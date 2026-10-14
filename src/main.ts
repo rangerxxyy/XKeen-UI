@@ -6,6 +6,7 @@ import { renderConnections, renderSelectors } from './mihomo-view';
 import { renderDns } from './dns-view';
 import { mountYamlEditor, unmountYamlEditor } from './yaml-editor';
 import { bindCoreReleaseChecks } from './core-releases';
+import { checkAppUpdate, type AppRelease } from './app-update';
 
 type Page = 'selectors' | 'connections' | 'configuration' | 'dns';
 
@@ -54,6 +55,10 @@ let logExpanded = false;
 let logFilter = '';
 let logController: AbortController | undefined;
 let logRefreshTimer: number | undefined;
+let appRelease: AppRelease | null = null;
+let appUpdateMessage = 'Проверка ещё не выполнялась.';
+let appUpdateCheckedAt = 0;
+let appUpdatePending: Promise<void> | null = null;
 
 const app = document.querySelector<HTMLDivElement>('#app');
 if (!app) throw new Error('Корневой элемент интерфейса #app не найден');
@@ -80,10 +85,13 @@ function renderHeader(): string {
   const stamp = state.checkedAt ? state.checkedAt.toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' }) : '—';
   const memory = status?.memory ? `RAM ${status.memory.usedMb}/${status.memory.totalMb} MB` : 'RAM —';
   const load = status?.loadAverage === null || status?.loadAverage === undefined ? 'Load —' : `Load ${status.loadAverage.toFixed(2)}`;
+  const updateLink = appRelease
+    ? `<a class="app-update-chip" href="${escapeHtml(appRelease.html_url)}" target="_blank" rel="noopener noreferrer" title="Открыть стабильный релиз XKeen UI">Доступно ${escapeHtml(appRelease.tag_name)} ↗</a>`
+    : '';
   return `<header class="topbar">
     <button class="top-status" id="services" type="button" aria-label="Открыть состояние сервисов"><span class="connection-led ${state.connected ? 'is-online' : 'is-offline'}"></span><span><strong>${escapeHtml(serviceText)}</strong><small>${state.connected ? `${memory} · ${load} · API :${status?.port ?? 1001} · ${stamp}` : 'Ожидание соединения с backend'}</small></span></button>
     <a class="brand" href="#selectors" aria-label="XKeen UI, селекторы"><span class="brand-mark">X</span><span>XKeen <b>UI</b></span></a>
-    <div class="top-actions"><span class="version-chip core-chip"><span class="chip-icon">◈</span> Mihomo <b>${coreLabel}</b></span><span class="version-chip"><span class="chip-icon">⬡</span> XKeen UI <b>v${status?.appVersion ?? '0.2.0'}</b></span><button class="icon-button" id="refresh" title="Обновить статус" aria-label="Обновить статус">↻</button><button class="icon-button" id="settings" title="Настройки" aria-label="Настройки">⚙</button></div>
+    <div class="top-actions"><span class="version-chip core-chip"><span class="chip-icon">◈</span> Mihomo <b>${coreLabel}</b></span><span class="version-chip"><span class="chip-icon">⬡</span> XKeen UI <b>v${status?.appVersion ?? '0.2.1'}</b></span>${updateLink}<button class="icon-button" id="refresh" title="Обновить статус" aria-label="Обновить статус">↻</button><button class="icon-button" id="settings" title="Настройки" aria-label="Настройки">⚙</button></div>
   </header>`;
 }
 
@@ -296,6 +304,7 @@ function render(): void {
   document.querySelector<HTMLButtonElement>('#settings')?.addEventListener('click', openSettings);
   document.querySelector<HTMLButtonElement>('#services')?.addEventListener('click', renderServicesDialog);
   document.querySelector<HTMLButtonElement>('#authenticate')?.addEventListener('click', openAccessDialog);
+  document.querySelector<HTMLButtonElement>('#check-app-update')?.addEventListener('click', () => void runAppUpdateCheck(true));
   document.querySelectorAll<HTMLButtonElement>('[data-xkeen-action]').forEach((button) => {
     button.addEventListener('click', () => void runXkeenAction(button.dataset.xkeenAction));
   });
@@ -352,6 +361,39 @@ async function runDnsQuery(): Promise<void> {
       if (activePage === 'dns') render();
     }
   }
+}
+
+async function runAppUpdateCheck(force = false): Promise<void> {
+  if (appUpdatePending) return appUpdatePending;
+  if (!force && Date.now() - appUpdateCheckedAt < 6 * 60 * 60 * 1000) return;
+  const installedVersion = state.status?.appVersion ?? '0.2.1';
+  appUpdateMessage = 'Проверяем стабильные релизы GitHub…';
+  const messageNode = document.querySelector<HTMLElement>('#app-update-message');
+  const checkButton = document.querySelector<HTMLButtonElement>('#check-app-update');
+  if (messageNode) messageNode.textContent = appUpdateMessage;
+  if (checkButton) { checkButton.disabled = true; checkButton.textContent = 'Проверяем…'; }
+  const pending = (async () => {
+    try {
+      appRelease = await checkAppUpdate(installedVersion);
+      appUpdateMessage = appRelease
+        ? `Доступно обновление ${appRelease.tag_name}. Установка из панели пока не подключена.`
+        : 'Установлена последняя стабильная версия.';
+      appUpdateCheckedAt = Date.now();
+    } catch (error) {
+      appUpdateMessage = error instanceof Error ? error.message : 'Не удалось проверить обновления.';
+      appUpdateCheckedAt = Date.now() - 5 * 60 * 60 * 1000;
+    } finally {
+      appUpdatePending = null;
+      const message = document.querySelector<HTMLElement>('#app-update-message');
+      const button = document.querySelector<HTMLButtonElement>('#check-app-update');
+      if (message) message.textContent = appUpdateMessage;
+      if (button) { button.disabled = false; button.textContent = 'Проверить'; }
+      render();
+    }
+  })();
+  appUpdatePending = pending;
+  render();
+  await pending;
 }
 
 function bindMihomoInteractions(): void {
@@ -503,7 +545,7 @@ function openSettings(): void {
     });
     if (!content) return;
     if (tab === 'general') {
-      content.innerHTML = `<div class="setting-row"><div><strong>Порт панели</strong><small>Адрес локального Rust API и интерфейса</small></div><span class="setting-value">${state.status?.port ?? 1001}</span></div><div class="setting-row"><div><strong>Backend</strong><small>${state.connected ? 'Соединение установлено' : 'Соединение отсутствует'}</small></div><span class="state-pill ${state.connected ? 'state-running' : 'state-unavailable'}">${state.connected ? 'На связи' : 'Ожидание'}</span></div><div class="setting-row"><div><strong>Режим</strong><small>Источник системных сведений</small></div><span class="setting-value">${state.status?.mode === 'router' ? 'Роутер' : 'Симуляция'}</span></div><div class="setting-row"><div><strong>Версия XKeen UI</strong><small>Сборка панели</small></div><span class="setting-value">${escapeHtml(state.status?.appVersion ?? '0.2.0')}</span></div>`;
+      content.innerHTML = `<div class="setting-row"><div><strong>Порт панели</strong><small>Адрес локального Rust API и интерфейса</small></div><span class="setting-value">${state.status?.port ?? 1001}</span></div><div class="setting-row"><div><strong>Backend</strong><small>${state.connected ? 'Соединение установлено' : 'Соединение отсутствует'}</small></div><span class="state-pill ${state.connected ? 'state-running' : 'state-unavailable'}">${state.connected ? 'На связи' : 'Ожидание'}</span></div><div class="setting-row"><div><strong>Режим</strong><small>Источник системных сведений</small></div><span class="setting-value">${state.status?.mode === 'router' ? 'Роутер' : 'Симуляция'}</span></div><div class="setting-row"><div><strong>Версия XKeen UI</strong><small>Установленная сборка</small></div><span class="setting-value">${escapeHtml(state.status?.appVersion ?? '0.2.1')}</span></div><div class="app-update-settings"><div><strong>Обновления панели</strong><small id="app-update-message" aria-live="polite">${escapeHtml(appUpdateMessage)}</small></div><button class="editor-button" id="check-app-update" type="button" ${appUpdatePending ? 'disabled' : ''}>${appUpdatePending ? 'Проверяем…' : 'Проверить'}</button></div>`;
       return;
     }
     if (tab === 'sources') {
@@ -578,6 +620,7 @@ async function refresh(): Promise<void> {
   if (activePage === 'configuration' && !authRequired) updateChrome();
   else render();
   if (activePage === 'selectors' || activePage === 'connections') void loadMihomoPage(activePage);
+  void runAppUpdateCheck();
 }
 
 render();

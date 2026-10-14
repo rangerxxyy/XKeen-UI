@@ -567,7 +567,10 @@ impl Paths {
             prefix: prefix.to_path_buf(),
             app: share.join("xkeen-ui"),
             share,
-            service: etc.join("init.d/S99xkeen-ui"),
+            // zxc-rv installs its own XKeen UI service at S99xkeen-ui. Keep
+            // this panel isolated so installing it never overwrites their
+            // service script or changes the existing port-1000 instance.
+            service: etc.join("init.d/S99xkeen-ui-panel"),
             config: etc.join("xkeen-ui.env"),
             pid: prefix.join("var/run/xkeen-ui.pid"),
             etc,

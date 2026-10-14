@@ -54,6 +54,9 @@ jobs:
           PREFIX="$ROOT/entware"
           PORT=$(python3 -c 'import socket; s=socket.socket(); s.bind(("127.0.0.1", 0)); print(s.getsockname()[1]); s.close()')
           mkdir -p "$PACKAGE/web"
+          mkdir -p "$PREFIX/etc/init.d"
+          printf '#!/bin/sh\nENABLED=yes\nPROCS=xkeen-ui\nARGS="-p 1000"\n' > "$PREFIX/etc/init.d/S99xkeen-ui"
+          cp "$PREFIX/etc/init.d/S99xkeen-ui" "$ROOT/legacy-service.expected"
           cp backend/target/release/xkeen-ui "$PACKAGE/xkeen-ui"
           cp -R release/web/. "$PACKAGE/web/"
           cleanup() {
@@ -81,10 +84,13 @@ jobs:
           test "$(curl --silent --output "$ROOT/missing-api.json" --write-out '%{http_code}' "http://127.0.0.1:$PORT/api/v1/does-not-exist")" = 404
           grep -q '"error":"API endpoint not found"' "$ROOT/missing-api.json"
           "$PACKAGE/xkeen-ui" update --prefix "$PREFIX" --package-dir "$PACKAGE"
-          "$PREFIX/etc/init.d/S99xkeen-ui" status
+          test -x "$PREFIX/etc/init.d/S99xkeen-ui-panel"
+          cmp "$ROOT/legacy-service.expected" "$PREFIX/etc/init.d/S99xkeen-ui"
+          "$PREFIX/etc/init.d/S99xkeen-ui-panel" status
           "$PREFIX/share/xkeen-ui/xkeen-ui" remove --prefix "$PREFIX"
           test ! -e "$PREFIX/share/xkeen-ui"
-          test ! -e "$PREFIX/etc/init.d/S99xkeen-ui"
+          test ! -e "$PREFIX/etc/init.d/S99xkeen-ui-panel"
+          cmp "$ROOT/legacy-service.expected" "$PREFIX/etc/init.d/S99xkeen-ui"
           test -f "$CONFIG"
           compgen -G "$PREFIX/share/xkeen-ui.backup.*" >/dev/null
 

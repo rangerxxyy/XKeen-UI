@@ -86,9 +86,9 @@ pub async fn control(action: &str) -> Result<XkeenStatus, String> {
         .filter(|_| status.installed)
         .ok_or_else(|| "Не найден исполняемый init-файл XKeen".to_owned())?;
     let args: &[&str] = match action {
-        "start" => &["start"],
+        "start" => &["start", "on"],
         "stop" => &["stop"],
-        "restart" => &["restart"],
+        "restart" => &["restart", "on"],
         _ => return Err("Допустимы только start, stop и restart".to_owned()),
     };
 

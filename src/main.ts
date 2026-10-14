@@ -464,6 +464,7 @@ async function refresh(): Promise<void> {
 
 render();
 void refresh();
+window.addEventListener('xkeen-core-updated', () => void refresh());
 refreshTimer = window.setInterval(() => void refresh(), 15_000);
 window.addEventListener('beforeunload', () => {
   requestController?.abort();

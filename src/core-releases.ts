@@ -1,9 +1,12 @@
+import { installCoreRelease } from './api';
+
 type CoreName = 'xray' | 'mihomo';
 
 type GitHubAsset = {
   name: string;
   size: number;
   browser_download_url: string;
+  digest?: string | null;
 };
 
 type GitHubRelease = {
@@ -53,7 +56,8 @@ export function isCoreRelease(value: unknown): value is GitHubRelease {
     && Array.isArray(release.assets)
     && release.assets.every((asset) => asset && typeof asset.name === 'string'
       && typeof asset.size === 'number' && Number.isFinite(asset.size) && asset.size >= 0
-      && typeof asset.browser_download_url === 'string');
+      && typeof asset.browser_download_url === 'string'
+      && (asset.digest === undefined || asset.digest === null || typeof asset.digest === 'string'));
 }
 
 export function findCompatibleCoreAsset(core: CoreName, assets: GitHubAsset[]): GitHubAsset | undefined {
@@ -115,6 +119,15 @@ function renderReleaseList(target: HTMLElement, core: CoreName, releases: GitHub
       assetRow.append(element('code', undefined, asset.name));
       assetRow.append(element('span', undefined, sizeLabel(asset.size)));
       card.append(assetRow);
+      const digest = asset.digest?.match(/^sha256:([a-f0-9]{64})$/i)?.[1];
+      if (digest && asset.size > 0 && asset.size <= 32 * 1024 * 1024) {
+        const install = element('button', 'editor-button editor-button-primary', 'Установить / обновить');
+        install.type = 'button';
+        install.addEventListener('click', () => void installRelease(core, release.tag_name, asset.name, digest, install, list));
+        card.append(install);
+      } else {
+        card.append(element('p', 'core-release-note', 'GitHub не предоставил проверяемый SHA-256 или архив превышает 32 MiB; установка недоступна.'));
+      }
     }
     const link = safeCoreReleaseLink(release.html_url);
     if (link) {
@@ -126,8 +139,31 @@ function renderReleaseList(target: HTMLElement, core: CoreName, releases: GitHub
     }
     list.append(card);
   }
-  const note = element('p', 'core-release-note', 'Просмотр релизов ничего не устанавливает. Установка и обновление ядер появятся после реализации проверки совместимости и безопасного отката.');
+  const note = element('p', 'core-release-note', 'Перед заменой активного ядра панель проверяет его конфигурацию и сохраняет предыдущий бинарник. Если перезапуск не подтвердится, выполняется откат.');
   target.replaceChildren(list, note);
+}
+
+async function installRelease(core: CoreName, tag: string, asset: string, sha256: string, button: HTMLButtonElement, list: HTMLElement): Promise<void> {
+  const confirmed = window.confirm(
+    `Установить ${core} ${tag} из выбранного GitHub-репозитория? Архив будет проверен по SHA-256. Если ядро сейчас обслуживает трафик, его конфигурация будет проверена, создана резервная копия, а сервис кратко перезапущен. При ошибке панель попробует восстановить прежний бинарник.`,
+  );
+  if (!confirmed) return;
+  button.disabled = true;
+  button.textContent = 'Проверка и установка…';
+  let feedback = element('p', 'core-release-feedback', `Загружаем и проверяем ${asset}.`);
+  list.append(feedback);
+  try {
+    const result = await installCoreRelease({ core, tag, asset, sha256 });
+    feedback.className = 'core-release-feedback';
+    feedback.textContent = `${result.detail}${result.backup ? ` · резервная копия: ${result.backup}` : ''}`;
+    window.dispatchEvent(new CustomEvent('xkeen-core-updated'));
+  } catch (error) {
+    feedback.className = 'core-release-feedback is-error';
+    feedback.textContent = error instanceof Error ? error.message : `Не удалось установить ${core}.`;
+  } finally {
+    button.disabled = false;
+    button.textContent = 'Установить / обновить';
+  }
 }
 
 export async function fetchCoreReleases(repository: string): Promise<GitHubRelease[]> {

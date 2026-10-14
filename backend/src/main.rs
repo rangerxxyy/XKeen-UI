@@ -23,6 +23,7 @@ use tower_http::{
 use tracing::{info, warn};
 
 mod installer;
+mod core_update;
 mod mihomo;
 mod xkeen;
 use mihomo::{Endpoint as MihomoEndpoint, MihomoClient, MihomoError};
@@ -38,6 +39,7 @@ struct AppState {
     core_sources: Arc<RwLock<CoreSources>>,
     core_sources_path: Option<PathBuf>,
     core_sources_lock: Arc<tokio::sync::Mutex<()>>,
+    core_update_lock: Arc<tokio::sync::Mutex<()>>,
 }
 
 #[derive(Clone, Deserialize, Serialize)]
@@ -258,6 +260,28 @@ async fn control_xkeen(
     }
     match xkeen::control(&request.action).await {
         Ok(status) => Json(status).into_response(),
+        Err(error) => (
+            StatusCode::BAD_REQUEST,
+            Json(serde_json::json!({"error":error})),
+        )
+            .into_response(),
+    }
+}
+
+async fn install_core(
+    State(state): State<AppState>,
+    Json(request): Json<core_update::CoreInstallRequest>,
+) -> Response {
+    if !state.router_mode {
+        return (
+            StatusCode::SERVICE_UNAVAILABLE,
+            Json(serde_json::json!({"error":"Установка ядер недоступна в режиме симуляции"})),
+        )
+            .into_response();
+    }
+    let _update_guard = state.core_update_lock.lock().await;
+    match core_update::install(&state, request).await {
+        Ok(result) => Json(result).into_response(),
         Err(error) => (
             StatusCode::BAD_REQUEST,
             Json(serde_json::json!({"error":error})),
@@ -689,6 +713,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         core_sources: Arc::new(RwLock::new(core_sources)),
         core_sources_path,
         core_sources_lock: Arc::new(tokio::sync::Mutex::new(())),
+        core_update_lock: Arc::new(tokio::sync::Mutex::new(())),
     };
     let web = web_root();
     let index = web.join("index.html");
@@ -712,6 +737,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         ));
     let mutation_api = Router::new()
         .route("/api/v1/xkeen/control", axum::routing::post(control_xkeen))
+        .route("/api/v1/cores/install", axum::routing::post(install_core))
         .route(
             "/api/v1/settings/core-sources",
             axum::routing::put(put_core_sources),

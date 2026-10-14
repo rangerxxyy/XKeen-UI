@@ -31,6 +31,14 @@ export interface CoreSources {
   mihomo: string;
 }
 
+export interface CoreInstallResult {
+  core: 'xray' | 'mihomo';
+  tag: string;
+  backup: string | null;
+  restarted: boolean;
+  detail: string;
+}
+
 export interface ApiState {
   connected: boolean;
   status: SystemStatus | null;
@@ -280,6 +288,31 @@ export async function saveCoreSources(sources: CoreSources): Promise<CoreSources
     throw new Error('Backend вернул некорректные источники ядер после сохранения');
   }
   return { xray: payload.xray, mihomo: payload.mihomo };
+}
+
+export async function installCoreRelease(request: {
+  core: 'xray' | 'mihomo';
+  tag: string;
+  asset: string;
+  sha256: string;
+}): Promise<CoreInstallResult> {
+  const token = sessionStorage.getItem(TOKEN_KEY);
+  const response = await fetch('/api/v1/cores/install', {
+    method: 'POST',
+    headers: {
+      Accept: 'application/json',
+      'Content-Type': 'application/json',
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    },
+    body: JSON.stringify(request),
+  });
+  const payload = await readJson(response, `Установка ${request.core}`);
+  if (!isRecord(payload) || payload.core !== request.core || payload.tag !== request.tag ||
+      (payload.backup !== null && typeof payload.backup !== 'string') ||
+      typeof payload.restarted !== 'boolean' || typeof payload.detail !== 'string') {
+    throw new Error('Backend вернул некорректный результат установки ядра');
+  }
+  return payload as unknown as CoreInstallResult;
 }
 
 export async function getHealth(signal?: AbortSignal): Promise<{ status: string }> {

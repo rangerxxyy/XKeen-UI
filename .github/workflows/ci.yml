@@ -48,7 +48,7 @@ jobs:
       - run: cargo build --release --manifest-path backend/Cargo.toml --locked
       - name: Exercise install, update, service, and remove in an isolated prefix
         run: |
-          set -euo pipefail
+          set -euxo pipefail
           ROOT=$(mktemp -d)
           PACKAGE="$ROOT/package"
           PREFIX="$ROOT/entware"

@@ -1,5 +1,5 @@
 import './style.css';
-import { ApiError, closeAllMihomoConnections, closeMihomoConnection, getHealth, getMihomoConnections, getMihomoSelectors, getStatus, hasAccessToken, queryMihomoDns, selectMihomoProxy, setAccessToken, type ApiState, type MihomoConnections, type MihomoDnsResult, type MihomoSelector, type ServiceStatus } from './api';
+import { ApiError, closeAllMihomoConnections, closeMihomoConnection, getHealth, getMihomoConnections, getMihomoSelectors, getMihomoVersion, getStatus, hasAccessToken, queryMihomoDns, selectMihomoProxy, setAccessToken, type ApiState, type MihomoConnections, type MihomoDnsResult, type MihomoSelector, type ServiceStatus } from './api';
 import { renderConnections, renderSelectors } from './mihomo-view';
 import { renderDns } from './dns-view';
 import { mountYamlEditor, unmountYamlEditor } from './yaml-editor';
@@ -33,6 +33,7 @@ let dnsError: string | null = null;
 let dnsQueryName = '';
 let dnsQueryType = 'A';
 let dnsController: AbortController | undefined;
+let mihomoVersion: string | null = null;
 
 const app = document.querySelector<HTMLDivElement>('#app');
 if (!app) throw new Error('Корневой элемент интерфейса #app не найден');
@@ -54,11 +55,13 @@ function serviceBadge(service: ServiceStatus): string {
 function renderHeader(): string {
   const status = state.status;
   const service = status?.services.find((item) => item.name.toLowerCase() === 'mihomo');
-  const coreLabel = service ? (service.version ? `v${escapeHtml(service.version)}` : service.state === 'running' ? 'Активен' : service.state === 'stopped' ? 'Остановлен' : 'Недоступен') : state.connected ? 'Не проверен' : 'Ожидание';
+  const coreLabel = mihomoVersion ? `v${escapeHtml(mihomoVersion)}` : service ? (service.version ? `v${escapeHtml(service.version)}` : service.state === 'running' ? 'Активен' : service.state === 'stopped' ? 'Остановлен' : 'Недоступен') : state.connected ? 'Не проверен' : 'Ожидание';
   const serviceText = service ? (service.state === 'running' ? 'Сервис активен' : service.state === 'stopped' ? 'Сервис остановлен' : 'Статус недоступен') : 'Состояние загружается';
   const stamp = state.checkedAt ? state.checkedAt.toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' }) : '—';
+  const memory = status?.memory ? `RAM ${status.memory.usedMb}/${status.memory.totalMb} MB` : 'RAM —';
+  const load = status?.loadAverage === null || status?.loadAverage === undefined ? 'Load —' : `Load ${status.loadAverage.toFixed(2)}`;
   return `<header class="topbar">
-    <div class="top-status"><span class="connection-led ${state.connected ? 'is-online' : 'is-offline'}"></span><div><strong>${escapeHtml(serviceText)}</strong><small>${state.connected ? `API · порт ${status?.port ?? 1001} · обновлено ${stamp}` : 'Ожидание соединения с backend'}</small></div></div>
+    <div class="top-status"><span class="connection-led ${state.connected ? 'is-online' : 'is-offline'}"></span><div><strong>${escapeHtml(serviceText)}</strong><small>${state.connected ? `${memory} · ${load} · API :${status?.port ?? 1001} · ${stamp}` : 'Ожидание соединения с backend'}</small></div></div>
     <a class="brand" href="#overview" aria-label="XKeen UI, главная"><span class="brand-mark">X</span><span>XKeen <b>UI</b></span></a>
     <div class="top-actions"><span class="version-chip core-chip"><span class="chip-icon">◈</span> Mihomo <b>${coreLabel}</b></span><span class="version-chip"><span class="chip-icon">⬡</span> XKeen UI <b>v${status?.appVersion ?? '0.1.0'}</b></span><button class="icon-button" id="refresh" title="Обновить статус" aria-label="Обновить статус">↻</button><button class="icon-button" id="settings" title="Настройки" aria-label="Настройки">⚙</button></div>
   </header>`;
@@ -251,6 +254,13 @@ async function loadMihomoPage(page: Page): Promise<void> {
   mihomoController?.abort();
   mihomoController = new AbortController();
   const { signal } = mihomoController;
+  if (!mihomoVersion) {
+    void getMihomoVersion(signal).then((version) => {
+      if (signal.aborted) return;
+      mihomoVersion = version;
+      if (activePage === page) updateChrome();
+    }).catch(() => undefined);
+  }
   if (page === 'selectors') { selectorsLoading = true; selectorsError = null; }
   else { connectionsLoading = true; connectionsError = null; }
   if (activePage === page) render();

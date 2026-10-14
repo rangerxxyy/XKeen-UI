@@ -24,6 +24,7 @@ button:focus-visible, a:focus-visible { outline: 2px solid var(--cyan); outline-
 .connection-led.is-offline { background: #708097; box-shadow: none; }
 .top-status strong { font-size: 12px; font-weight: 600; display: block; color: #d7e0f0; }
 .top-status small { color: var(--muted); font-size: 10px; display: block; margin-top: 3px; }
+.top-status small { max-width: 360px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .brand { display: flex; align-items: center; gap: 7px; color: #eaf5ff; text-decoration: none; font: 800 20px ui-sans-serif,system-ui,sans-serif; letter-spacing: -.7px; }
 .brand b { color: var(--cyan); }
 .brand-mark { width: 26px; height: 26px; border-radius: 8px; background: linear-gradient(145deg,#35c7dd,#5679ff); color: #071322; font-size: 16px; display: grid; place-items: center; }

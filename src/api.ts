@@ -123,6 +123,14 @@ export async function getMihomoSelectors(signal?: AbortSignal): Promise<MihomoSe
   });
 }
 
+export async function getMihomoVersion(signal?: AbortSignal): Promise<string> {
+  const payload = await getMihomoJson('/api/v1/mihomo/version', 'Получение версии Mihomo', signal);
+  if (!isRecord(payload) || typeof payload.version !== 'string' || !payload.version.trim()) {
+    throw new Error('Mihomo вернул некорректную версию');
+  }
+  return payload.version.trim();
+}
+
 export async function getMihomoConnections(signal?: AbortSignal): Promise<MihomoConnections> {
   const payload = await getMihomoJson('/api/v1/mihomo/connections', 'Получение соединений', signal);
   if (!isRecord(payload) || !Array.isArray(payload.connections)) {

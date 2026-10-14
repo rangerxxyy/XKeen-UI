@@ -22,6 +22,7 @@ use tower_http::{
 };
 use tracing::{info, warn};
 
+mod installer;
 mod mihomo;
 use mihomo::{Endpoint as MihomoEndpoint, MihomoClient, MihomoError};
 
@@ -585,6 +586,11 @@ fn web_root() -> PathBuf {
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
+    let args: Vec<String> = env::args().skip(1).collect();
+    if !args.is_empty() {
+        installer::dispatch(&args)?;
+        return Ok(());
+    }
     tracing_subscriber::fmt()
         .with_env_filter(
             tracing_subscriber::EnvFilter::try_from_default_env()

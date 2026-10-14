@@ -3,6 +3,7 @@ import { ApiError, closeAllMihomoConnections, closeMihomoConnection, getCoreSour
 import { renderConnections, renderSelectors } from './mihomo-view';
 import { renderDns } from './dns-view';
 import { mountYamlEditor, unmountYamlEditor } from './yaml-editor';
+import { bindCoreReleaseChecks } from './core-releases';
 
 type Page = 'overview' | 'selectors' | 'connections' | 'dns' | 'configuration' | 'logs';
 
@@ -353,7 +354,13 @@ function openSettings(): void {
       const sourceStorageNote = state.status?.mode === 'router'
         ? 'В режиме роутера значения хранятся в собственном файле настроек XKeen UI.'
         : 'В локальной симуляции значения хранятся в памяти до перезапуска backend.';
-      content.innerHTML = `<p class="modal-note">Укажите GitHub-репозитории релизов для будущих установок и обновлений. Это URL источника форка; путь установленного исполняемого файла панель не меняет. ${sourceStorageNote}</p><label class="source-field"><span><strong>Источник Xray</strong><small>Формат: github.com/владелец/репозиторий</small></span><input id="source-xray" type="url" autocomplete="url" placeholder="https://github.com/XTLS/Xray-core"></label><label class="source-field"><span><strong>Источник Mihomo</strong><small>Поддерживаются совместимые репозитории и форки</small></span><input id="source-mihomo" type="url" autocomplete="url" placeholder="https://github.com/MetaCubeX/mihomo"></label><div class="source-save-row"><span class="sources-feedback" id="sources-feedback" aria-live="polite">Загружаем сохранённые значения…</span><button class="editor-button editor-button-primary" type="button" id="save-core-sources">Сохранить источники</button></div>`;
+      content.innerHTML = `<p class="modal-note">Задайте GitHub-репозитории форков Xray и Mihomo. Здесь хранится адрес источника релизов; установленный путь ядра не меняется. ${sourceStorageNote}</p>
+        <label class="source-field"><span><strong>Источник Xray</strong><small>Формат: github.com/владелец/репозиторий</small></span><input id="source-xray" type="url" autocomplete="url" placeholder="https://github.com/XTLS/Xray-core"></label>
+        <label class="source-field"><span><strong>Источник Mihomo</strong><small>Поддерживаются совместимые репозитории и форки</small></span><input id="source-mihomo" type="url" autocomplete="url" placeholder="https://github.com/MetaCubeX/mihomo"></label>
+        <div class="core-release-checks"><section><div><strong>Xray</strong><small>Проверить последние ARM64-релизы</small></div><button type="button" class="editor-button" data-core-release="xray">Проверить релизы</button></section><div id="releases-xray" aria-live="polite"></div>
+        <section><div><strong>Mihomo</strong><small>Проверить последние ARM64-релизы</small></div><button type="button" class="editor-button" data-core-release="mihomo">Проверить релизы</button></section><div id="releases-mihomo" aria-live="polite"></div></div>
+        <div class="source-save-row"><span class="sources-feedback" id="sources-feedback" aria-live="polite">Загружаем сохранённые значения…</span><button class="editor-button editor-button-primary" type="button" id="save-core-sources">Сохранить источники</button></div>`;
+      bindCoreReleaseChecks();
       const xrayInput = content.querySelector<HTMLInputElement>('#source-xray');
       const mihomoInput = content.querySelector<HTMLInputElement>('#source-mihomo');
       const feedback = content.querySelector<HTMLElement>('#sources-feedback');

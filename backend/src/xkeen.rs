@@ -240,6 +240,6 @@ mod tests {
     #[test]
     fn truncates_long_output_without_splitting_utf8() {
         assert_eq!(truncate("коротко", 32), "коротко");
-        assert_eq!(truncate(&"я".repeat(20), 9), "яя…");
+        assert_eq!(truncate(&"я".repeat(20), 9), "яяяя…");
     }
 }

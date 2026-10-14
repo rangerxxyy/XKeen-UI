@@ -5,7 +5,15 @@ import { defaultHighlightStyle, syntaxHighlighting } from '@codemirror/language'
 import { yaml } from '@codemirror/lang-yaml';
 import { parseDocument } from 'yaml';
 
-const draftKey = 'xkeen-ui:draft:mihomo-yaml';
+const draftKey = 'xkeen-ui:draft:';
+const activeFileKey = 'xkeen-ui:draft-active-file';
+const draftFiles = [
+  { id: 'config', label: 'config', filename: 'config.yaml', yaml: true },
+  { id: 'ip_exclude', label: 'ip_exclude', filename: 'ip_exclude', yaml: false },
+  { id: 'port_exclude', label: 'port_exclude', filename: 'port_exclude', yaml: false },
+  { id: 'port_proxying', label: 'port_proxying', filename: 'port_proxying', yaml: false },
+  { id: 'xkeen', label: 'xkeen', filename: 'xkeen', yaml: false },
+] as const;
 const starterTemplate = `# Локальный пример для изучения формата Mihomo.
 # Этот черновик не связан с роутером и не применяется автоматически.
 mixed-port: 7890
@@ -21,6 +29,29 @@ rules:
 `;
 
 let editor: EditorView | null = null;
+let activeFile = sessionStorage.getItem(activeFileKey) ?? 'config';
+
+function currentFile() {
+  return draftFiles.find((file) => file.id === activeFile) ?? draftFiles[0];
+}
+
+function setEditorIdentity(): void {
+  const file = currentFile();
+  const filename = document.querySelector<HTMLElement>('#editor-filename');
+  const language = document.querySelector<HTMLElement>('#editor-language');
+  const hint = document.querySelector<HTMLElement>('#editor-file-hint');
+  if (filename) filename.textContent = file.filename;
+  if (language) language.textContent = file.yaml ? 'YAML · Mihomo' : 'TEXT · XKeen';
+  if (hint) hint.textContent = file.yaml ? 'Локальная вкладка · не файл роутера' : 'Локальный список · не файл роутера';
+  document.querySelectorAll<HTMLButtonElement>('[data-config-file]').forEach((button) => {
+    const selected = button.dataset.configFile === file.id;
+    button.classList.toggle('selected', selected);
+    button.setAttribute('aria-pressed', String(selected));
+  });
+  document.querySelectorAll<HTMLElement>('[data-yaml-only]').forEach((element) => {
+    element.hidden = !file.yaml;
+  });
+}
 
 const editorTheme = EditorView.theme({
   '&': { height: '100%', color: '#d9e4f5', backgroundColor: '#080e1b' },
@@ -67,11 +98,12 @@ function validateYaml(text: string): boolean {
 }
 
 function downloadDraft(text: string): void {
-  const blob = new Blob([text], { type: 'application/yaml;charset=utf-8' });
+  const file = currentFile();
+  const blob = new Blob([text], { type: file.yaml ? 'application/yaml;charset=utf-8' : 'text/plain;charset=utf-8' });
   const url = URL.createObjectURL(blob);
   const link = document.createElement('a');
   link.href = url;
-  link.download = 'mihomo-draft.yaml';
+  link.download = file.filename;
   link.click();
   window.setTimeout(() => URL.revokeObjectURL(url), 1000);
 }
@@ -86,12 +118,15 @@ export function mountYamlEditor(): void {
   if (!parent) return;
   unmountYamlEditor();
 
-  const initial = sessionStorage.getItem(draftKey) ?? '';
+  setEditorIdentity();
+  const file = currentFile();
+  const initial = sessionStorage.getItem(`${draftKey}${file.id}`) ?? '';
   const updateListener = EditorView.updateListener.of((update) => {
     if (!update.docChanged) return;
     const text = update.state.doc.toString();
-    sessionStorage.setItem(draftKey, text);
-    setValidation(`Черновик в этой вкладке · ${update.state.doc.lines} строк · не применён`, null);
+    sessionStorage.setItem(`${draftKey}${file.id}`, text);
+    if (file.yaml) setValidation(`Черновик в этой вкладке · ${update.state.doc.lines} строк · не применён`, null);
+    else setValidation(`Локальный текстовый список · ${update.state.doc.lines} строк · не применён`, null);
   });
   editor = new EditorView({
     parent,
@@ -102,7 +137,7 @@ export function mountYamlEditor(): void {
         keymap.of([...defaultKeymap, ...historyKeymap]),
         lineNumbers(),
         highlightActiveLine(),
-        yaml(),
+        ...(file.yaml ? [yaml()] : []),
         syntaxHighlighting(defaultHighlightStyle),
         editorTheme,
         EditorView.lineWrapping,
@@ -110,13 +145,27 @@ export function mountYamlEditor(): void {
       ],
     }),
   });
-  setValidation(initial.trim() ? `Черновик в этой вкладке · ${editor.state.doc.lines} строк · не применён` : 'Черновик пуст. Можно вставить шаблон или начать ввод.', null);
+  setValidation(initial.trim()
+    ? `${file.yaml ? 'Черновик' : 'Список'} в этой вкладке · ${editor.state.doc.lines} строк · не применён`
+    : file.yaml ? 'Черновик пуст. Можно вставить шаблон или начать ввод.' : 'Локальный список пуст.', null);
+
+  document.querySelectorAll<HTMLButtonElement>('[data-config-file]').forEach((button) => {
+    button.addEventListener('click', () => {
+      const nextFile = button.dataset.configFile;
+      if (!nextFile || !draftFiles.some((candidate) => candidate.id === nextFile)) return;
+      activeFile = nextFile;
+      sessionStorage.setItem(activeFileKey, activeFile);
+      mountYamlEditor();
+      const activeEditor = document.querySelector<HTMLElement>('#yaml-editor .cm-content');
+      activeEditor?.focus();
+    });
+  });
 
   document.querySelector<HTMLButtonElement>('#yaml-validate')?.addEventListener('click', () => {
     if (editor) validateYaml(editor.state.doc.toString());
   });
   document.querySelector<HTMLButtonElement>('#yaml-format')?.addEventListener('click', () => {
-    if (!editor) return;
+    if (!editor || !currentFile().yaml) return;
     const source = editor.state.doc.toString();
     const document = parseDocument(source, { uniqueKeys: true, version: '1.2' });
     if (document.errors.length) {
@@ -130,7 +179,7 @@ export function mountYamlEditor(): void {
     }
   });
   document.querySelector<HTMLButtonElement>('#yaml-template')?.addEventListener('click', () => {
-    if (!editor) return;
+    if (!editor || !currentFile().yaml) return;
     const current = editor.state.doc.toString();
     if (current.trim() && !window.confirm('Заменить текущий черновик примером? Текст текущего черновика будет заменён.')) return;
     editor.dispatch({ changes: { from: 0, to: editor.state.doc.length, insert: starterTemplate } });

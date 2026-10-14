@@ -10,7 +10,7 @@
 | XRAY-01 | Интеграция Xray и диагностики | [ ] | Состояние подтверждается API или штатной проверкой целевого ядра |
 | MIHOMO-01 | Clash API: группы, selectors, connections и logs | [~] | Чтение proxies/connections/rules/version и переключение Selector подключены; фильтр и явное подтверждение закрытия одного/всех connections готовы; runtime-проверка управляющих действий на реальном ядре не выполнена |
 | DNS-01 | Отдельные DNS Mihomo и Xray | [~] | Read-only Mihomo DNS lookup подключён; DNS settings, Xray DNS, validation, backup, apply, rollback не реализованы |
-| CONFIG-01 | Редактор YAML/JSON и безопасное применение | [~] | Локальный CodeMirror YAML-черновик, подсветка, форматирование и синтаксическая проверка готовы; Mihomo schema validation, backup/apply/rollback отсутствуют |
+| CONFIG-01 | Редактор YAML/JSON и безопасное применение | [~] | Локальные CodeMirror-вкладки config/ip_exclude/port_exclude/port_proxying/xkeen; изолированное хранение и экспорт; YAML syntax check/format для config. JSON/JSONC, Mihomo schema validation, backup/apply/rollback отсутствуют |
 | INSTALL-01 | POSIX installer, service, update/remove | [~] | ash/shellcheck, подтверждения, checksum, backup и отказоустойчивость |
 | TARGET-01 | Подтвердить модель и архитектуру роутера | [x] | Entware AArch64/glibc 2.27; runtime binary проверен read-only на loopback |
 | RELEASE-01 | Опубликовать исходники и совместимые артефакты | [~] | Исходный код опубликован; release намеренно не создан, установочная инструкция не публикуется |

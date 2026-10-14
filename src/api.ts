@@ -58,6 +58,18 @@ export interface MihomoConnection {
   start: string;
 }
 
+export interface MihomoDnsRecord {
+  name: string;
+  type: string;
+  ttl: number | null;
+  data: string;
+}
+
+export interface MihomoDnsResult {
+  status: string;
+  answers: MihomoDnsRecord[];
+}
+
 const TOKEN_KEY = 'xkeen-ui:session-token';
 
 export class ApiError extends Error {
@@ -140,6 +152,28 @@ export async function getMihomoConnections(signal?: AbortSignal): Promise<Mihomo
     downloadTotal: readCounter(payload.downloadTotal),
     connections,
   };
+}
+
+export async function queryMihomoDns(name: string, recordType: string, signal?: AbortSignal): Promise<MihomoDnsResult> {
+  const query = new URLSearchParams({ name, type: recordType });
+  const payload = await getMihomoJson(`/api/v1/mihomo/dns/query?${query.toString()}`, 'DNS-запрос Mihomo', signal);
+  if (!isRecord(payload) || typeof payload.Status !== 'number' || !Number.isInteger(payload.Status)) {
+    throw new Error('Mihomo вернул некорректный DNS-ответ');
+  }
+  const rcode: Record<number, string> = {
+    0: 'NOERROR', 1: 'FORMERR', 2: 'SERVFAIL', 3: 'NXDOMAIN',
+    4: 'NOTIMP', 5: 'REFUSED',
+  };
+  const answers = Array.isArray(payload.Answer) ? payload.Answer.flatMap((raw): MihomoDnsRecord[] => {
+    if (!isRecord(raw) || (typeof raw.name !== 'string') || (typeof raw.data !== 'string')) return [];
+    return [{
+      name: raw.name,
+      type: typeof raw.type === 'string' || typeof raw.type === 'number' ? String(raw.type) : '—',
+      ttl: typeof raw.TTL === 'number' && Number.isSafeInteger(raw.TTL) && raw.TTL >= 0 ? raw.TTL : null,
+      data: raw.data,
+    }];
+  }) : [];
+  return { status: rcode[payload.Status] ?? `RCODE ${payload.Status}`, answers };
 }
 
 export async function selectMihomoProxy(group: string, name: string, signal?: AbortSignal): Promise<void> {

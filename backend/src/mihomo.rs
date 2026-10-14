@@ -53,6 +53,7 @@ pub enum MihomoError {
     InvalidJson(serde_json::Error),
     InvalidSelection,
     InvalidConnectionId,
+    InvalidDnsQuery,
 }
 
 impl MihomoClient {
@@ -79,6 +80,30 @@ impl MihomoClient {
 
     pub async fn get_json(&self, endpoint: Endpoint) -> Result<Value, MihomoError> {
         let response = self.send(Method::GET, endpoint.path(), None).await?;
+        self.read_json(response).await
+    }
+
+    pub async fn dns_query(&self, name: &str, record_type: &str) -> Result<Value, MihomoError> {
+        if !valid_dns_name(name) || !valid_dns_type(record_type) {
+            return Err(MihomoError::InvalidDnsQuery);
+        }
+        let name = utf8_percent_encode(name, NON_ALPHANUMERIC);
+        let record_type = record_type.to_ascii_uppercase();
+        let record_type = utf8_percent_encode(&record_type, NON_ALPHANUMERIC);
+        let response = self
+            .send(
+                Method::GET,
+                &format!("dns/query?name={name}&type={record_type}"),
+                None,
+            )
+            .await?;
+        self.read_json(response).await
+    }
+
+    async fn read_json(
+        &self,
+        response: hyper::Response<hyper::body::Incoming>,
+    ) -> Result<Value, MihomoError> {
         if !response.status().is_success() {
             return Err(MihomoError::UpstreamStatus(response.status().as_u16()));
         }
@@ -236,10 +261,31 @@ fn valid_connection_id(value: &str) -> bool {
             .all(|byte| byte.is_ascii_hexdigit() || byte == b'-')
 }
 
+fn valid_dns_name(value: &str) -> bool {
+    let name = value.strip_suffix('.').unwrap_or(value);
+    !name.is_empty()
+        && name.len() <= 253
+        && name.split('.').all(|label| {
+            !label.is_empty()
+                && label.len() <= 63
+                && label.bytes().all(|byte| byte.is_ascii_alphanumeric() || byte == b'-')
+                && label.as_bytes()[0] != b'-'
+                && label.as_bytes()[label.len() - 1] != b'-'
+        })
+}
+
+fn valid_dns_type(value: &str) -> bool {
+    matches!(
+        value.to_ascii_uppercase().as_str(),
+        "A" | "AAAA" | "CNAME" | "TXT" | "MX" | "NS" | "PTR" | "SRV" | "HTTPS" | "SVCB"
+    )
+}
+
 #[cfg(test)]
 mod tests {
     use super::{
-        parse_controller_authority, valid_connection_id, valid_name, Endpoint, MihomoError,
+        parse_controller_authority, valid_connection_id, valid_dns_name, valid_dns_type,
+        valid_name, Endpoint, MihomoError,
     };
 
     #[test]
@@ -284,5 +330,19 @@ mod tests {
         assert!(!valid_connection_id(""));
         assert!(!valid_connection_id("../configs"));
         assert!(!valid_connection_id("id?secret=value"));
+    }
+
+    #[test]
+    fn dns_queries_allow_domain_names_and_known_record_types_only() {
+        assert!(valid_dns_name("example.com"));
+        assert!(valid_dns_name("router.lan."));
+        assert!(!valid_dns_name(""));
+        assert!(!valid_dns_name("bad..example"));
+        assert!(!valid_dns_name("-bad.example"));
+        assert!(!valid_dns_name("bad.example/path"));
+        assert!(valid_dns_type("A"));
+        assert!(valid_dns_type("aaaa"));
+        assert!(!valid_dns_type("ANY"));
+        assert!(!valid_dns_type("A&secret=value"));
     }
 }

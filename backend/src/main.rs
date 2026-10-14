@@ -6,7 +6,7 @@ use std::{
 };
 
 use axum::{
-    extract::{Path, State},
+    extract::{Path, Query, State},
     http::{header, HeaderMap, Request, StatusCode},
     middleware::{self, Next},
     response::{IntoResponse, Json, Response},
@@ -73,6 +73,13 @@ struct MemoryStatus {
 struct ProxySelection {
     group: String,
     name: String,
+}
+
+#[derive(Deserialize)]
+struct DnsQuery {
+    name: String,
+    #[serde(rename = "type")]
+    record_type: String,
 }
 
 async fn health() -> Json<Health> {
@@ -205,6 +212,24 @@ async fn mihomo_rules(State(state): State<AppState>) -> Response {
     mihomo_data(State(state), MihomoEndpoint::Rules).await
 }
 
+async fn mihomo_dns_query(State(state): State<AppState>, Query(query): Query<DnsQuery>) -> Response {
+    if !state.router_mode {
+        return (
+            StatusCode::SERVICE_UNAVAILABLE,
+            Json(serde_json::json!({"error":"DNS-запрос Mihomo недоступен в режиме симуляции"})),
+        )
+            .into_response();
+    }
+    match state
+        .mihomo
+        .dns_query(&query.name, &query.record_type)
+        .await
+    {
+        Ok(payload) => Json(payload).into_response(),
+        Err(error) => mihomo_error_response(error),
+    }
+}
+
 async fn select_mihomo_proxy(
     State(state): State<AppState>,
     Json(selection): Json<ProxySelection>,
@@ -226,10 +251,7 @@ async fn select_mihomo_proxy(
     }
 }
 
-async fn require_same_origin(
-    request: Request<axum::body::Body>,
-    next: Next,
-) -> Response {
+async fn require_same_origin(request: Request<axum::body::Body>, next: Next) -> Response {
     if same_origin(request.headers()) {
         next.run(request).await
     } else {
@@ -242,10 +264,16 @@ async fn require_same_origin(
 }
 
 fn same_origin(headers: &HeaderMap) -> bool {
-    let Some(origin) = headers.get(header::ORIGIN).and_then(|value| value.to_str().ok()) else {
+    let Some(origin) = headers
+        .get(header::ORIGIN)
+        .and_then(|value| value.to_str().ok())
+    else {
         return false;
     };
-    let Some(host) = headers.get(header::HOST).and_then(|value| value.to_str().ok()) else {
+    let Some(host) = headers
+        .get(header::HOST)
+        .and_then(|value| value.to_str().ok())
+    else {
         return false;
     };
     let Ok(origin_uri) = origin.parse::<axum::http::Uri>() else {
@@ -298,6 +326,10 @@ fn mihomo_error_response(error: MihomoError) -> Response {
             StatusCode::BAD_REQUEST,
             "Соединение больше не активно или его идентификатор некорректен",
         ),
+        MihomoError::InvalidDnsQuery => (
+            StatusCode::BAD_REQUEST,
+            "Домен или тип DNS-записи не прошёл проверку",
+        ),
     };
     (status, Json(serde_json::json!({"error":message}))).into_response()
 }
@@ -341,7 +373,7 @@ async fn require_access_token(
     };
     let supplied = request
         .headers()
-        .get(AUTHORIZATION)
+        .get(header::AUTHORIZATION)
         .and_then(|value| value.to_str().ok())
         .and_then(|value| value.strip_prefix("Bearer "));
     if supplied.is_some_and(|value| constant_time_equals(value.as_bytes(), expected.as_bytes())) {
@@ -445,6 +477,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         .route("/api/v1/mihomo/proxies", get(mihomo_proxies))
         .route("/api/v1/mihomo/connections", get(mihomo_connections))
         .route("/api/v1/mihomo/rules", get(mihomo_rules))
+        .route("/api/v1/mihomo/dns/query", get(mihomo_dns_query))
         .route_layer(middleware::from_fn_with_state(
             state.clone(),
             require_access_token,

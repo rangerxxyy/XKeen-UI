@@ -1,6 +1,7 @@
 import './style.css';
-import { ApiError, closeAllMihomoConnections, closeMihomoConnection, getHealth, getMihomoConnections, getMihomoSelectors, getStatus, hasAccessToken, selectMihomoProxy, setAccessToken, type ApiState, type MihomoConnections, type MihomoSelector, type ServiceStatus } from './api';
+import { ApiError, closeAllMihomoConnections, closeMihomoConnection, getHealth, getMihomoConnections, getMihomoSelectors, getStatus, hasAccessToken, queryMihomoDns, selectMihomoProxy, setAccessToken, type ApiState, type MihomoConnections, type MihomoDnsResult, type MihomoSelector, type ServiceStatus } from './api';
 import { renderConnections, renderSelectors } from './mihomo-view';
+import { renderDns } from './dns-view';
 import { mountYamlEditor, unmountYamlEditor } from './yaml-editor';
 
 type Page = 'overview' | 'selectors' | 'connections' | 'dns' | 'configuration' | 'logs';
@@ -26,6 +27,12 @@ let selectorsError: string | null = null;
 let connections: MihomoConnections | null = null;
 let connectionsLoading = true;
 let connectionsError: string | null = null;
+let dnsResult: MihomoDnsResult | null = null;
+let dnsLoading = false;
+let dnsError: string | null = null;
+let dnsQueryName = '';
+let dnsQueryType = 'A';
+let dnsController: AbortController | undefined;
 
 const app = document.querySelector<HTMLDivElement>('#app');
 if (!app) throw new Error('Корневой элемент интерфейса #app не найден');
@@ -135,19 +142,53 @@ function render(): void {
   const pageContent = authRequired || activePage === 'overview' ? renderOverview()
     : activePage === 'selectors' ? renderSelectors(selectors, selectorsLoading, selectorsError)
       : activePage === 'connections' ? renderConnections(connections, connectionsLoading, connectionsError)
+        : activePage === 'dns' ? renderDns(dnsResult, dnsLoading, dnsError, dnsQueryName, dnsQueryType)
         : renderComingSoon(activePage);
   app.innerHTML = `<div class="app-shell">${renderHeader()}${renderNavigation()}<main class="main-content">${pageContent}</main>${renderFooter()}<div class="toast-region" aria-live="polite"></div></div>`;
   document.querySelectorAll<HTMLButtonElement>('[data-page]').forEach((button) => {
     button.addEventListener('click', () => {
       const page = button.dataset.page as Page | undefined;
-      if (page && pages.some((item) => item.id === page)) { activePage = page; render(); void loadMihomoPage(page); }
+      if (page && pages.some((item) => item.id === page)) {
+        if (page !== 'dns') dnsController?.abort();
+        activePage = page;
+        render();
+        void loadMihomoPage(page);
+      }
     });
   });
   document.querySelectorAll<HTMLButtonElement>('#refresh,#refresh-secondary,#retry').forEach((button) => button.addEventListener('click', () => void refresh()));
   document.querySelector<HTMLButtonElement>('#settings')?.addEventListener('click', openSettings);
   document.querySelector<HTMLButtonElement>('#authenticate')?.addEventListener('click', openAccessDialog);
+  document.querySelector<HTMLFormElement>('#dns-query-form')?.addEventListener('submit', (event) => {
+    event.preventDefault();
+    const form = event.currentTarget as HTMLFormElement;
+    const data = new FormData(form);
+    dnsQueryName = String(data.get('name') ?? '').trim();
+    dnsQueryType = String(data.get('type') ?? 'A');
+    void runDnsQuery();
+  });
   if (activePage === 'configuration' && !authRequired) mountYamlEditor();
   bindMihomoInteractions();
+}
+
+async function runDnsQuery(): Promise<void> {
+  dnsController?.abort();
+  const controller = new AbortController();
+  dnsController = controller;
+  dnsLoading = true;
+  dnsError = null;
+  render();
+  try {
+    dnsResult = await queryMihomoDns(dnsQueryName, dnsQueryType, controller.signal);
+  } catch (error) {
+    if (error instanceof DOMException && error.name === 'AbortError') return;
+    dnsError = error instanceof Error ? error.message : 'DNS-запрос завершился ошибкой';
+  } finally {
+    if (!controller.signal.aborted) {
+      dnsLoading = false;
+      if (activePage === 'dns') render();
+    }
+  }
 }
 
 function bindMihomoInteractions(): void {

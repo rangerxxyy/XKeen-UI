@@ -721,6 +721,9 @@ mod tests {
     fn explicit_port_is_rejected_when_already_in_use() {
         let port = first_available_port(20_000).unwrap();
         let _occupied = TcpListener::bind(("0.0.0.0", port)).unwrap();
-        assert_eq!(choose_port(Some(port)).unwrap_err().kind(), std::io::ErrorKind::AddrInUse);
+        assert_eq!(
+            choose_port(Some(port)).unwrap_err().kind(),
+            std::io::ErrorKind::AddrInUse
+        );
     }
 }

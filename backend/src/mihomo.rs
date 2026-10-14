@@ -179,10 +179,7 @@ impl MihomoClient {
         // listed in selectors. Mihomo exposes their runtime metadata separately.
         let mut available_proxies = proxies.clone();
         if let Ok(provider_payload) = self.get_json(Endpoint::ProxyProviders).await {
-            if let Some(providers) = provider_payload
-                .get("providers")
-                .and_then(Value::as_object)
-            {
+            if let Some(providers) = provider_payload.get("providers").and_then(Value::as_object) {
                 for provider in providers.values() {
                     if let Some(items) = provider.get("proxies").and_then(Value::as_array) {
                         for proxy in items {

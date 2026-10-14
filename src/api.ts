@@ -38,6 +38,10 @@ export function setAccessToken(token: string | null): void {
   else sessionStorage.removeItem(TOKEN_KEY);
 }
 
+export function hasAccessToken(): boolean {
+  return sessionStorage.getItem(TOKEN_KEY) !== null;
+}
+
 export async function getStatus(signal?: AbortSignal): Promise<SystemStatus> {
   const token = sessionStorage.getItem(TOKEN_KEY);
   const response = await fetch('/api/v1/status', {

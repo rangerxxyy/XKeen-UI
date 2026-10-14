@@ -1,5 +1,5 @@
 import './style.css';
-import { ApiError, getHealth, getStatus, setAccessToken, type ApiState, type ServiceStatus } from './api';
+import { ApiError, getHealth, getStatus, hasAccessToken, setAccessToken, type ApiState, type ServiceStatus } from './api';
 import { mountYamlEditor, unmountYamlEditor } from './yaml-editor';
 
 type Page = 'overview' | 'selectors' | 'connections' | 'dns' | 'configuration' | 'logs';
@@ -174,9 +174,29 @@ function openAccessDialog(): void {
 function openSettings(): void {
   const modal = document.createElement('dialog');
   modal.className = 'modal';
-  modal.innerHTML = `<form method="dialog" class="modal-panel"><div class="modal-heading"><span class="modal-icon">⚙</span><h2>Настройки панели</h2><button class="icon-button" aria-label="Закрыть">×</button></div><div class="modal-tabs"><span class="selected">Общие</span><span>Режим UI</span><span>Ядра</span><span>Обновления</span></div><div class="setting-row"><div><strong>Порт панели</strong><small>Адрес локального Rust API и интерфейса</small></div><span class="setting-value">${state.status?.port ?? 1001}</span></div><div class="setting-row"><div><strong>Состояние backend</strong><small>${state.connected ? 'Соединение установлено' : 'Соединение отсутствует'}</small></div><span class="state-pill ${state.connected ? 'state-running' : 'state-unavailable'}">${state.connected ? 'На связи' : 'Ожидание'}</span></div><div class="modal-note">Параметры ядра и системные настройки будут доступны после подключения соответствующих модулей.</div><button class="button button-primary modal-close">Готово</button></form>`;
+  modal.innerHTML = `<form method="dialog" class="modal-panel"><div class="modal-heading"><span class="modal-icon">⚙</span><h2>Настройки панели</h2><button class="icon-button" aria-label="Закрыть">×</button></div><div class="modal-tabs" role="tablist" aria-label="Разделы настроек"><button class="settings-tab selected" id="settings-general" type="button" role="tab" aria-selected="true">Общие</button><button class="settings-tab" id="settings-security" type="button" role="tab" aria-selected="false">Безопасность</button></div><div id="settings-content" role="tabpanel"></div><button class="button button-primary modal-close">Готово</button></form>`;
   document.body.append(modal);
   modal.showModal();
+  const content = modal.querySelector<HTMLElement>('#settings-content');
+  const renderSettingsTab = (tab: 'general' | 'security') => {
+    modal.querySelectorAll<HTMLButtonElement>('.settings-tab').forEach((button) => {
+      const selected = button.id === `settings-${tab}`;
+      button.classList.toggle('selected', selected);
+      button.setAttribute('aria-selected', String(selected));
+    });
+    if (!content) return;
+    if (tab === 'general') {
+      content.innerHTML = `<div class="setting-row"><div><strong>Порт панели</strong><small>Адрес локального Rust API и интерфейса</small></div><span class="setting-value">${state.status?.port ?? 1001}</span></div><div class="setting-row"><div><strong>Backend</strong><small>${state.connected ? 'Соединение установлено' : 'Соединение отсутствует'}</small></div><span class="state-pill ${state.connected ? 'state-running' : 'state-unavailable'}">${state.connected ? 'На связи' : 'Ожидание'}</span></div><div class="setting-row"><div><strong>Режим</strong><small>Источник системных сведений</small></div><span class="setting-value">${state.status?.mode === 'router' ? 'Роутер' : 'Симуляция'}</span></div><div class="setting-row"><div><strong>Версия XKeen UI</strong><small>Сборка панели</small></div><span class="setting-value">${escapeHtml(state.status?.appVersion ?? '0.1.0')}</span></div>`;
+      return;
+    }
+    const tokenPresent = hasAccessToken();
+    content.innerHTML = `<div class="setting-row"><div><strong>Ключ API</strong><small>${tokenPresent ? 'Хранится только в sessionStorage этой вкладки' : 'Ключ этой вкладки не сохранён'}</small></div><span class="state-pill ${tokenPresent ? 'state-running' : 'state-unavailable'}">${tokenPresent ? 'Установлен' : 'Не задан'}</span></div><div class="security-actions"><button class="editor-button" id="replace-token">${tokenPresent ? 'Заменить ключ' : 'Добавить ключ'}</button>${tokenPresent ? '<button class="editor-button danger-button" id="forget-token">Забыть ключ</button>' : ''}</div><p class="modal-note">Секрет не отображается и не записывается в localStorage.${tokenPresent ? ' Удаление ключа отключит запросы к защищённому API.' : ''}</p>`;
+    modal.querySelector<HTMLButtonElement>('#replace-token')?.addEventListener('click', () => { modal.close(); openAccessDialog(); });
+    modal.querySelector<HTMLButtonElement>('#forget-token')?.addEventListener('click', () => { setAccessToken(null); modal.close(); void refresh(); });
+  };
+  modal.querySelector<HTMLButtonElement>('#settings-general')?.addEventListener('click', () => renderSettingsTab('general'));
+  modal.querySelector<HTMLButtonElement>('#settings-security')?.addEventListener('click', () => renderSettingsTab('security'));
+  renderSettingsTab('general');
   modal.addEventListener('close', () => modal.remove(), { once: true });
 }
 

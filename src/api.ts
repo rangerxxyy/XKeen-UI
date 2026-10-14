@@ -24,6 +24,40 @@ export interface ApiState {
   checkedAt: Date | null;
 }
 
+export interface MihomoProxyOption {
+  name: string;
+  type: string;
+  alive: boolean | null;
+  delay: number | null;
+}
+
+export interface MihomoSelector {
+  name: string;
+  current: string | null;
+  options: MihomoProxyOption[];
+}
+
+export interface MihomoConnections {
+  uploadTotal: number;
+  downloadTotal: number;
+  connections: MihomoConnection[];
+}
+
+export interface MihomoConnection {
+  id: string;
+  host: string;
+  destination: string;
+  source: string;
+  network: string;
+  process: string;
+  chains: string[];
+  rule: string;
+  rulePayload: string;
+  upload: number;
+  download: number;
+  start: string;
+}
+
 const TOKEN_KEY = 'xkeen-ui:session-token';
 
 export class ApiError extends Error {
@@ -49,6 +83,101 @@ export async function getStatus(signal?: AbortSignal): Promise<SystemStatus> {
     signal,
   });
   return parseSystemStatus(await readJson(response, 'Получение статуса'));
+}
+
+export async function getMihomoSelectors(signal?: AbortSignal): Promise<MihomoSelector[]> {
+  const payload = await getMihomoJson('/api/v1/mihomo/proxies', 'Получение селекторов', signal);
+  if (!isRecord(payload) || !isRecord(payload.proxies)) {
+    throw new Error('Mihomo вернул некорректный список прокси');
+  }
+  const proxies = payload.proxies;
+  return Object.entries(proxies).flatMap(([key, raw]): MihomoSelector[] => {
+    if (!isRecord(raw) || raw.type !== 'Selector' || !Array.isArray(raw.all)) return [];
+    const options = raw.all.flatMap((name): MihomoProxyOption[] => {
+      if (typeof name !== 'string') return [];
+      const option = proxies[name];
+      const history = isRecord(option) && Array.isArray(option.history) ? option.history : [];
+      const latest = history.at(-1);
+      const delay = isRecord(latest) && typeof latest.delay === 'number' && Number.isFinite(latest.delay)
+        ? latest.delay : null;
+      return [{
+        name,
+        type: isRecord(option) && typeof option.type === 'string' ? option.type : 'Unknown',
+        alive: isRecord(option) && typeof option.alive === 'boolean' ? option.alive : null,
+        delay,
+      }];
+    });
+    return [{ name: typeof raw.name === 'string' ? raw.name : key, current: typeof raw.now === 'string' ? raw.now : null, options }];
+  });
+}
+
+export async function getMihomoConnections(signal?: AbortSignal): Promise<MihomoConnections> {
+  const payload = await getMihomoJson('/api/v1/mihomo/connections', 'Получение соединений', signal);
+  if (!isRecord(payload) || !Array.isArray(payload.connections)) {
+    throw new Error('Mihomo вернул некорректный список соединений');
+  }
+  const connections = payload.connections.flatMap((raw): MihomoConnection[] => {
+    if (!isRecord(raw) || typeof raw.id !== 'string' || !isRecord(raw.metadata)) return [];
+    const metadata = raw.metadata;
+    const chains = Array.isArray(raw.chains) ? raw.chains.filter((item): item is string => typeof item === 'string') : [];
+    return [{
+      id: raw.id,
+      host: readString(metadata.host),
+      destination: joinAddress(metadata.destinationIP, metadata.destinationPort),
+      source: joinAddress(metadata.sourceIP, metadata.sourcePort),
+      network: readString(metadata.network),
+      process: readString(metadata.process),
+      chains,
+      rule: readString(raw.rule),
+      rulePayload: readString(raw.rulePayload),
+      upload: readCounter(raw.upload),
+      download: readCounter(raw.download),
+      start: readString(raw.start),
+    }];
+  });
+  return {
+    uploadTotal: readCounter(payload.uploadTotal),
+    downloadTotal: readCounter(payload.downloadTotal),
+    connections,
+  };
+}
+
+export async function selectMihomoProxy(group: string, name: string, signal?: AbortSignal): Promise<void> {
+  const token = sessionStorage.getItem(TOKEN_KEY);
+  const response = await fetch('/api/v1/mihomo/proxies/select', {
+    method: 'PUT',
+    headers: {
+      Accept: 'application/json',
+      'Content-Type': 'application/json',
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    },
+    body: JSON.stringify({ group, name }),
+    signal,
+  });
+  await readJson(response, 'Переключение селектора');
+}
+
+function readString(value: unknown): string {
+  return typeof value === 'string' ? value : '';
+}
+
+function readCounter(value: unknown): number {
+  return typeof value === 'number' && Number.isFinite(value) && value >= 0 ? value : 0;
+}
+
+function joinAddress(host: unknown, port: unknown): string {
+  const address = readString(host);
+  const number = typeof port === 'number' || typeof port === 'string' ? String(port) : '';
+  return address && number ? `${address}:${number}` : address || number;
+}
+
+async function getMihomoJson(path: string, operation: string, signal?: AbortSignal): Promise<unknown> {
+  const token = sessionStorage.getItem(TOKEN_KEY);
+  const response = await fetch(path, {
+    headers: { Accept: 'application/json', ...(token ? { Authorization: `Bearer ${token}` } : {}) },
+    signal,
+  });
+  return readJson(response, operation);
 }
 
 export async function getHealth(signal?: AbortSignal): Promise<{ status: string }> {

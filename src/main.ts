@@ -1,5 +1,6 @@
 import './style.css';
-import { ApiError, getHealth, getStatus, hasAccessToken, setAccessToken, type ApiState, type ServiceStatus } from './api';
+import { ApiError, getHealth, getMihomoConnections, getMihomoSelectors, getStatus, hasAccessToken, selectMihomoProxy, setAccessToken, type ApiState, type MihomoConnections, type MihomoSelector, type ServiceStatus } from './api';
+import { renderConnections, renderSelectors } from './mihomo-view';
 import { mountYamlEditor, unmountYamlEditor } from './yaml-editor';
 
 type Page = 'overview' | 'selectors' | 'connections' | 'dns' | 'configuration' | 'logs';
@@ -17,7 +18,14 @@ const state: ApiState = { connected: false, status: null, error: null, checkedAt
 let activePage: Page = 'overview';
 let refreshTimer: number | undefined;
 let requestController: AbortController | undefined;
+let mihomoController: AbortController | undefined;
 let authRequired = false;
+let selectors: MihomoSelector[] = [];
+let selectorsLoading = true;
+let selectorsError: string | null = null;
+let connections: MihomoConnections | null = null;
+let connectionsLoading = true;
+let connectionsError: string | null = null;
 
 const app = document.querySelector<HTMLDivElement>('#app');
 if (!app) throw new Error('Корневой элемент интерфейса #app не найден');
@@ -103,7 +111,7 @@ function renderComingSoon(page: Page): string {
     configuration: 'Редактор профилей появится после подключения YAML/JSON валидаторов и сценария резервного копирования.',
     logs: 'Журнал будет читать локальные источники и фильтровать записи без передачи секретов в интерфейс.',
   };
-  return `<section class="page-heading"><div><div class="eyebrow"><span class="eyebrow-line"></span> XKeen UI</div><h1>${current?.label ?? ''}</h1><p>${descriptions[page]}</p></div></section><section class="feature-placeholder"><div class="placeholder-symbol">${current?.icon ?? '◌'}</div><div class="placeholder-copy"><span class="status-label">ЭТАП 1 · КАРКАС ПАНЕЛИ</span><h2>Раздел спроектирован, интеграция ещё не включена</h2><p>${descriptions[page]}</p><p class="placeholder-note">В этой версии мы не показываем примерные данные и не выполняем операции, которые backend ещё не подтверждает.</p></div></section>`;
+  return `<section class="page-heading"><div><div class="eyebrow"><span class="eyebrow-line"></span> XKeen UI</div><h1>${current?.label ?? ''}</h1><p>${descriptions[page]}</p></div></section><section class="feature-placeholder"><div class="placeholder-symbol">${current?.icon ?? '◌'}</div><div class="placeholder-copy"><span class="status-label">ИНТЕГРАЦИЯ ЯДРА</span><h2>Для этого раздела ещё не подключён проверенный API</h2><p>${descriptions[page]}</p><p class="placeholder-note">Данные появятся после подключения подтверждённого системного источника.</p></div></section>`;
 }
 
 function renderConfiguration(): string {
@@ -124,17 +132,81 @@ function renderFooter(): string {
 function render(): void {
   if (!app) return;
   if (activePage !== 'configuration' || authRequired) unmountYamlEditor();
-  app.innerHTML = `<div class="app-shell">${renderHeader()}${renderNavigation()}<main class="main-content">${authRequired || activePage === 'overview' ? renderOverview() : renderComingSoon(activePage)}</main>${renderFooter()}<div class="toast-region" aria-live="polite"></div></div>`;
+  const pageContent = authRequired || activePage === 'overview' ? renderOverview()
+    : activePage === 'selectors' ? renderSelectors(selectors, selectorsLoading, selectorsError)
+      : activePage === 'connections' ? renderConnections(connections, connectionsLoading, connectionsError)
+        : renderComingSoon(activePage);
+  app.innerHTML = `<div class="app-shell">${renderHeader()}${renderNavigation()}<main class="main-content">${pageContent}</main>${renderFooter()}<div class="toast-region" aria-live="polite"></div></div>`;
   document.querySelectorAll<HTMLButtonElement>('[data-page]').forEach((button) => {
     button.addEventListener('click', () => {
       const page = button.dataset.page as Page | undefined;
-      if (page && pages.some((item) => item.id === page)) { activePage = page; render(); }
+      if (page && pages.some((item) => item.id === page)) { activePage = page; render(); void loadMihomoPage(page); }
     });
   });
   document.querySelectorAll<HTMLButtonElement>('#refresh,#refresh-secondary,#retry').forEach((button) => button.addEventListener('click', () => void refresh()));
   document.querySelector<HTMLButtonElement>('#settings')?.addEventListener('click', openSettings);
   document.querySelector<HTMLButtonElement>('#authenticate')?.addEventListener('click', openAccessDialog);
   if (activePage === 'configuration' && !authRequired) mountYamlEditor();
+  bindMihomoInteractions();
+}
+
+function bindMihomoInteractions(): void {
+  document.querySelector<HTMLButtonElement>('#mihomo-refresh,#mihomo-retry')?.addEventListener('click', () => void loadMihomoPage(activePage));
+  document.querySelectorAll<HTMLButtonElement>('.proxy-select').forEach((button) => {
+    button.addEventListener('click', () => void selectProxyFromUi(button));
+  });
+  document.querySelector<HTMLInputElement>('#connection-filter')?.addEventListener('input', (event) => {
+    const query = (event.currentTarget as HTMLInputElement).value.trim().toLocaleLowerCase();
+    let visible = 0;
+    document.querySelectorAll<HTMLTableRowElement>('.connection-table tbody tr').forEach((row) => {
+      const matches = row.dataset.search?.includes(query) ?? false;
+      row.hidden = !matches;
+      if (matches) visible += 1;
+    });
+    const noResults = document.querySelector<HTMLElement>('.connection-no-results.is-filtered');
+    if (noResults) noResults.hidden = query.length === 0 || visible > 0;
+  });
+}
+
+async function loadMihomoPage(page: Page): Promise<void> {
+  if (page !== 'selectors' && page !== 'connections') return;
+  mihomoController?.abort();
+  mihomoController = new AbortController();
+  const { signal } = mihomoController;
+  if (page === 'selectors') { selectorsLoading = true; selectorsError = null; }
+  else { connectionsLoading = true; connectionsError = null; }
+  if (activePage === page) render();
+  try {
+    if (page === 'selectors') selectors = await getMihomoSelectors(signal);
+    else connections = await getMihomoConnections(signal);
+  } catch (error) {
+    if (error instanceof DOMException && error.name === 'AbortError') return;
+    const message = error instanceof Error ? error.message : 'Неизвестная ошибка API Mihomo';
+    if (page === 'selectors') selectorsError = message;
+    else connectionsError = message;
+  } finally {
+    if (!signal.aborted) {
+      if (page === 'selectors') selectorsLoading = false;
+      else connectionsLoading = false;
+      if (activePage === page) render();
+    }
+  }
+}
+
+async function selectProxyFromUi(button: HTMLButtonElement): Promise<void> {
+  const group = button.dataset.proxyGroup;
+  const name = button.dataset.proxyName;
+  if (!group || !name || !window.confirm(`Переключить группу «${group}» на узел «${name}»? Новые соединения группы пойдут через выбранный узел.`)) return;
+  button.disabled = true;
+  button.textContent = 'Переключаем…';
+  try {
+    await selectMihomoProxy(group, name, mihomoController?.signal);
+    await loadMihomoPage('selectors');
+  } catch (error) {
+    selectorsError = error instanceof Error ? error.message : 'Не удалось выбрать узел';
+    selectorsLoading = false;
+    render();
+  }
 }
 
 function updateChrome(): void {
@@ -219,6 +291,7 @@ async function refresh(): Promise<void> {
   }
   if (activePage === 'configuration' && !authRequired) updateChrome();
   else render();
+  if (activePage === 'selectors' || activePage === 'connections') void loadMihomoPage(activePage);
 }
 
 render();
@@ -226,5 +299,6 @@ void refresh();
 refreshTimer = window.setInterval(() => void refresh(), 15_000);
 window.addEventListener('beforeunload', () => {
   requestController?.abort();
+  mihomoController?.abort();
   if (refreshTimer !== undefined) window.clearInterval(refreshTimer);
 });

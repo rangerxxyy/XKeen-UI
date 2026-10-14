@@ -13,13 +13,16 @@ use axum::{
     routing::get,
     Router,
 };
-use serde::Serialize;
+use serde::{Deserialize, Serialize};
 use tokio::net::TcpListener;
 use tower_http::{
     services::{ServeDir, ServeFile},
     trace::TraceLayer,
 };
 use tracing::{info, warn};
+
+mod mihomo;
+use mihomo::{Endpoint as MihomoEndpoint, MihomoClient, MihomoError};
 
 #[derive(Clone)]
 struct AppState {
@@ -28,6 +31,7 @@ struct AppState {
     router_mode: bool,
     access_token: Option<String>,
     platform: String,
+    mihomo: MihomoClient,
 }
 
 #[derive(Serialize)]
@@ -62,6 +66,13 @@ struct SystemStatus {
 struct MemoryStatus {
     used_mb: u64,
     total_mb: u64,
+}
+
+#[derive(Deserialize)]
+#[serde(deny_unknown_fields)]
+struct ProxySelection {
+    group: String,
+    name: String,
 }
 
 async fn health() -> Json<Health> {
@@ -130,6 +141,94 @@ async fn status(State(state): State<AppState>) -> Json<SystemStatus> {
             "Изоляция активна: реальные системные службы, DNS, маршруты и настройки устройства не изменяются."
         },
     })
+}
+
+async fn mihomo_data(State(state): State<AppState>, endpoint: MihomoEndpoint) -> Response {
+    if !state.router_mode {
+        return (
+            StatusCode::SERVICE_UNAVAILABLE,
+            Json(serde_json::json!({"error":"Mihomo API недоступен в режиме симуляции"})),
+        )
+            .into_response();
+    }
+
+    match state.mihomo.get_json(endpoint).await {
+        Ok(payload) => Json(payload).into_response(),
+        Err(error) => mihomo_error_response(error),
+    }
+}
+
+async fn mihomo_version(State(state): State<AppState>) -> Response {
+    mihomo_data(State(state), MihomoEndpoint::Version).await
+}
+
+async fn mihomo_proxies(State(state): State<AppState>) -> Response {
+    mihomo_data(State(state), MihomoEndpoint::Proxies).await
+}
+
+async fn mihomo_connections(State(state): State<AppState>) -> Response {
+    mihomo_data(State(state), MihomoEndpoint::Connections).await
+}
+
+async fn mihomo_rules(State(state): State<AppState>) -> Response {
+    mihomo_data(State(state), MihomoEndpoint::Rules).await
+}
+
+async fn select_mihomo_proxy(
+    State(state): State<AppState>,
+    Json(selection): Json<ProxySelection>,
+) -> Response {
+    if !state.router_mode {
+        return (
+            StatusCode::SERVICE_UNAVAILABLE,
+            Json(serde_json::json!({"error":"Mihomo API недоступен в режиме симуляции"})),
+        )
+            .into_response();
+    }
+    match state
+        .mihomo
+        .select_proxy(&selection.group, &selection.name)
+        .await
+    {
+        Ok(()) => Json(serde_json::json!({"status":"selected"})).into_response(),
+        Err(error) => mihomo_error_response(error),
+    }
+}
+
+fn mihomo_error_response(error: MihomoError) -> Response {
+    let (status, message) = match error {
+        MihomoError::Request(_) => (StatusCode::BAD_GATEWAY, "Не удалось связаться с Mihomo API"),
+        MihomoError::Body(_) => (
+            StatusCode::BAD_GATEWAY,
+            "Не удалось прочитать ответ Mihomo API",
+        ),
+        MihomoError::Timeout => (StatusCode::GATEWAY_TIMEOUT, "Mihomo API не ответил вовремя"),
+        MihomoError::UpstreamStatus(401 | 403) => (
+            StatusCode::BAD_GATEWAY,
+            "Mihomo API отклонил доступ; проверьте локальную настройку секрета",
+        ),
+        MihomoError::UpstreamStatus(_) => (StatusCode::BAD_GATEWAY, "Mihomo API вернул ошибку"),
+        MihomoError::ResponseTooLarge => {
+            (StatusCode::BAD_GATEWAY, "Ответ Mihomo API слишком большой")
+        }
+        MihomoError::InvalidJson(_) => (
+            StatusCode::BAD_GATEWAY,
+            "Mihomo API вернул некорректный JSON",
+        ),
+        MihomoError::InvalidControllerUrl => (
+            StatusCode::SERVICE_UNAVAILABLE,
+            "Адрес локального Mihomo API настроен некорректно",
+        ),
+        MihomoError::InvalidSecret => (
+            StatusCode::SERVICE_UNAVAILABLE,
+            "Секрет локального Mihomo API имеет некорректный формат",
+        ),
+        MihomoError::InvalidSelection => (
+            StatusCode::BAD_REQUEST,
+            "Узел не входит в доступную группу Selector",
+        ),
+    };
+    (status, Json(serde_json::json!({"error":message}))).into_response()
 }
 
 fn read_memory_status() -> Option<MemoryStatus> {
@@ -265,11 +364,20 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         router_mode,
         access_token,
         platform: format!("{} / {}", std::env::consts::OS, std::env::consts::ARCH),
+        mihomo: MihomoClient::from_env().map_err(|_| "invalid XKEEN_MIHOMO_URL")?,
     };
     let web = web_root();
     let index = web.join("index.html");
     let protected_api = Router::new()
         .route("/api/v1/status", get(status))
+        .route("/api/v1/mihomo/version", get(mihomo_version))
+        .route("/api/v1/mihomo/proxies", get(mihomo_proxies))
+        .route("/api/v1/mihomo/connections", get(mihomo_connections))
+        .route("/api/v1/mihomo/rules", get(mihomo_rules))
+        .route(
+            "/api/v1/mihomo/proxies/select",
+            axum::routing::put(select_mihomo_proxy),
+        )
         .route_layer(middleware::from_fn_with_state(
             state.clone(),
             require_access_token,

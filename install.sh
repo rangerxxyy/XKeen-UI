@@ -74,7 +74,11 @@ WORK=$(mktemp -d "${TMPDIR:-/tmp}/xkeen-ui.XXXXXX") || fail 'не удалось
 trap 'rm -rf "$WORK"' 0
 trap 'exit 1' HUP INT TERM
 ARCHIVE="xkeen-ui-linux-$ARCH.tar.gz"
-BASE="https://github.com/$REPOSITORY/releases/latest/download"
+RELEASE_JSON=$(curl -fsSL --retry 2 --connect-timeout 15 --max-filesize 1048576 "https://api.github.com/repos/$REPOSITORY/releases/latest") || fail 'не удалось определить стабильный release'
+VERSION=$(printf '%s\n' "$RELEASE_JSON" | sed -n 's/^[[:space:]]*"tag_name":[[:space:]]*"\([A-Za-z0-9._-][A-Za-z0-9._-]*\)"[,]\{0,1\}$/\1/p' | sed -n '1p')
+[ -n "$VERSION" ] || fail 'GitHub не вернул tag стабильного release'
+case "$VERSION" in *[!A-Za-z0-9._-]*) fail 'GitHub вернул некорректный tag release' ;; esac
+BASE="https://github.com/$REPOSITORY/releases/download/$VERSION"
 curl -fsSL --retry 2 --connect-timeout 15 --max-filesize 52428800 "$BASE/$ARCHIVE" -o "$WORK/$ARCHIVE" || fail 'не удалось получить release'
 curl -fsSL --retry 2 --connect-timeout 15 "$BASE/SHA256SUMS" -o "$WORK/SHA256SUMS" || fail 'не удалось получить SHA256SUMS'
 EXPECTED=$(awk -v file="$ARCHIVE" '$2 == file || $2 == "*" file {print $1; exit}' "$WORK/SHA256SUMS")

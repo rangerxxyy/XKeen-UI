@@ -3,7 +3,7 @@
 set -eu
 REPOSITORY=${XKEEN_REPOSITORY:-rangerxxyy/XKeen-UI}
 PREFIX=${XKEEN_PREFIX:-/opt}
-if [ "$#" -eq 0 ] && [ -t 0 ]; then
+if [ "$#" -eq 0 ] && [ -r /dev/tty ]; then
   printf '\033[38;5;141m'
   cat <<'BANNER'
    _  __ _  __                       _   _ ___
@@ -20,7 +20,7 @@ BANNER
     printf '  Статус панели: не установлена\n'
   fi
   printf '\n  1. Установить / переустановить\n  2. Обновить\n  3. Удалить\n  0. Выход\n\n> '
-  IFS= read -r choice || exit 0
+  IFS= read -r choice < /dev/tty || exit 0
   case "$choice" in
     1) set -- install ;;
     2) set -- update ;;

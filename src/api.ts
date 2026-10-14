@@ -98,8 +98,6 @@ export interface MihomoDnsResult {
   answers: MihomoDnsRecord[];
 }
 
-const TOKEN_KEY = 'xkeen-ui:session-token';
-
 export class ApiError extends Error {
   constructor(message: string, readonly status: number) {
     super(message);
@@ -107,19 +105,9 @@ export class ApiError extends Error {
   }
 }
 
-export function setAccessToken(token: string | null): void {
-  if (token) sessionStorage.setItem(TOKEN_KEY, token);
-  else sessionStorage.removeItem(TOKEN_KEY);
-}
-
-export function hasAccessToken(): boolean {
-  return sessionStorage.getItem(TOKEN_KEY) !== null;
-}
-
 export async function getStatus(signal?: AbortSignal): Promise<SystemStatus> {
-  const token = sessionStorage.getItem(TOKEN_KEY);
   const response = await fetch('/api/v1/status', {
-    headers: { Accept: 'application/json', ...(token ? { Authorization: `Bearer ${token}` } : {}) },
+    headers: { Accept: 'application/json' },
     signal,
   });
   return parseSystemStatus(await readJson(response, 'Получение статуса'));
@@ -213,13 +201,11 @@ export async function queryMihomoDns(name: string, recordType: string, signal?: 
 }
 
 export async function selectMihomoProxy(group: string, name: string, signal?: AbortSignal): Promise<void> {
-  const token = sessionStorage.getItem(TOKEN_KEY);
   const response = await fetch('/api/v1/mihomo/proxies/select', {
     method: 'PUT',
     headers: {
       Accept: 'application/json',
       'Content-Type': 'application/json',
-      ...(token ? { Authorization: `Bearer ${token}` } : {}),
     },
     body: JSON.stringify({ group, name }),
     signal,
@@ -228,20 +214,18 @@ export async function selectMihomoProxy(group: string, name: string, signal?: Ab
 }
 
 export async function closeMihomoConnection(id: string, signal?: AbortSignal): Promise<void> {
-  const token = sessionStorage.getItem(TOKEN_KEY);
   const response = await fetch(`/api/v1/mihomo/connections/${encodeURIComponent(id)}`, {
     method: 'DELETE',
-    headers: { Accept: 'application/json', ...(token ? { Authorization: `Bearer ${token}` } : {}) },
+    headers: { Accept: 'application/json' },
     signal,
   });
   requireSuccess(response, 'Закрытие соединения');
 }
 
 export async function closeAllMihomoConnections(signal?: AbortSignal): Promise<void> {
-  const token = sessionStorage.getItem(TOKEN_KEY);
   const response = await fetch('/api/v1/mihomo/connections', {
     method: 'DELETE',
-    headers: { Accept: 'application/json', ...(token ? { Authorization: `Bearer ${token}` } : {}) },
+    headers: { Accept: 'application/json' },
     signal,
   });
   requireSuccess(response, 'Закрытие соединений');
@@ -262,9 +246,8 @@ function joinAddress(host: unknown, port: unknown): string {
 }
 
 async function getMihomoJson(path: string, operation: string, signal?: AbortSignal): Promise<unknown> {
-  const token = sessionStorage.getItem(TOKEN_KEY);
   const response = await fetch(path, {
-    headers: { Accept: 'application/json', ...(token ? { Authorization: `Bearer ${token}` } : {}) },
+    headers: { Accept: 'application/json' },
     signal,
   });
   return readJson(response, operation);
@@ -279,13 +262,11 @@ export async function getCoreSources(): Promise<CoreSources> {
 }
 
 export async function saveCoreSources(sources: CoreSources): Promise<CoreSources> {
-  const token = sessionStorage.getItem(TOKEN_KEY);
   const response = await fetch('/api/v1/settings/core-sources', {
     method: 'PUT',
     headers: {
       Accept: 'application/json',
       'Content-Type': 'application/json',
-      ...(token ? { Authorization: `Bearer ${token}` } : {}),
     },
     body: JSON.stringify(sources),
   });
@@ -302,13 +283,11 @@ export async function installCoreRelease(request: {
   asset: string;
   sha256: string;
 }): Promise<CoreInstallResult> {
-  const token = sessionStorage.getItem(TOKEN_KEY);
   const response = await fetch('/api/v1/cores/install', {
     method: 'POST',
     headers: {
       Accept: 'application/json',
       'Content-Type': 'application/json',
-      ...(token ? { Authorization: `Bearer ${token}` } : {}),
     },
     body: JSON.stringify(request),
   });
@@ -341,7 +320,7 @@ export async function getHealth(signal?: AbortSignal): Promise<{ status: string 
 }
 
 export async function getXkeenStatus(signal?: AbortSignal): Promise<XkeenStatus> {
-  const payload = await getAuthenticatedJson('/api/v1/xkeen', 'Получение статуса XKeen', signal);
+  const payload = await getJson('/api/v1/xkeen', 'Получение статуса XKeen', signal);
   if (!isRecord(payload) || typeof payload.installed !== 'boolean' ||
       (payload.running !== null && typeof payload.running !== 'boolean') ||
       (payload.version !== null && typeof payload.version !== 'string') ||
@@ -360,13 +339,11 @@ export async function getXkeenStatus(signal?: AbortSignal): Promise<XkeenStatus>
 }
 
 export async function controlXkeen(action: 'start' | 'stop' | 'restart', signal?: AbortSignal): Promise<XkeenStatus> {
-  const token = sessionStorage.getItem(TOKEN_KEY);
   const response = await fetch('/api/v1/xkeen/control', {
     method: 'POST',
     headers: {
       Accept: 'application/json',
       'Content-Type': 'application/json',
-      ...(token ? { Authorization: `Bearer ${token}` } : {}),
     },
     body: JSON.stringify({ action }),
     signal,
@@ -378,10 +355,9 @@ export async function controlXkeen(action: 'start' | 'stop' | 'restart', signal?
   return payload as unknown as XkeenStatus;
 }
 
-async function getAuthenticatedJson(path: string, operation: string, signal?: AbortSignal): Promise<unknown> {
-  const token = sessionStorage.getItem(TOKEN_KEY);
+async function getJson(path: string, operation: string, signal?: AbortSignal): Promise<unknown> {
   const response = await fetch(path, {
-    headers: { Accept: 'application/json', ...(token ? { Authorization: `Bearer ${token}` } : {}) },
+    headers: { Accept: 'application/json' },
     signal,
   });
   return readJson(response, operation);

@@ -66,10 +66,9 @@ jobs:
             rm -rf "$ROOT"
           }
           trap cleanup EXIT
-          XKEEN_MIHOMO_URL=http://127.0.0.1:9090 XKEEN_MIHOMO_SECRET=ci-test-secret \
+          XKEEN_BIND=127.0.0.1 XKEEN_MIHOMO_URL=http://127.0.0.1:9090 XKEEN_MIHOMO_SECRET=ci-test-secret \
             "$PACKAGE/xkeen-ui" install --prefix "$PREFIX" --package-dir "$PACKAGE" --port "$PORT"
           CONFIG="$PREFIX/etc/xkeen-ui.env"
-          TOKEN=$(sed -n 's/^XKEEN_TOKEN=//p' "$CONFIG")
           test "$(stat -c '%a' "$CONFIG")" = 600
           grep -qx 'XKEEN_MIHOMO_URL=http://127.0.0.1:9090' "$CONFIG"
           grep -qx 'XKEEN_MIHOMO_SECRET=ci-test-secret' "$CONFIG"
@@ -79,8 +78,9 @@ jobs:
           test -n "$JS_ASSET" && test -n "$CSS_ASSET"
           curl --fail --silent "http://127.0.0.1:$PORT/assets/$JS_ASSET" >/dev/null
           curl --fail --silent "http://127.0.0.1:$PORT/assets/$CSS_ASSET" >/dev/null
-          test "$(curl --silent --output /dev/null --write-out '%{http_code}' "http://127.0.0.1:$PORT/api/v1/status")" = 401
-          curl --fail --silent --header "Authorization: Bearer $TOKEN" "http://127.0.0.1:$PORT/api/v1/status" | grep -q '"mode":"router"'
+          ! grep -q '^XKEEN_TOKEN=' "$CONFIG"
+          grep -qx 'XKEEN_BIND=127.0.0.1' "$CONFIG"
+          curl --fail --silent "http://127.0.0.1:$PORT/api/v1/status" | grep -q '"mode":"router"'
           test "$(curl --silent --output "$ROOT/missing-api.json" --write-out '%{http_code}' "http://127.0.0.1:$PORT/api/v1/does-not-exist")" = 404
           grep -q '"error":"API endpoint not found"' "$ROOT/missing-api.json"
           "$PACKAGE/xkeen-ui" update --prefix "$PREFIX" --package-dir "$PACKAGE"

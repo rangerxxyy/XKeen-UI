@@ -34,7 +34,6 @@ struct AppState {
     started: Instant,
     port: u16,
     router_mode: bool,
-    access_token: Option<String>,
     platform: String,
     mihomo: MihomoClient,
     core_sources: Arc<RwLock<CoreSources>>,
@@ -601,41 +600,6 @@ fn parse_load_average(contents: &str) -> Option<f32> {
         .filter(|value| value.is_finite() && *value >= 0.0)
 }
 
-async fn require_access_token(
-    State(state): State<AppState>,
-    request: Request<axum::body::Body>,
-    next: Next,
-) -> Response {
-    let Some(expected) = state.access_token.as_deref() else {
-        return next.run(request).await;
-    };
-    let supplied = request
-        .headers()
-        .get(header::AUTHORIZATION)
-        .and_then(|value| value.to_str().ok())
-        .and_then(|value| value.strip_prefix("Bearer "));
-    if supplied.is_some_and(|value| constant_time_equals(value.as_bytes(), expected.as_bytes())) {
-        next.run(request).await
-    } else {
-        (
-            StatusCode::UNAUTHORIZED,
-            Json(serde_json::json!({"error":"access token required"})),
-        )
-            .into_response()
-    }
-}
-
-fn constant_time_equals(left: &[u8], right: &[u8]) -> bool {
-    let mut difference = left.len() ^ right.len();
-    for index in 0..left.len().max(right.len()) {
-        difference |= usize::from(
-            left.get(index).copied().unwrap_or_default()
-                ^ right.get(index).copied().unwrap_or_default(),
-        );
-    }
-    difference == 0
-}
-
 fn process_is_running(service: &str) -> Option<bool> {
     let proc_dir = std::fs::read_dir("/proc").ok()?;
     for entry in proc_dir.flatten() {
@@ -695,14 +659,6 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             "XKEEN_MODE=router is supported only on Linux; use simulation mode locally".into(),
         );
     }
-    let access_token = env::var("XKEEN_TOKEN")
-        .ok()
-        .filter(|token| !token.trim().is_empty());
-    if router_mode && access_token.is_none() {
-        return Err(
-            "XKEEN_TOKEN is required in router mode; do not expose an unauthenticated panel".into(),
-        );
-    }
 
     let core_sources_path = router_mode.then(|| {
         env::var_os("XKEEN_CORE_SOURCES_PATH")
@@ -715,7 +671,6 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         started: Instant::now(),
         port,
         router_mode,
-        access_token,
         platform: format!("{} / {}", std::env::consts::OS, std::env::consts::ARCH),
         mihomo: MihomoClient::from_env().map_err(|_| "invalid XKEEN_MIHOMO_URL")?,
         core_sources: Arc::new(RwLock::new(core_sources)),
@@ -739,11 +694,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             get(mihomo_proxy_providers),
         )
         .route("/api/v1/mihomo/providers/rules", get(mihomo_rule_providers))
-        .route("/api/v1/mihomo/dns/query", get(mihomo_dns_query))
-        .route_layer(middleware::from_fn_with_state(
-            state.clone(),
-            require_access_token,
-        ));
+        .route("/api/v1/mihomo/dns/query", get(mihomo_dns_query));
     let mutation_api = Router::new()
         .route("/api/v1/xkeen/control", axum::routing::post(control_xkeen))
         .route("/api/v1/cores/install", axum::routing::post(install_core))
@@ -763,11 +714,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             "/api/v1/mihomo/proxies/select",
             axum::routing::put(select_mihomo_proxy),
         )
-        .route_layer(middleware::from_fn(require_same_origin))
-        .route_layer(middleware::from_fn_with_state(
-            state.clone(),
-            require_access_token,
-        ));
+        .route_layer(middleware::from_fn(require_same_origin));
     let app = Router::new()
         .route("/health", get(health))
         .route("/api/{*path}", any(api_not_found))
@@ -778,7 +725,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         .layer(TraceLayer::new_for_http());
 
     let bind_ip = env::var("XKEEN_BIND")
-        .unwrap_or_else(|_| "0.0.0.0".to_owned())
+        .unwrap_or_else(|_| "127.0.0.1".to_owned())
         .parse::<IpAddr>()?;
     let address = SocketAddr::new(bind_ip, port);
     let listener = TcpListener::bind(address).await.map_err(|error| {
@@ -795,8 +742,8 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 #[cfg(test)]
 mod tests {
     use super::{
-        constant_time_equals, load_core_sources, normalize_github_repo, parse_load_average,
-        same_origin, save_core_sources, CoreSources,
+        load_core_sources, normalize_github_repo, parse_load_average, same_origin,
+        save_core_sources, CoreSources,
     };
     use axum::http::{header, HeaderMap, HeaderValue};
 
@@ -806,14 +753,6 @@ mod tests {
         assert_eq!(parse_load_average("not-a-number 0 0"), None);
         assert_eq!(parse_load_average("NaN 0 0"), None);
         assert_eq!(parse_load_average(""), None);
-    }
-
-    #[test]
-    fn bearer_token_comparison_accepts_only_exact_bytes() {
-        assert!(constant_time_equals(b"abc123", b"abc123"));
-        assert!(!constant_time_equals(b"abc123", b"abc124"));
-        assert!(!constant_time_equals(b"abc", b"abc123"));
-        assert!(!constant_time_equals(b"", b"abc"));
     }
 
     #[test]

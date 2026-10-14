@@ -2,8 +2,8 @@ use std::{
     env,
     error::Error,
     fs::{self, OpenOptions},
-    io::{self, Read, Write},
-    net::TcpListener,
+    io::{self, Write},
+    net::{Ipv4Addr, TcpListener},
     path::{Path, PathBuf},
     process::{Command, Stdio},
     thread,
@@ -138,6 +138,7 @@ fn install_or_update(options: &InstallOptions) -> Result<(), Box<dyn Error>> {
     fs::create_dir_all(&paths.etc)?;
     let previous_config = read_optional(&paths.config)?;
     let saved = Config::parse(previous_config.as_deref())?;
+    let bind_ip = resolve_bind_ip()?;
     validate_owned_paths(&paths)?;
     let was_installed = paths.app.exists();
     if was_installed {
@@ -154,7 +155,7 @@ fn install_or_update(options: &InstallOptions) -> Result<(), Box<dyn Error>> {
     };
     let config = Config {
         port,
-        token: saved.token,
+        bind_ip: Some(bind_ip),
         mihomo_url: env::var("XKEEN_MIHOMO_URL").ok().or(saved.mihomo_url),
         mihomo_secret: env::var("XKEEN_MIHOMO_SECRET").ok().or(saved.mihomo_secret),
     };
@@ -225,12 +226,38 @@ fn install_or_update(options: &InstallOptions) -> Result<(), Box<dyn Error>> {
         return Err(error);
     }
 
-    println!("XKeen UI установлен и запущен на порту {port}.");
+    let bind_ip = config.bind_ip.expect("installer always resolves a LAN address");
+    println!("\x1b[38;5;51mПанель XKeen UI успешно установлена ✔️\x1b[0m");
+    println!("\x1b[38;5;51mАдрес панели: http://{bind_ip}:{port}\x1b[0m");
     if let Some(backup) = backup {
         println!("Предыдущая версия сохранена: {}", backup.display());
     }
-    println!("Ключ доступа (сохраните его): {}", config.token);
     Ok(())
+}
+
+fn resolve_bind_ip() -> Result<Ipv4Addr, Box<dyn Error>> {
+    if let Ok(value) = env::var("XKEEN_BIND") {
+        return value.parse::<Ipv4Addr>().map_err(|_| "XKEEN_BIND must be a valid IPv4 address".into());
+    }
+    for executable in ["/opt/sbin/ip", "/opt/bin/ip", "/sbin/ip", "/usr/sbin/ip", "/bin/ip"] {
+        let output = match Command::new(executable).args(["-4", "-o", "addr", "show", "dev", "br0"]).output() {
+            Ok(output) => output,
+            Err(error) if error.kind() == io::ErrorKind::NotFound => continue,
+            Err(error) => return Err(error.into()),
+        };
+        if !output.status.success() { continue; }
+        for line in String::from_utf8_lossy(&output.stdout).lines() {
+            let mut fields = line.split_whitespace();
+            while let Some(field) = fields.next() {
+                if field == "inet" {
+                    if let Some(address) = fields.next().and_then(|value| value.split('/').next()) {
+                        if let Ok(ip) = address.parse::<Ipv4Addr>() { return Ok(ip); }
+                    }
+                }
+            }
+        }
+    }
+    Err("could not detect the br0 IPv4 address; set XKEEN_BIND explicitly".into())
 }
 
 fn choose_port(requested: Option<u16>) -> io::Result<u16> {
@@ -340,10 +367,14 @@ fn service_start(prefix: &Path) -> Result<(), Box<dyn Error>> {
         fs::create_dir_all(parent)?;
     }
     let mut command = Command::new(paths.app.join("xkeen-ui"));
+    let bind_ip = match config.bind_ip {
+        Some(address) => address,
+        None => resolve_bind_ip()?,
+    };
     command
         .env_clear()
         .env("XKEEN_PORT", config.port.to_string())
-        .env("XKEEN_TOKEN", &config.token)
+        .env("XKEEN_BIND", bind_ip.to_string())
         .env("XKEEN_MODE", "router")
         .env("XKEEN_WEB_ROOT", paths.app.join("web"))
         .env(
@@ -456,19 +487,6 @@ fn read_pid(path: &Path) -> io::Result<Option<u32>> {
     }
 }
 
-fn random_token() -> io::Result<String> {
-    let mut bytes = [0_u8; 32];
-    fs::File::open("/dev/urandom")?.read_exact(&mut bytes)?;
-    let token = bytes
-        .iter()
-        .map(|byte| format!("{byte:02x}"))
-        .collect::<String>();
-    if token.len() != 64 {
-        return Err(io::Error::other("could not create access token"));
-    }
-    Ok(token)
-}
-
 fn read_optional(path: &Path) -> io::Result<Option<Vec<u8>>> {
     match fs::read(path) {
         Ok(contents) => Ok(Some(contents)),
@@ -486,7 +504,8 @@ fn restore_file(path: &Path, contents: Option<&[u8]>) -> io::Result<()> {
 }
 
 fn write_config(path: &Path, config: &Config) -> io::Result<()> {
-    let mut contents = format!("XKEEN_PORT={}\nXKEEN_TOKEN={}\n", config.port, config.token);
+    let mut contents = format!("XKEEN_PORT={}\n", config.port);
+    if let Some(bind_ip) = config.bind_ip { contents.push_str(&format!("XKEEN_BIND={bind_ip}\n")); }
     if let Some(url) = config
         .mihomo_url
         .as_deref()
@@ -541,7 +560,7 @@ fn write_atomic(path: &Path, contents: &[u8], mode: u32) -> io::Result<()> {
 #[derive(Debug, PartialEq, Eq)]
 struct Config {
     port: u16,
-    token: String,
+    bind_ip: Option<Ipv4Addr>,
     mihomo_url: Option<String>,
     mihomo_secret: Option<String>,
 }
@@ -549,7 +568,7 @@ struct Config {
 impl Config {
     fn parse(bytes: Option<&[u8]>) -> Result<Self, Box<dyn Error>> {
         let mut port = None;
-        let mut token = None;
+        let mut bind_ip = None;
         let mut mihomo_url = None;
         let mut mihomo_secret = None;
         if let Some(bytes) = bytes {
@@ -562,10 +581,8 @@ impl Config {
                     }
                     port = Some(parsed);
                 }
-                if let Some(value) = line.strip_prefix("XKEEN_TOKEN=") {
-                    if valid_token(value) {
-                        token = Some(value.to_owned());
-                    }
+                if let Some(value) = line.strip_prefix("XKEEN_BIND=") {
+                    bind_ip = value.parse::<Ipv4Addr>().ok();
                 }
                 if let Some(value) = line.strip_prefix("XKEEN_MIHOMO_URL=") {
                     if valid_env_value(value) {
@@ -581,18 +598,11 @@ impl Config {
         }
         Ok(Self {
             port: port.unwrap_or(DEFAULT_PORT),
-            token: match token {
-                Some(token) => token,
-                None => random_token()?,
-            },
+            bind_ip,
             mihomo_url,
             mihomo_secret,
         })
     }
-}
-
-fn valid_token(value: &str) -> bool {
-    value.len() == 64 && value.bytes().all(|byte| byte.is_ascii_hexdigit())
 }
 
 struct Paths {
@@ -698,13 +708,13 @@ mod tests {
     }
 
     #[test]
-    fn update_preserves_saved_port_and_only_accepts_a_strong_hex_token() {
+    fn configuration_reads_port_and_ignores_legacy_access_tokens() {
         let saved = Config::parse(Some(
             b"XKEEN_PORT=1234\nXKEEN_TOKEN=0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef\n",
         ))
         .unwrap();
         assert_eq!(saved.port, 1234);
-        assert_eq!(saved.token.len(), 64);
+        assert_eq!(saved.bind_ip, None);
         assert_eq!(saved.mihomo_url, None);
         assert_eq!(Config::parse(None).unwrap().port, 1001);
     }

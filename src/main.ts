@@ -1,7 +1,7 @@
 import '@fontsource-variable/inter';
 import '@fontsource-variable/jetbrains-mono';
 import './style.css';
-import { ApiError, closeAllMihomoConnections, closeMihomoConnection, controlXkeen, getCoreSources, getHealth, getMihomoConnections, getMihomoSelectors, getMihomoVersion, getStatus, getSystemLog, getXkeenStatus, hasAccessToken, queryMihomoDns, saveCoreSources, selectMihomoProxy, setAccessToken, type ApiState, type CoreSources, type MihomoConnections, type MihomoDnsResult, type MihomoSelector, type ServiceStatus, type SystemLog, type XkeenStatus } from './api';
+import { closeAllMihomoConnections, closeMihomoConnection, controlXkeen, getCoreSources, getHealth, getMihomoConnections, getMihomoSelectors, getMihomoVersion, getStatus, getSystemLog, getXkeenStatus, queryMihomoDns, saveCoreSources, selectMihomoProxy, type ApiState, type CoreSources, type MihomoConnections, type MihomoDnsResult, type MihomoSelector, type ServiceStatus, type SystemLog, type XkeenStatus } from './api';
 import { renderConnections, renderSelectors } from './mihomo-view';
 import { renderDns } from './dns-view';
 import { bindCoreReleaseChecks } from './core-releases';
@@ -24,7 +24,6 @@ let activePage: Page = 'selectors';
 let refreshTimer: number | undefined;
 let requestController: AbortController | undefined;
 let mihomoController: AbortController | undefined;
-let authRequired = false;
 let selectors: MihomoSelector[] = [];
 let selectorsLoading = true;
 let selectorsError: string | null = null;
@@ -276,15 +275,11 @@ function renderServicesDialog(): void {
   dialog.querySelectorAll<HTMLButtonElement>('[data-xkeen-action]').forEach((button) => button.addEventListener('click', () => void runXkeenAction(button.dataset.xkeenAction)));
 }
 
-function renderAccessRequired(): string {
-  return `<section class="page-heading"><div><div class="eyebrow"><span class="eyebrow-line"></span> ДОСТУП К ПАНЕЛИ</div><h1>Требуется ключ доступа</h1><p>Введите ключ, выданный установщиком XKeen UI.</p></div></section><div class="alert alert-error"><span class="alert-icon">!</span><div><strong>Backend отклонил запрос</strong><p>${escapeHtml(state.error ?? 'Для продолжения нужна авторизация.')}</p></div><button class="text-button" id="authenticate">Ввести ключ</button></div>`;
-}
-
 async function mountConfigurationEditor(): Promise<void> {
   try {
     yamlEditorLoad ??= import('./yaml-editor');
     yamlEditorModule = await yamlEditorLoad;
-    if (activePage === 'configuration' && !authRequired) yamlEditorModule.mountYamlEditor();
+    if (activePage === 'configuration') yamlEditorModule.mountYamlEditor();
   } catch (error) {
     yamlEditorLoad = null;
     const status = document.querySelector<HTMLElement>('#yaml-validation');
@@ -294,9 +289,8 @@ async function mountConfigurationEditor(): Promise<void> {
 
 function render(): void {
   if (!app) return;
-  if (activePage !== 'configuration' || authRequired) yamlEditorModule?.unmountYamlEditor();
-  const pageContent = authRequired ? renderAccessRequired()
-    : activePage === 'selectors' ? renderSelectors(selectors, selectorsLoading, selectorsError)
+  if (activePage !== 'configuration') yamlEditorModule?.unmountYamlEditor();
+  const pageContent = activePage === 'selectors' ? renderSelectors(selectors, selectorsLoading, selectorsError)
       : activePage === 'connections' ? renderConnections(connections, connectionsLoading, connectionsError)
         : activePage === 'dns' ? renderDns(dnsResult, dnsLoading, dnsError, dnsQueryName, dnsQueryType, dnsPanel)
         : renderComingSoon(activePage);
@@ -319,7 +313,6 @@ function render(): void {
   document.querySelectorAll<HTMLButtonElement>('#refresh,#refresh-secondary,#retry').forEach((button) => button.addEventListener('click', () => void refresh()));
   document.querySelector<HTMLButtonElement>('#settings')?.addEventListener('click', openSettings);
   document.querySelector<HTMLButtonElement>('#services')?.addEventListener('click', renderServicesDialog);
-  document.querySelector<HTMLButtonElement>('#authenticate')?.addEventListener('click', openAccessDialog);
   document.querySelector<HTMLButtonElement>('#check-app-update')?.addEventListener('click', () => void runAppUpdateCheck(true));
   document.querySelectorAll<HTMLButtonElement>('[data-xkeen-action]').forEach((button) => {
     button.addEventListener('click', () => void runXkeenAction(button.dataset.xkeenAction));
@@ -339,7 +332,7 @@ function render(): void {
       render();
     }
   }));
-  if (activePage === 'configuration' && !authRequired) void mountConfigurationEditor();
+  if (activePage === 'configuration') void mountConfigurationEditor();
   bindMihomoInteractions();
 }
 
@@ -536,31 +529,14 @@ function updateChrome(): void {
   document.querySelector<HTMLButtonElement>('#services')?.addEventListener('click', renderServicesDialog);
 }
 
-function openAccessDialog(): void {
-  const dialog = document.createElement('dialog');
-  dialog.className = 'modal';
-  dialog.innerHTML = `<form method="dialog" class="modal-panel" id="access-form"><div class="modal-heading"><span class="modal-icon">◇</span><h2>Вход в XKeen UI</h2><button class="icon-button" value="cancel" aria-label="Закрыть">×</button></div><p class="access-copy">Ключ хранится только до закрытия вкладки и используется для запросов к локальной панели.</p><label class="access-label" for="access-token">Ключ доступа</label><input class="access-input" id="access-token" type="password" autocomplete="current-password" required autofocus><button class="button button-primary modal-close" value="default">Подключиться</button></form>`;
-  document.body.append(dialog);
-  dialog.showModal();
-  dialog.querySelector<HTMLFormElement>('#access-form')?.addEventListener('submit', (event) => {
-    event.preventDefault();
-    const token = dialog.querySelector<HTMLInputElement>('#access-token')?.value.trim();
-    if (!token) return;
-    setAccessToken(token);
-    dialog.close();
-    void refresh();
-  });
-  dialog.addEventListener('close', () => dialog.remove(), { once: true });
-}
-
 function openSettings(): void {
   const modal = document.createElement('dialog');
   modal.className = 'modal';
-  modal.innerHTML = `<form method="dialog" class="modal-panel"><div class="modal-heading"><span class="modal-icon">⚙</span><h2>Настройки панели</h2><button class="icon-button" aria-label="Закрыть">×</button></div><div class="modal-tabs" role="tablist" aria-label="Разделы настроек"><button class="settings-tab selected" id="settings-general" type="button" role="tab" aria-selected="true">Общие</button><button class="settings-tab" id="settings-sources" type="button" role="tab" aria-selected="false">Источники ядер</button><button class="settings-tab" id="settings-security" type="button" role="tab" aria-selected="false">Безопасность</button></div><div id="settings-content" role="tabpanel"></div><button class="button button-primary modal-close">Готово</button></form>`;
+  modal.innerHTML = `<form method="dialog" class="modal-panel"><div class="modal-heading"><span class="modal-icon">⚙</span><h2>Настройки панели</h2><button class="icon-button" aria-label="Закрыть">×</button></div><div class="modal-tabs" role="tablist" aria-label="Разделы настроек"><button class="settings-tab selected" id="settings-general" type="button" role="tab" aria-selected="true">Общие</button><button class="settings-tab" id="settings-sources" type="button" role="tab" aria-selected="false">Источники ядер</button></div><div id="settings-content" role="tabpanel"></div><button class="button button-primary modal-close">Готово</button></form>`;
   document.body.append(modal);
   modal.showModal();
   const content = modal.querySelector<HTMLElement>('#settings-content');
-  const renderSettingsTab = (tab: 'general' | 'security' | 'sources') => {
+  const renderSettingsTab = (tab: 'general' | 'sources') => {
     modal.querySelectorAll<HTMLButtonElement>('.settings-tab').forEach((button) => {
       const selected = button.id === `settings-${tab}`;
       button.classList.toggle('selected', selected);
@@ -610,14 +586,10 @@ function openSettings(): void {
       });
       return;
     }
-    const tokenPresent = hasAccessToken();
-    content.innerHTML = `<div class="setting-row"><div><strong>Ключ API</strong><small>${tokenPresent ? 'Хранится только в sessionStorage этой вкладки' : 'Ключ этой вкладки не сохранён'}</small></div><span class="state-pill ${tokenPresent ? 'state-running' : 'state-unavailable'}">${tokenPresent ? 'Установлен' : 'Не задан'}</span></div><div class="security-actions"><button class="editor-button" id="replace-token">${tokenPresent ? 'Заменить ключ' : 'Добавить ключ'}</button>${tokenPresent ? '<button class="editor-button danger-button" id="forget-token">Забыть ключ</button>' : ''}</div><p class="modal-note">Секрет не отображается и не записывается в localStorage.${tokenPresent ? ' Удаление ключа отключит запросы к защищённому API.' : ''}</p>`;
-    modal.querySelector<HTMLButtonElement>('#replace-token')?.addEventListener('click', () => { modal.close(); openAccessDialog(); });
-    modal.querySelector<HTMLButtonElement>('#forget-token')?.addEventListener('click', () => { setAccessToken(null); modal.close(); void refresh(); });
+
   };
   modal.querySelector<HTMLButtonElement>('#settings-general')?.addEventListener('click', () => renderSettingsTab('general'));
   modal.querySelector<HTMLButtonElement>('#settings-sources')?.addEventListener('click', () => renderSettingsTab('sources'));
-  modal.querySelector<HTMLButtonElement>('#settings-security')?.addEventListener('click', () => renderSettingsTab('security'));
   renderSettingsTab('general');
   modal.addEventListener('close', () => modal.remove(), { once: true });
 }
@@ -631,16 +603,14 @@ async function refresh(): Promise<void> {
     xkeenStatus = state.status.mode === 'router' ? await getXkeenStatus(requestController.signal).catch(() => null) : null;
     state.connected = true;
     state.error = null;
-    authRequired = false;
     state.checkedAt = new Date();
   } catch (error) {
     if (error instanceof DOMException && error.name === 'AbortError') return;
     state.connected = false;
     state.status = null;
-    authRequired = error instanceof ApiError && error.status === 401;
-    state.error = authRequired ? 'Сервер отклонил ключ доступа' : error instanceof Error ? error.message : 'Неизвестная ошибка';
+    state.error = error instanceof Error ? error.message : 'Неизвестная ошибка';
   }
-  if (activePage === 'configuration' && !authRequired) updateChrome();
+  if (activePage === 'configuration') updateChrome();
   else render();
   if (activePage === 'selectors' || activePage === 'connections') void loadMihomoPage(activePage);
   void runAppUpdateCheck();

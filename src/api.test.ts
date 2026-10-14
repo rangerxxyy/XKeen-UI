@@ -5,7 +5,6 @@ afterEach(() => vi.unstubAllGlobals());
 
 describe('getSystemLog', () => {
   it('requests one fixed log id and validates a bounded response shape', async () => {
-    vi.stubGlobal('sessionStorage', { getItem: () => 'session-secret' });
     const fetchMock = vi.fn(async () => new Response(JSON.stringify({
       file: 'Xray · error.log',
       lines: ['2026-10-14 ERROR failed to start'],
@@ -19,13 +18,12 @@ describe('getSystemLog', () => {
       truncated: true,
     });
     expect(fetchMock).toHaveBeenCalledWith('/api/v1/logs?file=xray-error', {
-      headers: { Accept: 'application/json', Authorization: 'Bearer session-secret' },
+      headers: { Accept: 'application/json' },
       signal: undefined,
     });
   });
 
   it('rejects a response containing non-text log records', async () => {
-    vi.stubGlobal('sessionStorage', { getItem: () => null });
     vi.stubGlobal('fetch', async () => new Response(JSON.stringify({
       file: 'Xray · error.log', lines: ['safe', { html: '<script>' }], truncated: false,
     }), { headers: { 'Content-Type': 'application/json' } }));

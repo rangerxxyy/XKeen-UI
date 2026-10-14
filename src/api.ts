@@ -136,11 +136,26 @@ export async function getStatus(signal?: AbortSignal): Promise<SystemStatus> {
 }
 
 export async function getMihomoSelectors(signal?: AbortSignal): Promise<MihomoSelector[]> {
-  const payload = await getMihomoJson('/api/v1/mihomo/proxies', 'Получение селекторов', signal);
+  const [payload, providerPayload] = await Promise.all([
+    getMihomoJson('/api/v1/mihomo/proxies', 'Получение селекторов', signal),
+    getMihomoJson('/api/v1/mihomo/providers/proxies', 'Получение узлов подписок', signal).catch(() => null),
+  ]);
   if (!isRecord(payload) || !isRecord(payload.proxies)) {
     throw new Error('Mihomo вернул некорректный список прокси');
   }
-  const proxies = payload.proxies;
+  const proxies: UnknownRecord = { ...payload.proxies };
+  // Mihomo may omit subscription proxies from /proxies even while selectors
+  // still reference them. The zxc-rv UI fills those gaps from providers/proxies.
+  if (isRecord(providerPayload) && isRecord(providerPayload.providers)) {
+    for (const provider of Object.values(providerPayload.providers)) {
+      if (!isRecord(provider) || !Array.isArray(provider.proxies)) continue;
+      for (const option of provider.proxies) {
+        if (isRecord(option) && typeof option.name === 'string' && !isRecord(proxies[option.name])) {
+          proxies[option.name] = option;
+        }
+      }
+    }
+  }
   return Object.entries(proxies).flatMap(([key, raw]): MihomoSelector[] => {
     if (!isRecord(raw) || raw.type !== 'Selector' || !Array.isArray(raw.all)) return [];
     const options = raw.all.flatMap((name): MihomoProxyOption[] => {

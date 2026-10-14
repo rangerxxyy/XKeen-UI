@@ -175,6 +175,27 @@ impl MihomoClient {
         if group_data.get("type").and_then(Value::as_str) != Some("Selector") {
             return Err(MihomoError::InvalidSelection);
         }
+        // Subscription nodes can be absent from /proxies while still being
+        // listed in selectors. Mihomo exposes their runtime metadata separately.
+        let mut available_proxies = proxies.clone();
+        if let Ok(provider_payload) = self.get_json(Endpoint::ProxyProviders).await {
+            if let Some(providers) = provider_payload
+                .get("providers")
+                .and_then(Value::as_object)
+            {
+                for provider in providers.values() {
+                    if let Some(items) = provider.get("proxies").and_then(Value::as_array) {
+                        for proxy in items {
+                            if let Some(name) = proxy.get("name").and_then(Value::as_str) {
+                                available_proxies
+                                    .entry(name.to_owned())
+                                    .or_insert_with(|| proxy.clone());
+                            }
+                        }
+                    }
+                }
+            }
+        }
         let names = group_data
             .get("all")
             .and_then(Value::as_array)
@@ -182,7 +203,7 @@ impl MihomoClient {
             .iter()
             .filter_map(Value::as_str)
             .filter(|name| {
-                proxies.get(*name).is_some_and(|proxy| {
+                available_proxies.get(*name).is_some_and(|proxy| {
                     !matches!(
                         proxy.get("type").and_then(Value::as_str),
                         Some(
@@ -575,7 +596,8 @@ mod tests {
     #[tokio::test]
     async fn ping_group_checks_all_real_nodes_and_skips_nested_groups() {
         let (client, mut requests, server) = mock_controller(vec![
-            (StatusCode::OK, r#"{"proxies":{"Main":{"type":"Selector","all":["Finland","Sweden","DIRECT","Auto"]},"Finland":{"type":"VLESS"},"Sweden":{"type":"Hysteria2"},"DIRECT":{"type":"Direct"},"Auto":{"type":"URLTest"}}}"#.into()),
+            (StatusCode::OK, r#"{"proxies":{"Main":{"type":"Selector","all":["Finland","Sweden","DIRECT","Auto"]},"Finland":{"type":"VLESS"},"DIRECT":{"type":"Direct"},"Auto":{"type":"URLTest"}}}"#.into()),
+            (StatusCode::OK, r#"{"providers":{"subscription":{"proxies":[{"name":"Sweden","type":"Hysteria2"}]}}}"#.into()),
             (StatusCode::OK, r#"{"delay":42}"#.into()),
             (StatusCode::OK, r#"{"delay":73}"#.into()),
         ]).await;
@@ -588,6 +610,7 @@ mod tests {
             .iter()
             .all(|item| item["delay"] == 42 || item["delay"] == 73));
         assert_eq!(next_request(&mut requests).await.1, "/proxies");
+        assert_eq!(next_request(&mut requests).await.1, "/providers/proxies");
         let paths = [
             next_request(&mut requests).await.1,
             next_request(&mut requests).await.1,

@@ -83,16 +83,25 @@ describe('pingMihomoGroup', () => {
 });
 
 describe('getMihomoSelectors', () => {
-  it('skips group entries missing from the live Mihomo proxy map', async () => {
-    vi.stubGlobal('fetch', async () => new Response(JSON.stringify({ proxies: {
-      Main: { type: 'Selector', now: 'Finland', all: ['Finland', 'Stale entry'] },
-      Finland: { type: 'VLESS', alive: true, history: [{ delay: 37 }] },
-    } }), { headers: { 'Content-Type': 'application/json' } }));
+  it('fills subscription entries missing from the live proxy map using provider data', async () => {
+    vi.stubGlobal('fetch', async (input: RequestInfo | URL) => {
+      const url = String(input);
+      const body = url.endsWith('/providers/proxies')
+        ? { providers: { subscription: { proxies: [
+          { name: 'Sweden', type: 'VLESS', icon: 'flag-se', alive: true, history: [{ delay: 73 }] },
+        ] } } }
+        : { proxies: {
+          Main: { type: 'Selector', now: 'Sweden', all: ['Finland', 'Sweden', 'Stale entry'] },
+          Finland: { type: 'VLESS', alive: true, history: [{ delay: 37 }] },
+        } };
+      return new Response(JSON.stringify(body), { headers: { 'Content-Type': 'application/json' } });
+    });
 
     await expect(getMihomoSelectors()).resolves.toEqual([{
-      name: 'Main', icon: null, current: 'Finland', options: [{
-        name: 'Finland', type: 'VLESS', icon: null, alive: true, delay: 37,
-      }],
+      name: 'Main', icon: null, current: 'Sweden', options: [
+        { name: 'Finland', type: 'VLESS', icon: null, alive: true, delay: 37 },
+        { name: 'Sweden', type: 'VLESS', icon: 'flag-se', alive: true, delay: 73 },
+      ],
     }]);
   });
 });

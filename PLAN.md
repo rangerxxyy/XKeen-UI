@@ -17,7 +17,7 @@
 | INSTALL-01 | POSIX bootstrap и Rust installer/service lifecycle | [x] | Shell загружает стабильный ARM64 архив и сверяет SHA-256; Rust реализует install/update/remove/service, marker владения директорией, backup/rollback и защищённый конфиг. Изолированный lifecycle CI проходит. Текущий main добавляет оформленное меню |
 | QUAL-01 | Rust 37–38%, TypeScript 55–60%, Shell 2–3% | GitHub Languages API | [~] | Текущий main: около 53.6% TypeScript / 44.2% Rust / 2.1% Shell. TypeScript ниже и Rust выше целевого диапазона; доли отражают фактический исходный код, не подгонять искусственно |
 | TARGET-01 | Подтвердить модель и архитектуру роутера | [x] | Entware AArch64/glibc 2.27; runtime binary проверен read-only на loopback |
-| RELEASE-01 | Опубликовать исходники и совместимые артефакты | [x] | Стабильный v0.2.2 опубликован с ARM64 архивом и SHA256SUMS; установщик получает latest stable tag через API и использует прямые ссылки версии, checksum сверяется перед установкой |
+| RELEASE-01 | Опубликовать исходники и совместимые артефакты | [~] | v0.2.2 опубликован, но найден дефект archive executable bit; исправление в установщике и сборке v0.2.3 ожидает полного CI |
 | CI-01 | Linux CI для TS, Rust, Shell и router cross-build | [x] | CI `38618811134` для `2162ffb` полностью прошёл: frontend, backend fmt/tests/build/lifecycle, installer ShellCheck/syntax и AArch64 cross-build |
 
 Актуальная цель по решению пользователя: TypeScript 55–60%, Rust 37–38%; POSIX Shell используется только для установки XKeen UI (ориентир 2–3%). Это ориентир, а не причина создавать пустые модули или искусственный код. Публикуй фактический подсчёт LOC и отдельно поясняй долю установщика.

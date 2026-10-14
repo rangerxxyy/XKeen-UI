@@ -291,8 +291,80 @@ fn valid_dns_type(value: &str) -> bool {
 mod tests {
     use super::{
         parse_controller_authority, valid_connection_id, valid_dns_name, valid_dns_type,
-        valid_name, Endpoint, MihomoError,
+        valid_name, Endpoint, MihomoClient, MihomoError, MAX_RESPONSE_BYTES,
     };
+    use axum::http::{header, Method, StatusCode};
+    use http_body_util::Full;
+    use hyper::body::Bytes;
+    use hyper::service::service_fn;
+    use hyper_util::rt::TokioIo;
+    use std::{
+        convert::Infallible,
+        sync::{Arc, Mutex},
+    };
+    use tokio::{net::TcpListener, sync::mpsc, task::JoinHandle};
+
+    async fn mock_controller(
+        responses: Vec<(StatusCode, String)>,
+    ) -> (
+        MihomoClient,
+        mpsc::UnboundedReceiver<(Method, String, Option<String>)>,
+        JoinHandle<()>,
+    ) {
+        let listener = TcpListener::bind("127.0.0.1:0").await.unwrap();
+        let authority = listener.local_addr().unwrap().to_string();
+        let responses = Arc::new(Mutex::new(responses.into_iter()));
+        let (request_tx, request_rx) = mpsc::unbounded_channel();
+        let server = tokio::spawn(async move {
+            loop {
+                let Ok((stream, _)) = listener.accept().await else {
+                    break;
+                };
+                let responses = responses.clone();
+                let request_tx = request_tx.clone();
+                tokio::spawn(async move {
+                    let service = service_fn(move |request: hyper::Request<hyper::body::Incoming>| {
+                        let responses = responses.clone();
+                        let request_tx = request_tx.clone();
+                        async move {
+                            let _ = request_tx.send((
+                                request.method().clone(),
+                                request.uri().path_and_query().map_or("/", |value| value.as_str()).to_owned(),
+                                request.headers().get(header::AUTHORIZATION).and_then(|value| value.to_str().ok()).map(str::to_owned),
+                            ));
+                            let (status, body) = responses.lock().unwrap().next()
+                                .unwrap_or((StatusCode::INTERNAL_SERVER_ERROR, "no mock response".into()));
+                            Ok::<_, Infallible>(hyper::Response::builder()
+                                .status(status)
+                                .header(header::CONTENT_TYPE, "application/json")
+                                .body(Full::new(Bytes::from(body)))
+                                .unwrap())
+                        }
+                    });
+                    let _ = hyper::server::conn::http1::Builder::new()
+                        .serve_connection(TokioIo::new(stream), service)
+                        .await;
+                });
+            }
+        });
+        let mut connector = hyper_util::client::legacy::connect::HttpConnector::new();
+        connector.set_connect_timeout(Some(std::time::Duration::from_secs(1)));
+        let http = hyper_util::client::legacy::Client::builder(hyper_util::rt::TokioExecutor::new())
+            .build(connector);
+        let client = MihomoClient {
+            authority,
+            secret: Some("mock-secret".into()),
+            http,
+        };
+        (client, request_rx, server)
+    }
+
+    async fn next_request(
+        receiver: &mut mpsc::UnboundedReceiver<(Method, String, Option<String>)>,
+    ) -> (Method, String, Option<String>) {
+        tokio::time::timeout(std::time::Duration::from_secs(1), receiver.recv())
+            .await.unwrap().unwrap()
+    }
 
     #[test]
     fn endpoint_paths_are_a_fixed_allowlist() {
@@ -353,5 +425,78 @@ mod tests {
         assert!(valid_dns_type("aaaa"));
         assert!(!valid_dns_type("ANY"));
         assert!(!valid_dns_type("A&secret=value"));
+    }
+
+    #[tokio::test]
+    async fn dns_lookup_uses_encoded_query_and_parses_clash_response() {
+        let (client, mut requests, server) = mock_controller(vec![(
+            StatusCode::OK,
+            r#"{"Status":"NOERROR","Answer":[{"name":"example.com","type":"A","data":"192.0.2.1"}]}"#.into(),
+        )]).await;
+        let result = client.dns_query("example.com", "a").await.unwrap();
+        assert_eq!(result["Status"], "NOERROR");
+        assert_eq!(result["Answer"][0]["data"], "192.0.2.1");
+        assert_eq!(next_request(&mut requests).await, (Method::GET, "/dns/query?name=example%2Ecom&type=A".into(), Some("Bearer mock-secret".into())));
+        server.abort();
+    }
+
+    #[tokio::test]
+    async fn proxy_selection_checks_group_membership_then_sends_put() {
+        let (client, mut requests, server) = mock_controller(vec![
+            (StatusCode::OK, r#"{"proxies":{"Main / Europe":{"type":"Selector","all":["Finland","DIRECT"]}}}"#.into()),
+            (StatusCode::NO_CONTENT, String::new()),
+        ]).await;
+        client.select_proxy("Main / Europe", "Finland").await.unwrap();
+        assert_eq!(next_request(&mut requests).await, (Method::GET, "/proxies".into(), Some("Bearer mock-secret".into())));
+        assert_eq!(next_request(&mut requests).await, (Method::PUT, "/proxies/Main%20%2F%20Europe".into(), Some("Bearer mock-secret".into())));
+        server.abort();
+    }
+
+    #[tokio::test]
+    async fn proxy_selection_refuses_non_member_before_mutating() {
+        let (client, mut requests, server) = mock_controller(vec![(
+            StatusCode::OK,
+            r#"{"proxies":{"Main":{"type":"Selector","all":["Finland"]}}}"#.into(),
+        )]).await;
+        assert!(matches!(client.select_proxy("Main", "Unknown").await, Err(MihomoError::InvalidSelection)));
+        assert_eq!(next_request(&mut requests).await, (Method::GET, "/proxies".into(), Some("Bearer mock-secret".into())));
+        assert!(tokio::time::timeout(std::time::Duration::from_millis(30), requests.recv()).await.is_err());
+        server.abort();
+    }
+
+    #[tokio::test]
+    async fn close_connection_rechecks_the_id_before_delete() {
+        let (client, mut requests, server) = mock_controller(vec![
+            (StatusCode::OK, r#"{"connections":[{"id":"a8af0b12-24ff-4a4f-9000-19d9a3afc20d"}]}"#.into()),
+            (StatusCode::NO_CONTENT, String::new()),
+        ]).await;
+        client.close_connection("a8af0b12-24ff-4a4f-9000-19d9a3afc20d").await.unwrap();
+        assert_eq!(next_request(&mut requests).await, (Method::GET, "/connections".into(), Some("Bearer mock-secret".into())));
+        assert_eq!(next_request(&mut requests).await, (Method::DELETE, "/connections/a8af0b12-24ff-4a4f-9000-19d9a3afc20d".into(), Some("Bearer mock-secret".into())));
+        server.abort();
+    }
+
+    #[tokio::test]
+    async fn stale_connection_id_is_not_deleted() {
+        let (client, mut requests, server) = mock_controller(vec![(
+            StatusCode::OK,
+            r#"{"connections":[]}"#.into(),
+        )]).await;
+        assert!(matches!(client.close_connection("a8af0b12-24ff-4a4f-9000-19d9a3afc20d").await, Err(MihomoError::InvalidConnectionId)));
+        assert_eq!(next_request(&mut requests).await, (Method::GET, "/connections".into(), Some("Bearer mock-secret".into())));
+        assert!(tokio::time::timeout(std::time::Duration::from_millis(30), requests.recv()).await.is_err());
+        server.abort();
+    }
+
+    #[tokio::test]
+    async fn upstream_errors_and_oversized_bodies_are_rejected() {
+        let (client, _requests, server) = mock_controller(vec![(StatusCode::SERVICE_UNAVAILABLE, "{}".into())]).await;
+        assert!(matches!(client.get_json(Endpoint::Version).await, Err(MihomoError::UpstreamStatus(503))));
+        server.abort();
+
+        let body = format!("{{\"padding\":\"{}\"}}", "x".repeat(MAX_RESPONSE_BYTES));
+        let (client, _requests, server) = mock_controller(vec![(StatusCode::OK, body)]).await;
+        assert!(matches!(client.get_json(Endpoint::Version).await, Err(MihomoError::ResponseTooLarge)));
+        server.abort();
     }
 }

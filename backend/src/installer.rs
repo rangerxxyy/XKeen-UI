@@ -226,7 +226,9 @@ fn install_or_update(options: &InstallOptions) -> Result<(), Box<dyn Error>> {
         return Err(error);
     }
 
-    let bind_ip = config.bind_ip.expect("installer always resolves a LAN address");
+    let bind_ip = config
+        .bind_ip
+        .expect("installer always resolves a LAN address");
     println!("\x1b[38;5;51mПанель XKeen UI успешно установлена ✔️\x1b[0m");
     println!("\x1b[38;5;51mАдрес панели: http://{bind_ip}:{port}\x1b[0m");
     if let Some(backup) = backup {
@@ -237,21 +239,38 @@ fn install_or_update(options: &InstallOptions) -> Result<(), Box<dyn Error>> {
 
 fn resolve_bind_ip() -> Result<Ipv4Addr, Box<dyn Error>> {
     if let Ok(value) = env::var("XKEEN_BIND") {
-        return value.parse::<Ipv4Addr>().map_err(|_| "XKEEN_BIND must be a valid IPv4 address".into());
+        return value
+            .parse::<Ipv4Addr>()
+            .map_err(|_| io::Error::new(io::ErrorKind::InvalidInput, "XKEEN_BIND must be a valid IPv4 address"))
+            .map_err(Into::into);
     }
-    for executable in ["/opt/sbin/ip", "/opt/bin/ip", "/sbin/ip", "/usr/sbin/ip", "/bin/ip"] {
-        let output = match Command::new(executable).args(["-4", "-o", "addr", "show", "dev", "br0"]).output() {
+    let candidates = [
+        "/opt/sbin/ip",
+        "/opt/bin/ip",
+        "/sbin/ip",
+        "/usr/sbin/ip",
+        "/bin/ip",
+    ];
+    for executable in candidates {
+        let output = match Command::new(executable)
+            .args(["-4", "-o", "addr", "show", "dev", "br0"])
+            .output()
+        {
             Ok(output) => output,
             Err(error) if error.kind() == io::ErrorKind::NotFound => continue,
             Err(error) => return Err(error.into()),
         };
-        if !output.status.success() { continue; }
+        if !output.status.success() {
+            continue;
+        }
         for line in String::from_utf8_lossy(&output.stdout).lines() {
             let mut fields = line.split_whitespace();
             while let Some(field) = fields.next() {
                 if field == "inet" {
                     if let Some(address) = fields.next().and_then(|value| value.split('/').next()) {
-                        if let Ok(ip) = address.parse::<Ipv4Addr>() { return Ok(ip); }
+                        if let Ok(ip) = address.parse::<Ipv4Addr>() {
+                            return Ok(ip);
+                        }
                     }
                 }
             }
@@ -505,7 +524,9 @@ fn restore_file(path: &Path, contents: Option<&[u8]>) -> io::Result<()> {
 
 fn write_config(path: &Path, config: &Config) -> io::Result<()> {
     let mut contents = format!("XKEEN_PORT={}\n", config.port);
-    if let Some(bind_ip) = config.bind_ip { contents.push_str(&format!("XKEEN_BIND={bind_ip}\n")); }
+    if let Some(bind_ip) = config.bind_ip {
+        contents.push_str(&format!("XKEEN_BIND={bind_ip}\n"));
+    }
     if let Some(url) = config
         .mihomo_url
         .as_deref()

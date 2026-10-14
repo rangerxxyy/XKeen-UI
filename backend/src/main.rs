@@ -1,4 +1,9 @@
-use std::{env, net::{IpAddr, SocketAddr}, path::PathBuf, time::Instant};
+use std::{
+    env,
+    net::{IpAddr, SocketAddr},
+    path::PathBuf,
+    time::Instant,
+};
 
 use axum::{
     extract::State,

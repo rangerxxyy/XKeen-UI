@@ -18,9 +18,14 @@ type GitHubRelease = {
 
 const RESPONSE_LIMIT = 512 * 1024;
 
-function repoPath(value: string): string {
+export function normalizeCoreRepository(value: string): string {
   const trimmed = value.trim();
-  const url = new URL(trimmed.startsWith('github.com/') ? `https://${trimmed}` : trimmed);
+  const normalized = trimmed.startsWith('github.com/') ? `https://${trimmed}` : trimmed;
+  const authority = normalized.match(/^https:\/\/([^/?#]+)/i)?.[1];
+  if (authority?.includes(':')) {
+    throw new Error('В ссылке на репозиторий не должно быть порта, параметров или дополнительных путей.');
+  }
+  const url = new URL(normalized);
   if (url.protocol !== 'https:' || url.hostname !== 'github.com' || url.username || url.password) {
     throw new Error('Укажите корень публичного GitHub-репозитория.');
   }
@@ -36,7 +41,7 @@ function repoPath(value: string): string {
   return `${parts[0]}/${parts[1]}`;
 }
 
-function isRelease(value: unknown): value is GitHubRelease {
+export function isCoreRelease(value: unknown): value is GitHubRelease {
   if (!value || typeof value !== 'object') return false;
   const release = value as Partial<GitHubRelease>;
   return typeof release.tag_name === 'string'
@@ -47,10 +52,11 @@ function isRelease(value: unknown): value is GitHubRelease {
     && typeof release.draft === 'boolean'
     && Array.isArray(release.assets)
     && release.assets.every((asset) => asset && typeof asset.name === 'string'
-      && typeof asset.size === 'number' && typeof asset.browser_download_url === 'string');
+      && typeof asset.size === 'number' && Number.isFinite(asset.size) && asset.size >= 0
+      && typeof asset.browser_download_url === 'string');
 }
 
-function compatibleAsset(core: CoreName, assets: GitHubAsset[]): GitHubAsset | undefined {
+export function findCompatibleCoreAsset(core: CoreName, assets: GitHubAsset[]): GitHubAsset | undefined {
   if (core === 'xray') {
     return assets.find((asset) => /linux-arm64-v8a\.zip$/i.test(asset.name));
   }
@@ -58,7 +64,7 @@ function compatibleAsset(core: CoreName, assets: GitHubAsset[]): GitHubAsset | u
     && !/\.sha256(?:sum)?$/i.test(asset.name));
 }
 
-function safeGitHubLink(value: string): string | undefined {
+export function safeCoreReleaseLink(value: string): string | undefined {
   try {
     const url = new URL(value);
     if (url.protocol === 'https:' && url.hostname === 'github.com' && !url.username && !url.password) {
@@ -95,7 +101,7 @@ function renderReleaseList(target: HTMLElement, core: CoreName, releases: GitHub
     const title = element('strong', undefined, release.name || release.tag_name);
     const badges = element('span', 'core-release-badges');
     badges.append(element('span', `core-release-badge${release.prerelease ? ' is-preview' : ''}`, release.prerelease ? 'Предварительная' : 'Стабильная'));
-    const asset = compatibleAsset(core, release.assets);
+    const asset = findCompatibleCoreAsset(core, release.assets);
     badges.append(element('span', `core-release-badge${asset ? ' is-ready' : ' is-muted'}`, asset ? 'ARM64' : 'Нет архива ARM64'));
     heading.append(title, badges);
     card.append(heading);
@@ -110,7 +116,7 @@ function renderReleaseList(target: HTMLElement, core: CoreName, releases: GitHub
       assetRow.append(element('span', undefined, sizeLabel(asset.size)));
       card.append(assetRow);
     }
-    const link = safeGitHubLink(release.html_url);
+    const link = safeCoreReleaseLink(release.html_url);
     if (link) {
       const open = element('a', 'core-release-link', 'Открыть релиз на GitHub ↗');
       open.href = link;
@@ -124,7 +130,8 @@ function renderReleaseList(target: HTMLElement, core: CoreName, releases: GitHub
   target.replaceChildren(list, note);
 }
 
-async function fetchReleases(repo: string): Promise<GitHubRelease[]> {
+export async function fetchCoreReleases(repository: string): Promise<GitHubRelease[]> {
+  const repo = normalizeCoreRepository(repository);
   const response = await fetch(`https://api.github.com/repos/${repo}/releases?per_page=1`, {
     headers: { Accept: 'application/vnd.github+json', 'X-GitHub-Api-Version': '2022-11-28' },
     credentials: 'omit',
@@ -163,7 +170,7 @@ async function fetchReleases(repo: string): Promise<GitHubRelease[]> {
   }
   const body = new TextDecoder('utf-8', { fatal: true }).decode(bytes);
   const payload: unknown = JSON.parse(body);
-  if (!Array.isArray(payload) || !payload.every(isRelease)) throw new Error('GitHub вернул данные релизов неожиданного формата.');
+  if (!Array.isArray(payload) || !payload.every(isCoreRelease)) throw new Error('GitHub вернул данные релизов неожиданного формата.');
   return payload;
 }
 
@@ -179,8 +186,7 @@ export function bindCoreReleaseChecks(): void {
       button.textContent = 'Проверяем…';
       target.replaceChildren(element('p', 'core-release-feedback', 'Получаем опубликованные релизы из GitHub.'));
       try {
-        const repo = repoPath(input.value);
-        const releases = await fetchReleases(repo);
+        const releases = await fetchCoreReleases(input.value);
         renderReleaseList(target, core, releases);
       } catch (error) {
         target.replaceChildren(element('p', 'core-release-feedback is-error', error instanceof Error ? error.message : 'Не удалось получить релизы.'));

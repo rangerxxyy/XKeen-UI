@@ -20,5 +20,5 @@
 | CFG-04 | Сохранение, резервная копия, применение и откат системных конфигов | Rust file/config service | Не начато | Ограничение корня, snapshot, atomic apply, проверка результата и восстановление |
 | SYS-01 | Статус приложения, памяти и load average | `backend/src/main.rs` | Частично | Режим роутера читает системные показатели; действия сервисов не реализованы |
 | SYS-02 | Логи и диагностика | Backend/UI | Не начато | Нужны ограниченные чтение/фильтрация и redaction секретов |
-| INST-01 | Entware installer на порту 1001 | `install.sh`, `backend/src/installer.rs` | Реализовано частично | Shell отвечает за загрузку/checksum; Rust — install/update/remove/service и rollback. Текущие изменения ещё не проверены CI; router-install не запускался |
-| QUAL-01 | Rust 37–38%, TS 55–60%, Shell 2–3% | LOC исходников | Не достигнуто | После переноса lifecycle в Rust пересчитать LOC; не использовать байтовую статистику GitHub как LOC |
+| INST-01 | Entware installer на порту 1001 | `install.sh`, `backend/src/installer.rs` | Реализовано частично | Shell отвечает за загрузку/checksum; Rust — install/update/remove/service и rollback. Изолированный end-to-end CI прогон ожидается; router-install не запускался |
+| QUAL-01 | Rust 37–38%, TS 55–60%, Shell 2–3% | GitHub Languages API | В пределах ориентира на предыдущем snapshot | На `17c41db`: TS 58.0%, Rust 39.5%, Shell 2.4%. Добавлены ~7 KB meaningful release-validation tests; снять новые точные значения после push |

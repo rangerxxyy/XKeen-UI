@@ -15,7 +15,7 @@
 | UTIL-01 | Меню «Утилиты» в конфигурации | [~] | Шаблоны, проверка, форматирование и экспорт черновика доступны как реальные действия; импорт подключений, AmneziaWG, backup, geo scan и route test не показывать как работающие, пока не реализованы |
 | DNS-03 | Handoff KeeneticOS/Mihomo и откат DNS/content filter | [!] | Upstream-поведение исследовано; не копировать жёстко заданный DNS rollback. Сперва описать полный snapshot/restore RCI и тестировать на mocks, без записи в пользовательский роутер |
 | INSTALL-01 | POSIX bootstrap и Rust installer/service lifecycle | [~] | Shell загружает архив и сверяет SHA-256; Rust реализует install/update/remove/service, marker владения директорией, backup/rollback и защищённый конфиг. CI ждёт текущие изменения |
-| QUAL-01 | Rust 37–38%, TypeScript 55–60%, Shell 2–3% | LOC собственного кода | [~] | Пересчитать LOC после публикации; байтовая статистика GitHub не заменяет подсчёт строк |
+| QUAL-01 | Rust 37–38%, TypeScript 55–60%, Shell 2–3% | GitHub Languages API | [~] | На текущем опубликованном коммите 58.0% TypeScript / 39.5% Rust / 2.4% Shell. Добавить meaningful TS coverage и перепроверить, не оптимизировать цифры искусственно |
 | TARGET-01 | Подтвердить модель и архитектуру роутера | [x] | Entware AArch64/glibc 2.27; runtime binary проверен read-only на loopback |
 | RELEASE-01 | Опубликовать исходники и совместимые артефакты | [~] | Исходный код опубликован; release намеренно не создан, установочная инструкция не публикуется |
 | CI-01 | Linux CI для TS, Rust, Shell и router cross-build | [~] | Последняя проверка опубликованного commit выявила rustfmt failure; исправить, затем дождаться всех jobs, включая AArch64 |

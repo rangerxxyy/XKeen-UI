@@ -23,6 +23,7 @@ jobs:
           cache: pnpm
       - run: pnpm install --frozen-lockfile
       - run: pnpm typecheck
+      - run: pnpm test
       - run: pnpm build
       - uses: actions/upload-artifact@v4
         with:
@@ -54,7 +55,7 @@ jobs:
           PORT=$(python3 -c 'import socket; s=socket.socket(); s.bind(("127.0.0.1", 0)); print(s.getsockname()[1]); s.close()')
           mkdir -p "$PACKAGE/web"
           cp backend/target/release/xkeen-ui "$PACKAGE/xkeen-ui"
-          cp release/web/index.html "$PACKAGE/web/index.html"
+          cp -R release/web/. "$PACKAGE/web/"
           cleanup() {
             if [ -x "$PREFIX/share/xkeen-ui/xkeen-ui" ]; then
               "$PREFIX/share/xkeen-ui/xkeen-ui" service stop --prefix "$PREFIX" || true
@@ -62,11 +63,19 @@ jobs:
             rm -rf "$ROOT"
           }
           trap cleanup EXIT
-          "$PACKAGE/xkeen-ui" install --prefix "$PREFIX" --package-dir "$PACKAGE" --port "$PORT"
+          XKEEN_MIHOMO_URL=http://127.0.0.1:9090 XKEEN_MIHOMO_SECRET=ci-test-secret \
+            "$PACKAGE/xkeen-ui" install --prefix "$PREFIX" --package-dir "$PACKAGE" --port "$PORT"
           CONFIG="$PREFIX/etc/xkeen-ui.env"
           TOKEN=$(sed -n 's/^XKEEN_TOKEN=//p' "$CONFIG")
           test "$(stat -c '%a' "$CONFIG")" = 600
+          grep -qx 'XKEEN_MIHOMO_URL=http://127.0.0.1:9090' "$CONFIG"
+          grep -qx 'XKEEN_MIHOMO_SECRET=ci-test-secret' "$CONFIG"
           curl --fail --silent "http://127.0.0.1:$PORT/" | grep -q '<div id="app"></div>'
+          JS_ASSET=$(find "$PREFIX/share/xkeen-ui/web/assets" -name 'main-*.js' -printf '%f\n' | head -n 1)
+          CSS_ASSET=$(find "$PREFIX/share/xkeen-ui/web/assets" -name 'main-*.css' -printf '%f\n' | head -n 1)
+          test -n "$JS_ASSET" && test -n "$CSS_ASSET"
+          curl --fail --silent "http://127.0.0.1:$PORT/assets/$JS_ASSET" >/dev/null
+          curl --fail --silent "http://127.0.0.1:$PORT/assets/$CSS_ASSET" >/dev/null
           test "$(curl --silent --output /dev/null --write-out '%{http_code}' "http://127.0.0.1:$PORT/api/v1/status")" = 401
           curl --fail --silent --header "Authorization: Bearer $TOKEN" "http://127.0.0.1:$PORT/api/v1/status" | grep -q '"mode":"router"'
           "$PACKAGE/xkeen-ui" update --prefix "$PREFIX" --package-dir "$PACKAGE"

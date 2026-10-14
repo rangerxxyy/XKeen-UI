@@ -106,9 +106,21 @@ jobs:
         env:
           RUSTFLAGS: -C link-arg=-Wl,--dynamic-linker=/opt/lib/ld-linux-aarch64.so.1 -C link-arg=-Wl,-rpath,/opt/lib
       - run: |
+          set -euo pipefail
           mkdir -p router-aarch64/web
           cp backend/target/aarch64-unknown-linux-gnu/release/xkeen-ui router-aarch64/xkeen-ui
           cp -R release/web/. router-aarch64/web/
+          chmod 755 router-aarch64/xkeen-ui
+          tar -czf xkeen-ui-linux-aarch64.tar.gz -C router-aarch64 xkeen-ui web
+          sha256sum xkeen-ui-linux-aarch64.tar.gz > SHA256SUMS
+          tar -tvzf xkeen-ui-linux-aarch64.tar.gz | awk '$NF == "xkeen-ui" && substr($1, 4, 1) == "x" { found=1 } END { exit !found }'
+      - uses: actions/upload-artifact@v4
+        with:
+          name: release-aarch64
+          path: |
+            xkeen-ui-linux-aarch64.tar.gz
+            SHA256SUMS
+          if-no-files-found: error
       - uses: actions/upload-artifact@v4
         with:
           name: router-aarch64-test

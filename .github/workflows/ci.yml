@@ -56,6 +56,8 @@ jobs:
       - run: cargo install cross --git https://github.com/cross-rs/cross --locked
       - run: cross build --release --locked --target aarch64-unknown-linux-gnu
         working-directory: backend
+        env:
+          RUSTFLAGS: -C link-arg=-Wl,--dynamic-linker=/opt/lib/ld-linux-aarch64.so.1 -C link-arg=-Wl,-rpath,/opt/lib
       - run: |
           mkdir -p router-aarch64/web
           cp backend/target/aarch64-unknown-linux-gnu/release/xkeen-ui router-aarch64/xkeen-ui

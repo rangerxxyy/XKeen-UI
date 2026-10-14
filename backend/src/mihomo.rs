@@ -268,9 +268,9 @@ fn valid_dns_name(value: &str) -> bool {
         && name.split('.').all(|label| {
             !label.is_empty()
                 && label.len() <= 63
-                && label.bytes().all(|byte| {
-                    byte.is_ascii_alphanumeric() || byte == b'-' || byte == b'_'
-                })
+                && label
+                    .bytes()
+                    .all(|byte| byte.is_ascii_alphanumeric() || byte == b'-' || byte == b'_')
                 && label.as_bytes()[0] != b'-'
                 && label.as_bytes()[label.len() - 1] != b'-'
         })

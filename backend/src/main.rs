@@ -22,8 +22,8 @@ use tower_http::{
 };
 use tracing::{info, warn};
 
-mod core_update;
 mod config_files;
+mod core_update;
 mod installer;
 mod logs;
 mod mihomo;
@@ -593,7 +593,8 @@ async fn ping_mihomo_group(
         return (
             StatusCode::SERVICE_UNAVAILABLE,
             Json(serde_json::json!({"error":"Проверка серверов недоступна в режиме симуляции"})),
-        ).into_response();
+        )
+            .into_response();
     }
     match state.mihomo.ping_group(&request.group).await {
         Ok(result) => Json(result).into_response(),

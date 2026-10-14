@@ -167,20 +167,38 @@ impl MihomoClient {
             return Err(MihomoError::InvalidSelection);
         }
         let payload = self.get_json(Endpoint::Proxies).await?;
-        let proxies = payload.get("proxies").and_then(Value::as_object)
+        let proxies = payload
+            .get("proxies")
+            .and_then(Value::as_object)
             .ok_or(MihomoError::InvalidSelection)?;
         let group_data = proxies.get(group).ok_or(MihomoError::InvalidSelection)?;
         if group_data.get("type").and_then(Value::as_str) != Some("Selector") {
             return Err(MihomoError::InvalidSelection);
         }
-        let names = group_data.get("all").and_then(Value::as_array)
+        let names = group_data
+            .get("all")
+            .and_then(Value::as_array)
             .ok_or(MihomoError::InvalidSelection)?
-            .iter().filter_map(Value::as_str)
-            .filter(|name| proxies.get(*name).is_some_and(|proxy| {
-                !matches!(proxy.get("type").and_then(Value::as_str),
-                    Some("Selector" | "URLTest" | "LoadBalance" | "Fallback" | "Direct" | "Reject" | "Compatible"))
-            }))
-            .map(str::to_owned).collect::<Vec<_>>();
+            .iter()
+            .filter_map(Value::as_str)
+            .filter(|name| {
+                proxies.get(*name).is_some_and(|proxy| {
+                    !matches!(
+                        proxy.get("type").and_then(Value::as_str),
+                        Some(
+                            "Selector"
+                                | "URLTest"
+                                | "LoadBalance"
+                                | "Fallback"
+                                | "Direct"
+                                | "Reject"
+                                | "Compatible"
+                        )
+                    )
+                })
+            })
+            .map(str::to_owned)
+            .collect::<Vec<_>>();
 
         let mut results = Vec::with_capacity(names.len());
         for batch in names.chunks(8) {
@@ -188,12 +206,18 @@ impl MihomoClient {
             for name in batch.iter().cloned() {
                 let client = self.clone();
                 tasks.spawn(async move {
-                    let delay = client.ping_proxy(&name).await.ok().and_then(|value| value.get("delay").and_then(Value::as_u64));
+                    let delay = client
+                        .ping_proxy(&name)
+                        .await
+                        .ok()
+                        .and_then(|value| value.get("delay").and_then(Value::as_u64));
                     json!({"name": name, "delay": delay})
                 });
             }
             while let Some(result) = tasks.join_next().await {
-                if let Ok(result) = result { results.push(result); }
+                if let Ok(result) = result {
+                    results.push(result);
+                }
             }
         }
         Ok(json!({"results": results}))
@@ -202,7 +226,13 @@ impl MihomoClient {
     async fn ping_proxy(&self, name: &str) -> Result<Value, MihomoError> {
         let name = utf8_percent_encode(name, NON_ALPHANUMERIC);
         let url = utf8_percent_encode("https://www.gstatic.com/generate_204", NON_ALPHANUMERIC);
-        let response = self.send(Method::GET, &format!("proxies/{name}/delay?url={url}&timeout=5000"), None).await?;
+        let response = self
+            .send(
+                Method::GET,
+                &format!("proxies/{name}/delay?url={url}&timeout=5000"),
+                None,
+            )
+            .await?;
         self.read_json(response).await
     }
 
@@ -554,11 +584,20 @@ mod tests {
         let entries = result["results"].as_array().unwrap();
         assert!(entries.iter().any(|item| item["name"] == "Finland"));
         assert!(entries.iter().any(|item| item["name"] == "Sweden"));
-        assert!(entries.iter().all(|item| item["delay"] == 42 || item["delay"] == 73));
+        assert!(entries
+            .iter()
+            .all(|item| item["delay"] == 42 || item["delay"] == 73));
         assert_eq!(next_request(&mut requests).await.1, "/proxies");
-        let paths = [next_request(&mut requests).await.1, next_request(&mut requests).await.1];
-        assert!(paths.iter().any(|path| path.starts_with("/proxies/Finland/delay?")));
-        assert!(paths.iter().any(|path| path.starts_with("/proxies/Sweden/delay?")));
+        let paths = [
+            next_request(&mut requests).await.1,
+            next_request(&mut requests).await.1,
+        ];
+        assert!(paths
+            .iter()
+            .any(|path| path.starts_with("/proxies/Finland/delay?")));
+        assert!(paths
+            .iter()
+            .any(|path| path.starts_with("/proxies/Sweden/delay?")));
         server.abort();
     }
 

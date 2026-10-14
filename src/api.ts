@@ -146,6 +146,10 @@ export async function getMihomoSelectors(signal?: AbortSignal): Promise<MihomoSe
     const options = raw.all.flatMap((name): MihomoProxyOption[] => {
       if (typeof name !== 'string') return [];
       const option = proxies[name];
+      // Match Mihomo's runtime map: groups may keep stale names in `all` after
+      // a provider refresh, but without a proxy object they cannot be shown,
+      // pinged, or selected reliably.
+      if (!isRecord(option)) return [];
       const history = isRecord(option) && Array.isArray(option.history) ? option.history : [];
       const latest = history.at(-1);
       const delay = isRecord(latest) && typeof latest.delay === 'number' && Number.isFinite(latest.delay)

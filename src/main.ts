@@ -83,7 +83,7 @@ function serviceBadge(service: ServiceStatus): string {
 function renderHeader(): string {
   const status = state.status;
   const service = status?.services.find((item) => item.name.toLowerCase() === 'mihomo');
-  const formatVersion = (version: string) => `v${escapeHtml(version.replace(/^v/i, ''))}`;
+  const formatVersion = (version: string) => `v${escapeHtml(version.replace(/^v+/i, ''))}`;
   const coreLabel = mihomoVersion ? formatVersion(mihomoVersion) : service ? (service.version ? formatVersion(service.version) : service.state === 'running' ? 'Активен' : service.state === 'stopped' ? 'Остановлен' : 'Недоступен') : state.connected ? 'Не проверен' : 'Ожидание';
   const serviceText = service ? (service.state === 'running' ? 'Сервис активен' : service.state === 'stopped' ? 'Сервис остановлен' : 'Статус недоступен') : 'Состояние загружается';
   const stamp = state.checkedAt ? state.checkedAt.toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' }) : '—';

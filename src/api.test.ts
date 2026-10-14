@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { applyActiveMihomoConfig, getSystemLog, pingMihomoGroup } from './api';
+import { applyActiveMihomoConfig, getMihomoSelectors, getSystemLog, pingMihomoGroup } from './api';
 
 afterEach(() => vi.unstubAllGlobals());
 
@@ -79,5 +79,20 @@ describe('pingMihomoGroup', () => {
       body: JSON.stringify({ group: 'Main' }),
       signal: undefined,
     });
+  });
+});
+
+describe('getMihomoSelectors', () => {
+  it('skips group entries missing from the live Mihomo proxy map', async () => {
+    vi.stubGlobal('fetch', async () => new Response(JSON.stringify({ proxies: {
+      Main: { type: 'Selector', now: 'Finland', all: ['Finland', 'Stale entry'] },
+      Finland: { type: 'VLESS', alive: true, history: [{ delay: 37 }] },
+    } }), { headers: { 'Content-Type': 'application/json' } }));
+
+    await expect(getMihomoSelectors()).resolves.toEqual([{
+      name: 'Main', icon: null, current: 'Finland', options: [{
+        name: 'Finland', type: 'VLESS', icon: null, alive: true, delay: 37,
+      }],
+    }]);
   });
 });

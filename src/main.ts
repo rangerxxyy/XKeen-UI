@@ -4,7 +4,6 @@ import './style.css';
 import { ApiError, closeAllMihomoConnections, closeMihomoConnection, controlXkeen, getCoreSources, getHealth, getMihomoConnections, getMihomoSelectors, getMihomoVersion, getStatus, getSystemLog, getXkeenStatus, hasAccessToken, queryMihomoDns, saveCoreSources, selectMihomoProxy, setAccessToken, type ApiState, type CoreSources, type MihomoConnections, type MihomoDnsResult, type MihomoSelector, type ServiceStatus, type SystemLog, type XkeenStatus } from './api';
 import { renderConnections, renderSelectors } from './mihomo-view';
 import { renderDns } from './dns-view';
-import { mountYamlEditor, unmountYamlEditor } from './yaml-editor';
 import { bindCoreReleaseChecks } from './core-releases';
 import { checkAppUpdate, type AppRelease } from './app-update';
 
@@ -18,6 +17,9 @@ const pages: { id: Page; label: string; icon: string }[] = [
 ];
 
 const state: ApiState = { connected: false, status: null, error: null, checkedAt: null };
+type YamlEditorModule = typeof import('./yaml-editor');
+let yamlEditorModule: YamlEditorModule | null = null;
+let yamlEditorLoad: Promise<YamlEditorModule> | null = null;
 let activePage: Page = 'selectors';
 let refreshTimer: number | undefined;
 let requestController: AbortController | undefined;
@@ -278,9 +280,21 @@ function renderAccessRequired(): string {
   return `<section class="page-heading"><div><div class="eyebrow"><span class="eyebrow-line"></span> ДОСТУП К ПАНЕЛИ</div><h1>Требуется ключ доступа</h1><p>Введите ключ, выданный установщиком XKeen UI.</p></div></section><div class="alert alert-error"><span class="alert-icon">!</span><div><strong>Backend отклонил запрос</strong><p>${escapeHtml(state.error ?? 'Для продолжения нужна авторизация.')}</p></div><button class="text-button" id="authenticate">Ввести ключ</button></div>`;
 }
 
+async function mountConfigurationEditor(): Promise<void> {
+  try {
+    yamlEditorLoad ??= import('./yaml-editor');
+    yamlEditorModule = await yamlEditorLoad;
+    if (activePage === 'configuration' && !authRequired) yamlEditorModule.mountYamlEditor();
+  } catch (error) {
+    yamlEditorLoad = null;
+    const status = document.querySelector<HTMLElement>('#yaml-validation');
+    if (status) status.textContent = error instanceof Error ? `Не удалось загрузить редактор: ${error.message}` : 'Не удалось загрузить редактор конфигурации.';
+  }
+}
+
 function render(): void {
   if (!app) return;
-  if (activePage !== 'configuration' || authRequired) unmountYamlEditor();
+  if (activePage !== 'configuration' || authRequired) yamlEditorModule?.unmountYamlEditor();
   const pageContent = authRequired ? renderAccessRequired()
     : activePage === 'selectors' ? renderSelectors(selectors, selectorsLoading, selectorsError)
       : activePage === 'connections' ? renderConnections(connections, connectionsLoading, connectionsError)
@@ -325,7 +339,7 @@ function render(): void {
       render();
     }
   }));
-  if (activePage === 'configuration' && !authRequired) mountYamlEditor();
+  if (activePage === 'configuration' && !authRequired) void mountConfigurationEditor();
   bindMihomoInteractions();
 }
 
@@ -554,7 +568,7 @@ function openSettings(): void {
     });
     if (!content) return;
     if (tab === 'general') {
-      content.innerHTML = `<div class="setting-row"><div><strong>Порт панели</strong><small>Адрес локального Rust API и интерфейса</small></div><span class="setting-value">${state.status?.port ?? 1001}</span></div><div class="setting-row"><div><strong>Backend</strong><small>${state.connected ? 'Соединение установлено' : 'Соединение отсутствует'}</small></div><span class="state-pill ${state.connected ? 'state-running' : 'state-unavailable'}">${state.connected ? 'На связи' : 'Ожидание'}</span></div><div class="setting-row"><div><strong>Режим</strong><small>Источник системных сведений</small></div><span class="setting-value">${state.status?.mode === 'router' ? 'Роутер' : 'Симуляция'}</span></div><div class="setting-row"><div><strong>Версия XKeen UI</strong><small>Установленная сборка</small></div><span class="setting-value">${escapeHtml(state.status?.appVersion ?? '0.2.1')}</span></div><div class="app-update-settings"><div><strong>Обновления панели</strong><small id="app-update-message" aria-live="polite">${escapeHtml(appUpdateMessage)}</small></div><button class="editor-button" id="check-app-update" type="button" ${appUpdatePending ? 'disabled' : ''}>${appUpdatePending ? 'Проверяем…' : 'Проверить'}</button></div>`;
+      content.innerHTML = `<div class="setting-row"><div><strong>Порт панели</strong><small>Адрес локального Rust API и интерфейса</small></div><span class="setting-value">${state.status?.port ?? 1001}</span></div><div class="setting-row"><div><strong>Backend</strong><small>${state.connected ? 'Соединение установлено' : 'Соединение отсутствует'}</small></div><span class="state-pill ${state.connected ? 'state-running' : 'state-unavailable'}">${state.connected ? 'На связи' : 'Ожидание'}</span></div><div class="setting-row"><div><strong>Режим</strong><small>Источник системных сведений</small></div><span class="setting-value">${state.status?.mode === 'router' ? 'Роутер' : 'Симуляция'}</span></div><div class="setting-row"><div><strong>Версия XKeen UI</strong><small>Установленная сборка</small></div><span class="setting-value">${escapeHtml(state.status?.appVersion ?? APP_VERSION)}</span></div><div class="app-update-settings"><div><strong>Обновления панели</strong><small id="app-update-message" aria-live="polite">${escapeHtml(appUpdateMessage)}</small></div><button class="editor-button" id="check-app-update" type="button" ${appUpdatePending ? 'disabled' : ''}>${appUpdatePending ? 'Проверяем…' : 'Проверить'}</button></div>`;
       return;
     }
     if (tab === 'sources') {

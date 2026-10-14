@@ -173,6 +173,9 @@ fn install_or_update(options: &InstallOptions) -> Result<(), Box<dyn Error>> {
         copy_package(&package_dir, &staging)?;
         fs::rename(&staging, &paths.app)?;
         write_config(&paths.config, &config)?;
+        if let Some(parent) = paths.service.parent() {
+            fs::create_dir_all(parent)?;
+        }
         write_service(&paths.service, &options.prefix)?;
         service_start(&options.prefix)?;
         Ok(())

@@ -63,6 +63,7 @@ let appUpdatePending: Promise<void> | null = null;
 
 const app = document.querySelector<HTMLDivElement>('#app');
 if (!app) throw new Error('Корневой элемент интерфейса #app не найден');
+const APP_VERSION = __APP_VERSION__;
 
 function escapeHtml(value: string): string {
   return value.replace(/[&<>"']/g, (character) => {
@@ -92,7 +93,7 @@ function renderHeader(): string {
   return `<header class="topbar">
     <button class="top-status" id="services" type="button" aria-label="Открыть состояние сервисов"><span class="connection-led ${state.connected ? 'is-online' : 'is-offline'}"></span><span><strong>${escapeHtml(serviceText)}</strong><small>${state.connected ? `${memory} · ${load} · API :${status?.port ?? 1001} · ${stamp}` : 'Ожидание соединения с backend'}</small></span></button>
     <a class="brand" href="#selectors" aria-label="XKeen UI, селекторы"><span class="brand-mark">X</span><span>XKeen <b>UI</b></span></a>
-    <div class="top-actions"><span class="version-chip core-chip"><span class="chip-icon">◈</span> Mihomo <b>${coreLabel}</b></span><span class="version-chip"><span class="chip-icon">⬡</span> XKeen UI <b>v${status?.appVersion ?? '0.2.2'}</b></span>${updateLink}<button class="icon-button" id="refresh" title="Обновить статус" aria-label="Обновить статус">↻</button><button class="icon-button" id="settings" title="Настройки" aria-label="Настройки">⚙</button></div>
+    <div class="top-actions"><span class="version-chip core-chip"><span class="chip-icon">◈</span> Mihomo <b>${coreLabel}</b></span><span class="version-chip"><span class="chip-icon">⬡</span> XKeen UI <b>v${status?.appVersion ?? APP_VERSION}</b></span>${updateLink}<button class="icon-button" id="refresh" title="Обновить статус" aria-label="Обновить статус">↻</button><button class="icon-button" id="settings" title="Настройки" aria-label="Настройки">⚙</button></div>
   </header>`;
 }
 
@@ -374,7 +375,7 @@ async function runDnsQuery(): Promise<void> {
 async function runAppUpdateCheck(force = false): Promise<void> {
   if (appUpdatePending) return appUpdatePending;
   if (!force && Date.now() - appUpdateCheckedAt < 6 * 60 * 60 * 1000) return;
-  const installedVersion = state.status?.appVersion ?? '0.2.1';
+  const installedVersion = state.status?.appVersion ?? APP_VERSION;
   appUpdateMessage = 'Проверяем стабильные релизы GitHub…';
   const messageNode = document.querySelector<HTMLElement>('#app-update-message');
   const checkButton = document.querySelector<HTMLButtonElement>('#check-app-update');

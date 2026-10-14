@@ -1,4 +1,5 @@
 import { defineConfig, type Plugin } from 'vite';
+import packageJson from './package.json';
 
 function applicationShell(): Plugin {
   const developmentDocument = '<!doctype html><html lang="ru"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="theme-color" content="#080d18"><title>XKeen UI</title></head><body><div id="app"></div><script type="module" src="/src/main.ts"></script></body></html>';
@@ -32,6 +33,7 @@ function applicationShell(): Plugin {
 }
 
 export default defineConfig({
+  define: { __APP_VERSION__: JSON.stringify(packageJson.version) },
   plugins: [applicationShell()],
   base: './',
   server: {

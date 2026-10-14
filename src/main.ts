@@ -34,6 +34,7 @@ let dnsLoading = false;
 let dnsError: string | null = null;
 let dnsQueryName = '';
 let dnsQueryType = 'A';
+let dnsPanel: 'mihomo' | 'handoff' = 'mihomo';
 let dnsController: AbortController | undefined;
 let mihomoVersion: string | null = null;
 let xkeenStatus: XkeenStatus | null = null;
@@ -282,7 +283,7 @@ function render(): void {
   const pageContent = authRequired ? renderAccessRequired()
     : activePage === 'selectors' ? renderSelectors(selectors, selectorsLoading, selectorsError)
       : activePage === 'connections' ? renderConnections(connections, connectionsLoading, connectionsError)
-        : activePage === 'dns' ? renderDns(dnsResult, dnsLoading, dnsError, dnsQueryName, dnsQueryType)
+        : activePage === 'dns' ? renderDns(dnsResult, dnsLoading, dnsError, dnsQueryName, dnsQueryType, dnsPanel)
         : renderComingSoon(activePage);
   app.innerHTML = `<div class="app-shell">${renderHeader()}${renderNavigation()}<main class="main-content">${pageContent}</main>${renderJournal()}<div class="toast-region" aria-live="polite"></div></div>`;
   bindJournal();
@@ -316,6 +317,13 @@ function render(): void {
     dnsQueryType = String(data.get('type') ?? 'A');
     void runDnsQuery();
   });
+  document.querySelectorAll<HTMLButtonElement>('[data-dns-panel]').forEach((button) => button.addEventListener('click', () => {
+    const panel = button.dataset.dnsPanel;
+    if (panel === 'mihomo' || panel === 'handoff') {
+      dnsPanel = panel;
+      render();
+    }
+  }));
   if (activePage === 'configuration' && !authRequired) mountYamlEditor();
   bindMihomoInteractions();
 }

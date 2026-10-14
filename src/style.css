@@ -345,6 +345,8 @@ body { background: #090a14; }
 .dns-subnav-button:hover { color:var(--text); background:#19172b; }
 .dns-subnav-button.is-active { color:#eeeaff; border-color:#4a416f; background:#211e36; }
 .dns-handoff-intro { display:grid; gap:1rem; color:var(--muted); font-size:.9rem; line-height:1.65; }
+.alert-warning { background:#292419; border-color:#66552b; }
+.alert-warning .alert-icon { color:#f2bd66; background:#46371e; }
 .dns-handoff-intro code { color:#d5ccff; }
 .dns-handoff-grid { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:.7rem; margin:1.2rem 0; }
 .dns-handoff-step { display:flex; gap:.8rem; align-items:flex-start; padding:.9rem; border:1px solid var(--stroke); border-radius:.7rem; background:#11111d; }

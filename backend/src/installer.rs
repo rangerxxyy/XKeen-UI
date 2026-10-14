@@ -113,7 +113,10 @@ fn validate_prefix(prefix: &Path) -> Result<(), Box<dyn Error>> {
             .bytes()
             .all(|byte| byte.is_ascii_alphanumeric() || matches!(byte, b'/' | b'_' | b'.' | b'-'))
     {
-        return Err("installation path must be an absolute path without traversal or special characters".into());
+        return Err(
+            "installation path must be an absolute path without traversal or special characters"
+                .into(),
+        );
     }
     Ok(())
 }
@@ -189,16 +192,25 @@ fn install_or_update(options: &InstallOptions) -> Result<(), Box<dyn Error>> {
         }
         if let Some(backup) = backup.as_ref() {
             if let Err(restore) = fs::rename(backup, &paths.app) {
-                rollback_errors.push(format!("could not restore {}: {restore}", backup.display()));
+                rollback_errors.push(format!(
+                    "could not restore {}: {restore}",
+                    backup.display()
+                ));
             } else if let Err(start) = service_start(&options.prefix) {
-                rollback_errors.push(format!("previous version was restored but did not start: {start}"));
+                rollback_errors.push(format!(
+                    "previous version was restored but did not start: {start}"
+                ));
             }
         }
         if let Err(restore) = restore_file(&paths.config, previous_config.as_deref()) {
             rollback_errors.push(format!("could not restore configuration: {restore}"));
         }
         if !rollback_errors.is_empty() {
-            return Err(format!("{error}; rollback incomplete: {}", rollback_errors.join("; ")).into());
+            return Err(format!(
+                "{error}; rollback incomplete: {}",
+                rollback_errors.join("; ")
+            )
+            .into());
         }
         return Err(error);
     }
@@ -281,7 +293,9 @@ fn service_start(prefix: &Path) -> Result<(), Box<dyn Error>> {
         return Err("application executable not found".into());
     }
     if !paths.app.join(".xkeen-ui-managed").is_file() {
-        return Err("application ownership marker not found; refusing to manage this directory".into());
+        return Err(
+            "application ownership marker not found; refusing to manage this directory".into(),
+        );
     }
     if let Some(pid) = read_pid(&paths.pid)? {
         if owns_process(pid, &paths.app.join("xkeen-ui")) {
@@ -300,7 +314,10 @@ fn service_start(prefix: &Path) -> Result<(), Box<dyn Error>> {
         .env("XKEEN_TOKEN", &config.token)
         .env("XKEEN_MODE", "router")
         .env("XKEEN_WEB_ROOT", paths.app.join("web"))
-        .env("XKEEN_CORE_SOURCES_PATH", paths.etc.join("xkeen-ui-core-sources.json"))
+        .env(
+            "XKEEN_CORE_SOURCES_PATH",
+            paths.etc.join("xkeen-ui-core-sources.json"),
+        )
         .env("PATH", "/opt/bin:/opt/sbin:/usr/bin:/bin")
         .stdin(Stdio::null())
         .stdout(Stdio::null())
@@ -396,7 +413,10 @@ fn read_pid(path: &Path) -> io::Result<Option<u32>> {
 fn random_token() -> io::Result<String> {
     let mut bytes = [0_u8; 32];
     fs::File::open("/dev/urandom")?.read_exact(&mut bytes)?;
-    let token = bytes.iter().map(|byte| format!("{byte:02x}")).collect::<String>();
+    let token = bytes
+        .iter()
+        .map(|byte| format!("{byte:02x}"))
+        .collect::<String>();
     if token.len() != 64 {
         return Err(io::Error::other("could not create access token"));
     }
@@ -421,10 +441,18 @@ fn restore_file(path: &Path, contents: Option<&[u8]>) -> io::Result<()> {
 
 fn write_config(path: &Path, config: &Config) -> io::Result<()> {
     let mut contents = format!("XKEEN_PORT={}\nXKEEN_TOKEN={}\n", config.port, config.token);
-    if let Some(url) = config.mihomo_url.as_deref().filter(|value| valid_env_value(value)) {
+    if let Some(url) = config
+        .mihomo_url
+        .as_deref()
+        .filter(|value| valid_env_value(value))
+    {
         contents.push_str(&format!("XKEEN_MIHOMO_URL={url}\n"));
     }
-    if let Some(secret) = config.mihomo_secret.as_deref().filter(|value| valid_env_value(value)) {
+    if let Some(secret) = config
+        .mihomo_secret
+        .as_deref()
+        .filter(|value| valid_env_value(value))
+    {
         contents.push_str(&format!("XKEEN_MIHOMO_SECRET={secret}\n"));
     }
     write_atomic(path, contents.as_bytes(), 0o600)
@@ -575,7 +603,10 @@ fn validate_owned_paths(paths: &Paths) -> Result<(), Box<dyn Error>> {
         }
     }
     if paths.app.exists() && !paths.app.join(".xkeen-ui-managed").is_file() {
-        return Err("application directory has no XKeen UI ownership marker; refusing to replace it".into());
+        return Err(
+            "application directory has no XKeen UI ownership marker; refusing to replace it"
+                .into(),
+        );
     }
     Ok(())
 }
@@ -594,7 +625,10 @@ mod tests {
 
     #[test]
     fn installer_options_have_safe_router_defaults() {
-        assert_eq!(parse_install_options(&[]).unwrap(), InstallOptions::default());
+        assert_eq!(
+            parse_install_options(&[]).unwrap(),
+            InstallOptions::default()
+        );
         assert!(parse_install_options(&["--port".into(), "0".into()]).is_err());
         assert!(parse_install_options(&["--port".into(), "65536".into()]).is_err());
         assert!(parse_install_options(&["--port".into(), "1001".into()]).is_ok());

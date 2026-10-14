@@ -4,6 +4,7 @@ use std::{
     os::unix::fs::PermissionsExt,
     path::{Path, PathBuf},
     process::Stdio,
+    time::Duration,
 };
 use tokio::process::Command;
 
@@ -30,12 +31,17 @@ pub struct ControlRequest {
 
 pub fn read_status() -> XkeenStatus {
     let info = fs::read_to_string(INFO_FILE).ok();
-    let init_path = info.as_deref().and_then(resolve_init_path).or_else(fallback_init_path);
+    let init_path = info
+        .as_deref()
+        .and_then(resolve_init_path)
+        .or_else(fallback_init_path);
     let version = info
         .as_deref()
         .and_then(|text| shell_assignment(text, "xkeen_current_version"))
         .filter(|value| !value.is_empty() && value.len() <= 64);
-    let init_contents = init_path.as_deref().and_then(|path| fs::read_to_string(path).ok());
+    let init_contents = init_path
+        .as_deref()
+        .and_then(|path| fs::read_to_string(path).ok());
     let core = init_contents
         .as_deref()
         .and_then(|text| shell_assignment(text, "name_client"))
@@ -205,8 +211,14 @@ mod tests {
     #[test]
     fn reads_xkeen_config_without_sourcing_shell() {
         let text = "initd_dir=\"/opt/etc/init.d\" # dir\ninitd_file=\"$initd_dir/S05xkeen\"\nxkeen_current_version=2.1";
-        assert_eq!(resolve_init_path(text).as_deref(), Some("/opt/etc/init.d/S05xkeen"));
-        assert_eq!(shell_assignment(text, "xkeen_current_version").as_deref(), Some("2.1"));
+        assert_eq!(
+            resolve_init_path(text).as_deref(),
+            Some("/opt/etc/init.d/S05xkeen")
+        );
+        assert_eq!(
+            shell_assignment(text, "xkeen_current_version").as_deref(),
+            Some("2.1")
+        );
     }
 
     #[test]

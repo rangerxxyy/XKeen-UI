@@ -271,6 +271,21 @@ async fn status(State(state): State<AppState>) -> Json<SystemStatus> {
         .into_iter()
         .map(|name| {
             if state.router_mode {
+                if name == "Xkeen" {
+                    let xkeen = xkeen::read_status();
+                    let (service_state, detail) = match (xkeen.installed, xkeen.running) {
+                        (false, _) => ("unavailable", "Штатный init-файл XKeen не найден"),
+                        (true, Some(true)) => ("running", "Настроенное ядро XKeen запущено"),
+                        (true, Some(false)) => ("stopped", "Настроенное ядро XKeen остановлено"),
+                        (true, None) => ("unknown", "Не удалось определить настроенное ядро XKeen"),
+                    };
+                    return ServiceStatus {
+                        name,
+                        state: service_state,
+                        version: xkeen.version,
+                        detail,
+                    };
+                }
                 match process_is_running(name) {
                     Some(true) => ServiceStatus {
                         name,
@@ -323,7 +338,7 @@ async fn status(State(state): State<AppState>) -> Json<SystemStatus> {
             .flatten(),
         services,
         notice: if state.router_mode {
-            "Режим устройства: отображаются только состояния обнаруженных процессов. Управляющие операции в этой версии отключены."
+            "Статус ядра XKeen читается из системы; команды управления требуют подтверждения в панели."
         } else {
             "Изоляция активна: реальные системные службы, DNS, маршруты и настройки устройства не изменяются."
         },

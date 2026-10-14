@@ -2,7 +2,7 @@ import '@fontsource-variable/inter';
 import '@fontsource-variable/jetbrains-mono';
 import './style.css';
 import { closeAllMihomoConnections, closeMihomoConnection, controlXkeen, getCoreSources, getHealth, getMihomoConnections, getMihomoSelectors, getMihomoVersion, getStatus, getSystemLog, getXkeenStatus, pingMihomoGroup, queryMihomoDns, saveCoreSources, selectMihomoProxy, type ApiState, type CoreSources, type MihomoConnections, type MihomoDnsResult, type MihomoSelector, type ServiceStatus, type SystemLog, type XkeenStatus } from './api';
-import { renderConnections, renderSelectors } from './mihomo-view';
+import { applyPingResults, renderConnections, renderSelectors } from './mihomo-view';
 import { renderDns } from './dns-view';
 import { bindCoreReleaseChecks } from './core-releases';
 import { checkAppUpdate, type AppRelease } from './app-update';
@@ -83,7 +83,8 @@ function serviceBadge(service: ServiceStatus): string {
 function renderHeader(): string {
   const status = state.status;
   const service = status?.services.find((item) => item.name.toLowerCase() === 'mihomo');
-  const coreLabel = mihomoVersion ? `v${escapeHtml(mihomoVersion)}` : service ? (service.version ? `v${escapeHtml(service.version)}` : service.state === 'running' ? 'Активен' : service.state === 'stopped' ? 'Остановлен' : 'Недоступен') : state.connected ? 'Не проверен' : 'Ожидание';
+  const formatVersion = (version: string) => `v${escapeHtml(version.replace(/^v/i, ''))}`;
+  const coreLabel = mihomoVersion ? formatVersion(mihomoVersion) : service ? (service.version ? formatVersion(service.version) : service.state === 'running' ? 'Активен' : service.state === 'stopped' ? 'Остановлен' : 'Недоступен') : state.connected ? 'Не проверен' : 'Ожидание';
   const serviceText = service ? (service.state === 'running' ? 'Сервис активен' : service.state === 'stopped' ? 'Сервис остановлен' : 'Статус недоступен') : 'Состояние загружается';
   const stamp = state.checkedAt ? state.checkedAt.toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' }) : '—';
   const memory = status?.memory ? `RAM ${status.memory.usedMb}/${status.memory.totalMb} MB` : 'RAM —';
@@ -447,14 +448,7 @@ async function pingGroupFromUi(button: HTMLButtonElement): Promise<void> {
   button.textContent = '…';
   try {
     const results = await pingMihomoGroup(group, mihomoController?.signal);
-    const byName = new Map(results.map((result) => [result.name, result]));
-    selectors = selectors.map((selector) => selector.name !== group ? selector : ({
-      ...selector,
-      options: selector.options.map((option) => {
-        const result = byName.get(option.name);
-        return result ? { ...option, alive: result.delay !== null, delay: result.delay } : option;
-      }),
-    }));
+    selectors = applyPingResults(selectors, results);
     render();
   } catch (error) {
     button.title = error instanceof Error ? error.message : 'Не удалось проверить серверы';

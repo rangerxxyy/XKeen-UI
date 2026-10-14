@@ -1,4 +1,15 @@
-import type { MihomoConnection, MihomoConnections, MihomoSelector } from './api';
+import type { MihomoConnection, MihomoConnections, MihomoPingResult, MihomoSelector } from './api';
+
+export function applyPingResults(groups: MihomoSelector[], results: MihomoPingResult[]): MihomoSelector[] {
+  const resultByName = new Map(results.map((result) => [result.name, result]));
+  return groups.map((group) => ({
+    ...group,
+    options: group.options.map((option) => {
+      const result = resultByName.get(option.name);
+      return result ? { ...option, alive: result.delay !== null, delay: result.delay } : option;
+    }),
+  }));
+}
 
 function escapeHtml(value: string): string {
   return value.replace(/[&<>"']/g, (character) => {

@@ -137,8 +137,8 @@ fn install_or_update(options: &InstallOptions) -> Result<(), Box<dyn Error>> {
     fs::create_dir_all(&paths.etc)?;
     let previous_config = read_optional(&paths.config)?;
     let saved = Config::parse(previous_config.as_deref())?;
-    let port = options.port.or(saved.port).unwrap_or(DEFAULT_PORT);
-    let token = saved.token.unwrap_or(random_token()?);
+    let port = options.port.unwrap_or(saved.port);
+    let token = saved.token;
     let config = Config {
         port,
         token,
@@ -532,7 +532,10 @@ impl Config {
         }
         Ok(Self {
             port: port.unwrap_or(DEFAULT_PORT),
-            token: token.unwrap_or(random_token()?),
+            token: match token {
+                Some(token) => token,
+                None => random_token()?,
+            },
             mihomo_url,
             mihomo_secret,
         })

@@ -1,7 +1,7 @@
 import '@fontsource-variable/inter';
 import '@fontsource-variable/jetbrains-mono';
 import './style.css';
-import { ApiError, closeAllMihomoConnections, closeMihomoConnection, controlXkeen, getCoreSources, getHealth, getMihomoConnections, getMihomoSelectors, getMihomoVersion, getStatus, getXkeenStatus, hasAccessToken, queryMihomoDns, saveCoreSources, selectMihomoProxy, setAccessToken, type ApiState, type CoreSources, type MihomoConnections, type MihomoDnsResult, type MihomoSelector, type ServiceStatus, type XkeenStatus } from './api';
+import { ApiError, closeAllMihomoConnections, closeMihomoConnection, controlXkeen, getCoreSources, getHealth, getMihomoConnections, getMihomoSelectors, getMihomoVersion, getStatus, getSystemLog, getXkeenStatus, hasAccessToken, queryMihomoDns, saveCoreSources, selectMihomoProxy, setAccessToken, type ApiState, type CoreSources, type MihomoConnections, type MihomoDnsResult, type MihomoSelector, type ServiceStatus, type SystemLog, type XkeenStatus } from './api';
 import { renderConnections, renderSelectors } from './mihomo-view';
 import { renderDns } from './dns-view';
 import { mountYamlEditor, unmountYamlEditor } from './yaml-editor';
@@ -38,6 +38,21 @@ let mihomoVersion: string | null = null;
 let xkeenStatus: XkeenStatus | null = null;
 let xkeenControlMessage = '';
 let xkeenControlBusy = false;
+const logFiles = [
+  { id: 'xray-error', label: 'Xray · error.log' },
+  { id: 'xray-access', label: 'Xray · access.log' },
+  { id: 'web-error', label: 'Web · error.log' },
+  { id: 'nfqws2', label: 'nfqws2.log' },
+  { id: 'xkeen-ui', label: 'XKeen UI · xkeen-ui.log' },
+];
+let selectedLog = 'xray-error';
+let logData: SystemLog | null = null;
+let logError: string | null = null;
+let logLoading = false;
+let logCleared = false;
+let logExpanded = false;
+let logController: AbortController | undefined;
+let logRefreshTimer: number | undefined;
 
 const app = document.querySelector<HTMLDivElement>('#app');
 if (!app) throw new Error('Корневой элемент интерфейса #app не найден');
@@ -67,7 +82,7 @@ function renderHeader(): string {
   return `<header class="topbar">
     <button class="top-status" id="services" type="button" aria-label="Открыть состояние сервисов"><span class="connection-led ${state.connected ? 'is-online' : 'is-offline'}"></span><span><strong>${escapeHtml(serviceText)}</strong><small>${state.connected ? `${memory} · ${load} · API :${status?.port ?? 1001} · ${stamp}` : 'Ожидание соединения с backend'}</small></span></button>
     <a class="brand" href="#selectors" aria-label="XKeen UI, селекторы"><span class="brand-mark">X</span><span>XKeen <b>UI</b></span></a>
-    <div class="top-actions"><span class="version-chip core-chip"><span class="chip-icon">◈</span> Mihomo <b>${coreLabel}</b></span><span class="version-chip"><span class="chip-icon">⬡</span> XKeen UI <b>v${status?.appVersion ?? '0.1.0'}</b></span><button class="icon-button" id="refresh" title="Обновить статус" aria-label="Обновить статус">↻</button><button class="icon-button" id="settings" title="Настройки" aria-label="Настройки">⚙</button></div>
+    <div class="top-actions"><span class="version-chip core-chip"><span class="chip-icon">◈</span> Mihomo <b>${coreLabel}</b></span><span class="version-chip"><span class="chip-icon">⬡</span> XKeen UI <b>v${status?.appVersion ?? '0.2.0'}</b></span><button class="icon-button" id="refresh" title="Обновить статус" aria-label="Обновить статус">↻</button><button class="icon-button" id="settings" title="Настройки" aria-label="Настройки">⚙</button></div>
   </header>`;
 }
 
@@ -122,7 +137,111 @@ function renderFooter(): string {
 }
 
 function renderJournal(): string {
-  return `<section class="journal-panel" aria-label="Журнал событий"><header class="journal-heading"><h2>Журнал</h2><div class="journal-tools"><label class="journal-filter"><span aria-hidden="true">⌕</span><input type="search" placeholder="Фильтр" aria-label="Фильтр журнала" disabled></label><select aria-label="Файл журнала" disabled><option>Журнал событий</option></select><button class="journal-icon-button" type="button" title="Очистить журнал" aria-label="Очистить журнал" disabled>♲</button><button class="journal-icon-button" type="button" title="Развернуть журнал" aria-label="Развернуть журнал" disabled>⛶</button></div></header><div class="journal-body"><div class="journal-empty"><span class="journal-empty-icon">▤</span><strong>Источник журнала ещё не подключён</strong><p>Здесь появятся записи после подключения чтения системных логов.</p></div></div></section>`;
+  return `<section class="journal-panel ${logExpanded ? 'is-expanded' : ''}" aria-label="Журнал событий"><header class="journal-heading"><h2>Журнал</h2><div class="journal-tools"><label class="journal-filter"><span aria-hidden="true">⌕</span><input id="journal-filter" type="search" placeholder="Фильтр" aria-label="Фильтр журнала"></label><select id="journal-file" aria-label="Файл журнала">${logFiles.map((file) => `<option value="${file.id}" ${selectedLog === file.id ? 'selected' : ''}>${file.label}</option>`).join('')}</select><button class="journal-icon-button" id="journal-clear" type="button" title="Очистить отображение" aria-label="Очистить отображение">♲</button><button class="journal-icon-button" id="journal-expand" type="button" title="Развернуть журнал" aria-label="Развернуть журнал" aria-pressed="${logExpanded}">${logExpanded ? '⤢' : '⛶'}</button></div></header><div class="journal-body" id="journal-body" aria-live="polite"></div></section>`;
+}
+
+function drawJournal(): void {
+  const body = document.querySelector<HTMLElement>('#journal-body');
+  if (!body) return;
+  if (logLoading) {
+    body.innerHTML = '<div class="journal-empty"><span class="loading-orbit" aria-hidden="true"></span><strong>Загружаем журнал</strong></div>';
+    return;
+  }
+  if (logError) {
+    body.innerHTML = `<div class="journal-empty"><span class="journal-empty-icon">!</span><strong>Журнал недоступен</strong><p>${escapeHtml(logError)}</p></div>`;
+    return;
+  }
+  if (logCleared) {
+    body.innerHTML = '<div class="journal-empty"><span class="journal-empty-icon">✓</span><strong>Отображение очищено</strong><p>Исходный файл на устройстве не изменён.</p></div>';
+    return;
+  }
+  const filter = document.querySelector<HTMLInputElement>('#journal-filter')?.value.trim().toLocaleLowerCase() ?? '';
+  const lines = (logData?.lines ?? []).filter((line) => !filter || line.toLocaleLowerCase().includes(filter));
+  const list = document.createElement('div');
+  list.className = 'journal-lines';
+  for (const [index, line] of lines.entries()) {
+    const row = document.createElement('div');
+    row.className = 'journal-line';
+    row.dataset.level = /\b(error|fatal|panic)\b/i.test(line) ? 'error' : /\b(warn|warning)\b/i.test(line) ? 'warning' : 'info';
+    const number = document.createElement('span');
+    number.className = 'journal-line-number';
+    number.textContent = String(index + 1).padStart(3, '0');
+    const message = document.createElement('code');
+    message.textContent = line;
+    row.append(number, message);
+    list.append(row);
+  }
+  body.replaceChildren();
+  if (logData?.truncated) {
+    const note = document.createElement('p');
+    note.className = 'journal-truncated';
+    note.textContent = 'Показан ограниченный хвост файла журнала.';
+    body.append(note);
+  }
+  if (!lines.length) {
+    const empty = document.createElement('div');
+    empty.className = 'journal-empty';
+    const icon = document.createElement('span');
+    icon.className = 'journal-empty-icon';
+    icon.textContent = '▤';
+    const title = document.createElement('strong');
+    title.textContent = filter ? 'Совпадений нет' : 'В выбранном журнале пока нет записей';
+    const file = document.createElement('p');
+    file.textContent = logData?.file ?? 'Ожидается ответ backend';
+    empty.append(icon, title, file);
+    body.append(empty);
+  } else body.append(list);
+}
+
+async function loadSystemLog(): Promise<void> {
+  if (logLoading) return;
+  logController?.abort();
+  const controller = new AbortController();
+  logController = controller;
+  logLoading = true;
+  logError = null;
+  logCleared = false;
+  drawJournal();
+  try {
+    logData = await getSystemLog(selectedLog, AbortSignal.any([controller.signal, AbortSignal.timeout(12_000)]));
+  } catch (error) {
+    if (error instanceof DOMException && error.name === 'AbortError') return;
+    logData = null;
+    logError = error instanceof Error ? error.message : 'Не удалось загрузить журнал';
+  } finally {
+    if (logController === controller) {
+      logLoading = false;
+      drawJournal();
+    }
+  }
+}
+
+function bindJournal(): void {
+  const fileSelect = document.querySelector<HTMLSelectElement>('#journal-file');
+  fileSelect?.addEventListener('change', () => {
+    selectedLog = fileSelect.value;
+    logController?.abort();
+    logLoading = false;
+    logData = null;
+    void loadSystemLog();
+  });
+  document.querySelector<HTMLInputElement>('#journal-filter')?.addEventListener('input', drawJournal);
+  document.querySelector<HTMLButtonElement>('#journal-clear')?.addEventListener('click', () => {
+    logCleared = true;
+    drawJournal();
+  });
+  document.querySelector<HTMLButtonElement>('#journal-expand')?.addEventListener('click', () => {
+    logExpanded = !logExpanded;
+    document.querySelector('.journal-panel')?.classList.toggle('is-expanded', logExpanded);
+    const button = document.querySelector<HTMLButtonElement>('#journal-expand');
+    if (button) {
+      button.textContent = logExpanded ? '⤢' : '⛶';
+      button.setAttribute('aria-pressed', String(logExpanded));
+      button.title = logExpanded ? 'Свернуть журнал' : 'Развернуть журнал';
+    }
+  });
+  drawJournal();
+  if (!logData && !logError && !logLoading) void loadSystemLog();
 }
 
 function renderServicesDialog(): void {
@@ -154,6 +273,7 @@ function render(): void {
         : activePage === 'dns' ? renderDns(dnsResult, dnsLoading, dnsError, dnsQueryName, dnsQueryType)
         : renderComingSoon(activePage);
   app.innerHTML = `<div class="app-shell">${renderHeader()}${renderNavigation()}<main class="main-content">${pageContent}</main>${renderJournal()}<div class="toast-region" aria-live="polite"></div></div>`;
+  bindJournal();
   document.querySelectorAll<HTMLButtonElement>('[data-page]').forEach((button) => {
     button.addEventListener('click', () => {
       const page = button.dataset.page as Page | undefined;
@@ -379,7 +499,7 @@ function openSettings(): void {
     });
     if (!content) return;
     if (tab === 'general') {
-      content.innerHTML = `<div class="setting-row"><div><strong>Порт панели</strong><small>Адрес локального Rust API и интерфейса</small></div><span class="setting-value">${state.status?.port ?? 1001}</span></div><div class="setting-row"><div><strong>Backend</strong><small>${state.connected ? 'Соединение установлено' : 'Соединение отсутствует'}</small></div><span class="state-pill ${state.connected ? 'state-running' : 'state-unavailable'}">${state.connected ? 'На связи' : 'Ожидание'}</span></div><div class="setting-row"><div><strong>Режим</strong><small>Источник системных сведений</small></div><span class="setting-value">${state.status?.mode === 'router' ? 'Роутер' : 'Симуляция'}</span></div><div class="setting-row"><div><strong>Версия XKeen UI</strong><small>Сборка панели</small></div><span class="setting-value">${escapeHtml(state.status?.appVersion ?? '0.1.0')}</span></div>`;
+      content.innerHTML = `<div class="setting-row"><div><strong>Порт панели</strong><small>Адрес локального Rust API и интерфейса</small></div><span class="setting-value">${state.status?.port ?? 1001}</span></div><div class="setting-row"><div><strong>Backend</strong><small>${state.connected ? 'Соединение установлено' : 'Соединение отсутствует'}</small></div><span class="state-pill ${state.connected ? 'state-running' : 'state-unavailable'}">${state.connected ? 'На связи' : 'Ожидание'}</span></div><div class="setting-row"><div><strong>Режим</strong><small>Источник системных сведений</small></div><span class="setting-value">${state.status?.mode === 'router' ? 'Роутер' : 'Симуляция'}</span></div><div class="setting-row"><div><strong>Версия XKeen UI</strong><small>Сборка панели</small></div><span class="setting-value">${escapeHtml(state.status?.appVersion ?? '0.2.0')}</span></div>`;
       return;
     }
     if (tab === 'sources') {
@@ -464,4 +584,7 @@ window.addEventListener('beforeunload', () => {
   requestController?.abort();
   mihomoController?.abort();
   if (refreshTimer !== undefined) window.clearInterval(refreshTimer);
+  logController?.abort();
+  if (logRefreshTimer !== undefined) window.clearInterval(logRefreshTimer);
 });
+logRefreshTimer = window.setInterval(() => { if (!document.hidden && !logExpanded) void loadSystemLog(); }, 15_000);

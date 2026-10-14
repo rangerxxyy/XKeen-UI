@@ -39,6 +39,12 @@ export interface CoreInstallResult {
   detail: string;
 }
 
+export interface SystemLog {
+  file: string;
+  lines: string[];
+  truncated: boolean;
+}
+
 export interface ApiState {
   connected: boolean;
   status: SystemStatus | null;
@@ -313,6 +319,16 @@ export async function installCoreRelease(request: {
     throw new Error('Backend вернул некорректный результат установки ядра');
   }
   return payload as unknown as CoreInstallResult;
+}
+
+export async function getSystemLog(file: string, signal?: AbortSignal): Promise<SystemLog> {
+  const query = new URLSearchParams({ file });
+  const payload = await getMihomoJson(`/api/v1/logs?${query.toString()}`, 'Чтение журнала', signal);
+  if (!isRecord(payload) || typeof payload.file !== 'string' || !Array.isArray(payload.lines) ||
+      !payload.lines.every((line) => typeof line === 'string') || typeof payload.truncated !== 'boolean') {
+    throw new Error('Backend вернул некорректный формат журнала');
+  }
+  return { file: payload.file, lines: payload.lines as string[], truncated: payload.truncated };
 }
 
 export async function getHealth(signal?: AbortSignal): Promise<{ status: string }> {

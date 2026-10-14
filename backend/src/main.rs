@@ -24,6 +24,7 @@ use tracing::{info, warn};
 
 mod core_update;
 mod installer;
+mod logs;
 mod mihomo;
 mod xkeen;
 use mihomo::{Endpoint as MihomoEndpoint, MihomoClient, MihomoError};
@@ -720,6 +721,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let read_api = Router::new()
         .route("/api/v1/status", get(status))
         .route("/api/v1/xkeen", get(xkeen_status))
+        .route("/api/v1/logs", get(logs::read_logs))
         .route("/api/v1/settings/core-sources", get(get_core_sources))
         .route("/api/v1/mihomo/version", get(mihomo_version))
         .route("/api/v1/mihomo/proxies", get(mihomo_proxies))

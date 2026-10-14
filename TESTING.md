@@ -1,4 +1,4 @@
-# Проверка XKeen UI 0.1.0
+# Проверка XKeen UI 0.2.0
 
 ## Frontend
 

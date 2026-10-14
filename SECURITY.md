@@ -1,4 +1,4 @@
-# Безопасность — XKeen UI 0.1.0
+# Безопасность — XKeen UI 0.2.0
 
 - HTTP API пока содержит только read-only endpoints; единственный защищённый endpoint — `/api/v1/status`.
 - Simulation mode не запускает системные команды и не читает конфигурации роутера.

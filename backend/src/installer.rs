@@ -3,6 +3,7 @@ use std::{
     error::Error,
     fs::{self, OpenOptions},
     io::{self, Read, Write},
+    net::TcpListener,
     path::{Path, PathBuf},
     process::{Command, Stdio},
     thread,
@@ -137,20 +138,27 @@ fn install_or_update(options: &InstallOptions) -> Result<(), Box<dyn Error>> {
     fs::create_dir_all(&paths.etc)?;
     let previous_config = read_optional(&paths.config)?;
     let saved = Config::parse(previous_config.as_deref())?;
-    let port = options.port.unwrap_or(saved.port);
-    let token = saved.token;
-    let config = Config {
-        port,
-        token,
-        mihomo_url: env::var("XKEEN_MIHOMO_URL").ok().or(saved.mihomo_url),
-        mihomo_secret: env::var("XKEEN_MIHOMO_SECRET").ok().or(saved.mihomo_secret),
-    };
-
     validate_owned_paths(&paths)?;
     let was_installed = paths.app.exists();
     if was_installed {
         service_stop(&options.prefix)?;
     }
+    let port = match choose_port(options.port) {
+        Ok(port) => port,
+        Err(error) => {
+            if was_installed {
+                let _ = service_start(&options.prefix);
+            }
+            return Err(error.into());
+        }
+    };
+    let config = Config {
+        port,
+        token: saved.token,
+        mihomo_url: env::var("XKEEN_MIHOMO_URL").ok().or(saved.mihomo_url),
+        mihomo_secret: env::var("XKEEN_MIHOMO_SECRET").ok().or(saved.mihomo_secret),
+    };
+
     let backup = if paths.app.exists() {
         let backup = paths.backup_path()?;
         fs::rename(&paths.app, &backup)?;
@@ -223,6 +231,30 @@ fn install_or_update(options: &InstallOptions) -> Result<(), Box<dyn Error>> {
     }
     println!("Ключ доступа (сохраните его): {}", config.token);
     Ok(())
+}
+
+fn choose_port(requested: Option<u16>) -> io::Result<u16> {
+    if let Some(port) = requested {
+        return if port_is_available(port) {
+            Ok(port)
+        } else {
+            Err(io::Error::new(
+                io::ErrorKind::AddrInUse,
+                format!("requested port {port} is already in use"),
+            ))
+        };
+    }
+    first_available_port(DEFAULT_PORT)
+}
+
+fn first_available_port(start: u16) -> io::Result<u16> {
+    (start..=u16::MAX)
+        .find(|port| port_is_available(*port))
+        .ok_or_else(|| io::Error::new(io::ErrorKind::AddrNotAvailable, "no free TCP port found"))
+}
+
+fn port_is_available(port: u16) -> bool {
+    TcpListener::bind(("0.0.0.0", port)).is_ok()
 }
 
 fn validate_package(package_dir: &Path) -> Result<(), Box<dyn Error>> {
@@ -639,7 +671,11 @@ fn timestamp() -> io::Result<u64> {
 
 #[cfg(test)]
 mod tests {
-    use super::{parse_install_options, validate_prefix, Config, InstallOptions};
+    use super::{
+        choose_port, first_available_port, parse_install_options, validate_prefix, Config,
+        InstallOptions, DEFAULT_PORT,
+    };
+    use std::net::TcpListener;
     use std::path::Path;
 
     #[test]
@@ -671,5 +707,20 @@ mod tests {
         assert_eq!(saved.token.len(), 64);
         assert_eq!(saved.mihomo_url, None);
         assert_eq!(Config::parse(None).unwrap().port, 1001);
+    }
+
+    #[test]
+    fn automatic_port_selection_uses_1001_then_the_next_free_port() {
+        let port = first_available_port(20_000).unwrap();
+        let _occupied = TcpListener::bind(("0.0.0.0", port)).unwrap();
+        assert!(first_available_port(port).unwrap() > port);
+        assert!(choose_port(None).unwrap() >= DEFAULT_PORT);
+    }
+
+    #[test]
+    fn explicit_port_is_rejected_when_already_in_use() {
+        let port = first_available_port(20_000).unwrap();
+        let _occupied = TcpListener::bind(("0.0.0.0", port)).unwrap();
+        assert_eq!(choose_port(Some(port)).unwrap_err().kind(), std::io::ErrorKind::AddrInUse);
     }
 }

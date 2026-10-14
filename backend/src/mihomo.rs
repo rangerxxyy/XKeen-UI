@@ -268,9 +268,9 @@ fn valid_dns_name(value: &str) -> bool {
         && name.split('.').all(|label| {
             !label.is_empty()
                 && label.len() <= 63
-                && label
-                    .bytes()
-                    .all(|byte| byte.is_ascii_alphanumeric() || byte == b'-')
+                && label.bytes().all(|byte| {
+                    byte.is_ascii_alphanumeric() || byte == b'-' || byte == b'_'
+                })
                 && label.as_bytes()[0] != b'-'
                 && label.as_bytes()[label.len() - 1] != b'-'
         })
@@ -338,6 +338,7 @@ mod tests {
     fn dns_queries_allow_domain_names_and_known_record_types_only() {
         assert!(valid_dns_name("example.com"));
         assert!(valid_dns_name("router.lan."));
+        assert!(valid_dns_name("_xmpp._tcp.example.com"));
         assert!(!valid_dns_name(""));
         assert!(!valid_dns_name("bad..example"));
         assert!(!valid_dns_name("-bad.example"));

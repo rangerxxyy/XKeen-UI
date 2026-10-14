@@ -13,6 +13,7 @@ if [ "$#" -eq 0 ] && [ -r /dev/tty ]; then
  /   | / /| |/ __// __// / / / /_/ /_/ /
 /_/|_|/_/ |_|\___/\___//_/ /_/ \____//___/
 BANNER
+  printf '\033[1;38;5;141m  XKeen UI\033[0m\n'
   machine=$(uname -m 2>/dev/null || printf unknown)
   case "$machine" in aarch64|arm64) machine=arm64-v8a ;; esac
   printf '\033[38;5;51mАрхитектура: %s\033[0m\n' "$machine"

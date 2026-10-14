@@ -138,7 +138,7 @@ fn install_or_update(options: &InstallOptions) -> Result<(), Box<dyn Error>> {
     fs::create_dir_all(&paths.etc)?;
     let previous_config = read_optional(&paths.config)?;
     let saved = Config::parse(previous_config.as_deref())?;
-    let bind_ip = resolve_bind_ip()?;
+    let bind_ip = resolve_bind_ip().or_else(|error| saved.bind_ip.ok_or(error))?;
     validate_owned_paths(&paths)?;
     let was_installed = paths.app.exists();
     if was_installed {

@@ -95,14 +95,15 @@ pub async fn control(action: &str) -> Result<XkeenStatus, String> {
     let mut command = Command::new(path);
     command
         .args(args)
+        .kill_on_drop(true)
         .env_clear()
         .env("PATH", "/opt/sbin:/opt/bin:/sbin:/bin:/usr/sbin:/usr/bin")
         .stdin(Stdio::null())
         .env("HOME", "/root")
         .env("TERM", "dumb");
-    let output = command
-        .output()
+    let output = tokio::time::timeout(Duration::from_secs(30), command.output())
         .await
+        .map_err(|_| "Команда XKeen не завершилась за 30 секунд".to_owned())?
         .map_err(|error| format!("Не удалось выполнить {}: {error}", path))?;
     if !output.status.success() {
         let detail = String::from_utf8_lossy(&output.stderr);
@@ -205,7 +206,7 @@ fn truncate(value: &str, max_bytes: usize) -> String {
 
 #[cfg(test)]
 mod tests {
-    use super::{resolve_init_path, safe_init_path, shell_assignment};
+    use super::{resolve_init_path, safe_init_path, shell_assignment, truncate};
     use std::path::Path;
 
     #[test]
@@ -234,5 +235,11 @@ mod tests {
         let value = shell_assignment(text, "name_client").unwrap();
         assert!(!super::ALLOWED_CLIENTS.contains(&value.as_str()));
         assert!(super::ALLOWED_CLIENTS.contains(&"mihomo"));
+    }
+
+    #[test]
+    fn truncates_long_output_without_splitting_utf8() {
+        assert_eq!(truncate("коротко", 32), "коротко");
+        assert_eq!(truncate(&"я".repeat(20), 9), "яя…");
     }
 }

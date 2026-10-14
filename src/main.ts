@@ -51,6 +51,7 @@ let logError: string | null = null;
 let logLoading = false;
 let logCleared = false;
 let logExpanded = false;
+let logFilter = '';
 let logController: AbortController | undefined;
 let logRefreshTimer: number | undefined;
 
@@ -137,7 +138,7 @@ function renderFooter(): string {
 }
 
 function renderJournal(): string {
-  return `<section class="journal-panel ${logExpanded ? 'is-expanded' : ''}" aria-label="Журнал событий"><header class="journal-heading"><h2>Журнал</h2><div class="journal-tools"><label class="journal-filter"><span aria-hidden="true">⌕</span><input id="journal-filter" type="search" placeholder="Фильтр" aria-label="Фильтр журнала"></label><select id="journal-file" aria-label="Файл журнала">${logFiles.map((file) => `<option value="${file.id}" ${selectedLog === file.id ? 'selected' : ''}>${file.label}</option>`).join('')}</select><button class="journal-icon-button" id="journal-clear" type="button" title="Очистить отображение" aria-label="Очистить отображение">♲</button><button class="journal-icon-button" id="journal-expand" type="button" title="Развернуть журнал" aria-label="Развернуть журнал" aria-pressed="${logExpanded}">${logExpanded ? '⤢' : '⛶'}</button></div></header><div class="journal-body" id="journal-body" aria-live="polite"></div></section>`;
+  return `<section class="journal-panel ${logExpanded ? 'is-expanded' : ''}" aria-label="Журнал событий"><header class="journal-heading"><h2>Журнал</h2><div class="journal-tools"><label class="journal-filter"><span aria-hidden="true">⌕</span><input id="journal-filter" type="search" placeholder="Фильтр" aria-label="Фильтр журнала" value="${escapeHtml(logFilter)}"></label><select id="journal-file" aria-label="Файл журнала">${logFiles.map((file) => `<option value="${file.id}" ${selectedLog === file.id ? 'selected' : ''}>${file.label}</option>`).join('')}</select><button class="journal-icon-button" id="journal-clear" type="button" title="Очистить отображение" aria-label="Очистить отображение">♲</button><button class="journal-icon-button" id="journal-expand" type="button" title="Развернуть журнал" aria-label="Развернуть журнал" aria-pressed="${logExpanded}">${logExpanded ? '⤢' : '⛶'}</button></div></header><div class="journal-body" id="journal-body" aria-live="polite"></div></section>`;
 }
 
 function drawJournal(): void {
@@ -155,7 +156,7 @@ function drawJournal(): void {
     body.innerHTML = '<div class="journal-empty"><span class="journal-empty-icon">✓</span><strong>Отображение очищено</strong><p>Исходный файл на устройстве не изменён.</p></div>';
     return;
   }
-  const filter = document.querySelector<HTMLInputElement>('#journal-filter')?.value.trim().toLocaleLowerCase() ?? '';
+  const filter = logFilter.trim().toLocaleLowerCase();
   const lines = (logData?.lines ?? []).filter((line) => !filter || line.toLocaleLowerCase().includes(filter));
   const list = document.createElement('div');
   list.className = 'journal-lines';
@@ -225,7 +226,10 @@ function bindJournal(): void {
     logData = null;
     void loadSystemLog();
   });
-  document.querySelector<HTMLInputElement>('#journal-filter')?.addEventListener('input', drawJournal);
+  document.querySelector<HTMLInputElement>('#journal-filter')?.addEventListener('input', (event) => {
+    logFilter = (event.currentTarget as HTMLInputElement).value;
+    drawJournal();
+  });
   document.querySelector<HTMLButtonElement>('#journal-clear')?.addEventListener('click', () => {
     logCleared = true;
     drawJournal();

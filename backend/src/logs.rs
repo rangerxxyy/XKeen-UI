@@ -143,9 +143,14 @@ fn sanitize_line(line: &str) -> String {
         .collect();
     for key in [
         "password=",
+        "password:",
         "token=",
+        "token:",
         "secret=",
+        "secret:",
         "api_key=",
+        "api_key:",
+        "api-key=",
         "privatekey=",
         "authorization:",
         "bearer ",

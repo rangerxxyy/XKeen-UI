@@ -452,32 +452,24 @@ fn service_stop(prefix: &Path) -> Result<(), Box<dyn Error>> {
 }
 
 fn signal_process(pid: u32) -> io::Result<()> {
-    let pid_arg = pid.to_string();
-    let candidates = [
-        "/opt/bin/kill",
-        "/opt/sbin/kill",
-        "/bin/kill",
-        "/usr/bin/kill",
-    ];
-    let mut last_not_found = None;
-    for executable in candidates {
-        match Command::new(executable)
-            .env_clear()
-            .arg("-TERM")
-            .arg(&pid_arg)
-            .status()
-        {
-            Ok(status) if status.success() => return Ok(()),
-            Ok(_) => return Err(io::Error::other("could not signal XKeen UI process")),
-            Err(error) if error.kind() == io::ErrorKind::NotFound => {
-                last_not_found = Some(error);
-            }
-            Err(error) => return Err(error),
-        }
+    use std::os::raw::c_int;
+
+    // Entware commonly provides `kill` only as a BusyBox shell builtin, so
+    // invoking `/bin/kill` or `/opt/bin/kill` fails with ENOENT. Signal the
+    // verified panel PID directly; ownership is checked by service_stop first.
+    unsafe extern "C" {
+        fn kill(pid: c_int, signal: c_int) -> c_int;
     }
-    Err(last_not_found.unwrap_or_else(|| {
-        io::Error::new(io::ErrorKind::NotFound, "no supported kill command found")
-    }))
+    let pid = c_int::try_from(pid)
+        .map_err(|_| io::Error::new(io::ErrorKind::InvalidInput, "invalid panel PID"))?;
+    // SAFETY: `pid` is the validated PID read from the service file and the
+    // caller verified that it belongs to the XKeen UI executable.
+    let result = unsafe { kill(pid, 15) };
+    if result == 0 {
+        Ok(())
+    } else {
+        Err(io::Error::last_os_error())
+    }
 }
 
 fn service_status(prefix: &Path) {

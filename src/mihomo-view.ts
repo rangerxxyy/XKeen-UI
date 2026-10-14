@@ -47,9 +47,9 @@ function proxyCard(group: MihomoSelector): string {
 
 export function renderSelectors(groups: MihomoSelector[], loading: boolean, error: string | null): string {
   const state = loadState(loading, error, 'группы');
-  return `<section class="page-heading mihomo-heading"><div><div class="eyebrow"><span class="eyebrow-line"></span> MIHOMO · РЕАЛЬНЫЕ ДАННЫЕ</div><h1>Селекторы</h1><p>Выбор узла изменит активный маршрут для группы Mihomo.</p></div><div class="mihomo-heading-actions"><span class="runtime-badge"><span class="runtime-dot"></span> API ядра</span><button class="button button-quiet" id="mihomo-refresh"><span>↻</span> Обновить</button></div></section>
-  ${state || (groups.length === 0 ? '<section class="mihomo-empty"><span class="mihomo-error-mark">◇</span><strong>Группы Selector не найдены</strong><p>API Mihomo ответил, но не вернул выбираемых групп.</p></section>' : `<section class="selector-summary"><div><span class="summary-icon">⇄</span><strong>${groups.length}</strong><small>активных групп</small></div><span class="summary-divider"></span><p>Данные загружены из действующего runtime Mihomo.</p><span class="summary-version">READ ONLY API + ЯВНЫЙ ВЫБОР</span></section><div class="selector-list">${groups.map(proxyCard).join('')}</div>`)}
-  <div class="mihomo-privacy-note"><span>i</span><p>Список групп и иконки узлов читаются из текущего API Mihomo. Смена узла отправляется только после нажатия «Выбрать» и подтверждения.</p></div>`;
+  return `<section class="selector-toolbar"><div class="selector-toolbar-title"><h1>Селекторы</h1>${loading ? '<span class="selector-count">Загрузка…</span>' : error ? '' : `<span class="selector-count">${groups.length} групп</span>`}</div><div class="mihomo-heading-actions"><span class="runtime-badge"><span class="runtime-dot"></span> Mihomo API</span><button class="button button-quiet" id="mihomo-refresh"><span>↻</span> Обновить</button></div></section>
+  ${state || (groups.length === 0 ? '<section class="mihomo-empty"><span class="mihomo-error-mark">◇</span><strong>Группы Selector не найдены</strong><p>API Mihomo ответил, но не вернул выбираемых групп.</p></section>' : `<div class="selector-list">${groups.map(proxyCard).join('')}</div>`)}
+  `;
 }
 
 function connectionRow(connection: MihomoConnection): string {

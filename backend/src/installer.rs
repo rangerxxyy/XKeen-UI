@@ -352,22 +352,7 @@ fn service_stop(prefix: &Path) -> Result<(), Box<dyn Error>> {
         println!("Удалена устаревшая запись PID.");
         return Ok(());
     }
-    let pid_arg = pid.to_string();
-    let status = Command::new("/bin/kill")
-        .env_clear()
-        .arg("-TERM")
-        .arg(&pid_arg)
-        .status()
-        .or_else(|_| {
-            Command::new("/usr/bin/kill")
-                .env_clear()
-                .arg("-TERM")
-                .arg(&pid_arg)
-                .status()
-        })?;
-    if !status.success() {
-        return Err("could not signal XKeen UI process".into());
-    }
+    signal_process(pid)?;
     for _ in 0..50 {
         if !owns_process(pid, &paths.app.join("xkeen-ui")) {
             fs::remove_file(&paths.pid)?;
@@ -377,6 +362,35 @@ fn service_stop(prefix: &Path) -> Result<(), Box<dyn Error>> {
         thread::sleep(Duration::from_millis(100));
     }
     Err("XKeen UI process did not stop; PID file was kept".into())
+}
+
+fn signal_process(pid: u32) -> io::Result<()> {
+    let pid_arg = pid.to_string();
+    let candidates = [
+        "/opt/bin/kill",
+        "/opt/sbin/kill",
+        "/bin/kill",
+        "/usr/bin/kill",
+    ];
+    let mut last_not_found = None;
+    for executable in candidates {
+        match Command::new(executable)
+            .env_clear()
+            .arg("-TERM")
+            .arg(&pid_arg)
+            .status()
+        {
+            Ok(status) if status.success() => return Ok(()),
+            Ok(_) => return Err(io::Error::other("could not signal XKeen UI process")),
+            Err(error) if error.kind() == io::ErrorKind::NotFound => {
+                last_not_found = Some(error);
+            }
+            Err(error) => return Err(error),
+        }
+    }
+    Err(last_not_found.unwrap_or_else(|| {
+        io::Error::new(io::ErrorKind::NotFound, "no supported kill command found")
+    }))
 }
 
 fn service_status(prefix: &Path) {

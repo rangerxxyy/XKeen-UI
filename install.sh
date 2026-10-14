@@ -7,7 +7,6 @@ if [ "$#" -eq 0 ] && [ -r /dev/tty ]; then
   printf '\033[2J\033[H'
   printf '\033[38;5;141m'
   cat <<'BANNER'
-cat << 'EOF'
    _  __  __ __                        __  __  ____ 
   | |/ / / //_/___   ___   ____       / / / / /  _/ 
   |   / / ,<  / _ \ / _ \ / __ \     / / / /  / /   
@@ -16,9 +15,8 @@ cat << 'EOF'
 ----------------------------------------------------
            XKeen UI — Установка пакета              
 ----------------------------------------------------
-EOF
 BANNER
-  printf '\033[1;38;5;141m  XKeen  UI\033[0m\n'
+  printf '\033[1;38;5;141m  XKeen UI\033[0m\n'
   machine=$(uname -m 2>/dev/null || printf unknown)
   case "$machine" in aarch64|arm64) machine=arm64-v8a ;; esac
   printf '\033[38;5;51mАрхитектура: %s\033[0m\n' "$machine"

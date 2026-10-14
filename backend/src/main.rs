@@ -11,7 +11,7 @@ use axum::{
     http::{header, HeaderMap, Request, StatusCode},
     middleware::{self, Next},
     response::{IntoResponse, Json, Response},
-    routing::get,
+    routing::{any, get},
     Router,
 };
 use serde::{Deserialize, Serialize};
@@ -235,6 +235,13 @@ struct DnsQuery {
 
 async fn health() -> Json<Health> {
     Json(Health { status: "ok" })
+}
+
+async fn api_not_found() -> impl IntoResponse {
+    (
+        StatusCode::NOT_FOUND,
+        Json(serde_json::json!({ "error": "API endpoint not found" })),
+    )
 }
 
 async fn xkeen_status(State(state): State<AppState>) -> Response {
@@ -763,6 +770,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         ));
     let app = Router::new()
         .route("/health", get(health))
+        .route("/api/{*path}", any(api_not_found))
         .merge(read_api)
         .merge(mutation_api)
         .fallback_service(ServeDir::new(&web).not_found_service(ServeFile::new(index)))

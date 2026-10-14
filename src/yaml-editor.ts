@@ -6,7 +6,7 @@ import { yaml } from '@codemirror/lang-yaml';
 import { json } from '@codemirror/lang-json';
 import { applyEdits, format as formatJsonc, parse as parseJsonc, printParseErrorCode, type ParseError } from 'jsonc-parser';
 import { parseDocument } from 'yaml';
-import { chooseReferenceTemplate } from './templates';
+import { chooseReferenceTemplate, getDefaultTemplate } from './templates';
 
 const draftKey = 'xkeen-ui:draft:';
 const activeFileKey = 'xkeen-ui:draft-active-file';
@@ -17,7 +17,7 @@ const draftFiles = [
   { id: 'port_proxying', label: 'port_proxying', filename: 'port_proxying', format: 'text' },
   { id: 'xkeen', label: 'xkeen', filename: 'xkeen', format: 'text' },
   { id: 'xray_json', label: 'xray_config.json', filename: 'config.json', format: 'json' },
-  { id: 'xray_jsonc', label: 'xray_config.jsonc', filename: 'config.jsonc', format: 'jsonc' },
+  { id: 'xray_jsonc', label: '05_routing.jsonc', filename: '05_routing.jsonc', format: 'jsonc' },
 ] as const;
 let editor: EditorView | null = null;
 let activeFile = sessionStorage.getItem(activeFileKey) ?? 'config';
@@ -147,7 +147,9 @@ export function mountYamlEditor(): void {
 
   setEditorIdentity();
   const file = currentFile();
-  const initial = sessionStorage.getItem(`${draftKey}${file.id}`) ?? '';
+  const storedDraft = sessionStorage.getItem(`${draftKey}${file.id}`);
+  const initial = storedDraft ?? (file.id === 'config' || file.id === 'xray_jsonc' ? getDefaultTemplate(file.id === 'config' ? 'mihomo' : 'xray').content : '');
+  if (storedDraft === null && initial) sessionStorage.setItem(`${draftKey}${file.id}`, initial);
   const updateListener = EditorView.updateListener.of((update) => {
     if (!update.docChanged) return;
     const text = update.state.doc.toString();
@@ -174,6 +176,11 @@ export function mountYamlEditor(): void {
   setValidation(initial.trim()
     ? `Черновик ${file.filename} · ${editor.state.doc.lines} строк · не применён`
     : file.format === 'yaml' ? 'Черновик пуст. Можно вставить шаблон или начать ввод.' : 'Локальный черновик пуст.', null);
+  if (storedDraft === null && initial.trim()) {
+    setValidation(file.format === 'yaml'
+      ? 'Загружен локальный стартовый шаблон Mihomo «Только заблокированное»; это черновик.'
+      : 'Загружен локальный шаблон Xray Routing «Только заблокированное»; это фрагмент конфигурации.', null);
+  }
 
   document.querySelectorAll<HTMLButtonElement>('[data-config-file]').forEach((button) => {
     button.addEventListener('click', () => {

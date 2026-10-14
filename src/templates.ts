@@ -5,6 +5,37 @@ export interface ReferenceTemplate {
   url: string;
 }
 
+import mihomoBlocked from './templates/mihomo-blocked.yaml?raw';
+import mihomoProxyExceptRu from './templates/mihomo-proxy-except-ru.yaml?raw';
+import xrayBlocked from './templates/xray-blocked.jsonc?raw';
+import xrayProxyExceptRu from './templates/xray-proxy-except-ru.json?raw';
+
+export interface BundledTemplate {
+  name: string;
+  content: string;
+}
+
+const bundledTemplates: Record<ReferenceCore, BundledTemplate[]> = {
+  mihomo: [
+    { name: 'Только заблокированное (zxc-rv)', content: mihomoBlocked },
+    { name: 'Всё через PROXY, кроме RU (zxc-rv)', content: mihomoProxyExceptRu },
+  ],
+  xray: [
+    { name: 'Routing: только заблокированное (zxc-rv)', content: xrayBlocked },
+    { name: 'Routing: всё через прокси, кроме RU (zxc-rv)', content: xrayProxyExceptRu },
+  ],
+};
+
+export function getBundledTemplates(core: ReferenceCore): BundledTemplate[] {
+  return bundledTemplates[core];
+}
+
+export function getDefaultTemplate(core: ReferenceCore): BundledTemplate {
+  const template = bundledTemplates[core][0];
+  if (!template) throw new Error(`Нет встроенного шаблона для ${core}`);
+  return template;
+}
+
 const ASSETS_REVISION = '26e20e85ddde31622a7002e6567698c9389b164e';
 const ASSETS_ROOT = `https://raw.githubusercontent.com/zxc-rv/assets/${ASSETS_REVISION}/config_templates/`;
 const MANIFEST_URL = `${ASSETS_ROOT}templates.json`;
@@ -38,7 +69,16 @@ function closeDialog(dialog: HTMLDialogElement): void {
 }
 
 export async function chooseReferenceTemplate(core: ReferenceCore): Promise<{ name: string; content: string } | null> {
-  const templates = await getTemplates(core);
+  const localTemplates = getBundledTemplates(core);
+  let remoteTemplates: ReferenceTemplate[] = [];
+  try {
+    remoteTemplates = (await getTemplates(core)).filter((item) =>
+      !localTemplates.some((local) => local.name === item.name || item.name.toLocaleLowerCase().includes(local.name.includes('PROXY') ? 'все в прокси' : 'только заблокированное')),
+    );
+  } catch {
+    // Bundled defaults stay usable offline if GitHub or its template manifest is unavailable.
+  }
+  const templates: Array<BundledTemplate | ReferenceTemplate> = [...localTemplates, ...remoteTemplates];
   const dialog = document.createElement('dialog');
   dialog.className = 'template-dialog';
   const form = document.createElement('form');
@@ -75,9 +115,14 @@ export async function chooseReferenceTemplate(core: ReferenceCore): Promise<{ na
     importButton.disabled = true;
     status.textContent = 'Загружаем…';
     try {
-      const response = await fetch(template.url, { credentials: 'omit', referrerPolicy: 'no-referrer' });
-      if (!response.ok) throw new Error(`HTTP ${response.status}`);
-      const content = await response.text();
+      let content: string;
+      if ('content' in template) {
+        content = template.content;
+      } else {
+        const response = await fetch(template.url, { credentials: 'omit', referrerPolicy: 'no-referrer' });
+        if (!response.ok) throw new Error(`HTTP ${response.status}`);
+        content = await response.text();
+      }
       if (!content.trim() || content.length > 1_000_000) throw new Error('Шаблон пустой или превышает 1 МБ');
       dialog.dispatchEvent(new CustomEvent('template-selected', { detail: { name: template.name, content } }));
       closeDialog(dialog);

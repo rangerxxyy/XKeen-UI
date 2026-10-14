@@ -3,16 +3,20 @@ import { EditorView, highlightActiveLine, keymap, lineNumbers } from '@codemirro
 import { defaultKeymap, history, historyKeymap } from '@codemirror/commands';
 import { defaultHighlightStyle, syntaxHighlighting } from '@codemirror/language';
 import { yaml } from '@codemirror/lang-yaml';
+import { json } from '@codemirror/lang-json';
+import { applyEdits, format as formatJsonc, parse as parseJsonc, printParseErrorCode, type ParseError } from 'jsonc-parser';
 import { parseDocument } from 'yaml';
 
 const draftKey = 'xkeen-ui:draft:';
 const activeFileKey = 'xkeen-ui:draft-active-file';
 const draftFiles = [
-  { id: 'config', label: 'config', filename: 'config.yaml', yaml: true },
-  { id: 'ip_exclude', label: 'ip_exclude', filename: 'ip_exclude', yaml: false },
-  { id: 'port_exclude', label: 'port_exclude', filename: 'port_exclude', yaml: false },
-  { id: 'port_proxying', label: 'port_proxying', filename: 'port_proxying', yaml: false },
-  { id: 'xkeen', label: 'xkeen', filename: 'xkeen', yaml: false },
+  { id: 'config', label: 'config', filename: 'config.yaml', format: 'yaml' },
+  { id: 'ip_exclude', label: 'ip_exclude', filename: 'ip_exclude', format: 'text' },
+  { id: 'port_exclude', label: 'port_exclude', filename: 'port_exclude', format: 'text' },
+  { id: 'port_proxying', label: 'port_proxying', filename: 'port_proxying', format: 'text' },
+  { id: 'xkeen', label: 'xkeen', filename: 'xkeen', format: 'text' },
+  { id: 'xray_json', label: 'xray_config.json', filename: 'config.json', format: 'json' },
+  { id: 'xray_jsonc', label: 'xray_config.jsonc', filename: 'config.jsonc', format: 'jsonc' },
 ] as const;
 const starterTemplate = `# Локальный пример для изучения формата Mihomo.
 # Этот черновик не связан с роутером и не применяется автоматически.
@@ -41,15 +45,18 @@ function setEditorIdentity(): void {
   const language = document.querySelector<HTMLElement>('#editor-language');
   const hint = document.querySelector<HTMLElement>('#editor-file-hint');
   if (filename) filename.textContent = file.filename;
-  if (language) language.textContent = file.yaml ? 'YAML · Mihomo' : 'TEXT · XKeen';
-  if (hint) hint.textContent = file.yaml ? 'Локальная вкладка · не файл роутера' : 'Локальный список · не файл роутера';
+  if (language) language.textContent = file.format === 'yaml' ? 'YAML · Mihomo' : file.format === 'text' ? 'TEXT · XKeen' : `${file.format.toUpperCase()} · Xray`;
+  if (hint) hint.textContent = file.format === 'yaml' ? 'Локальная вкладка · не файл роутера' : 'Локальный черновик · не файл роутера';
   document.querySelectorAll<HTMLButtonElement>('[data-config-file]').forEach((button) => {
     const selected = button.dataset.configFile === file.id;
     button.classList.toggle('selected', selected);
     button.setAttribute('aria-pressed', String(selected));
   });
   document.querySelectorAll<HTMLElement>('[data-yaml-only]').forEach((element) => {
-    element.hidden = !file.yaml;
+    element.hidden = file.format !== 'yaml';
+  });
+  document.querySelectorAll<HTMLElement>('[data-structured-only]').forEach((element) => {
+    element.hidden = file.format === 'text';
   });
 }
 
@@ -97,9 +104,42 @@ function validateYaml(text: string): boolean {
   return true;
 }
 
+function validateStructuredDocument(text: string): boolean {
+  const format = currentFile().format;
+  if (format === 'yaml') return validateYaml(text);
+  if (format === 'text') {
+    setValidation('Для этого списка синтаксический валидатор не задан.', null);
+    return false;
+  }
+  if (!text.trim()) {
+    setValidation('Черновик пуст.', null);
+    return false;
+  }
+  const errors: ParseError[] = [];
+  const value: unknown = parseJsonc(text, errors, {
+    allowTrailingComma: format === 'jsonc',
+    disallowComments: format === 'json',
+  });
+  if (errors.length && errors[0]) {
+    const error = errors[0];
+    const line = text.slice(0, error.offset).split('\n').length;
+    setValidation(`Ошибка ${format.toUpperCase()} · строка ${line}: ${printParseErrorCode(error.error)}`, false);
+    return false;
+  }
+  if (!value || typeof value !== 'object' || Array.isArray(value)) {
+    setValidation(`${format.toUpperCase()} синтаксически корректен, но ожидается корневой объект Xray.`, false);
+    return false;
+  }
+  setValidation(`${format.toUpperCase()} синтаксически корректен. Схема версии Xray не проверялась.`, true);
+  return true;
+}
+
 function downloadDraft(text: string): void {
   const file = currentFile();
-  const blob = new Blob([text], { type: file.yaml ? 'application/yaml;charset=utf-8' : 'text/plain;charset=utf-8' });
+  const mime = file.format === 'yaml' ? 'application/yaml;charset=utf-8'
+    : file.format === 'json' || file.format === 'jsonc' ? 'application/json;charset=utf-8'
+      : 'text/plain;charset=utf-8';
+  const blob = new Blob([text], { type: mime });
   const url = URL.createObjectURL(blob);
   const link = document.createElement('a');
   link.href = url;
@@ -125,8 +165,7 @@ export function mountYamlEditor(): void {
     if (!update.docChanged) return;
     const text = update.state.doc.toString();
     sessionStorage.setItem(`${draftKey}${file.id}`, text);
-    if (file.yaml) setValidation(`Черновик в этой вкладке · ${update.state.doc.lines} строк · не применён`, null);
-    else setValidation(`Локальный текстовый список · ${update.state.doc.lines} строк · не применён`, null);
+    setValidation(`Черновик ${file.filename} · ${update.state.doc.lines} строк · не применён`, null);
   });
   editor = new EditorView({
     parent,
@@ -137,7 +176,7 @@ export function mountYamlEditor(): void {
         keymap.of([...defaultKeymap, ...historyKeymap]),
         lineNumbers(),
         highlightActiveLine(),
-        ...(file.yaml ? [yaml()] : []),
+        ...(file.format === 'yaml' ? [yaml()] : file.format === 'text' ? [] : [json()]),
         syntaxHighlighting(defaultHighlightStyle),
         editorTheme,
         EditorView.lineWrapping,
@@ -146,8 +185,8 @@ export function mountYamlEditor(): void {
     }),
   });
   setValidation(initial.trim()
-    ? `${file.yaml ? 'Черновик' : 'Список'} в этой вкладке · ${editor.state.doc.lines} строк · не применён`
-    : file.yaml ? 'Черновик пуст. Можно вставить шаблон или начать ввод.' : 'Локальный список пуст.', null);
+    ? `Черновик ${file.filename} · ${editor.state.doc.lines} строк · не применён`
+    : file.format === 'yaml' ? 'Черновик пуст. Можно вставить шаблон или начать ввод.' : 'Локальный черновик пуст.', null);
 
   document.querySelectorAll<HTMLButtonElement>('[data-config-file]').forEach((button) => {
     button.addEventListener('click', () => {
@@ -162,24 +201,28 @@ export function mountYamlEditor(): void {
   });
 
   document.querySelector<HTMLButtonElement>('#yaml-validate')?.addEventListener('click', () => {
-    if (editor) validateYaml(editor.state.doc.toString());
+    if (editor) validateStructuredDocument(editor.state.doc.toString());
   });
   document.querySelector<HTMLButtonElement>('#yaml-format')?.addEventListener('click', () => {
-    if (!editor || !currentFile().yaml) return;
+    if (!editor || currentFile().format === 'text') return;
     const source = editor.state.doc.toString();
-    const document = parseDocument(source, { uniqueKeys: true, version: '1.2' });
-    if (document.errors.length) {
-      validateYaml(source);
+    if (!validateStructuredDocument(source)) {
       return;
     }
-    if (document.contents) {
-      const formatted = document.toString({ indent: 2, lineWidth: 0 });
-      editor.dispatch({ changes: { from: 0, to: editor.state.doc.length, insert: formatted } });
-      setValidation('Форматирование выполнено. Совместимость со схемой ядра не проверена.', true);
+    const file = currentFile();
+    let formatted = source;
+    if (file.format === 'yaml') {
+      const document = parseDocument(source, { uniqueKeys: true, version: '1.2' });
+      if (document.contents) formatted = document.toString({ indent: 2, lineWidth: 0 });
+    } else {
+      const edits = formatJsonc(source, undefined, { insertSpaces: true, tabSize: 2, eol: '\n' });
+      formatted = applyEdits(source, edits);
     }
+    editor.dispatch({ changes: { from: 0, to: editor.state.doc.length, insert: formatted } });
+    setValidation(`Форматирование ${file.format.toUpperCase()} выполнено; совместимость со схемой не проверялась.`, true);
   });
   document.querySelector<HTMLButtonElement>('#yaml-template')?.addEventListener('click', () => {
-    if (!editor || !currentFile().yaml) return;
+    if (!editor || currentFile().format !== 'yaml') return;
     const current = editor.state.doc.toString();
     if (current.trim() && !window.confirm('Заменить текущий черновик примером? Текст текущего черновика будет заменён.')) return;
     editor.dispatch({ changes: { from: 0, to: editor.state.doc.length, insert: starterTemplate } });

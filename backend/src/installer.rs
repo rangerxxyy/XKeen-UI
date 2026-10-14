@@ -171,6 +171,8 @@ fn install_or_update(options: &InstallOptions) -> Result<(), Box<dyn Error>> {
     }
     let result = (|| -> Result<(), Box<dyn Error>> {
         copy_package(&package_dir, &staging)?;
+        set_mode(&staging.join("xkeen-ui"), 0o755)?;
+        write_atomic(&staging.join(".xkeen-ui-managed"), b"XKeen UI\n", 0o600)?;
         fs::rename(&staging, &paths.app)?;
         write_config(&paths.config, &config)?;
         if let Some(parent) = paths.service.parent() {
@@ -254,8 +256,6 @@ fn copy_package(source: &Path, destination: &Path) -> Result<(), Box<dyn Error>>
             return Err("release package contains a special file".into());
         }
     }
-    set_mode(destination.join("xkeen-ui").as_path(), 0o755)?;
-    write_atomic(&destination.join(".xkeen-ui-managed"), b"XKeen UI\n", 0o600)?;
     Ok(())
 }
 

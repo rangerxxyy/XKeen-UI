@@ -192,10 +192,7 @@ fn install_or_update(options: &InstallOptions) -> Result<(), Box<dyn Error>> {
         }
         if let Some(backup) = backup.as_ref() {
             if let Err(restore) = fs::rename(backup, &paths.app) {
-                rollback_errors.push(format!(
-                    "could not restore {}: {restore}",
-                    backup.display()
-                ));
+                rollback_errors.push(format!("could not restore {}: {restore}", backup.display()));
             } else if let Err(start) = service_start(&options.prefix) {
                 rollback_errors.push(format!(
                     "previous version was restored but did not start: {start}"
@@ -604,8 +601,7 @@ fn validate_owned_paths(paths: &Paths) -> Result<(), Box<dyn Error>> {
     }
     if paths.app.exists() && !paths.app.join(".xkeen-ui-managed").is_file() {
         return Err(
-            "application directory has no XKeen UI ownership marker; refusing to replace it"
-                .into(),
+            "application directory has no XKeen UI ownership marker; refusing to replace it".into(),
         );
     }
     Ok(())

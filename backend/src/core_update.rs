@@ -2,8 +2,7 @@ use super::AppState;
 use crate::xkeen;
 use serde::{Deserialize, Serialize};
 use std::{
-    fs,
-    io,
+    fs, io,
     os::unix::fs::PermissionsExt,
     path::{Path, PathBuf},
     process::Stdio,
@@ -48,7 +47,9 @@ pub(super) async fn install(
         return Err("Некорректное имя релиза или файла".into());
     }
     if !valid_asset(core, &request.asset) {
-        return Err("Файл не является поддерживаемым архивом Linux ARM64 для выбранного ядра".into());
+        return Err(
+            "Файл не является поддерживаемым архивом Linux ARM64 для выбранного ядра".into(),
+        );
     }
     if request.sha256.len() != 64 || !request.sha256.bytes().all(|byte| byte.is_ascii_hexdigit()) {
         return Err("GitHub не предоставил корректный SHA-256 для файла".into());
@@ -58,10 +59,13 @@ pub(super) async fn install(
             .core_sources
             .read()
             .map_err(|_| "Не удалось прочитать репозиторий ядра".to_owned())?;
-        if core == "xray" { source.xray.clone() } else { source.mihomo.clone() }
+        if core == "xray" {
+            source.xray.clone()
+        } else {
+            source.mihomo.clone()
+        }
     };
-    repo
-        .strip_prefix("https://github.com/")
+    repo.strip_prefix("https://github.com/")
         .ok_or_else(|| "Разрешены только GitHub-репозитории".to_owned())?;
     let url = format!("{repo}/releases/download/{}/{}", request.tag, request.asset);
     let epoch = SystemTime::now()
@@ -99,7 +103,15 @@ async fn stage_and_install(
     let archive = temp.join(&request.asset);
     let mut download = Command::new("curl");
     download
-        .args(["-fLsS", "--retry", "2", "--connect-timeout", "15", "--max-time", "300"])
+        .args([
+            "-fLsS",
+            "--retry",
+            "2",
+            "--connect-timeout",
+            "15",
+            "--max-time",
+            "300",
+        ])
         .arg("--max-filesize")
         .arg(MAX_ASSET_BYTES.to_string())
         .arg("--proto")
@@ -151,7 +163,12 @@ async fn stage_and_install(
     }
 
     let staged = temp.join("core.new");
-    extract_core(core, &request.asset, &archive, &staged).await?;
+    tokio::time::timeout(
+        Duration::from_secs(90),
+        extract_core(core, &request.asset, &archive, &staged),
+    )
+    .await
+    .map_err(|_| "Распаковка ядра превысила 90 секунд".to_owned())??;
     let binary_size = tokio::fs::metadata(&staged)
         .await
         .map_err(|error| format!("Не удалось прочитать распакованное ядро: {error}"))?
@@ -168,9 +185,13 @@ async fn stage_and_install(
     let previous = xkeen::read_status();
     let core_running = process_is_running(core);
     if core_running && previous.core.as_deref() != Some(core) {
-        return Err("Ядро запущено, но его связь с init-файлом XKeen не подтверждена; замена отменена".into());
+        return Err(
+            "Ядро запущено, но его связь с init-файлом XKeen не подтверждена; замена отменена"
+                .into(),
+        );
     }
-    let active = core_running && previous.running == Some(true) && previous.core.as_deref() == Some(core);
+    let active =
+        core_running && previous.running == Some(true) && previous.core.as_deref() == Some(core);
     if active {
         validate_active_config(core, &staged).await?;
     }
@@ -183,7 +204,9 @@ async fn stage_and_install(
         .await
         .map_err(|error| format!("Не удалось атомарно заменить ядро: {error}"))?;
     if active {
-        let backup_path = backup.as_ref().ok_or("Не удалось найти резервную копию активного ядра")?;
+        let backup_path = backup
+            .as_ref()
+            .ok_or("Не удалось найти резервную копию активного ядра")?;
         match xkeen::control("restart").await {
             Ok(status) if status.running == Some(true) => {}
             Ok(_) => {
@@ -194,7 +217,9 @@ async fn stage_and_install(
             Err(error) => {
                 restore_backup(backup_path, &target).await?;
                 let _ = xkeen::control("restart").await;
-                return Err(format!("Обновление отменено, предыдущая версия восстановлена: {error}"));
+                return Err(format!(
+                    "Обновление отменено, предыдущая версия восстановлена: {error}"
+                ));
             }
         }
     }
@@ -212,7 +237,12 @@ async fn stage_and_install(
     })
 }
 
-async fn extract_core(core: &str, asset_name: &str, archive: &Path, output: &Path) -> Result<(), String> {
+async fn extract_core(
+    core: &str,
+    asset_name: &str,
+    archive: &Path,
+    output: &Path,
+) -> Result<(), String> {
     let (program, args) = if core == "xray" {
         let listing = Command::new("unzip")
             .args(["-Z1"])
@@ -231,7 +261,14 @@ async fn extract_core(core: &str, asset_name: &str, archive: &Path, output: &Pat
             .lines()
             .find(|entry| !entry.ends_with('/') && entry.rsplit('/').next() == Some("xray"))
             .ok_or_else(|| "В Xray ZIP-архиве не найден бинарник xray".to_owned())?;
-        ("unzip", vec!["-p".to_owned(), archive.display().to_string(), member.to_owned()])
+        (
+            "unzip",
+            vec![
+                "-p".to_owned(),
+                archive.display().to_string(),
+                member.to_owned(),
+            ],
+        )
     } else if asset_name.ends_with(".gz") {
         ("gzip", vec!["-dc".into(), archive.display().to_string()])
     } else {
@@ -248,7 +285,10 @@ async fn extract_core(core: &str, asset_name: &str, archive: &Path, output: &Pat
         .kill_on_drop(true)
         .spawn()
         .map_err(|error| format!("Не удалось запустить {program}: {error}"))?;
-    let mut stdout = child.stdout.take().ok_or("Не удалось прочитать архив ядра")?;
+    let mut stdout = child
+        .stdout
+        .take()
+        .ok_or("Не удалось прочитать архив ядра")?;
     let mut file = tokio::fs::File::create(output)
         .await
         .map_err(|error| format!("Не удалось создать временный бинарник: {error}"))?;
@@ -289,30 +329,45 @@ async fn extract_core(core: &str, asset_name: &str, archive: &Path, output: &Pat
 
 async fn validate_active_config(core: &str, binary: &Path) -> Result<(), String> {
     let (args, config) = if core == "mihomo" {
-        (vec!["-t", "-f", "/opt/etc/mihomo/config.yaml"], "/opt/etc/mihomo/config.yaml")
+        (
+            vec!["-t", "-f", "/opt/etc/mihomo/config.yaml"],
+            "/opt/etc/mihomo/config.yaml",
+        )
     } else {
-        (vec!["run", "-test", "-config", "/opt/etc/xray/config.json"], "/opt/etc/xray/config.json")
+        (vec!["run", "-test"], "/opt/etc/xray/configs")
     };
-    if !Path::new(config).is_file() {
-        return Err(format!("Активный конфиг ядра не найден: {config}; обновление отменено"));
+    if !Path::new(config).exists() {
+        return Err(format!(
+            "Активный конфиг ядра не найден: {config}; обновление отменено"
+        ));
     }
-    let output = tokio::time::timeout(
-        Duration::from_secs(20),
-        Command::new(binary)
-            .args(args)
-            .env_clear()
-            .env("PATH", "/opt/bin:/opt/sbin:/usr/bin:/bin")
-            .stdin(Stdio::null())
-            .stdout(Stdio::null())
-            .stderr(Stdio::null())
-            .kill_on_drop(true)
-            .status(),
-    )
-    .await
-    .map_err(|_| "Проверка конфигурации превысила 20 секунд".to_owned())?
-    .map_err(|error| format!("Не удалось проверить конфигурацию: {error}"))?;
+    let mut command = Command::new(binary);
+    command
+        .args(args)
+        .env_clear()
+        .env("PATH", "/opt/bin:/opt/sbin:/usr/bin:/bin")
+        .stdin(Stdio::null())
+        .stdout(Stdio::null())
+        .stderr(Stdio::null())
+        .kill_on_drop(true);
+    if core == "xray" {
+        command
+            .env("XRAY_LOCATION_CONFDIR", "/opt/etc/xray/configs")
+            .env("XRAY_LOCATION_ASSET", "/opt/etc/xray/dat")
+            .current_dir("/opt/etc/xray");
+    } else {
+        command
+            .env("CLASH_HOME_DIR", "/opt/etc/mihomo")
+            .current_dir("/opt/etc/mihomo");
+    }
+    let output = tokio::time::timeout(Duration::from_secs(20), command.status())
+        .await
+        .map_err(|_| "Проверка конфигурации превысила 20 секунд".to_owned())?
+        .map_err(|error| format!("Не удалось проверить конфигурацию: {error}"))?;
     if !output.success() {
-        return Err(format!("Текущая конфигурация {core} не проходит проверку новой версией; файлы не изменены"));
+        return Err(format!(
+            "Текущая конфигурация {core} не проходит проверку новой версией; файлы не изменены"
+        ));
     }
     Ok(())
 }
@@ -329,16 +384,25 @@ async fn backup_existing(target: &Path, core: &str) -> Result<Option<PathBuf>, S
     let dir = Path::new("/opt/sbin/core-backup");
     match tokio::fs::symlink_metadata(dir).await {
         Ok(metadata) if !metadata.is_dir() || metadata.file_type().is_symlink() => {
-            return Err("Каталог резервных копий является ссылкой или не является каталогом".into());
+            return Err(
+                "Каталог резервных копий является ссылкой или не является каталогом".into(),
+            );
         }
         Ok(_) => {}
         Err(error) if error.kind() == io::ErrorKind::NotFound => {}
-        Err(error) => return Err(format!("Не удалось проверить каталог резервных копий: {error}")),
+        Err(error) => {
+            return Err(format!(
+                "Не удалось проверить каталог резервных копий: {error}"
+            ));
+        }
     }
     tokio::fs::create_dir_all(dir)
         .await
         .map_err(|error| format!("Не удалось создать каталог резервных копий: {error}"))?;
-    let stamp = SystemTime::now().duration_since(UNIX_EPOCH).unwrap_or_default().as_nanos();
+    let stamp = SystemTime::now()
+        .duration_since(UNIX_EPOCH)
+        .unwrap_or_default()
+        .as_nanos();
     let backup = dir.join(format!("{core}-{stamp}"));
     tokio::fs::copy(target, &backup)
         .await
@@ -368,7 +432,10 @@ async fn is_aarch64_elf(path: &Path) -> Result<bool, String> {
     file.read_exact(&mut header)
         .await
         .map_err(|error| format!("Заголовок бинарника ядра повреждён: {error}"))?;
-    Ok(&header[..4] == b"\x7fELF" && header[4] == 2 && header[5] == 1 && u16::from_le_bytes([header[18], header[19]]) == 183)
+    Ok(&header[..4] == b"\x7fELF"
+        && header[4] == 2
+        && header[5] == 1
+        && u16::from_le_bytes([header[18], header[19]]) == 183)
 }
 
 fn valid_segment(value: &str) -> bool {
@@ -376,12 +443,19 @@ fn valid_segment(value: &str) -> bool {
         && value.len() <= 128
         && value != "."
         && value != ".."
-        && value.bytes().all(|byte| byte.is_ascii_alphanumeric() || b"._+-".contains(&byte))
+        && value
+            .bytes()
+            .all(|byte| byte.is_ascii_alphanumeric() || b"._+-".contains(&byte))
 }
 
 fn valid_asset(core: &str, asset: &str) -> bool {
     match core {
-        "xray" => asset.to_ascii_lowercase().starts_with("xray-linux-arm64-v8a") && asset.ends_with(".zip"),
+        "xray" => {
+            asset
+                .to_ascii_lowercase()
+                .starts_with("xray-linux-arm64-v8a")
+                && asset.ends_with(".zip")
+        }
         "mihomo" => asset.contains("linux-arm64") && asset.ends_with(".gz"),
         _ => false,
     }

@@ -22,8 +22,8 @@ use tower_http::{
 };
 use tracing::{info, warn};
 
-mod installer;
 mod core_update;
+mod installer;
 mod mihomo;
 mod xkeen;
 use mihomo::{Endpoint as MihomoEndpoint, MihomoClient, MihomoError};

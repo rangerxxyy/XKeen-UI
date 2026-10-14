@@ -7,19 +7,17 @@ import { renderDns } from './dns-view';
 import { mountYamlEditor, unmountYamlEditor } from './yaml-editor';
 import { bindCoreReleaseChecks } from './core-releases';
 
-type Page = 'overview' | 'selectors' | 'connections' | 'dns' | 'configuration' | 'logs';
+type Page = 'selectors' | 'connections' | 'configuration' | 'dns';
 
 const pages: { id: Page; label: string; icon: string }[] = [
-  { id: 'overview', label: 'Обзор', icon: '◫' },
   { id: 'selectors', label: 'Селекторы', icon: '⇄' },
   { id: 'connections', label: 'Соединения', icon: '⌁' },
-  { id: 'dns', label: 'DNS', icon: '◎' },
   { id: 'configuration', label: 'Конфигурация', icon: '⌘' },
-  { id: 'logs', label: 'Журнал', icon: '≋' },
+  { id: 'dns', label: 'DNS', icon: '◎' },
 ];
 
 const state: ApiState = { connected: false, status: null, error: null, checkedAt: null };
-let activePage: Page = 'overview';
+let activePage: Page = 'selectors';
 let refreshTimer: number | undefined;
 let requestController: AbortController | undefined;
 let mihomoController: AbortController | undefined;
@@ -67,18 +65,14 @@ function renderHeader(): string {
   const memory = status?.memory ? `RAM ${status.memory.usedMb}/${status.memory.totalMb} MB` : 'RAM —';
   const load = status?.loadAverage === null || status?.loadAverage === undefined ? 'Load —' : `Load ${status.loadAverage.toFixed(2)}`;
   return `<header class="topbar">
-    <div class="top-status"><span class="connection-led ${state.connected ? 'is-online' : 'is-offline'}"></span><div><strong>${escapeHtml(serviceText)}</strong><small>${state.connected ? `${memory} · ${load} · API :${status?.port ?? 1001} · ${stamp}` : 'Ожидание соединения с backend'}</small></div></div>
-    <a class="brand" href="#overview" aria-label="XKeen UI, главная"><span class="brand-mark">X</span><span>XKeen <b>UI</b></span></a>
+    <button class="top-status" id="services" type="button" aria-label="Открыть состояние сервисов"><span class="connection-led ${state.connected ? 'is-online' : 'is-offline'}"></span><span><strong>${escapeHtml(serviceText)}</strong><small>${state.connected ? `${memory} · ${load} · API :${status?.port ?? 1001} · ${stamp}` : 'Ожидание соединения с backend'}</small></span></button>
+    <a class="brand" href="#selectors" aria-label="XKeen UI, селекторы"><span class="brand-mark">X</span><span>XKeen <b>UI</b></span></a>
     <div class="top-actions"><span class="version-chip core-chip"><span class="chip-icon">◈</span> Mihomo <b>${coreLabel}</b></span><span class="version-chip"><span class="chip-icon">⬡</span> XKeen UI <b>v${status?.appVersion ?? '0.1.0'}</b></span><button class="icon-button" id="refresh" title="Обновить статус" aria-label="Обновить статус">↻</button><button class="icon-button" id="settings" title="Настройки" aria-label="Настройки">⚙</button></div>
   </header>`;
 }
 
 function renderNavigation(): string {
   return `<nav class="navigation" aria-label="Разделы панели">${pages.map((page) => `<button class="nav-item ${activePage === page.id ? 'active' : ''}" data-page="${page.id}" ${activePage === page.id ? 'aria-current="page"' : ''}><span class="nav-icon">${page.icon}</span>${page.label}</button>`).join('')}<span class="nav-spacer"></span><span class="environment-tag"><span class="tiny-dot"></span>${state.status?.mode === 'router' ? 'Роутер' : 'Локальная среда'}</span></nav>`;
-}
-
-function metricCard(icon: string, label: string, value: string, note: string, tint: string): string {
-  return `<article class="metric-card"><div class="metric-top"><span class="metric-icon ${tint}">${icon}</span><span class="metric-note">${note}</span></div><p>${label}</p><strong>${value}</strong></article>`;
 }
 
 function renderServiceCard(service: ServiceStatus): string {
@@ -95,31 +89,6 @@ function renderServiceCard(service: ServiceStatus): string {
   return `<article class="service-card"><div class="service-heading"><span class="service-icon">${icon}</span><div class="service-name"><strong>${escapeHtml(service.name)}</strong><small>${summary}</small></div>${serviceBadge(effectiveService)}</div><div class="service-foot"><span>${effectiveService.state === 'running' ? 'Работает' : effectiveService.state === 'unavailable' ? 'Проверка недоступна' : effectiveService.state === 'stopped' ? 'Остановлен' : 'Нет подтверждения запуска'}</span>${isXkeen && xkeenStatus?.detail ? `<span>${escapeHtml(xkeenStatus.detail)}</span>` : ''}</div>${actions}</article>`;
 }
 
-function renderOverview(): string {
-  const status = state.status;
-  const serviceCount = status?.services.filter((service) => service.state === 'running').length;
-  const services = status?.services ?? [];
-  const memory = status?.memory;
-  return `<section class="page-heading"><div><div class="eyebrow"><span class="eyebrow-line"></span> СИСТЕМА УПРАВЛЕНИЯ</div><h1>Обзор системы</h1><p>Состояние XKeen и доступность сетевых ядер в одном месте.</p></div><button class="button button-quiet" id="refresh-secondary"><span>↻</span> Обновить</button></section>
-  ${state.error ? `<div class="alert alert-error"><span class="alert-icon">!</span><div><strong>${authRequired ? 'Нужен ключ доступа' : 'Нет связи с локальным API'}</strong><p>${escapeHtml(state.error)}${authRequired ? ' Введите ключ, который показал установщик.' : '. Убедитесь, что Rust backend запущен на порту 1001.'}</p></div><button class="text-button" id="${authRequired ? 'authenticate' : 'retry'}">${authRequired ? 'Войти' : 'Повторить'}</button></div>` : ''}
-  ${status?.mode === 'simulation' ? `<div class="alert alert-info"><span class="alert-icon">i</span><div><strong>Режим разработки</strong><p>${escapeHtml(status.notice)} Состояния компонентов не подменяются демонстрационными значениями.</p></div><span class="alert-tag">SIMULATION</span></div>` : ''}
-  <div class="metric-grid">
-    ${metricCard('◉', 'Сервисы активны', status ? `${serviceCount ?? 0} / ${services.length}` : '—', 'фактический статус', 'mint')}
-    ${metricCard('▤', 'Память', memory ? `${memory.usedMb} / ${memory.totalMb} MB` : 'Недоступна', 'по данным ОС', 'blue')}
-    ${metricCard('⌁', 'Платформа', status ? escapeHtml(status.platform) : 'Определяется', status?.loadAverage === null || status?.loadAverage === undefined ? 'нагрузка недоступна' : `load avg ${status.loadAverage.toFixed(2)}`, 'violet')}
-    ${metricCard('◷', 'Работа панели', status ? formatUptime(status.uptimeSeconds) : '—', 'текущая сессия', 'violet')}
-    ${metricCard('⌖', 'API', state.connected ? `:${status?.port ?? 1001}` : 'Ожидание', state.connected ? 'соединение активно' : 'нет соединения', 'amber')}
-  </div>
-  <section class="content-section"><div class="section-title"><div><h2>Сетевые компоненты</h2><p>Статусы поступают из backend и не заменяются фиктивными данными.</p></div><span class="section-counter">${services.length} компонента</span></div><div class="service-grid">${services.length ? services.map(renderServiceCard).join('') : emptyCard('Пока нет данных о компонентах', 'Подключите backend; он сообщит только значения, полученные из системы.')}</div></section>
-  <section class="content-section"><div class="section-title"><div><h2>Быстрый переход</h2><p>Разделы станут доступны по мере подключения проверенных API.</p></div></div><div class="quick-grid">${[['⇄','Селекторы','Группы и выбор узлов','selectors'],['◎','DNS','Параметры разрешения имён','dns'],['⌘','Конфигурация','Проверка и применение профилей','configuration']].map(([icon,title,sub,page])=>`<button class="quick-card" data-page="${page}"><span class="quick-icon">${icon}</span><span><strong>${title}</strong><small>${sub}</small></span><span class="quick-arrow">↗</span></button>`).join('')}</div></section>`;
-}
-
-function formatUptime(seconds: number): string {
-  const hours = Math.floor(seconds / 3600);
-  const minutes = Math.floor((seconds % 3600) / 60);
-  return hours ? `${hours} ч ${minutes} мин` : `${minutes} мин`;
-}
-
 function emptyCard(title: string, body: string): string {
   return `<div class="empty-card"><span class="empty-icon">◌</span><strong>${title}</strong><p>${body}</p></div>`;
 }
@@ -128,12 +97,10 @@ function renderComingSoon(page: Page): string {
   const current = pages.find((item) => item.id === page);
   if (page === 'configuration') return renderConfiguration();
   const descriptions: Record<Page, string> = {
-    overview: '',
     selectors: 'Подключите проверенный Mihomo API, чтобы показывать фактические группы, узлы и выбранные значения.',
     connections: 'Здесь появятся соединения, источники, цепочки прокси и объёмы трафика из runtime API ядра.',
     dns: 'Управление DNS будет раздельным для Mihomo и Xray, с проверкой конфигурации и безопасным применением.',
     configuration: 'Редактор профилей появится после подключения YAML/JSON валидаторов и сценария резервного копирования.',
-    logs: 'Журнал будет читать локальные источники и фильтровать записи без передачи секретов в интерфейс.',
   };
   return `<section class="page-heading"><div><div class="eyebrow"><span class="eyebrow-line"></span> XKeen UI</div><h1>${current?.label ?? ''}</h1><p>${descriptions[page]}</p></div></section><section class="feature-placeholder"><div class="placeholder-symbol">${current?.icon ?? '◌'}</div><div class="placeholder-copy"><span class="status-label">ИНТЕГРАЦИЯ ЯДРА</span><h2>Для этого раздела ещё не подключён проверенный API</h2><p>${descriptions[page]}</p><p class="placeholder-note">Данные появятся после подключения подтверждённого системного источника.</p></div></section>`;
 }
@@ -154,15 +121,39 @@ function renderFooter(): string {
   return `<footer class="footer"><span><span class="footer-mark">✳</span> XKeen UI <span class="footer-muted">· первая версия</span></span><span>${state.connected ? 'Backend отвечает' : 'Backend не подключён'} <span class="footer-indicator ${state.connected ? 'is-online' : ''}"></span></span></footer>`;
 }
 
+function renderJournal(): string {
+  return `<section class="journal-panel" aria-label="Журнал событий"><header class="journal-heading"><h2>Журнал</h2><div class="journal-tools"><label class="journal-filter"><span aria-hidden="true">⌕</span><input type="search" placeholder="Фильтр" aria-label="Фильтр журнала" disabled></label><select aria-label="Файл журнала" disabled><option>Журнал событий</option></select><button class="journal-icon-button" type="button" title="Очистить журнал" aria-label="Очистить журнал" disabled>♲</button><button class="journal-icon-button" type="button" title="Развернуть журнал" aria-label="Развернуть журнал" disabled>⛶</button></div></header><div class="journal-body"><div class="journal-empty"><span class="journal-empty-icon">▤</span><strong>Источник журнала ещё не подключён</strong><p>Здесь появятся записи после подключения чтения системных логов.</p></div></div></section>`;
+}
+
+function renderServicesDialog(): void {
+  let dialog = document.querySelector<HTMLDialogElement>('#services-dialog');
+  if (!dialog) {
+    dialog = document.createElement('dialog');
+    dialog.id = 'services-dialog';
+    dialog.className = 'modal';
+    document.body.append(dialog);
+    dialog.addEventListener('close', () => dialog?.remove(), { once: true });
+  }
+  const services = state.status?.services ?? [];
+  dialog.innerHTML = `<div class="modal-panel services-modal"><div class="modal-heading"><span class="modal-icon">◈</span><h2>Состояние сервисов</h2><button class="icon-button" id="services-close" type="button" aria-label="Закрыть">×</button></div><div class="service-grid">${services.length ? services.map(renderServiceCard).join('') : emptyCard('Состояние недоступно', 'Подключите backend, чтобы увидеть сервисы.')}</div><p class="service-dialog-note">Управление XKeen применяет команды к системной службе роутера.</p></div>`;
+  if (!dialog.open) dialog.showModal();
+  dialog.querySelector<HTMLButtonElement>('#services-close')?.addEventListener('click', () => dialog?.close());
+  dialog.querySelectorAll<HTMLButtonElement>('[data-xkeen-action]').forEach((button) => button.addEventListener('click', () => void runXkeenAction(button.dataset.xkeenAction)));
+}
+
+function renderAccessRequired(): string {
+  return `<section class="page-heading"><div><div class="eyebrow"><span class="eyebrow-line"></span> ДОСТУП К ПАНЕЛИ</div><h1>Требуется ключ доступа</h1><p>Введите ключ, выданный установщиком XKeen UI.</p></div></section><div class="alert alert-error"><span class="alert-icon">!</span><div><strong>Backend отклонил запрос</strong><p>${escapeHtml(state.error ?? 'Для продолжения нужна авторизация.')}</p></div><button class="text-button" id="authenticate">Ввести ключ</button></div>`;
+}
+
 function render(): void {
   if (!app) return;
   if (activePage !== 'configuration' || authRequired) unmountYamlEditor();
-  const pageContent = authRequired || activePage === 'overview' ? renderOverview()
+  const pageContent = authRequired ? renderAccessRequired()
     : activePage === 'selectors' ? renderSelectors(selectors, selectorsLoading, selectorsError)
       : activePage === 'connections' ? renderConnections(connections, connectionsLoading, connectionsError)
         : activePage === 'dns' ? renderDns(dnsResult, dnsLoading, dnsError, dnsQueryName, dnsQueryType)
         : renderComingSoon(activePage);
-  app.innerHTML = `<div class="app-shell">${renderHeader()}${renderNavigation()}<main class="main-content">${pageContent}</main>${renderFooter()}<div class="toast-region" aria-live="polite"></div></div>`;
+  app.innerHTML = `<div class="app-shell">${renderHeader()}${renderNavigation()}<main class="main-content">${pageContent}</main>${renderJournal()}<div class="toast-region" aria-live="polite"></div></div>`;
   document.querySelectorAll<HTMLButtonElement>('[data-page]').forEach((button) => {
     button.addEventListener('click', () => {
       const page = button.dataset.page as Page | undefined;
@@ -179,6 +170,7 @@ function render(): void {
   });
   document.querySelectorAll<HTMLButtonElement>('#refresh,#refresh-secondary,#retry').forEach((button) => button.addEventListener('click', () => void refresh()));
   document.querySelector<HTMLButtonElement>('#settings')?.addEventListener('click', openSettings);
+  document.querySelector<HTMLButtonElement>('#services')?.addEventListener('click', renderServicesDialog);
   document.querySelector<HTMLButtonElement>('#authenticate')?.addEventListener('click', openAccessDialog);
   document.querySelectorAll<HTMLButtonElement>('[data-xkeen-action]').forEach((button) => {
     button.addEventListener('click', () => void runXkeenAction(button.dataset.xkeenAction));
@@ -214,6 +206,7 @@ async function runXkeenAction(action: string | undefined): Promise<void> {
   } finally {
     xkeenControlBusy = false;
     render();
+    if (document.querySelector('#services-dialog')) renderServicesDialog();
   }
 }
 
@@ -351,6 +344,7 @@ function updateChrome(): void {
   }
   document.querySelector<HTMLButtonElement>('#refresh')?.addEventListener('click', () => void refresh());
   document.querySelector<HTMLButtonElement>('#settings')?.addEventListener('click', openSettings);
+  document.querySelector<HTMLButtonElement>('#services')?.addEventListener('click', renderServicesDialog);
 }
 
 function openAccessDialog(): void {

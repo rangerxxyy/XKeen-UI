@@ -149,7 +149,10 @@ function render(): void {
     button.addEventListener('click', () => {
       const page = button.dataset.page as Page | undefined;
       if (page && pages.some((item) => item.id === page)) {
-        if (page !== 'dns') dnsController?.abort();
+        if (page !== 'dns') {
+          dnsController?.abort();
+          dnsLoading = false;
+        }
         activePage = page;
         render();
         void loadMihomoPage(page);

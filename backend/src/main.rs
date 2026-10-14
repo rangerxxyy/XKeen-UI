@@ -212,7 +212,10 @@ async fn mihomo_rules(State(state): State<AppState>) -> Response {
     mihomo_data(State(state), MihomoEndpoint::Rules).await
 }
 
-async fn mihomo_dns_query(State(state): State<AppState>, Query(query): Query<DnsQuery>) -> Response {
+async fn mihomo_dns_query(
+    State(state): State<AppState>,
+    Query(query): Query<DnsQuery>,
+) -> Response {
     if !state.router_mode {
         return (
             StatusCode::SERVICE_UNAVAILABLE,

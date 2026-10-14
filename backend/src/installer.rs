@@ -241,7 +241,12 @@ fn resolve_bind_ip() -> Result<Ipv4Addr, Box<dyn Error>> {
     if let Ok(value) = env::var("XKEEN_BIND") {
         return value
             .parse::<Ipv4Addr>()
-            .map_err(|_| io::Error::new(io::ErrorKind::InvalidInput, "XKEEN_BIND must be a valid IPv4 address"))
+            .map_err(|_| {
+                io::Error::new(
+                    io::ErrorKind::InvalidInput,
+                    "XKEEN_BIND must be a valid IPv4 address",
+                )
+            })
             .map_err(Into::into);
     }
     let candidates = [

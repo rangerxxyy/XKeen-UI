@@ -182,6 +182,70 @@ h1,h2,p { margin: 0; }
 .dns-workspace{overflow:hidden;border:1px solid #27364d;border-radius:15px;background:linear-gradient(145deg,#111b2c,#0c1421 72%);box-shadow:0 15px 38px #0002}.dns-workspace-heading{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:18px 20px;border-bottom:1px solid #202d41}.dns-workspace-heading h2{margin-top:5px;font-size:15px}.dns-query-form{display:grid;grid-template-columns:minmax(180px,1fr) 155px auto;align-items:end;gap:11px;padding:17px 20px;border-bottom:1px solid #202d41}.dns-query-form label{display:grid;gap:7px;color:#9cabc0;font-size:10px}.dns-query-form input,.dns-query-form select{width:100%;height:37px;border:1px solid #2b3b54;border-radius:8px;background:#080f1c;color:#e8eef9;padding:0 10px;font:inherit;font-size:11px;outline:none}.dns-query-form input:focus,.dns-query-form select:focus{border-color:#4c9bcc;box-shadow:0 0 0 3px #42b8d51c}.dns-query-form button{height:37px;white-space:nowrap}.dns-feedback{display:flex;align-items:flex-start;gap:12px;margin:17px 20px;padding:15px;border:1px solid #293950;border-radius:10px;background:#101c2c}.dns-feedback>span{flex:0 0 auto;width:21px;height:21px;display:grid;place-items:center;border-radius:50%;background:#173550;color:#76cbf2;font-size:12px}.dns-feedback strong{font-size:11px}.dns-feedback p{margin-top:5px;color:#91a2ba;font-size:10px;line-height:1.5}.dns-feedback.is-error{border-color:#603744;background:#241720}.dns-feedback.is-error>span{background:#482431;color:#ff9aa5}.dns-result{margin:17px 20px;overflow:hidden;border:1px solid #273750;border-radius:10px;background:#0b1320}.dns-result>header{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:13px 15px;border-bottom:1px solid #243249}.dns-result h2{margin-top:4px;font-size:14px}.dns-answer-count{padding:5px 8px;border:1px solid #245646;border-radius:7px;background:#10251f;color:#6fddb0;font-size:9px}.dns-record-list{display:grid}.dns-record{display:grid;grid-template-columns:minmax(0,1fr) auto auto;align-items:center;gap:14px;padding:11px 14px;border-bottom:1px solid #1e2b40}.dns-record:last-child{border-bottom:0}.dns-record>div{display:flex;align-items:center;gap:8px;min-width:0}.dns-record strong{overflow:hidden;color:#dce7f7;font-size:10px;text-overflow:ellipsis}.dns-record>div span{padding:3px 5px;border:1px solid #32445e;border-radius:5px;color:#92afd1;font-size:8px}.dns-record code{overflow-wrap:anywhere;color:#73d5dc;font-size:10px}.dns-record small{color:#788aa4;font-size:9px;white-space:nowrap}.dns-no-answer{padding:15px;color:#9aaac0;font-size:10px;line-height:1.55}.mihomo-privacy-note{display:flex;gap:9px;margin-top:12px;padding:12px 14px;border:1px solid #222f43;border-radius:10px;background:#0d1522}.mihomo-privacy-note>span{flex:0 0 auto;color:#81aee3;font-size:11px}.mihomo-privacy-note p{color:#8292aa;font-size:9px;line-height:1.6}
 @media(max-width:700px){.dns-query-form{grid-template-columns:1fr 115px;padding:13px}.dns-query-form button{grid-column:1/-1}.dns-workspace-heading{padding:14px}.dns-record{grid-template-columns:1fr auto;gap:7px}.dns-record code{grid-column:1;grid-row:2}.dns-record small{grid-column:2;grid-row:2}}
 
+/* Matte indigo palette: quiet surfaces, restrained violet accents, no glossy gradients. */
+:root {
+  color: #e7e5f1;
+  background: #090a14;
+  --bg: #090a14;
+  --surface: #10111f;
+  --surface-raised: #151629;
+  --surface-hover: #1b1c31;
+  --stroke: #292a40;
+  --stroke-soft: #202134;
+  --text: #e7e5f1;
+  --muted: #9998b2;
+  --subtle: #74738f;
+  --blue: #8587c9;
+  --cyan: #a29ae1;
+  --violet: #a29ae1;
+}
+body { background: #090a14; }
+.topbar,.navigation,.journal-panel { background: #10111f; border-color: #292a40; }
+.brand { color: #e7e5f1; }
+.brand-mark { background: #272641; color: #c0b9f0; }
+.version-chip,.icon-button,.button-quiet,.journal-filter,.journal-tools select,.journal-icon-button,
+.journal-empty,.journal-lines,.metric-card,.service-card,.quick-card,.selector-card,
+.connections-panel,.connections-toolbar,.connection-search,.traffic-summary,.connection-table th,
+.editor-workspace,.editor-toolbar,.code-editor-shell,.editor-gutter-label,.editor-statusbar,
+.dns-workspace,.dns-result,.template-dialog,.modal-panel,.editor-utilities-menu {
+  background-image: none;
+  box-shadow: none;
+}
+.nav-item { color: #aaa8c3; }
+.nav-item:hover { background: #191a2d; color: #e7e5f1; }
+.nav-item.active { background: #202039; color: #eeecfa; box-shadow: inset 0 0 0 1px #3b395c; }
+.nav-icon,.chip-icon,.modal-icon,.editor-button span { color: #aaa1e6; }
+.journal-heading { border-color: #25263a; }
+.journal-filter,.journal-tools select,.journal-icon-button,.journal-empty,.journal-lines { background-color: #0b0c18; border-color: #26273b; }
+.journal-line { border-color: #1b1c2b; }
+.button-primary { background: #514b8e; border-color: #6961a7; }
+.button-primary:hover { background: #5b549a; filter: none; }
+.metric-card,.service-card,.quick-card,.selector-card,.connections-panel,.connections-toolbar,
+.editor-workspace,.editor-toolbar,.dns-workspace,.modal-panel,.template-dialog {
+  background-color: #111222;
+  border-color: #2b2c43;
+}
+.metric-card:after { display: none; }
+.selector-card,.metric-card,.editor-workspace,.dns-workspace { box-shadow: none; }
+.selector-summary,.traffic-summary,.editor-toolbar,.dns-workspace,.feature-placeholder { background-image: none; }
+.selector-summary { background-color: #141528; border-color: #2b2c43; }
+.summary-icon,.file-mark,.placeholder-symbol { background-color: #24233c; border-color: #3a3858; color: #aaa1e6; }
+.proxy-option.is-selected,.config-file-tab.selected { background-color: #272644; border-color: #55517e; }
+.proxy-option:hover,.quick-card:hover { background-color: #191a2d; border-color: #454362; transform: none; }
+.connection-search:focus-within,.dns-query-form input:focus,.dns-query-form select:focus,.access-input:focus {
+  border-color: #7772b5;
+  box-shadow: 0 0 0 2px #7772b51c;
+}
+.connection-route,.text-button,.status-label { color: #aaa1e6; }
+.editor-button-primary { background: #262542; border-color: #474466; color: #e8e5f6; }
+.editor-button-primary:hover { background: #302e50; border-color: #625d8c; }
+.editor-callout,.alert-info,.dns-feedback { background-color: #17182a; border-color: #34344e; }
+.editor-callout,.alert-info,.dns-feedback,.mihomo-privacy-note { background-image: none; }
+.modal::backdrop,.template-dialog::backdrop { background: #05050dcc; backdrop-filter: none; }
+.modal-panel,.template-dialog { border-color: #303149; }
+.editor-utilities-menu { background-color: #151629; border-color: #303149; }
+.editor-utilities-menu button:hover,.editor-utilities-menu button:focus-visible { background: #25243f; }
+
 .config-file-tabs{display:flex;gap:5px;overflow-x:auto;padding:10px 13px 0;border-bottom:1px solid #202d41;background:#0d1522}.config-file-tab{flex:0 0 auto;min-height:31px;padding:0 11px;border:1px solid transparent;border-radius:8px 8px 0 0;background:transparent;color:#8293ab;font:inherit;font-size:9px;cursor:pointer}.config-file-tab:hover{color:#d9e7f8;background:#152338}.config-file-tab.selected{border-color:#293a54;border-bottom-color:#0e1726;background:#0e1726;color:#dfeaff}.editor-toolbar{border-top:0}.editor-actions [hidden]{display:none!important}
 @media(max-width:600px){.config-file-tabs{padding-left:8px;padding-right:8px}.config-file-tab{padding:0 8px;font-size:8px}.editor-toolbar{gap:9px}}
 .editor-utilities { position: relative; }
@@ -250,3 +314,22 @@ h1,h2,p { margin: 0; }
 @media(max-width: 560px) { .core-release-checks > section { align-items: flex-start; flex-direction: column; } .core-release-heading { align-items: flex-start; flex-direction: column; } .core-release-asset { align-items: flex-start; flex-direction: column; } }
 @media(max-width: 560px) { .source-save-row { align-items: stretch; flex-direction: column; } }
 @media(max-width: 680px) { .app-shell { height: auto; min-height: 100vh; display: block; padding: 12px; } .journal-panel { min-height: 254px; margin: 0 4px 12px; } .journal-heading { align-items: flex-start; flex-direction: column; } .journal-tools { width: 100%; } .journal-filter { flex: 1; width: auto; } .main-content { min-height: auto; padding-top: 20px; overflow: visible; } .journal-panel.is-expanded { position: fixed; inset: 8px; margin: 0; } }
+
+/* Final palette pass, kept last so component defaults cannot reintroduce blue gloss. */
+:root { --bg:#090a14; --surface:#10111f; --surface-raised:#151629; --surface-hover:#1b1c31; --stroke:#292a40; --stroke-soft:#202134; --text:#e7e5f1; --muted:#9998b2; --subtle:#74738f; --blue:#8587c9; --cyan:#a29ae1; --violet:#a29ae1; }
+.topbar,.navigation,.journal-panel,.selector-card,.selector-summary,.proxy-option,.connections-panel,.connections-toolbar,.traffic-summary,.editor-workspace,.editor-toolbar,.editor-statusbar,.dns-workspace,.template-dialog,.modal-panel,.editor-utilities-menu,.core-release-checks>section,.core-release-card { background-image:none; box-shadow:none; }
+.topbar,.navigation,.journal-panel { background-color:#10111f; border-color:#292a40; }
+.selector-card,.selector-summary,.connections-panel,.editor-workspace,.dns-workspace { background-color:#121326; border-color:#2b2c43; }
+.selector-summary,.traffic-summary,.editor-toolbar,.editor-statusbar,.connections-toolbar { background-color:#151629; }
+.proxy-option { background-color:#0e0f1e; border-color:#292a40; }
+.proxy-option:hover,.quick-card:hover { background-color:#191a2d; border-color:#454362; transform:none; }
+.proxy-option.is-selected,.config-file-tab.selected { background-color:#272644; background-image:none; border-color:#66618f; box-shadow:inset 0 0 0 1px #7774bd24; }
+.brand { color:#e7e5f1; }.brand-mark { background:#272641; color:#c0b9f0; }
+.nav-item.active { background:#202039; color:#eeecfa; box-shadow:inset 0 0 0 1px #3b395c; }
+.button-primary { background:#514b8e; border-color:#6961a7; }.button-primary:hover { background:#5b549a; filter:none; }
+.editor-button-primary { background:#262542; border-color:#474466; }.editor-button-primary:hover { background:#302e50; border-color:#625d8c; }
+.selector-summary,.selector-card,.proxy-option,.traffic-summary,.editor-toolbar,.dns-workspace,.feature-placeholder { background-image:none; }
+.metric-card:after { display:none; }
+.metric-card,.service-card,.quick-card,.journal-panel,.connections-panel,.selector-card,.editor-workspace,.dns-workspace,.modal-panel,.template-dialog,.editor-utilities-menu { box-shadow:none; }
+.connection-route,.text-button,.status-label,.nav-icon,.chip-icon,.modal-icon { color:#aaa1e6; }
+.modal::backdrop,.template-dialog::backdrop { backdrop-filter:none; }

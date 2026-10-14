@@ -26,4 +26,17 @@ describe('XKeen UI release check', () => {
     }), { headers: { 'Content-Type': 'application/json' } })));
     await expect(checkAppUpdate('0.2.0')).rejects.toThrow('нет полного ARM64-пакета');
   });
+
+  it('reports that no stable release exists when GitHub latest returns 404', async () => {
+    vi.stubGlobal('fetch', vi.fn(async () => new Response('', { status: 404 })));
+    await expect(checkAppUpdate('0.2.1')).rejects.toThrow('стабильной версии пока нет');
+  });
+
+  it('does not advertise the installed version as an update', async () => {
+    vi.stubGlobal('fetch', vi.fn(async () => new Response(JSON.stringify({
+      tag_name: 'v0.2.1', name: 'v0.2.1', html_url: 'https://github.com/rangerxxyy/XKeen-UI/releases/tag/v0.2.1',
+      prerelease: false, draft: false, assets: [{ name: 'xkeen-ui-linux-aarch64.tar.gz' }, { name: 'SHA256SUMS' }],
+    }), { headers: { 'Content-Type': 'application/json' } })));
+    await expect(checkAppUpdate('0.2.1')).resolves.toBeNull();
+  });
 });

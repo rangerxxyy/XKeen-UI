@@ -4,8 +4,15 @@ set -eu
 REPOSITORY=${XKEEN_REPOSITORY:-rangerxxyy/XKeen-UI}
 PREFIX=${XKEEN_PREFIX:-/opt}
 if [ "$#" -eq 0 ] && [ -t 0 ]; then
-  printf '\033[38;5;141m  __  __ _  __                       __  __\n  \\/ /| |/ / ___  ___ _  ___  ___ / / / /\n   \/  |   / / -_)/ _ `/ / -_)/ _ \\/ /_/ /\n      /_/|_|  \\__//_//_/ \\__/ \\___/\\____/\033[0m\n'
-  printf '\033[38;5;141m  ─────────────────────────────────────────\033[0m\n'
+  printf '\033[38;5;141m'
+  cat <<'BANNER'
+   _  __ _  __                       _   _ ___
+   \ \/ /| |/ / ___  ___ _ __        | | | |_ _|
+    \  / | ' / / -_)| -_) '_ \       | |_| || |
+    /_/  |_|\_\ \___|___| .__/        \___/|___|
+                         |_|  XKeen UI
+BANNER
+  printf '\033[38;5;75m  ── ROUTER CONTROL PANEL ─────────────────────\033[0m\n'
   printf '  Архитектура: \033[38;5;114m%s\033[0m\n' "$(uname -m 2>/dev/null || printf unknown)"
   if [ -x "$PREFIX/share/xkeen-ui/xkeen-ui" ]; then
     "$PREFIX/share/xkeen-ui/xkeen-ui" service status --prefix "$PREFIX"

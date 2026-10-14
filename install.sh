@@ -20,7 +20,9 @@ while [ "$#" -gt 0 ]; do
   shift
 done
 case "$PORT" in ''|*[!0-9]*) fail 'порт должен быть числом от 1 до 65535' ;; esac
-[ "$PORT" -ge 1 ] 2>/dev/null && [ "$PORT" -le 65535 ] 2>/dev/null || fail 'порт должен быть числом от 1 до 65535'
+if [ "$PORT" -lt 1 ] 2>/dev/null || [ "$PORT" -gt 65535 ] 2>/dev/null; then
+  fail 'порт должен быть числом от 1 до 65535'
+fi
 case "$PREFIX" in /*) ;; *) fail 'путь установки должен быть абсолютным' ;; esac
 case "$PREFIX" in *[!A-Za-z0-9_./-]*|*..*) fail 'путь установки содержит недопустимые символы' ;; esac
 APP_DIR=$PREFIX/share/xkeen-ui
@@ -129,7 +131,11 @@ stop() {
 status() { [ -r "$PIDFILE" ] && owns_pid "$(cat "$PIDFILE")" && echo 'XKeen UI запущен' || echo 'XKeen UI остановлен'; }
 case "${1:-status}" in start) start ;; stop) stop ;; restart) stop; start ;; status) status ;; *) exit 2 ;; esac
 SERVICE
-  if [ "$PREFIX" != /opt ]; then sed "s|/opt|$PREFIX|g" "$SERVICE_FILE" > "$SERVICE_FILE.tmp" && mv "$SERVICE_FILE.tmp" "$SERVICE_FILE" || fail 'не удалось настроить службу'; fi
+  if [ "$PREFIX" != /opt ]; then
+    if ! sed "s|/opt|$PREFIX|g" "$SERVICE_FILE" > "$SERVICE_FILE.tmp" || ! mv "$SERVICE_FILE.tmp" "$SERVICE_FILE"; then
+      fail 'не удалось настроить службу'
+    fi
+  fi
   chmod 755 "$SERVICE_FILE" || fail 'не удалось установить права службы'
 }
 install_app() {
@@ -147,7 +153,9 @@ install_app() {
   mkdir -p "$PREFIX/share" "$ETC_DIR" || fail 'не удалось создать каталоги'
   if [ -d "$APP_DIR" ]; then stamp=$(date +%Y%m%d%H%M%S 2>/dev/null || echo backup); mv "$APP_DIR" "$APP_DIR.backup.$stamp" || fail 'не удалось сохранить текущую версию'; fi
   mv "$WORK/unpacked" "$APP_DIR" || fail 'не удалось установить файлы'
-  (umask 077; printf 'XKEEN_PORT=%s\nXKEEN_TOKEN=%s\n' "$PORT" "$ACCESS_TOKEN" > "$CONFIG_FILE.tmp") && chmod 600 "$CONFIG_FILE.tmp" && mv "$CONFIG_FILE.tmp" "$CONFIG_FILE" || fail 'не удалось сохранить настройки доступа'
+  if ! (umask 077; printf 'XKEEN_PORT=%s\nXKEEN_TOKEN=%s\n' "$PORT" "$ACCESS_TOKEN" > "$CONFIG_FILE.tmp") || ! chmod 600 "$CONFIG_FILE.tmp" || ! mv "$CONFIG_FILE.tmp" "$CONFIG_FILE"; then
+    fail 'не удалось сохранить настройки доступа'
+  fi
   write_service
   "$SERVICE_FILE" start || fail 'файлы размещены, но запуск службы не прошёл; предыдущая версия сохранена'
   say "Ключ доступа (сохраните его): $ACCESS_TOKEN"
@@ -170,7 +178,7 @@ update_app() {
 remove_app() {
   [ -d "$APP_DIR" ] || fail 'каталог приложения не найден'
   confirm 'Удалить панель? Конфигурация и backup-каталоги останутся.'
-  [ -x "$SERVICE_FILE" ] && "$SERVICE_FILE" stop || true
+  if [ -x "$SERVICE_FILE" ]; then "$SERVICE_FILE" stop || true; fi
   rm -rf "$APP_DIR"; rm -f "$SERVICE_FILE"
   say 'Файлы панели удалены; конфигурация и резервные копии сохранены.'
 }

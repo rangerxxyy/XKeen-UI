@@ -357,3 +357,42 @@ body { background: #090a14; }
 .dns-handoff-disabled .toggle-switch { display:inline-block; width:1.8rem; height:1rem; margin-right:.45rem; vertical-align:middle; border:1px solid #615b77; border-radius:99px; background:#242234; }
 .dns-handoff-note { margin:.6rem 0 0; }
 @media(max-width:720px) { .dns-handoff-grid { grid-template-columns:1fr; } .dns-subnav-button { padding:.5rem .6rem; font-size:.75rem; } }
+
+/* Larger, calmer controls and selector density aligned to the supplied reference. */
+body { font-size: 14px; }
+.navigation .nav-item { font-size: 14px; }
+.selector-list { gap: 14px; }
+.selector-card { padding: 16px; }
+.selector-card-heading h2 { display:flex; align-items:center; gap:9px; font-size:17px; }
+.selector-group-icon { width:22px; height:22px; object-fit:contain; border-radius:4px; }
+.selector-kicker,.selector-current small { font-size:10px; }
+.selector-current strong { font-size:13px; }
+.selector-card-meta { margin:11px 0; font-size:12px; }
+.proxy-options { grid-template-columns:repeat(5,minmax(0,1fr)); gap:8px; }
+.proxy-option { min-height:76px; padding:10px 11px; border-radius:9px; }
+.proxy-option-name { display:flex; align-items:center; gap:7px; min-width:0; overflow:hidden; margin:0!important; font-size:13px!important; line-height:1.35; text-overflow:ellipsis; white-space:nowrap; }
+.proxy-option-icon { width:17px; height:17px; flex:0 0 17px; object-fit:contain; border-radius:3px; }
+.proxy-option-bottom { padding-top:10px; }
+.proxy-type,.proxy-health { font-size:10px; }
+.proxy-select { min-height:28px; padding:0 9px; font-size:10px; }
+.selected-mark { font-size:10px; }
+.connection-table th { font-size:11px; }
+.connection-table td { padding:11px; font-size:12px; }
+.connection-table td>small { font-size:10px; }
+.code-editor .cm-editor { font-size:14px; }
+.code-editor .cm-scroller { font-family:"JetBrains Mono Variable","JetBrains Mono",ui-monospace,SFMono-Regular,Consolas,monospace; line-height:1.65; }
+.editor-file strong { font-size:14px; }
+.editor-file small,.editor-callout p,.editor-validation,.editor-encoding { font-size:12px; }
+.editor-button,.config-file-tab { font-size:12px; }
+.editor-gutter-label { font-size:11px; }
+.config-load-active { white-space:nowrap; }
+@media(max-width:1100px) { .proxy-options { grid-template-columns:repeat(4,minmax(0,1fr)); } }
+@media(max-width:800px) { .proxy-options { grid-template-columns:repeat(3,minmax(0,1fr)); } }
+@media(max-width:600px) {
+  .proxy-options { grid-template-columns:repeat(2,minmax(0,1fr)); gap:7px; }
+  .proxy-option { min-height:74px; padding:9px; }
+  .proxy-option-name { font-size:12px!important; }
+  .code-editor .cm-editor { font-size:12px; }
+  .editor-button,.config-file-tab { font-size:11px; }
+  .editor-file small,.editor-callout p,.editor-validation { font-size:11px; }
+}

@@ -55,12 +55,14 @@ export interface ApiState {
 export interface MihomoProxyOption {
   name: string;
   type: string;
+  icon: string | null;
   alive: boolean | null;
   delay: number | null;
 }
 
 export interface MihomoSelector {
   name: string;
+  icon: string | null;
   current: string | null;
   options: MihomoProxyOption[];
 }
@@ -131,12 +133,28 @@ export async function getMihomoSelectors(signal?: AbortSignal): Promise<MihomoSe
       return [{
         name,
         type: isRecord(option) && typeof option.type === 'string' ? option.type : 'Unknown',
+        icon: isRecord(option) && typeof option.icon === 'string' ? option.icon : null,
         alive: isRecord(option) && typeof option.alive === 'boolean' ? option.alive : null,
         delay,
       }];
     });
-    return [{ name: typeof raw.name === 'string' ? raw.name : key, current: typeof raw.now === 'string' ? raw.now : null, options }];
+    return [{ name: typeof raw.name === 'string' ? raw.name : key, icon: typeof raw.icon === 'string' ? raw.icon : null, current: typeof raw.now === 'string' ? raw.now : null, options }];
   });
+}
+
+export interface ActiveConfig {
+  core: 'mihomo';
+  path: string;
+  content: string;
+  modified: string | null;
+}
+
+export async function getActiveMihomoConfig(signal?: AbortSignal): Promise<ActiveConfig> {
+  const payload = await getMihomoJson('/api/v1/config/active?core=mihomo', 'Чтение активной конфигурации', signal);
+  if (!isRecord(payload) || payload.core !== 'mihomo' || typeof payload.path !== 'string' || typeof payload.content !== 'string') {
+    throw new Error('Backend вернул некорректную активную конфигурацию');
+  }
+  return { core: 'mihomo', path: payload.path, content: payload.content, modified: typeof payload.modified === 'string' ? payload.modified : null };
 }
 
 export async function getMihomoVersion(signal?: AbortSignal): Promise<string> {

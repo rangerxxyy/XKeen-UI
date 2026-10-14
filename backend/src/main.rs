@@ -391,6 +391,34 @@ async fn mihomo_data(State(state): State<AppState>, endpoint: MihomoEndpoint) ->
     }
 }
 
+#[derive(Deserialize)]
+struct ActiveConfigQuery {
+    core: String,
+}
+
+async fn active_config(State(state): State<AppState>, Query(query): Query<ActiveConfigQuery>) -> Response {
+    if !state.router_mode {
+        return (StatusCode::SERVICE_UNAVAILABLE, Json(serde_json::json!({"error":"Чтение файлов конфигурации доступно только на роутере"}))).into_response();
+    }
+    if query.core != "mihomo" {
+        return (StatusCode::BAD_REQUEST, Json(serde_json::json!({"error":"Поддерживается только активная конфигурация Mihomo"}))).into_response();
+    }
+    const CONFIG_PATH: &str = "/opt/etc/mihomo/config.yaml";
+    let metadata = match tokio::fs::metadata(CONFIG_PATH).await {
+        Ok(value) if value.is_file() => value,
+        Ok(_) => return (StatusCode::NOT_FOUND, Json(serde_json::json!({"error":"Активный конфиг Mihomo не является файлом"}))).into_response(),
+        Err(error) if error.kind() == std::io::ErrorKind::NotFound => return (StatusCode::NOT_FOUND, Json(serde_json::json!({"error":format!("Активный конфиг Mihomo не найден: {CONFIG_PATH}")}))).into_response(),
+        Err(_) => return (StatusCode::INTERNAL_SERVER_ERROR, Json(serde_json::json!({"error":"Не удалось прочитать метаданные активного конфига Mihomo"}))).into_response(),
+    };
+    if metadata.len() > 8 * 1024 * 1024 {
+        return (StatusCode::PAYLOAD_TOO_LARGE, Json(serde_json::json!({"error":"Конфигурация превышает лимит чтения 8 MiB"}))).into_response();
+    }
+    match tokio::fs::read_to_string(CONFIG_PATH).await {
+        Ok(content) => Json(serde_json::json!({"core":"mihomo","path":CONFIG_PATH,"content":content,"modified":metadata.modified().ok().and_then(|time| time.duration_since(std::time::UNIX_EPOCH).ok()).map(|time| time.as_secs().to_string())})).into_response(),
+        Err(_) => (StatusCode::INTERNAL_SERVER_ERROR, Json(serde_json::json!({"error":"Не удалось прочитать активный конфиг Mihomo как UTF-8"}))).into_response(),
+    }
+}
+
 async fn mihomo_version(State(state): State<AppState>) -> Response {
     mihomo_data(State(state), MihomoEndpoint::Version).await
 }
@@ -684,6 +712,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         .route("/api/v1/status", get(status))
         .route("/api/v1/xkeen", get(xkeen_status))
         .route("/api/v1/logs", get(logs::read_logs))
+        .route("/api/v1/config/active", get(active_config))
         .route("/api/v1/settings/core-sources", get(get_core_sources))
         .route("/api/v1/mihomo/version", get(mihomo_version))
         .route("/api/v1/mihomo/proxies", get(mihomo_proxies))

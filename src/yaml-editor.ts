@@ -7,6 +7,7 @@ import { json } from '@codemirror/lang-json';
 import { applyEdits, format as formatJsonc, parse as parseJsonc, printParseErrorCode, type ParseError } from 'jsonc-parser';
 import { parseDocument } from 'yaml';
 import { chooseReferenceTemplate, getDefaultTemplate } from './templates';
+import { getActiveMihomoConfig } from './api';
 
 const draftKey = 'xkeen-ui:draft:';
 const activeFileKey = 'xkeen-ui:draft-active-file';
@@ -49,7 +50,7 @@ function setEditorIdentity(): void {
 
 const editorTheme = EditorView.theme({
   '&': { height: '100%', color: '#d9e4f5', backgroundColor: '#080e1b' },
-  '.cm-scroller': { overflow: 'auto', fontFamily: 'ui-monospace, SFMono-Regular, Consolas, monospace', lineHeight: '1.65' },
+  '.cm-scroller': { overflow: 'auto', fontFamily: '"JetBrains Mono Variable", "JetBrains Mono", ui-monospace, SFMono-Regular, Consolas, monospace', lineHeight: '1.65' },
   '.cm-content': { padding: '14px 0', caretColor: '#65c9ff' },
   '.cm-gutters': { color: '#566a88', backgroundColor: '#0a1120', borderRight: '1px solid #1e2b40' },
   '.cm-activeLine': { backgroundColor: '#111e31' },
@@ -237,5 +238,27 @@ export function mountYamlEditor(): void {
   document.querySelector<HTMLButtonElement>('#yaml-download')?.addEventListener('click', (event) => {
     (event.currentTarget as HTMLButtonElement).closest('details')?.removeAttribute('open');
     if (editor) downloadDraft(editor.state.doc.toString());
+  });
+  document.querySelector<HTMLButtonElement>('#config-load-active')?.addEventListener('click', async (event) => {
+    const button = event.currentTarget as HTMLButtonElement;
+    if (!editor || currentFile().id !== 'config') return;
+    const requestedEditor = editor;
+    if (editor.state.doc.length && !window.confirm('Загрузить активный конфиг Mihomo с роутера вместо текущего текста редактора? На роутер ничего записываться не будет.')) return;
+    button.disabled = true;
+    button.textContent = 'Читаем…';
+    try {
+      const active = await getActiveMihomoConfig();
+      if (editor !== requestedEditor || currentFile().id !== 'config') return;
+      editor.dispatch({ changes: { from: 0, to: editor.state.doc.length, insert: active.content } });
+      const hint = document.querySelector<HTMLElement>('#editor-file-hint');
+      if (hint) hint.textContent = `Снимок с роутера · ${active.path}`;
+      validateStructuredDocument(active.content);
+      setValidation(`Прочитан активный конфиг с роутера: ${active.path}. Изменения здесь пока не применяются.`, null);
+    } catch (error) {
+      setValidation(error instanceof Error ? `Не удалось прочитать конфиг: ${error.message}` : 'Не удалось прочитать конфиг роутера.', false);
+    } finally {
+      button.disabled = false;
+      button.textContent = '↓ Считать конфиг роутера';
+    }
   });
 }

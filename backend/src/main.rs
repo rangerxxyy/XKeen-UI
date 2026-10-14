@@ -1,4 +1,4 @@
-use std::{env, net::SocketAddr, path::PathBuf, time::Instant};
+use std::{env, net::{IpAddr, SocketAddr}, path::PathBuf, time::Instant};
 
 use axum::{
     extract::State,
@@ -276,7 +276,10 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         .with_state(state)
         .layer(TraceLayer::new_for_http());
 
-    let address = SocketAddr::from(([0, 0, 0, 0], port));
+    let bind_ip = env::var("XKEEN_BIND")
+        .unwrap_or_else(|_| "0.0.0.0".to_owned())
+        .parse::<IpAddr>()?;
+    let address = SocketAddr::new(bind_ip, port);
     let listener = TcpListener::bind(address).await.map_err(|error| {
         if error.kind() == std::io::ErrorKind::PermissionDenied {
             warn!(port, "binding the requested port was denied");

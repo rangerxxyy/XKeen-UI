@@ -1,0 +1,2 @@
+[target.aarch64-unknown-linux-gnu]
+image = "ghcr.io/cross-rs/aarch64-unknown-linux-gnu:main-centos@sha256:9a298dba2c8b8bc5749dce0a0ec1648cd1e39f2888c8b2dd93d7b89ee37ff0fc"

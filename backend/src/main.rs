@@ -160,7 +160,9 @@ async fn put_core_sources(
         if let Err(error) = save_core_sources(path, &sources).await {
             return (
                 StatusCode::INTERNAL_SERVER_ERROR,
-                Json(serde_json::json!({"error":format!("Не удалось сохранить настройки: {error}")})),
+                Json(
+                    serde_json::json!({"error":format!("Не удалось сохранить настройки: {error}")}),
+                ),
             )
                 .into_response();
         }

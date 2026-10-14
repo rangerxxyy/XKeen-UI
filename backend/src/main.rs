@@ -6,8 +6,8 @@ use std::{
 };
 
 use axum::{
-    extract::State,
-    http::{header::AUTHORIZATION, Request, StatusCode},
+    extract::{Path, State},
+    http::{header, HeaderMap, Request, StatusCode},
     middleware::{self, Next},
     response::{IntoResponse, Json, Response},
     routing::get,
@@ -170,6 +170,37 @@ async fn mihomo_connections(State(state): State<AppState>) -> Response {
     mihomo_data(State(state), MihomoEndpoint::Connections).await
 }
 
+async fn close_all_mihomo_connections(State(state): State<AppState>) -> Response {
+    if !state.router_mode {
+        return (
+            StatusCode::SERVICE_UNAVAILABLE,
+            Json(serde_json::json!({"error":"Закрытие соединений недоступно в режиме симуляции"})),
+        )
+            .into_response();
+    }
+    match state.mihomo.close_all_connections().await {
+        Ok(()) => StatusCode::NO_CONTENT.into_response(),
+        Err(error) => mihomo_error_response(error),
+    }
+}
+
+async fn close_mihomo_connection(
+    State(state): State<AppState>,
+    Path(id): Path<String>,
+) -> Response {
+    if !state.router_mode {
+        return (
+            StatusCode::SERVICE_UNAVAILABLE,
+            Json(serde_json::json!({"error":"Закрытие соединений недоступно в режиме симуляции"})),
+        )
+            .into_response();
+    }
+    match state.mihomo.close_connection(&id).await {
+        Ok(()) => StatusCode::NO_CONTENT.into_response(),
+        Err(error) => mihomo_error_response(error),
+    }
+}
+
 async fn mihomo_rules(State(state): State<AppState>) -> Response {
     mihomo_data(State(state), MihomoEndpoint::Rules).await
 }
@@ -193,6 +224,42 @@ async fn select_mihomo_proxy(
         Ok(()) => Json(serde_json::json!({"status":"selected"})).into_response(),
         Err(error) => mihomo_error_response(error),
     }
+}
+
+async fn require_same_origin(
+    request: Request<axum::body::Body>,
+    next: Next,
+) -> Response {
+    if same_origin(request.headers()) {
+        next.run(request).await
+    } else {
+        (
+            StatusCode::FORBIDDEN,
+            Json(serde_json::json!({"error":"cross-origin request rejected"})),
+        )
+            .into_response()
+    }
+}
+
+fn same_origin(headers: &HeaderMap) -> bool {
+    let Some(origin) = headers.get(header::ORIGIN).and_then(|value| value.to_str().ok()) else {
+        return false;
+    };
+    let Some(host) = headers.get(header::HOST).and_then(|value| value.to_str().ok()) else {
+        return false;
+    };
+    let Ok(origin_uri) = origin.parse::<axum::http::Uri>() else {
+        return false;
+    };
+    let Some(authority) = origin_uri.authority() else {
+        return false;
+    };
+    matches!(origin_uri.scheme_str(), Some("http" | "https"))
+        && !authority.as_str().contains('@')
+        && origin_uri
+            .path_and_query()
+            .is_none_or(|path| path.as_str() == "/")
+        && authority.as_str().eq_ignore_ascii_case(host)
 }
 
 fn mihomo_error_response(error: MihomoError) -> Response {
@@ -226,6 +293,10 @@ fn mihomo_error_response(error: MihomoError) -> Response {
         MihomoError::InvalidSelection => (
             StatusCode::BAD_REQUEST,
             "Узел не входит в доступную группу Selector",
+        ),
+        MihomoError::InvalidConnectionId => (
+            StatusCode::BAD_REQUEST,
+            "Соединение больше не активно или его идентификатор некорректен",
         ),
     };
     (status, Json(serde_json::json!({"error":message}))).into_response()
@@ -368,23 +439,38 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     };
     let web = web_root();
     let index = web.join("index.html");
-    let protected_api = Router::new()
+    let read_api = Router::new()
         .route("/api/v1/status", get(status))
         .route("/api/v1/mihomo/version", get(mihomo_version))
         .route("/api/v1/mihomo/proxies", get(mihomo_proxies))
         .route("/api/v1/mihomo/connections", get(mihomo_connections))
         .route("/api/v1/mihomo/rules", get(mihomo_rules))
+        .route_layer(middleware::from_fn_with_state(
+            state.clone(),
+            require_access_token,
+        ));
+    let mutation_api = Router::new()
+        .route(
+            "/api/v1/mihomo/connections",
+            axum::routing::delete(close_all_mihomo_connections),
+        )
+        .route(
+            "/api/v1/mihomo/connections/{id}",
+            axum::routing::delete(close_mihomo_connection),
+        )
         .route(
             "/api/v1/mihomo/proxies/select",
             axum::routing::put(select_mihomo_proxy),
         )
+        .route_layer(middleware::from_fn(require_same_origin))
         .route_layer(middleware::from_fn_with_state(
             state.clone(),
             require_access_token,
         ));
     let app = Router::new()
         .route("/health", get(health))
-        .merge(protected_api)
+        .merge(read_api)
+        .merge(mutation_api)
         .fallback_service(ServeDir::new(&web).not_found_service(ServeFile::new(index)))
         .with_state(state)
         .layer(TraceLayer::new_for_http());
@@ -406,7 +492,8 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
 #[cfg(test)]
 mod tests {
-    use super::{constant_time_equals, parse_load_average};
+    use super::{constant_time_equals, parse_load_average, same_origin};
+    use axum::http::{header, HeaderMap, HeaderValue};
 
     #[test]
     fn load_average_parser_reads_only_a_finite_first_value() {
@@ -435,5 +522,34 @@ mod tests {
         assert_eq!("0".parse::<u16>().ok(), Some(0));
         assert!("1001".parse::<u16>().is_ok_and(|port| port > 0));
         assert!("65536".parse::<u16>().is_err());
+    }
+
+    #[test]
+    fn mutations_require_an_exact_same_origin_header() {
+        let mut headers = HeaderMap::new();
+        headers.insert(header::HOST, HeaderValue::from_static("192.168.1.1:1001"));
+        headers.insert(
+            header::ORIGIN,
+            HeaderValue::from_static("http://192.168.1.1:1001"),
+        );
+        assert!(same_origin(&headers));
+
+        headers.insert(
+            header::ORIGIN,
+            HeaderValue::from_static("http://attacker.example"),
+        );
+        assert!(!same_origin(&headers));
+        headers.insert(
+            header::ORIGIN,
+            HeaderValue::from_static("http://192.168.1.1:1002"),
+        );
+        assert!(!same_origin(&headers));
+        headers.insert(
+            header::ORIGIN,
+            HeaderValue::from_static("http://user@192.168.1.1:1001"),
+        );
+        assert!(!same_origin(&headers));
+        headers.remove(header::ORIGIN);
+        assert!(!same_origin(&headers));
     }
 }

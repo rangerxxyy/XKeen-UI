@@ -52,6 +52,7 @@ pub enum MihomoError {
     ResponseTooLarge,
     InvalidJson(serde_json::Error),
     InvalidSelection,
+    InvalidConnectionId,
 }
 
 impl MihomoClient {
@@ -131,6 +132,45 @@ impl MihomoClient {
         }
     }
 
+    pub async fn close_connection(&self, id: &str) -> Result<(), MihomoError> {
+        if !valid_connection_id(id) {
+            return Err(MihomoError::InvalidConnectionId);
+        }
+        let connections = self.get_json(Endpoint::Connections).await?;
+        let exists = connections
+            .get("connections")
+            .and_then(Value::as_array)
+            .is_some_and(|items| {
+                items
+                    .iter()
+                    .any(|item| item.get("id").and_then(Value::as_str) == Some(id))
+            });
+        if !exists {
+            return Err(MihomoError::InvalidConnectionId);
+        }
+        self.expect_success(Method::DELETE, &format!("connections/{id}"), None)
+            .await
+    }
+
+    pub async fn close_all_connections(&self) -> Result<(), MihomoError> {
+        self.expect_success(Method::DELETE, "connections", None)
+            .await
+    }
+
+    async fn expect_success(
+        &self,
+        method: Method,
+        path: &str,
+        body: Option<Bytes>,
+    ) -> Result<(), MihomoError> {
+        let response = self.send(method, path, body).await?;
+        if response.status().is_success() {
+            Ok(())
+        } else {
+            Err(MihomoError::UpstreamStatus(response.status().as_u16()))
+        }
+    }
+
     async fn send(
         &self,
         method: Method,
@@ -188,9 +228,19 @@ fn valid_name(value: &str) -> bool {
     !value.is_empty() && value.len() <= 256 && !value.chars().any(char::is_control)
 }
 
+fn valid_connection_id(value: &str) -> bool {
+    !value.is_empty()
+        && value.len() <= 128
+        && value
+            .bytes()
+            .all(|byte| byte.is_ascii_hexdigit() || byte == b'-')
+}
+
 #[cfg(test)]
 mod tests {
-    use super::{parse_controller_authority, valid_name, Endpoint, MihomoError};
+    use super::{
+        parse_controller_authority, valid_connection_id, valid_name, Endpoint, MihomoError,
+    };
 
     #[test]
     fn endpoint_paths_are_a_fixed_allowlist() {
@@ -226,5 +276,13 @@ mod tests {
         assert!(!valid_name("main\n"));
         assert!(!valid_name(&"x".repeat(257)));
         assert!(valid_name("Main / Europe"));
+    }
+
+    #[test]
+    fn connection_ids_allow_only_uuid_safe_characters() {
+        assert!(valid_connection_id("a8af0b12-24ff-4a4f-9000-19d9a3afc20d"));
+        assert!(!valid_connection_id(""));
+        assert!(!valid_connection_id("../configs"));
+        assert!(!valid_connection_id("id?secret=value"));
     }
 }

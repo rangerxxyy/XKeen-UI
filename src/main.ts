@@ -1,5 +1,5 @@
 import './style.css';
-import { ApiError, getHealth, getMihomoConnections, getMihomoSelectors, getStatus, hasAccessToken, selectMihomoProxy, setAccessToken, type ApiState, type MihomoConnections, type MihomoSelector, type ServiceStatus } from './api';
+import { ApiError, closeAllMihomoConnections, closeMihomoConnection, getHealth, getMihomoConnections, getMihomoSelectors, getStatus, hasAccessToken, selectMihomoProxy, setAccessToken, type ApiState, type MihomoConnections, type MihomoSelector, type ServiceStatus } from './api';
 import { renderConnections, renderSelectors } from './mihomo-view';
 import { mountYamlEditor, unmountYamlEditor } from './yaml-editor';
 
@@ -155,6 +155,10 @@ function bindMihomoInteractions(): void {
   document.querySelectorAll<HTMLButtonElement>('.proxy-select').forEach((button) => {
     button.addEventListener('click', () => void selectProxyFromUi(button));
   });
+  document.querySelectorAll<HTMLButtonElement>('[data-close-connection]').forEach((button) => {
+    button.addEventListener('click', () => void closeConnectionFromUi(button));
+  });
+  document.querySelector<HTMLButtonElement>('#close-all-connections')?.addEventListener('click', () => void closeAllConnectionsFromUi());
   document.querySelector<HTMLInputElement>('#connection-filter')?.addEventListener('input', (event) => {
     const query = (event.currentTarget as HTMLInputElement).value.trim().toLocaleLowerCase();
     let visible = 0;
@@ -166,6 +170,35 @@ function bindMihomoInteractions(): void {
     const noResults = document.querySelector<HTMLElement>('.connection-no-results.is-filtered');
     if (noResults) noResults.hidden = query.length === 0 || visible > 0;
   });
+}
+
+async function closeConnectionFromUi(button: HTMLButtonElement): Promise<void> {
+  const id = button.dataset.closeConnection;
+  if (!id || !window.confirm('Закрыть выбранное соединение? Текущий сетевой запрос может прерваться.')) return;
+  button.disabled = true;
+  try {
+    await closeMihomoConnection(id, mihomoController?.signal);
+    await loadMihomoPage('connections');
+  } catch (error) {
+    connectionsError = error instanceof Error ? error.message : 'Не удалось закрыть соединение';
+    connectionsLoading = false;
+    render();
+  }
+}
+
+async function closeAllConnectionsFromUi(): Promise<void> {
+  const count = connections?.connections.length ?? 0;
+  if (!count || !window.confirm(`Закрыть все ${count} активных соединений? Это может прервать текущие запросы устройств.`)) return;
+  const button = document.querySelector<HTMLButtonElement>('#close-all-connections');
+  if (button) { button.disabled = true; button.textContent = 'Закрываем…'; }
+  try {
+    await closeAllMihomoConnections(mihomoController?.signal);
+    await loadMihomoPage('connections');
+  } catch (error) {
+    connectionsError = error instanceof Error ? error.message : 'Не удалось закрыть соединения';
+    connectionsLoading = false;
+    render();
+  }
 }
 
 async function loadMihomoPage(page: Page): Promise<void> {

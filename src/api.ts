@@ -157,6 +157,26 @@ export async function selectMihomoProxy(group: string, name: string, signal?: Ab
   await readJson(response, 'Переключение селектора');
 }
 
+export async function closeMihomoConnection(id: string, signal?: AbortSignal): Promise<void> {
+  const token = sessionStorage.getItem(TOKEN_KEY);
+  const response = await fetch(`/api/v1/mihomo/connections/${encodeURIComponent(id)}`, {
+    method: 'DELETE',
+    headers: { Accept: 'application/json', ...(token ? { Authorization: `Bearer ${token}` } : {}) },
+    signal,
+  });
+  requireSuccess(response, 'Закрытие соединения');
+}
+
+export async function closeAllMihomoConnections(signal?: AbortSignal): Promise<void> {
+  const token = sessionStorage.getItem(TOKEN_KEY);
+  const response = await fetch('/api/v1/mihomo/connections', {
+    method: 'DELETE',
+    headers: { Accept: 'application/json', ...(token ? { Authorization: `Bearer ${token}` } : {}) },
+    signal,
+  });
+  requireSuccess(response, 'Закрытие соединений');
+}
+
 function readString(value: unknown): string {
   return typeof value === 'string' ? value : '';
 }
@@ -248,10 +268,14 @@ function parseSystemStatus(value: unknown): SystemStatus {
 }
 
 async function readJson(response: Response, operation: string): Promise<unknown> {
-  if (!response.ok) throw new ApiError(`${operation}: HTTP ${response.status}`, response.status);
+  requireSuccess(response, operation);
   const contentType = response.headers.get('content-type') ?? '';
   if (!contentType.toLowerCase().includes('application/json')) {
     throw new Error(`${operation}: backend вернул не JSON; проверьте Rust backend и адрес API`);
   }
   return await response.json() as unknown;
+}
+
+function requireSuccess(response: Response, operation: string): void {
+  if (!response.ok) throw new ApiError(`${operation}: HTTP ${response.status}`, response.status);
 }

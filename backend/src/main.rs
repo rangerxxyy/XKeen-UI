@@ -24,6 +24,7 @@ use tracing::{info, warn};
 
 mod installer;
 mod mihomo;
+mod xkeen;
 use mihomo::{Endpoint as MihomoEndpoint, MihomoClient, MihomoError};
 
 #[derive(Clone)]
@@ -231,6 +232,38 @@ struct DnsQuery {
 
 async fn health() -> Json<Health> {
     Json(Health { status: "ok" })
+}
+
+async fn xkeen_status(State(state): State<AppState>) -> Response {
+    if !state.router_mode {
+        return (
+            StatusCode::SERVICE_UNAVAILABLE,
+            Json(serde_json::json!({"error":"Управление XKeen недоступно в режиме симуляции"})),
+        )
+            .into_response();
+    }
+    Json(xkeen::read_status()).into_response()
+}
+
+async fn control_xkeen(
+    State(state): State<AppState>,
+    Json(request): Json<xkeen::ControlRequest>,
+) -> Response {
+    if !state.router_mode {
+        return (
+            StatusCode::SERVICE_UNAVAILABLE,
+            Json(serde_json::json!({"error":"Управление XKeen недоступно в режиме симуляции"})),
+        )
+            .into_response();
+    }
+    match xkeen::control(&request.action).await {
+        Ok(status) => Json(status).into_response(),
+        Err(error) => (
+            StatusCode::BAD_REQUEST,
+            Json(serde_json::json!({"error":error})),
+        )
+            .into_response(),
+    }
 }
 
 async fn status(State(state): State<AppState>) -> Json<SystemStatus> {
@@ -646,6 +679,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let index = web.join("index.html");
     let read_api = Router::new()
         .route("/api/v1/status", get(status))
+        .route("/api/v1/xkeen", get(xkeen_status))
         .route("/api/v1/settings/core-sources", get(get_core_sources))
         .route("/api/v1/mihomo/version", get(mihomo_version))
         .route("/api/v1/mihomo/proxies", get(mihomo_proxies))
@@ -662,6 +696,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             require_access_token,
         ));
     let mutation_api = Router::new()
+        .route("/api/v1/xkeen/control", axum::routing::post(control_xkeen))
         .route(
             "/api/v1/settings/core-sources",
             axum::routing::put(put_core_sources),

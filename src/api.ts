@@ -17,6 +17,15 @@ export interface SystemStatus {
   notice: string;
 }
 
+export interface XkeenStatus {
+  installed: boolean;
+  running: boolean | null;
+  version: string | null;
+  core: 'mihomo' | 'xray' | null;
+  initPath: string | null;
+  detail: string;
+}
+
 export interface CoreSources {
   xray: string;
   mihomo: string;
@@ -280,6 +289,53 @@ export async function getHealth(signal?: AbortSignal): Promise<{ status: string 
     throw new Error('Проверка API: backend вернул некорректный ответ');
   }
   return { status: 'ok' };
+}
+
+export async function getXkeenStatus(signal?: AbortSignal): Promise<XkeenStatus> {
+  const payload = await getAuthenticatedJson('/api/v1/xkeen', 'Получение статуса XKeen', signal);
+  if (!isRecord(payload) || typeof payload.installed !== 'boolean' ||
+      (payload.running !== null && typeof payload.running !== 'boolean') ||
+      (payload.version !== null && typeof payload.version !== 'string') ||
+      (payload.core !== null && !['mihomo', 'xray'].includes(String(payload.core))) ||
+      (payload.initPath !== null && typeof payload.initPath !== 'string') || typeof payload.detail !== 'string') {
+    throw new Error('Получение статуса XKeen: backend вернул некорректный ответ');
+  }
+  return {
+    installed: payload.installed,
+    running: payload.running,
+    version: payload.version,
+    core: payload.core as XkeenStatus['core'],
+    initPath: payload.initPath as string | null,
+    detail: payload.detail,
+  };
+}
+
+export async function controlXkeen(action: 'start' | 'stop' | 'restart', signal?: AbortSignal): Promise<XkeenStatus> {
+  const token = sessionStorage.getItem(TOKEN_KEY);
+  const response = await fetch('/api/v1/xkeen/control', {
+    method: 'POST',
+    headers: {
+      Accept: 'application/json',
+      'Content-Type': 'application/json',
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    },
+    body: JSON.stringify({ action }),
+    signal,
+  });
+  const payload = await readJson(response, `Команда XKeen ${action}`);
+  if (!isRecord(payload) || typeof payload.installed !== 'boolean' || typeof payload.detail !== 'string') {
+    throw new Error('Управление XKeen: backend вернул некорректный ответ');
+  }
+  return payload as unknown as XkeenStatus;
+}
+
+async function getAuthenticatedJson(path: string, operation: string, signal?: AbortSignal): Promise<unknown> {
+  const token = sessionStorage.getItem(TOKEN_KEY);
+  const response = await fetch(path, {
+    headers: { Accept: 'application/json', ...(token ? { Authorization: `Bearer ${token}` } : {}) },
+    signal,
+  });
+  return readJson(response, operation);
 }
 
 type UnknownRecord = Record<string, unknown>;

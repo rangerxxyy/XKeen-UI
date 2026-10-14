@@ -3,6 +3,23 @@
 set -eu
 REPOSITORY=${XKEEN_REPOSITORY:-rangerxxyy/XKeen-UI}
 PREFIX=${XKEEN_PREFIX:-/opt}
+if [ "$#" -eq 0 ] && [ -t 0 ]; then
+  printf '\033[96m  XKeen UI\033[0m\n  ─────────────────────────\n  Архитектура: %s\n' "$(uname -m 2>/dev/null || printf unknown)"
+  if [ -x "$PREFIX/share/xkeen-ui/xkeen-ui" ]; then
+    "$PREFIX/share/xkeen-ui/xkeen-ui" service status --prefix "$PREFIX"
+  else
+    printf '  Статус панели: не установлена\n'
+  fi
+  printf '\n  1. Установить / переустановить\n  2. Обновить\n  3. Удалить\n  0. Выход\n\n> '
+  IFS= read -r choice || exit 0
+  case "$choice" in
+    1) set -- install ;;
+    2) set -- update ;;
+    3) set -- remove ;;
+    0|'') exit 0 ;;
+    *) printf 'Неизвестный пункт меню.\n' >&2; exit 2 ;;
+  esac
+fi
 ACTION=${1:-install}
 APP_DIR=$PREFIX/share/xkeen-ui
 shift || true

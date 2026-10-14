@@ -1,5 +1,7 @@
+import '@fontsource-variable/inter';
+import '@fontsource-variable/jetbrains-mono';
 import './style.css';
-import { ApiError, closeAllMihomoConnections, closeMihomoConnection, getCoreSources, getHealth, getMihomoConnections, getMihomoSelectors, getMihomoVersion, getStatus, hasAccessToken, queryMihomoDns, saveCoreSources, selectMihomoProxy, setAccessToken, type ApiState, type CoreSources, type MihomoConnections, type MihomoDnsResult, type MihomoSelector, type ServiceStatus } from './api';
+import { ApiError, closeAllMihomoConnections, closeMihomoConnection, controlXkeen, getCoreSources, getHealth, getMihomoConnections, getMihomoSelectors, getMihomoVersion, getStatus, getXkeenStatus, hasAccessToken, queryMihomoDns, saveCoreSources, selectMihomoProxy, setAccessToken, type ApiState, type CoreSources, type MihomoConnections, type MihomoDnsResult, type MihomoSelector, type ServiceStatus, type XkeenStatus } from './api';
 import { renderConnections, renderSelectors } from './mihomo-view';
 import { renderDns } from './dns-view';
 import { mountYamlEditor, unmountYamlEditor } from './yaml-editor';
@@ -35,6 +37,9 @@ let dnsQueryName = '';
 let dnsQueryType = 'A';
 let dnsController: AbortController | undefined;
 let mihomoVersion: string | null = null;
+let xkeenStatus: XkeenStatus | null = null;
+let xkeenControlMessage = '';
+let xkeenControlBusy = false;
 
 const app = document.querySelector<HTMLDivElement>('#app');
 if (!app) throw new Error('Корневой элемент интерфейса #app не найден');
@@ -77,9 +82,17 @@ function metricCard(icon: string, label: string, value: string, note: string, ti
 }
 
 function renderServiceCard(service: ServiceStatus): string {
+  const isXkeen = service.name.toLowerCase() === 'xkeen';
+  const effectiveService: ServiceStatus = isXkeen && xkeenStatus
+    ? { ...service, state: !xkeenStatus.installed ? 'unavailable' : xkeenStatus.running === null ? 'unknown' : xkeenStatus.running ? 'running' : 'stopped', version: xkeenStatus.version, detail: xkeenStatus.detail }
+    : service;
   const icon = service.name === 'Xray' ? '✳' : service.name === 'Mihomo' ? '◉' : '⌂';
-  const summary = service.version ? `Версия ${escapeHtml(service.version)}` : escapeHtml(service.detail);
-  return `<article class="service-card"><div class="service-heading"><span class="service-icon">${icon}</span><div class="service-name"><strong>${escapeHtml(service.name)}</strong><small>${summary}</small></div>${serviceBadge(service)}</div><div class="service-foot"><span>${service.state === 'running' ? 'Работает' : service.state === 'unavailable' ? 'Проверка недоступна' : 'Нет подтверждения запуска'}</span><button class="text-button" disabled title="Управление сервисом появится после подключения системного адаптера">Подробнее <span>↗</span></button></div></article>`;
+  const summary = isXkeen && xkeenStatus?.version ? `Версия ${escapeHtml(xkeenStatus.version)}` : service.version ? `Версия ${escapeHtml(service.version)}` : escapeHtml(effectiveService.detail);
+  const canControl = isXkeen && state.status?.mode === 'router' && xkeenStatus?.installed;
+  const actions = canControl
+    ? `<div class="service-controls" aria-label="Управление XKeen"><button class="editor-button" data-xkeen-action="start" ${xkeenControlBusy || xkeenStatus?.running ? 'disabled' : ''}>Запустить</button><button class="editor-button" data-xkeen-action="restart" ${xkeenControlBusy ? 'disabled' : ''}>Перезапустить</button><button class="editor-button danger-button" data-xkeen-action="stop" ${xkeenControlBusy || xkeenStatus?.running === false ? 'disabled' : ''}>Остановить</button></div>${xkeenStatus?.initPath ? `<small class="service-path">Init: ${escapeHtml(xkeenStatus.initPath)} · ${escapeHtml(xkeenStatus.core ?? 'ядро не определено')}</small>` : ''}${xkeenControlMessage ? `<p class="xkeen-control-message" role="status">${escapeHtml(xkeenControlMessage)}</p>` : ''}`
+    : '';
+  return `<article class="service-card"><div class="service-heading"><span class="service-icon">${icon}</span><div class="service-name"><strong>${escapeHtml(service.name)}</strong><small>${summary}</small></div>${serviceBadge(effectiveService)}</div><div class="service-foot"><span>${effectiveService.state === 'running' ? 'Работает' : effectiveService.state === 'unavailable' ? 'Проверка недоступна' : effectiveService.state === 'stopped' ? 'Остановлен' : 'Нет подтверждения запуска'}</span>${isXkeen && xkeenStatus?.detail ? `<span>${escapeHtml(xkeenStatus.detail)}</span>` : ''}</div>${actions}</article>`;
 }
 
 function renderOverview(): string {
@@ -167,6 +180,9 @@ function render(): void {
   document.querySelectorAll<HTMLButtonElement>('#refresh,#refresh-secondary,#retry').forEach((button) => button.addEventListener('click', () => void refresh()));
   document.querySelector<HTMLButtonElement>('#settings')?.addEventListener('click', openSettings);
   document.querySelector<HTMLButtonElement>('#authenticate')?.addEventListener('click', openAccessDialog);
+  document.querySelectorAll<HTMLButtonElement>('[data-xkeen-action]').forEach((button) => {
+    button.addEventListener('click', () => void runXkeenAction(button.dataset.xkeenAction));
+  });
   document.querySelector<HTMLFormElement>('#dns-query-form')?.addEventListener('submit', (event) => {
     event.preventDefault();
     const form = event.currentTarget as HTMLFormElement;
@@ -177,6 +193,28 @@ function render(): void {
   });
   if (activePage === 'configuration' && !authRequired) mountYamlEditor();
   bindMihomoInteractions();
+}
+
+async function runXkeenAction(action: string | undefined): Promise<void> {
+  if (action !== 'start' && action !== 'stop' && action !== 'restart') return;
+  const prompt = action === 'start'
+    ? 'Запустить XKeen? Это активирует проксирование согласно текущей конфигурации роутера.'
+    : action === 'stop'
+      ? 'Остановить XKeen? Трафик роутера перестанет идти через прокси.'
+      : 'Перезапустить XKeen? Активные соединения могут прерваться.';
+  if (!window.confirm(prompt)) return;
+  xkeenControlBusy = true;
+  xkeenControlMessage = `Выполняется команда ${action}…`;
+  render();
+  try {
+    xkeenStatus = await controlXkeen(action);
+    xkeenControlMessage = `Команда ${action} завершена.`;
+  } catch (error) {
+    xkeenControlMessage = error instanceof Error ? error.message : 'Не удалось выполнить команду XKeen';
+  } finally {
+    xkeenControlBusy = false;
+    render();
+  }
 }
 
 async function runDnsQuery(): Promise<void> {
@@ -407,6 +445,7 @@ async function refresh(): Promise<void> {
   try {
     await getHealth(requestController.signal);
     state.status = await getStatus(requestController.signal);
+    xkeenStatus = state.status.mode === 'router' ? await getXkeenStatus(requestController.signal).catch(() => null) : null;
     state.connected = true;
     state.error = null;
     authRequired = false;

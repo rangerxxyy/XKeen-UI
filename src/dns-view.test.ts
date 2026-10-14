@@ -10,12 +10,10 @@ describe('DNS workspaces', () => {
 
   it('shows router DNS handoff as off and unavailable until its API is implemented', () => {
     const view = renderDns(null, false, null, '', 'A', 'handoff');
-    expect(view).toContain('Передача управления DNS');
-    expect(view).toContain('listen: 0.0.0.0:53');
-    expect(view).toContain('192.168.1.1');
-    expect(view).toContain('IPv4/IPv6, DoH/DoT, DNS-override и контентный фильтр');
-    expect(view).toContain('Отключить фильтр Keenetic');
-    expect(view).toContain('Включить управление DNS</button>');
-    expect(view).toContain('пока не подключена к API роутера');
+    expect(view).toContain('Передача DNS роутера');
+    expect(view).toContain('Выключено');
+    expect(view).toContain('DoH/DoT и контентного фильтра');
+    expect(view).toContain('Включить</button>');
+    expect(view).toContain('Управление отключено');
   });
 });

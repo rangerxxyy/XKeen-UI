@@ -67,6 +67,26 @@ export interface MihomoSelector {
   options: MihomoProxyOption[];
 }
 
+export interface MihomoPingResult {
+  name: string;
+  delay: number | null;
+}
+
+export async function pingMihomoGroup(group: string, signal?: AbortSignal): Promise<MihomoPingResult[]> {
+  const response = await fetch('/api/v1/mihomo/proxies/ping', {
+    method: 'POST',
+    headers: { Accept: 'application/json', 'Content-Type': 'application/json' },
+    body: JSON.stringify({ group }),
+    signal,
+  });
+  const payload = await readJson(response, 'Проверка серверов группы');
+  if (!isRecord(payload) || !Array.isArray(payload.results)) throw new Error('Backend вернул некорректные результаты ping');
+  return payload.results.flatMap((raw): MihomoPingResult[] => {
+    if (!isRecord(raw) || typeof raw.name !== 'string' || !(raw.delay === null || (typeof raw.delay === 'number' && Number.isFinite(raw.delay)))) return [];
+    return [{ name: raw.name, delay: raw.delay }];
+  });
+}
+
 export interface MihomoConnections {
   uploadTotal: number;
   downloadTotal: number;
@@ -155,6 +175,36 @@ export async function getActiveMihomoConfig(signal?: AbortSignal): Promise<Activ
     throw new Error('Backend вернул некорректную активную конфигурацию');
   }
   return { core: 'mihomo', path: payload.path, content: payload.content, modified: typeof payload.modified === 'string' ? payload.modified : null };
+}
+
+export interface ApplyMihomoConfigResult {
+  status: 'saved' | 'applied';
+  path: string;
+  backup: string;
+  restarted: boolean;
+  detail: string;
+}
+
+export async function applyActiveMihomoConfig(content: string, expectedContent: string, signal?: AbortSignal): Promise<ApplyMihomoConfigResult> {
+  const response = await fetch('/api/v1/config/active', {
+    method: 'PUT',
+    headers: { Accept: 'application/json', 'Content-Type': 'application/json' },
+    body: JSON.stringify({ content, expectedContent }),
+    signal,
+  });
+  const payload = await readJson(response, 'Применение конфигурации Mihomo');
+  if (!isRecord(payload) || !['saved', 'applied'].includes(String(payload.status)) ||
+      payload.path !== '/opt/etc/mihomo/config.yaml' || typeof payload.backup !== 'string' ||
+      typeof payload.restarted !== 'boolean' || typeof payload.detail !== 'string') {
+    throw new Error('Backend вернул некорректный результат применения конфигурации');
+  }
+  return {
+    status: payload.status as ApplyMihomoConfigResult['status'],
+    path: payload.path,
+    backup: payload.backup,
+    restarted: payload.restarted,
+    detail: payload.detail,
+  };
 }
 
 export async function getMihomoVersion(signal?: AbortSignal): Promise<string> {

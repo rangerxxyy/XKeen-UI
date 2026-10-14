@@ -1,7 +1,7 @@
 import '@fontsource-variable/inter';
 import '@fontsource-variable/jetbrains-mono';
 import './style.css';
-import { closeAllMihomoConnections, closeMihomoConnection, controlXkeen, getCoreSources, getHealth, getMihomoConnections, getMihomoSelectors, getMihomoVersion, getStatus, getSystemLog, getXkeenStatus, queryMihomoDns, saveCoreSources, selectMihomoProxy, type ApiState, type CoreSources, type MihomoConnections, type MihomoDnsResult, type MihomoSelector, type ServiceStatus, type SystemLog, type XkeenStatus } from './api';
+import { closeAllMihomoConnections, closeMihomoConnection, controlXkeen, getCoreSources, getHealth, getMihomoConnections, getMihomoSelectors, getMihomoVersion, getStatus, getSystemLog, getXkeenStatus, pingMihomoGroup, queryMihomoDns, saveCoreSources, selectMihomoProxy, type ApiState, type CoreSources, type MihomoConnections, type MihomoDnsResult, type MihomoSelector, type ServiceStatus, type SystemLog, type XkeenStatus } from './api';
 import { renderConnections, renderSelectors } from './mihomo-view';
 import { renderDns } from './dns-view';
 import { bindCoreReleaseChecks } from './core-releases';
@@ -133,15 +133,16 @@ function renderComingSoon(page: Page): string {
 }
 
 function renderConfiguration(): string {
-  return `<section class="page-heading"><div><div class="eyebrow"><span class="eyebrow-line"></span> РАБОЧАЯ ОБЛАСТЬ</div><h1>Конфигурация</h1><p>Изолированные черновики файлов и списков XKeen без доступа к файлам роутера.</p></div><span class="runtime-badge"><span class="runtime-dot"></span> Режим черновика</span></section>
+  const router = state.status?.mode === 'router';
+  return `<section class="page-heading"><h1>Конфигурация</h1><span class="runtime-badge"><span class="runtime-dot"></span> ${router ? 'Роутер' : 'Черновик'}</span></section>
   <section class="editor-workspace" aria-label="Редактор конфигурации Mihomo">
     <div class="config-file-tabs" role="group" aria-label="Файлы конфигурации">${[['config','config'],['ip_exclude','ip_exclude'],['port_exclude','port_exclude'],['port_proxying','port_proxying'],['xkeen','xkeen'],['xray_json','Xray JSON'],['xray_jsonc','Xray routing']].map(([id,label]) => `<button class="config-file-tab" data-config-file="${id}" type="button" aria-pressed="${id === 'config'}">${label}</button>`).join('')}</div>
-    <div class="editor-toolbar"><div class="editor-file"><span class="file-mark">⌘</span><div><strong id="editor-filename">config.yaml</strong><small id="editor-file-hint">Локальная вкладка · не файл роутера</small></div><span class="draft-pill">Черновик</span></div><div class="editor-actions"><button class="editor-button" id="config-load-active" type="button" data-yaml-only title="Прочитать /opt/etc/mihomo/config.yaml; ничего не записывается на роутер">↓ Считать конфиг роутера</button><details class="editor-utilities" data-structured-only><summary class="editor-button">⋯ Утилиты</summary><div class="editor-utilities-menu" role="menu" aria-label="Утилиты конфигурации"><button type="button" role="menuitem" id="yaml-template">▤ Шаблоны конфигураций</button><button type="button" role="menuitem" id="yaml-validate">✓ Проверить</button><button type="button" role="menuitem" id="yaml-format">⌘ Форматировать</button><button type="button" role="menuitem" id="yaml-download">↓ Скачать черновик</button></div></details></div></div>
-    <div class="editor-callout"><span class="callout-mark">i</span><p>Черновик хранится только в текущей вкладке браузера. Он не загружается и не применяется на роутере. Проверка проверяет YAML, но не схему конкретной версии Mihomo.</p></div>
+    <div class="editor-toolbar"><div class="editor-file"><span class="file-mark">⌘</span><div><strong id="editor-filename">config.yaml</strong><small id="editor-file-hint">Локальная вкладка · не файл роутера</small></div><span class="draft-pill">Черновик</span></div><div class="editor-actions"><button class="editor-button" id="config-load-active" type="button" data-yaml-only title="Прочитать /opt/etc/mihomo/config.yaml">↓ Считать конфиг</button><button class="editor-button editor-button-primary" id="config-apply-active" type="button" data-yaml-only disabled title="Сначала считайте актуальный конфиг роутера">Применить на роутер</button><details class="editor-utilities" data-structured-only><summary class="editor-button">⋯ Утилиты</summary><div class="editor-utilities-menu" role="menu" aria-label="Утилиты конфигурации"><button type="button" role="menuitem" id="yaml-template">▤ Шаблоны конфигураций</button><button type="button" role="menuitem" id="yaml-validate">✓ Проверить</button><button type="button" role="menuitem" id="yaml-format">⌘ Форматировать</button><button type="button" role="menuitem" id="yaml-download">↓ Скачать черновик</button></div></details></div></div>
+    <div class="editor-callout"><span class="callout-mark">i</span><p>Перед применением конфиг проверяется, предыдущая версия сохраняется в резервную копию.</p></div>
     <div class="code-editor-shell"><div class="editor-gutter-label" id="editor-language">YAML · Mihomo</div><div class="code-editor" id="yaml-editor" aria-label="Текст локального черновика конфигурации"></div></div>
     <div class="editor-statusbar"><span id="yaml-validation" class="editor-validation">Черновик пуст</span><span class="editor-encoding">UTF-8 <span>·</span> YAML 1.2 <span>·</span> Mihomo</span></div>
   </section>
-  <section class="editor-next-step"><span>◇</span><div><strong>Подключение к конфигурации роутера</strong><p>Чтение и безопасное применение появятся после Rust API с резервной копией, блокировкой пути и подтверждённым откатом.</p></div><span class="coming-tag">НЕ ПОДКЛЮЧЕНО</span></section>`;
+  ${router ? '' : '<section class="editor-next-step"><span>◇</span><div><strong>Режим предпросмотра</strong><p>Из этого окружения доступно только редактирование черновиков. Для чтения и применения конфига откройте панель на роутере.</p></div><span class="coming-tag">ЛОКАЛЬНЫЙ РЕЖИМ</span></section>'}`;
 }
 
 function renderFooter(): string {
@@ -289,12 +290,14 @@ async function mountConfigurationEditor(): Promise<void> {
 
 function render(): void {
   if (!app) return;
+  const scrollTop = app.querySelector<HTMLElement>('.workspace-scroll')?.scrollTop ?? 0;
   if (activePage !== 'configuration') yamlEditorModule?.unmountYamlEditor();
   const pageContent = activePage === 'selectors' ? renderSelectors(selectors, selectorsLoading, selectorsError)
       : activePage === 'connections' ? renderConnections(connections, connectionsLoading, connectionsError)
         : activePage === 'dns' ? renderDns(dnsResult, dnsLoading, dnsError, dnsQueryName, dnsQueryType, dnsPanel)
         : renderComingSoon(activePage);
-  app.innerHTML = `<div class="app-shell">${renderHeader()}${renderNavigation()}<main class="main-content">${pageContent}</main>${renderJournal()}<div class="toast-region" aria-live="polite"></div></div>`;
+  app.innerHTML = `<div class="app-shell">${renderHeader()}${renderNavigation()}<div class="workspace-scroll"><main class="main-content">${pageContent}</main>${renderJournal()}</div><div class="toast-region" aria-live="polite"></div></div>`;
+  app.querySelector<HTMLElement>('.workspace-scroll')!.scrollTop = scrollTop;
   bindJournal();
   document.querySelectorAll<HTMLButtonElement>('[data-page]').forEach((button) => {
     button.addEventListener('click', () => {
@@ -413,9 +416,12 @@ async function runAppUpdateCheck(force = false): Promise<void> {
 }
 
 function bindMihomoInteractions(): void {
-  document.querySelector<HTMLButtonElement>('#mihomo-refresh,#mihomo-retry')?.addEventListener('click', () => void loadMihomoPage(activePage));
-  document.querySelectorAll<HTMLButtonElement>('.proxy-select').forEach((button) => {
+  document.querySelector<HTMLButtonElement>('#mihomo-retry')?.addEventListener('click', () => void loadMihomoPage(activePage));
+  document.querySelectorAll<HTMLButtonElement>('.proxy-option').forEach((button) => {
     button.addEventListener('click', () => void selectProxyFromUi(button));
+  });
+  document.querySelectorAll<HTMLButtonElement>('[data-ping-group]').forEach((button) => {
+    button.addEventListener('click', () => void pingGroupFromUi(button));
   });
   document.querySelectorAll<HTMLButtonElement>('[data-close-connection]').forEach((button) => {
     button.addEventListener('click', () => void closeConnectionFromUi(button));
@@ -432,6 +438,30 @@ function bindMihomoInteractions(): void {
     const noResults = document.querySelector<HTMLElement>('.connection-no-results.is-filtered');
     if (noResults) noResults.hidden = query.length === 0 || visible > 0;
   });
+}
+
+async function pingGroupFromUi(button: HTMLButtonElement): Promise<void> {
+  const group = button.dataset.pingGroup;
+  if (!group || button.disabled) return;
+  button.disabled = true;
+  button.textContent = '…';
+  try {
+    const results = await pingMihomoGroup(group, mihomoController?.signal);
+    const byName = new Map(results.map((result) => [result.name, result]));
+    selectors = selectors.map((selector) => selector.name !== group ? selector : ({
+      ...selector,
+      options: selector.options.map((option) => {
+        const result = byName.get(option.name);
+        return result ? { ...option, alive: result.delay !== null, delay: result.delay } : option;
+      }),
+    }));
+    render();
+  } catch (error) {
+    button.title = error instanceof Error ? error.message : 'Не удалось проверить серверы';
+  } finally {
+    button.disabled = false;
+    button.textContent = 'ϟ';
+  }
 }
 
 async function closeConnectionFromUi(button: HTMLButtonElement): Promise<void> {
@@ -498,9 +528,10 @@ async function loadMihomoPage(page: Page): Promise<void> {
 async function selectProxyFromUi(button: HTMLButtonElement): Promise<void> {
   const group = button.dataset.proxyGroup;
   const name = button.dataset.proxyName;
+  if (button.getAttribute('aria-current') === 'true') return;
   if (!group || !name || !window.confirm(`Переключить группу «${group}» на узел «${name}»? Новые соединения группы пойдут через выбранный узел.`)) return;
   button.disabled = true;
-  button.textContent = 'Переключаем…';
+  button.disabled = true;
   try {
     await selectMihomoProxy(group, name, mihomoController?.signal);
     await loadMihomoPage('selectors');

@@ -7,7 +7,7 @@ use std::{
 };
 
 use axum::{
-    extract::{Path, Query, State},
+    extract::{DefaultBodyLimit, Path, Query, State},
     http::{header, HeaderMap, Request, StatusCode},
     middleware::{self, Next},
     response::{IntoResponse, Json, Response},
@@ -23,6 +23,7 @@ use tower_http::{
 use tracing::{info, warn};
 
 mod core_update;
+mod config_files;
 mod installer;
 mod logs;
 mod mihomo;
@@ -223,6 +224,12 @@ struct MemoryStatus {
 struct ProxySelection {
     group: String,
     name: String,
+}
+
+#[derive(Deserialize)]
+#[serde(deny_unknown_fields)]
+struct ProxyGroupPing {
+    group: String,
 }
 
 #[derive(Deserialize)]
@@ -578,6 +585,22 @@ async fn select_mihomo_proxy(
     }
 }
 
+async fn ping_mihomo_group(
+    State(state): State<AppState>,
+    Json(request): Json<ProxyGroupPing>,
+) -> Response {
+    if !state.router_mode {
+        return (
+            StatusCode::SERVICE_UNAVAILABLE,
+            Json(serde_json::json!({"error":"Проверка серверов недоступна в режиме симуляции"})),
+        ).into_response();
+    }
+    match state.mihomo.ping_group(&request.group).await {
+        Ok(result) => Json(result).into_response(),
+        Err(error) => mihomo_error_response(error),
+    }
+}
+
 async fn require_same_origin(request: Request<axum::body::Body>, next: Next) -> Response {
     if same_origin(request.headers()) {
         next.run(request).await
@@ -805,6 +828,15 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             "/api/v1/mihomo/proxies/select",
             axum::routing::put(select_mihomo_proxy),
         )
+        .route(
+            "/api/v1/mihomo/proxies/ping",
+            axum::routing::post(ping_mihomo_group),
+        )
+        .route(
+            "/api/v1/config/active",
+            axum::routing::put(config_files::apply_active),
+        )
+        .route_layer(DefaultBodyLimit::max(9 * 1024 * 1024))
         .route_layer(middleware::from_fn(require_same_origin));
     let app = Router::new()
         .route("/health", get(health))

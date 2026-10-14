@@ -7,7 +7,7 @@ import { json } from '@codemirror/lang-json';
 import { applyEdits, format as formatJsonc, parse as parseJsonc, printParseErrorCode, type ParseError } from 'jsonc-parser';
 import { parseDocument } from 'yaml';
 import { chooseReferenceTemplate, getDefaultTemplate } from './templates';
-import { getActiveMihomoConfig } from './api';
+import { applyActiveMihomoConfig, getActiveMihomoConfig } from './api';
 
 const draftKey = 'xkeen-ui:draft:';
 const activeFileKey = 'xkeen-ui:draft-active-file';
@@ -22,6 +22,7 @@ const draftFiles = [
 ] as const;
 let editor: EditorView | null = null;
 let activeFile = sessionStorage.getItem(activeFileKey) ?? 'config';
+let activeConfigSnapshot: string | null = null;
 
 function currentFile() {
   return draftFiles.find((file) => file.id === activeFile) ?? draftFiles[0];
@@ -145,6 +146,9 @@ export function mountYamlEditor(): void {
   const parent = editorElement();
   if (!parent) return;
   unmountYamlEditor();
+  activeConfigSnapshot = null;
+  const applyButton = document.querySelector<HTMLButtonElement>('#config-apply-active');
+  if (applyButton) applyButton.disabled = true;
 
   setEditorIdentity();
   const file = currentFile();
@@ -252,13 +256,45 @@ export function mountYamlEditor(): void {
       editor.dispatch({ changes: { from: 0, to: editor.state.doc.length, insert: active.content } });
       const hint = document.querySelector<HTMLElement>('#editor-file-hint');
       if (hint) hint.textContent = `Снимок с роутера · ${active.path}`;
+      activeConfigSnapshot = active.content;
+      const applyButton = document.querySelector<HTMLButtonElement>('#config-apply-active');
+      if (applyButton) applyButton.disabled = false;
       validateStructuredDocument(active.content);
-      setValidation(`Прочитан активный конфиг с роутера: ${active.path}. Изменения здесь пока не применяются.`, null);
+      setValidation(`Прочитан активный конфиг с роутера: ${active.path}.`, null);
     } catch (error) {
       setValidation(error instanceof Error ? `Не удалось прочитать конфиг: ${error.message}` : 'Не удалось прочитать конфиг роутера.', false);
     } finally {
       button.disabled = false;
       button.textContent = '↓ Считать конфиг роутера';
+    }
+  });
+  document.querySelector<HTMLButtonElement>('#config-apply-active')?.addEventListener('click', async (event) => {
+    const button = event.currentTarget as HTMLButtonElement;
+    if (!editor || currentFile().id !== 'config' || button.disabled) return;
+    const requestedEditor = editor;
+    const content = editor.state.doc.toString();
+    const expectedContent = activeConfigSnapshot;
+    if (expectedContent === null) {
+      setValidation('Считайте актуальный конфиг с роутера перед применением.', false);
+      return;
+    }
+    if (!validateYaml(content)) return;
+    if (!window.confirm('Применить этот конфиг к Mihomo на роутере? Ядро проверит файл перед заменой. Будет создана резервная копия; если перезапуск не подтвердится, backend попробует восстановить предыдущий конфиг.')) return;
+    button.disabled = true;
+    button.textContent = 'Проверка и запись…';
+    try {
+      const result = await applyActiveMihomoConfig(content, expectedContent);
+      if (editor !== requestedEditor || currentFile().id !== 'config') return;
+      activeConfigSnapshot = content;
+      const hint = document.querySelector<HTMLElement>('#editor-file-hint');
+      if (hint) hint.textContent = `Активный конфиг · ${result.path}`;
+      setValidation(`${result.detail}. Резервная копия: ${result.backup}`, true);
+    } catch (error) {
+      if (error instanceof Error && error.message.includes('HTTP 409')) activeConfigSnapshot = null;
+      setValidation(error instanceof Error ? `Применение не выполнено: ${error.message}` : 'Применение конфигурации завершилось ошибкой.', false);
+    } finally {
+      button.disabled = activeConfigSnapshot === null;
+      button.textContent = 'Применить на роутер';
     }
   });
 }

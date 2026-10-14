@@ -9,6 +9,7 @@ use hyper_util::{
 };
 use percent_encoding::{utf8_percent_encode, NON_ALPHANUMERIC};
 use serde_json::{json, Value};
+use tokio::task::JoinSet;
 
 const MAX_RESPONSE_BYTES: usize = 4 * 1024 * 1024;
 const REQUEST_TIMEOUT: Duration = Duration::from_secs(5);
@@ -159,6 +160,50 @@ impl MihomoClient {
         } else {
             Err(MihomoError::UpstreamStatus(response.status().as_u16()))
         }
+    }
+
+    pub async fn ping_group(&self, group: &str) -> Result<Value, MihomoError> {
+        if !valid_name(group) {
+            return Err(MihomoError::InvalidSelection);
+        }
+        let payload = self.get_json(Endpoint::Proxies).await?;
+        let proxies = payload.get("proxies").and_then(Value::as_object)
+            .ok_or(MihomoError::InvalidSelection)?;
+        let group_data = proxies.get(group).ok_or(MihomoError::InvalidSelection)?;
+        if group_data.get("type").and_then(Value::as_str) != Some("Selector") {
+            return Err(MihomoError::InvalidSelection);
+        }
+        let names = group_data.get("all").and_then(Value::as_array)
+            .ok_or(MihomoError::InvalidSelection)?
+            .iter().filter_map(Value::as_str)
+            .filter(|name| proxies.get(*name).is_some_and(|proxy| {
+                !matches!(proxy.get("type").and_then(Value::as_str),
+                    Some("Selector" | "URLTest" | "LoadBalance" | "Fallback" | "Direct" | "Reject" | "Compatible"))
+            }))
+            .map(str::to_owned).collect::<Vec<_>>();
+
+        let mut results = Vec::with_capacity(names.len());
+        for batch in names.chunks(8) {
+            let mut tasks = JoinSet::new();
+            for name in batch.iter().cloned() {
+                let client = self.clone();
+                tasks.spawn(async move {
+                    let delay = client.ping_proxy(&name).await.ok().and_then(|value| value.get("delay").and_then(Value::as_u64));
+                    json!({"name": name, "delay": delay})
+                });
+            }
+            while let Some(result) = tasks.join_next().await {
+                if let Ok(result) = result { results.push(result); }
+            }
+        }
+        Ok(json!({"results": results}))
+    }
+
+    async fn ping_proxy(&self, name: &str) -> Result<Value, MihomoError> {
+        let name = utf8_percent_encode(name, NON_ALPHANUMERIC);
+        let url = utf8_percent_encode("https://www.gstatic.com/generate_204", NON_ALPHANUMERIC);
+        let response = self.send(Method::GET, &format!("proxies/{name}/delay?url={url}&timeout=5000"), None).await?;
+        self.read_json(response).await
     }
 
     pub async fn close_connection(&self, id: &str) -> Result<(), MihomoError> {
@@ -494,6 +539,26 @@ mod tests {
                 Some("Bearer mock-secret".into())
             )
         );
+        server.abort();
+    }
+
+    #[tokio::test]
+    async fn ping_group_checks_all_real_nodes_and_skips_nested_groups() {
+        let (client, mut requests, server) = mock_controller(vec![
+            (StatusCode::OK, r#"{"proxies":{"Main":{"type":"Selector","all":["Finland","Sweden","DIRECT","Auto"]},"Finland":{"type":"VLESS"},"Sweden":{"type":"Hysteria2"},"DIRECT":{"type":"Direct"},"Auto":{"type":"URLTest"}}}"#.into()),
+            (StatusCode::OK, r#"{"delay":42}"#.into()),
+            (StatusCode::OK, r#"{"delay":73}"#.into()),
+        ]).await;
+        let result = client.ping_group("Main").await.unwrap();
+        assert_eq!(result["results"].as_array().unwrap().len(), 2);
+        let entries = result["results"].as_array().unwrap();
+        assert!(entries.iter().any(|item| item["name"] == "Finland"));
+        assert!(entries.iter().any(|item| item["name"] == "Sweden"));
+        assert!(entries.iter().all(|item| item["delay"] == 42 || item["delay"] == 73));
+        assert_eq!(next_request(&mut requests).await.1, "/proxies");
+        let paths = [next_request(&mut requests).await.1, next_request(&mut requests).await.1];
+        assert!(paths.iter().any(|path| path.starts_with("/proxies/Finland/delay?")));
+        assert!(paths.iter().any(|path| path.starts_with("/proxies/Sweden/delay?")));
         server.abort();
     }
 

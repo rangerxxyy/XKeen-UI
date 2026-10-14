@@ -1,6 +1,7 @@
 node_modules/
 release/
 backend/target/
+work/
 *.log
 .env
 .env.*

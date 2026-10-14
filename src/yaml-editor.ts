@@ -6,6 +6,7 @@ import { yaml } from '@codemirror/lang-yaml';
 import { json } from '@codemirror/lang-json';
 import { applyEdits, format as formatJsonc, parse as parseJsonc, printParseErrorCode, type ParseError } from 'jsonc-parser';
 import { parseDocument } from 'yaml';
+import { chooseReferenceTemplate } from './templates';
 
 const draftKey = 'xkeen-ui:draft:';
 const activeFileKey = 'xkeen-ui:draft-active-file';
@@ -18,20 +19,6 @@ const draftFiles = [
   { id: 'xray_json', label: 'xray_config.json', filename: 'config.json', format: 'json' },
   { id: 'xray_jsonc', label: 'xray_config.jsonc', filename: 'config.jsonc', format: 'jsonc' },
 ] as const;
-const starterTemplate = `# Локальный пример для изучения формата Mihomo.
-# Этот черновик не связан с роутером и не применяется автоматически.
-mixed-port: 7890
-allow-lan: false
-mode: rule
-log-level: info
-ipv6: false
-external-controller: 127.0.0.1:9090
-proxies: []
-proxy-groups: []
-rules:
-  - MATCH,DIRECT
-`;
-
 let editor: EditorView | null = null;
 let activeFile = sessionStorage.getItem(activeFileKey) ?? 'config';
 
@@ -222,11 +209,20 @@ export function mountYamlEditor(): void {
     setValidation(`Форматирование ${file.format.toUpperCase()} выполнено; совместимость со схемой не проверялась.`, true);
   });
   document.querySelector<HTMLButtonElement>('#yaml-template')?.addEventListener('click', () => {
-    if (!editor || currentFile().format !== 'yaml') return;
+    const file = currentFile();
+    if (!editor || (file.format !== 'yaml' && file.format !== 'json' && file.format !== 'jsonc')) return;
     const current = editor.state.doc.toString();
-    if (current.trim() && !window.confirm('Заменить текущий черновик примером? Текст текущего черновика будет заменён.')) return;
-    editor.dispatch({ changes: { from: 0, to: editor.state.doc.length, insert: starterTemplate } });
-    editor.focus();
+    if (current.trim() && !window.confirm('Загрузить шаблон вместо текущего черновика? Текущий текст останется только в истории undo до закрытия вкладки.')) return;
+    void chooseReferenceTemplate(file.format === 'yaml' ? 'mihomo' : 'xray').then((template) => {
+      if (!template || !editor) return;
+      editor.dispatch({ changes: { from: 0, to: editor.state.doc.length, insert: template.content } });
+      editor.focus();
+      validateStructuredDocument(template.content);
+      const status = document.querySelector<HTMLElement>('#yaml-validation');
+      if (status) status.textContent = `Шаблон «${template.name}» загружен в локальный черновик; перед использованием проверьте его совместимость.`;
+    }).catch((error: unknown) => {
+      setValidation(error instanceof Error ? `Не удалось открыть каталог: ${error.message}` : 'Не удалось открыть каталог шаблонов.', false);
+    });
   });
   document.querySelector<HTMLButtonElement>('#yaml-download')?.addEventListener('click', () => {
     if (editor) downloadDraft(editor.state.doc.toString());

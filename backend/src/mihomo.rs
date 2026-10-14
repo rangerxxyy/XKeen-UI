@@ -28,6 +28,8 @@ pub enum Endpoint {
     Proxies,
     Connections,
     Rules,
+    ProxyProviders,
+    RuleProviders,
 }
 
 impl Endpoint {
@@ -37,6 +39,8 @@ impl Endpoint {
             Self::Proxies => "proxies",
             Self::Connections => "connections",
             Self::Rules => "rules",
+            Self::ProxyProviders => "providers/proxies",
+            Self::RuleProviders => "providers/rules",
         }
     }
 }
@@ -296,6 +300,8 @@ mod tests {
         assert_eq!(Endpoint::Proxies.path(), "proxies");
         assert_eq!(Endpoint::Connections.path(), "connections");
         assert_eq!(Endpoint::Rules.path(), "rules");
+        assert_eq!(Endpoint::ProxyProviders.path(), "providers/proxies");
+        assert_eq!(Endpoint::RuleProviders.path(), "providers/rules");
     }
 
     #[test]

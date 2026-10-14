@@ -142,3 +142,19 @@ h1,h2,p { margin: 0; }
 
 .config-file-tabs{display:flex;gap:5px;overflow-x:auto;padding:10px 13px 0;border-bottom:1px solid #202d41;background:#0d1522}.config-file-tab{flex:0 0 auto;min-height:31px;padding:0 11px;border:1px solid transparent;border-radius:8px 8px 0 0;background:transparent;color:#8293ab;font:inherit;font-size:9px;cursor:pointer}.config-file-tab:hover{color:#d9e7f8;background:#152338}.config-file-tab.selected{border-color:#293a54;border-bottom-color:#0e1726;background:#0e1726;color:#dfeaff}.editor-toolbar{border-top:0}.editor-actions [hidden]{display:none!important}
 @media(max-width:600px){.config-file-tabs{padding-left:8px;padding-right:8px}.config-file-tab{padding:0 8px;font-size:8px}.editor-toolbar{gap:9px}}
+ .template-dialog {
+  width: min(34rem, calc(100vw - 2rem));
+  max-height: min(80vh, 42rem);
+  padding: 1.35rem;
+  color: var(--text, #e8eef8);
+  background: #111a2b;
+  border: 1px solid #2c3b55;
+  border-radius: 1rem;
+  box-shadow: 0 1.5rem 5rem #000a;
+ }
+ .template-dialog::backdrop { background: #020617c9; backdrop-filter: blur(5px); }
+ .template-dialog h2 { margin: 0 0 .5rem; font-size: 1.2rem; }
+ .template-dialog p { color: #9aaac1; font-size: .85rem; line-height: 1.5; }
+ .template-select { width: 100%; margin: .6rem 0; padding: .7rem; color: inherit; background: #080e1b; border: 1px solid #30415d; border-radius: .55rem; }
+ .template-status { min-height: 1.4rem; }
+ .template-actions { display: flex; justify-content: flex-end; gap: .6rem; margin-top: 1rem; }

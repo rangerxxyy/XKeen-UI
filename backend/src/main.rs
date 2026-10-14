@@ -212,6 +212,14 @@ async fn mihomo_rules(State(state): State<AppState>) -> Response {
     mihomo_data(State(state), MihomoEndpoint::Rules).await
 }
 
+async fn mihomo_proxy_providers(State(state): State<AppState>) -> Response {
+    mihomo_data(State(state), MihomoEndpoint::ProxyProviders).await
+}
+
+async fn mihomo_rule_providers(State(state): State<AppState>) -> Response {
+    mihomo_data(State(state), MihomoEndpoint::RuleProviders).await
+}
+
 async fn mihomo_dns_query(
     State(state): State<AppState>,
     Query(query): Query<DnsQuery>,
@@ -480,6 +488,14 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         .route("/api/v1/mihomo/proxies", get(mihomo_proxies))
         .route("/api/v1/mihomo/connections", get(mihomo_connections))
         .route("/api/v1/mihomo/rules", get(mihomo_rules))
+        .route(
+            "/api/v1/mihomo/providers/proxies",
+            get(mihomo_proxy_providers),
+        )
+        .route(
+            "/api/v1/mihomo/providers/rules",
+            get(mihomo_rule_providers),
+        )
         .route("/api/v1/mihomo/dns/query", get(mihomo_dns_query))
         .route_layer(middleware::from_fn_with_state(
             state.clone(),

@@ -56,8 +56,10 @@ impl Default for CoreSources {
 
 impl CoreSources {
     fn normalize(&mut self) -> Result<(), &'static str> {
-        self.xray = normalize_github_repo(&self.xray).ok_or("Некорректный GitHub-репозиторий Xray")?;
-        self.mihomo = normalize_github_repo(&self.mihomo).ok_or("Некорректный GitHub-репозиторий Mihomo")?;
+        self.xray =
+            normalize_github_repo(&self.xray).ok_or("Некорректный GitHub-репозиторий Xray")?;
+        self.mihomo =
+            normalize_github_repo(&self.mihomo).ok_or("Некорректный GitHub-репозиторий Mihomo")?;
         Ok(())
     }
 }
@@ -70,7 +72,10 @@ fn normalize_github_repo(value: &str) -> Option<String> {
         trimmed.to_owned()
     };
     let url = normalized.strip_prefix("https://github.com/")?;
-    let path = url.trim_end_matches('/').strip_suffix(".git").unwrap_or(url.trim_end_matches('/'));
+    let path = url
+        .trim_end_matches('/')
+        .strip_suffix(".git")
+        .unwrap_or(url.trim_end_matches('/'));
     let mut parts = path.split('/');
     let owner = parts.next()?;
     let repo = parts.next()?;
@@ -83,19 +88,25 @@ fn normalize_github_repo(value: &str) -> Option<String> {
 fn valid_github_component(value: &str) -> bool {
     !value.is_empty()
         && value.len() <= 100
-        && value.bytes().all(|byte| byte.is_ascii_alphanumeric() || matches!(byte, b'-' | b'_' | b'.'))
+        && value
+            .bytes()
+            .all(|byte| byte.is_ascii_alphanumeric() || matches!(byte, b'-' | b'_' | b'.'))
         && value != "."
         && value != ".."
 }
 
-async fn load_core_sources(path: Option<&PathBuf>) -> Result<CoreSources, Box<dyn std::error::Error>> {
-    let Some(path) = path else { return Ok(CoreSources::default()) };
+async fn load_core_sources(
+    path: Option<&PathBuf>,
+) -> Result<CoreSources, Box<dyn std::error::Error>> {
+    let Some(path) = path else {
+        return Ok(CoreSources::default());
+    };
     match tokio::fs::read(path).await {
         Ok(bytes) => {
             let mut sources: CoreSources = serde_json::from_slice(&bytes)?;
-            sources.normalize().map_err(|error| {
-                std::io::Error::new(std::io::ErrorKind::InvalidData, error)
-            })?;
+            sources
+                .normalize()
+                .map_err(|error| std::io::Error::new(std::io::ErrorKind::InvalidData, error))?;
             Ok(sources)
         }
         Err(error) if error.kind() == std::io::ErrorKind::NotFound => Ok(CoreSources::default()),
@@ -125,18 +136,33 @@ async fn save_core_sources(path: &PathBuf, sources: &CoreSources) -> std::io::Re
 async fn get_core_sources(State(state): State<AppState>) -> Response {
     match state.core_sources.read() {
         Ok(sources) => Json(sources.clone()).into_response(),
-        Err(_) => (StatusCode::INTERNAL_SERVER_ERROR, Json(serde_json::json!({"error":"Не удалось прочитать настройки источников"}))).into_response(),
+        Err(_) => (
+            StatusCode::INTERNAL_SERVER_ERROR,
+            Json(serde_json::json!({"error":"Не удалось прочитать настройки источников"})),
+        )
+            .into_response(),
     }
 }
 
-async fn put_core_sources(State(state): State<AppState>, Json(mut sources): Json<CoreSources>) -> Response {
+async fn put_core_sources(
+    State(state): State<AppState>,
+    Json(mut sources): Json<CoreSources>,
+) -> Response {
     if let Err(error) = sources.normalize() {
-        return (StatusCode::BAD_REQUEST, Json(serde_json::json!({"error":error}))).into_response();
+        return (
+            StatusCode::BAD_REQUEST,
+            Json(serde_json::json!({"error":error})),
+        )
+            .into_response();
     }
     let _write_guard = state.core_sources_lock.lock().await;
     if let Some(path) = state.core_sources_path.as_ref() {
         if let Err(error) = save_core_sources(path, &sources).await {
-            return (StatusCode::INTERNAL_SERVER_ERROR, Json(serde_json::json!({"error":format!("Не удалось сохранить настройки: {error}")}))).into_response();
+            return (
+                StatusCode::INTERNAL_SERVER_ERROR,
+                Json(serde_json::json!({"error":format!("Не удалось сохранить настройки: {error}")})),
+            )
+                .into_response();
         }
     }
     match state.core_sources.write() {
@@ -144,7 +170,11 @@ async fn put_core_sources(State(state): State<AppState>, Json(mut sources): Json
             *current = sources.clone();
             Json(sources).into_response()
         }
-        Err(_) => (StatusCode::INTERNAL_SERVER_ERROR, Json(serde_json::json!({"error":"Не удалось обновить настройки источников"}))).into_response(),
+        Err(_) => (
+            StatusCode::INTERNAL_SERVER_ERROR,
+            Json(serde_json::json!({"error":"Не удалось обновить настройки источников"})),
+        )
+            .into_response(),
     }
 }
 
@@ -670,7 +700,10 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
 #[cfg(test)]
 mod tests {
-    use super::{constant_time_equals, load_core_sources, normalize_github_repo, parse_load_average, same_origin, save_core_sources, CoreSources};
+    use super::{
+        constant_time_equals, load_core_sources, normalize_github_repo, parse_load_average,
+        same_origin, save_core_sources, CoreSources,
+    };
     use axum::http::{header, HeaderMap, HeaderValue};
 
     #[test]
@@ -704,11 +737,26 @@ mod tests {
 
     #[test]
     fn core_repository_urls_are_normalized_and_restricted_to_github_repo_roots() {
-        assert_eq!(normalize_github_repo("github.com/MetaCubeX/mihomo"), Some("https://github.com/MetaCubeX/mihomo".into()));
-        assert_eq!(normalize_github_repo("https://github.com/XTLS/Xray-core.git/"), Some("https://github.com/XTLS/Xray-core".into()));
-        assert_eq!(normalize_github_repo("https://github.com/owner/repo/releases"), None);
-        assert_eq!(normalize_github_repo("https://example.com/owner/repo"), None);
-        assert_eq!(normalize_github_repo("https://github.com/owner/repo?redirect=evil"), None);
+        assert_eq!(
+            normalize_github_repo("github.com/MetaCubeX/mihomo"),
+            Some("https://github.com/MetaCubeX/mihomo".into())
+        );
+        assert_eq!(
+            normalize_github_repo("https://github.com/XTLS/Xray-core.git/"),
+            Some("https://github.com/XTLS/Xray-core".into())
+        );
+        assert_eq!(
+            normalize_github_repo("https://github.com/owner/repo/releases"),
+            None
+        );
+        assert_eq!(
+            normalize_github_repo("https://example.com/owner/repo"),
+            None
+        );
+        assert_eq!(
+            normalize_github_repo("https://github.com/owner/repo?redirect=evil"),
+            None
+        );
         assert_eq!(normalize_github_repo("https://github.com/owner"), None);
     }
 
@@ -718,7 +766,10 @@ mod tests {
             .duration_since(std::time::UNIX_EPOCH)
             .unwrap()
             .as_nanos();
-        let path = std::env::temp_dir().join(format!("xkeen-ui-sources-{}-{nonce}.json", std::process::id()));
+        let path = std::env::temp_dir().join(format!(
+            "xkeen-ui-sources-{}-{nonce}.json",
+            std::process::id()
+        ));
         let mut sources = CoreSources::default();
         sources.xray = "https://github.com/example/xray-fork".into();
         save_core_sources(&path, &sources).await.unwrap();

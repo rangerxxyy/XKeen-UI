@@ -2,7 +2,7 @@ use std::{env, time::Duration};
 
 use axum::http::header;
 use http_body_util::{BodyExt, Full};
-use hyper::{body::Bytes, Method, Request, StatusCode, Uri};
+use hyper::{body::Bytes, Method, Request, Uri};
 use hyper_util::{
     client::legacy::{connect::HttpConnector, Client},
     rt::TokioExecutor,
@@ -146,7 +146,7 @@ impl MihomoClient {
             .header(header::ACCEPT, "application/json");
         if let Some(secret) = self.secret.as_deref() {
             let value = format!("Bearer {secret}")
-                .parse()
+                .parse::<hyper::header::HeaderValue>()
                 .map_err(|_| MihomoError::InvalidSecret)?;
             builder = builder.header(header::AUTHORIZATION, value);
         }

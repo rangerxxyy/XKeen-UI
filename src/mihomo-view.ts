@@ -48,8 +48,8 @@ function proxyCard(group: MihomoSelector): string {
     </button>`;
   }).join('');
   const groupIcon = group.icon ? `<img class="selector-group-icon" src="${escapeHtml(group.icon)}" alt="" referrerpolicy="no-referrer" onerror="this.hidden=true">` : '';
-  return `<section class="selector-card"><header class="selector-card-heading"><div><h2>${groupIcon}${escapeHtml(group.name)}</h2></div><div class="selector-heading-actions"><span class="selector-current" title="Активный узел"><strong>${escapeHtml(group.current ?? '—')}</strong></span><button class="ping-group" type="button" data-ping-group="${escapeHtml(group.name)}" aria-label="Пинг всех серверов группы ${escapeHtml(group.name)}" title="Пинг всех серверов">ϟ</button></div></header>
-    <div class="selector-card-meta"><span>${group.options.length} узлов</span><span class="selector-meta-line"></span><span>${escapeHtml(group.current ?? '—')}</span></div>
+  return `<section class="selector-card"><header class="selector-card-heading"><div><h2>${groupIcon}${escapeHtml(group.name)}</h2></div><div class="selector-heading-actions"><button class="ping-group" type="button" data-ping-group="${escapeHtml(group.name)}" aria-label="Пинг всех серверов группы ${escapeHtml(group.name)}" title="Пинг всех серверов группы">ϟ</button></div></header>
+    <div class="selector-card-meta"><span>Selector (${group.options.length})</span><span class="selector-meta-line">›</span><span>${escapeHtml(group.current ?? '—')}</span></div>
     <div class="proxy-options">${options || '<div class="mihomo-inline-empty">В этой группе нет узлов.</div>'}</div>
   </section>`;
 }

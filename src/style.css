@@ -16,7 +16,7 @@
 body { margin: 0; min-width: 320px; min-height: 100vh; background: var(--bg); }
 button { font: inherit; color: inherit; }
 button:focus-visible, a:focus-visible { outline: 2px solid var(--cyan); outline-offset: 3px; }
-.app-shell { width: 100%; max-width: 1390px; height: 100vh; min-height: 600px; margin: 0 auto; padding: 20px 28px 18px; display: flex; flex-direction: column; }
+.app-shell { width: 100%; max-width: 1600px; height: 100vh; min-height: 600px; margin: 0 auto; padding: 12px 12px 10px; display: flex; flex-direction: column; }
 .topbar { height: 74px; display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; padding: 0 18px; background: #111323; border: 1px solid #292b43; border-radius: 18px; }
 .top-status { display: flex; align-items: center; gap: 11px; min-width: 0; }
 .top-status { padding: 0; border: 0; background: transparent; color: inherit; text-align: left; cursor: pointer; }
@@ -186,16 +186,19 @@ h1,h2,p { margin: 0; }
 .page-heading { margin-bottom: 14px; }
 .page-heading h1 { margin-top: 0; font-size: 21px; }
 .page-heading p,.eyebrow { display: none; }
-.selector-toolbar { margin-bottom: 8px; min-height: 30px; }
-.selector-card { padding: 13px; margin-bottom: 12px; }
+.selector-toolbar { margin-bottom: 6px; min-height: 28px; }
+.selector-toolbar h1 { font-size: 1.05rem; }
+.selector-card { padding: 11px; margin-bottom: 10px; }
 .selector-card-heading { align-items: center; }
 .selector-card-heading h2 { margin: 0; font-size: 14px; }
+.selector-heading-actions { gap: 6px; }
 .selector-current { max-width: min(38vw, 300px); }
 .selector-current small { display: none; }
-.selector-heading-actions { display: flex; align-items: center; gap: 8px; min-width: 0; }
-.selector-card-meta { margin: 6px 0 8px; color: #8385a1; font-size: 9px; }
-.selector-card-meta > span:last-child { display: none; }
-.ping-group { width: 30px; height: 30px; flex: 0 0 30px; display: grid; place-items: center; padding: 0; border: 1px solid #34334f; border-radius: 8px; background: #17172a; color: #b6a8ff; font-size: 20px; line-height: 1; cursor: pointer; }
+.selector-heading-actions { display: flex; align-items: center; gap: 6px; min-width: 0; }
+.selector-card-meta { margin: 7px 0 8px; color: #8c8da8; font-size: 10px; }
+.selector-card-meta > span:last-child { display: inline; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.selector-meta-line { padding: 0 3px; color: #6f708d; }
+.ping-group { width: 28px; height: 28px; flex: 0 0 28px; display: grid; place-items: center; padding: 0; border: 1px solid #34334f; border-radius: 8px; background: #17172a; color: #b6a8ff; font-size: 19px; line-height: 1; cursor: pointer; }
 .ping-group:hover { border-color: #7774bd; background: #252342; color: #e2dcff; }
 .ping-group:disabled { opacity: .6; cursor: wait; }
 .proxy-option { width: 100%; color: inherit; text-align: left; font: inherit; cursor: pointer; }
@@ -410,17 +413,18 @@ body { background: #090a14; }
 body { font-size: 14px; }
 .navigation .nav-item { font-size: 14px; }
 .selector-list { gap: 14px; }
-.selector-card { padding: 16px; }
-.selector-card-heading h2 { display:flex; align-items:center; gap:9px; font-size:17px; }
-.selector-group-icon { width:22px; height:22px; object-fit:contain; border-radius:4px; }
+.selector-toolbar h1 { font-size: 1.05rem; }
+.selector-card { padding: 11px; }
+.selector-card-heading h2 { display:flex; align-items:center; gap:8px; font-size:15px; }
+.selector-group-icon { width:20px; height:20px; object-fit:contain; border-radius:4px; }
 .selector-kicker,.selector-current small { font-size:10px; }
 .selector-current strong { font-size:13px; }
-.selector-card-meta { margin:11px 0; font-size:12px; }
+.selector-card-meta { margin:7px 0 8px; font-size:10px; }
 .proxy-options { grid-template-columns:repeat(5,minmax(0,1fr)); gap:8px; }
-.proxy-option { min-height:76px; padding:10px 11px; border-radius:9px; }
+.proxy-option { min-height:70px; padding:9px 10px; border-radius:9px; }
 .proxy-option-name { display:flex; align-items:center; gap:7px; min-width:0; overflow:hidden; margin:0!important; font-size:13px!important; line-height:1.35; text-overflow:ellipsis; white-space:nowrap; }
 .proxy-option-icon { width:17px; height:17px; flex:0 0 17px; object-fit:contain; border-radius:3px; }
-.proxy-option-bottom { padding-top:10px; }
+.proxy-option-bottom { padding-top:8px; }
 .proxy-type,.proxy-health { font-size:10px; }
 .proxy-select { min-height:28px; padding:0 9px; font-size:10px; }
 .selected-mark { font-size:10px; }

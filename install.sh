@@ -4,16 +4,18 @@ set -eu
 REPOSITORY=${XKEEN_REPOSITORY:-rangerxxyy/XKeen-UI}
 PREFIX=${XKEEN_PREFIX:-/opt}
 if [ "$#" -eq 0 ] && [ -r /dev/tty ]; then
+  printf '\033[2J\033[H'
   printf '\033[38;5;141m'
   cat <<'BANNER'
-       __  __  __                    _   __  __
-      / / / / / /  ____  ___  ____  / | / / / /
-     / /_/ / / /  / __ \/ _ \/ __ \/  |/ / / /
-    / __  / / /__/ /_/ /  __/ / / / /|  / /_/
-   /_/ /_/ /____/\____/\___/_/ /_/_/ |_/\__/
-                       XKeen UI
+   _  __  __ __                       __  __ ____
+  | |/ / / //_/___   ___   ____      / / / //  _/
+  |   / / ,<  / _ \ / _ \ / __ \    / / / / / /
+ /   | / /| |/ __// __// / / / /_/ /_/ /
+/_/|_|/_/ |_|\___/\___//_/ /_/ \____//___/
 BANNER
-  printf '\033[38;5;51m  Архитектура: %s\033[0m\n' "$(uname -m 2>/dev/null || printf unknown)"
+  machine=$(uname -m 2>/dev/null || printf unknown)
+  case "$machine" in aarch64|arm64) machine=arm64-v8a ;; esac
+  printf '\033[38;5;51mАрхитектура: %s\033[0m\n' "$machine"
   if [ -x "$PREFIX/share/xkeen-ui/xkeen-ui" ]; then
     panel_status=$("$PREFIX/share/xkeen-ui/xkeen-ui" service status --prefix "$PREFIX" 2>/dev/null || true)
     case "$panel_status" in
@@ -24,7 +26,7 @@ BANNER
   else
     panel_status=не_установлена
   fi
-  printf '\033[38;5;51m  Статус панели: %s\033[0m\n' "$panel_status"
+  printf '\033[38;5;51mСтатус панели: %s\033[0m\n' "$panel_status"
   printf '\n  1. Установить / переустановить\n  2. Обновить\n  3. Удалить\n  0. Выход\n\n> '
   IFS= read -r choice < /dev/tty || exit 0
   case "$choice" in
@@ -73,8 +75,8 @@ trap 'rm -rf "$WORK"' 0
 trap 'exit 1' HUP INT TERM
 ARCHIVE="xkeen-ui-linux-$ARCH.tar.gz"
 BASE="https://github.com/$REPOSITORY/releases/latest/download"
-curl -fL --retry 2 --connect-timeout 15 --max-filesize 52428800 "$BASE/$ARCHIVE" -o "$WORK/$ARCHIVE" || fail 'не удалось получить release'
-curl -fL --retry 2 --connect-timeout 15 "$BASE/SHA256SUMS" -o "$WORK/SHA256SUMS" || fail 'не удалось получить SHA256SUMS'
+curl -fsSL --retry 2 --connect-timeout 15 --max-filesize 52428800 "$BASE/$ARCHIVE" -o "$WORK/$ARCHIVE" || fail 'не удалось получить release'
+curl -fsSL --retry 2 --connect-timeout 15 "$BASE/SHA256SUMS" -o "$WORK/SHA256SUMS" || fail 'не удалось получить SHA256SUMS'
 EXPECTED=$(awk -v file="$ARCHIVE" '$2 == file || $2 == "*" file {print $1; exit}' "$WORK/SHA256SUMS")
 [ -n "$EXPECTED" ] || fail "в SHA256SUMS нет записи для $ARCHIVE"
 ACTUAL=$(sha256sum "$WORK/$ARCHIVE" | awk '{print $1}')

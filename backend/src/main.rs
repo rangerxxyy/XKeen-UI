@@ -2,6 +2,7 @@ use std::{
     env,
     net::{IpAddr, SocketAddr},
     path::PathBuf,
+    sync::{Arc, RwLock},
     time::Instant,
 };
 
@@ -32,6 +33,119 @@ struct AppState {
     access_token: Option<String>,
     platform: String,
     mihomo: MihomoClient,
+    core_sources: Arc<RwLock<CoreSources>>,
+    core_sources_path: Option<PathBuf>,
+    core_sources_lock: Arc<tokio::sync::Mutex<()>>,
+}
+
+#[derive(Clone, Deserialize, Serialize)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+struct CoreSources {
+    xray: String,
+    mihomo: String,
+}
+
+impl Default for CoreSources {
+    fn default() -> Self {
+        Self {
+            xray: "https://github.com/XTLS/Xray-core".into(),
+            mihomo: "https://github.com/MetaCubeX/mihomo".into(),
+        }
+    }
+}
+
+impl CoreSources {
+    fn normalize(&mut self) -> Result<(), &'static str> {
+        self.xray = normalize_github_repo(&self.xray).ok_or("Некорректный GitHub-репозиторий Xray")?;
+        self.mihomo = normalize_github_repo(&self.mihomo).ok_or("Некорректный GitHub-репозиторий Mihomo")?;
+        Ok(())
+    }
+}
+
+fn normalize_github_repo(value: &str) -> Option<String> {
+    let trimmed = value.trim();
+    let normalized = if trimmed.starts_with("github.com/") {
+        format!("https://{trimmed}")
+    } else {
+        trimmed.to_owned()
+    };
+    let url = normalized.strip_prefix("https://github.com/")?;
+    let path = url.trim_end_matches('/').strip_suffix(".git").unwrap_or(url.trim_end_matches('/'));
+    let mut parts = path.split('/');
+    let owner = parts.next()?;
+    let repo = parts.next()?;
+    if parts.next().is_some() || !valid_github_component(owner) || !valid_github_component(repo) {
+        return None;
+    }
+    Some(format!("https://github.com/{owner}/{repo}"))
+}
+
+fn valid_github_component(value: &str) -> bool {
+    !value.is_empty()
+        && value.len() <= 100
+        && value.bytes().all(|byte| byte.is_ascii_alphanumeric() || matches!(byte, b'-' | b'_' | b'.'))
+        && value != "."
+        && value != ".."
+}
+
+async fn load_core_sources(path: Option<&PathBuf>) -> Result<CoreSources, Box<dyn std::error::Error>> {
+    let Some(path) = path else { return Ok(CoreSources::default()) };
+    match tokio::fs::read(path).await {
+        Ok(bytes) => {
+            let mut sources: CoreSources = serde_json::from_slice(&bytes)?;
+            sources.normalize().map_err(|error| {
+                std::io::Error::new(std::io::ErrorKind::InvalidData, error)
+            })?;
+            Ok(sources)
+        }
+        Err(error) if error.kind() == std::io::ErrorKind::NotFound => Ok(CoreSources::default()),
+        Err(error) => Err(error.into()),
+    }
+}
+
+async fn save_core_sources(path: &PathBuf, sources: &CoreSources) -> std::io::Result<()> {
+    #[cfg(unix)]
+    use std::os::unix::fs::PermissionsExt;
+
+    let parent = path
+        .parent()
+        .ok_or_else(|| std::io::Error::other("Нет каталога настроек"))?;
+    tokio::fs::create_dir_all(parent).await?;
+    let temporary = path.with_extension("json.tmp");
+    tokio::fs::write(
+        &temporary,
+        serde_json::to_vec_pretty(sources).map_err(std::io::Error::other)?,
+    )
+    .await?;
+    #[cfg(unix)]
+    tokio::fs::set_permissions(&temporary, std::fs::Permissions::from_mode(0o600)).await?;
+    tokio::fs::rename(temporary, path).await
+}
+
+async fn get_core_sources(State(state): State<AppState>) -> Response {
+    match state.core_sources.read() {
+        Ok(sources) => Json(sources.clone()).into_response(),
+        Err(_) => (StatusCode::INTERNAL_SERVER_ERROR, Json(serde_json::json!({"error":"Не удалось прочитать настройки источников"}))).into_response(),
+    }
+}
+
+async fn put_core_sources(State(state): State<AppState>, Json(mut sources): Json<CoreSources>) -> Response {
+    if let Err(error) = sources.normalize() {
+        return (StatusCode::BAD_REQUEST, Json(serde_json::json!({"error":error}))).into_response();
+    }
+    let _write_guard = state.core_sources_lock.lock().await;
+    if let Some(path) = state.core_sources_path.as_ref() {
+        if let Err(error) = save_core_sources(path, &sources).await {
+            return (StatusCode::INTERNAL_SERVER_ERROR, Json(serde_json::json!({"error":format!("Не удалось сохранить настройки: {error}")}))).into_response();
+        }
+    }
+    match state.core_sources.write() {
+        Ok(mut current) => {
+            *current = sources.clone();
+            Json(sources).into_response()
+        }
+        Err(_) => (StatusCode::INTERNAL_SERVER_ERROR, Json(serde_json::json!({"error":"Не удалось обновить настройки источников"}))).into_response(),
+    }
 }
 
 #[derive(Serialize)]
@@ -472,6 +586,13 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         );
     }
 
+    let core_sources_path = router_mode.then(|| {
+        env::var_os("XKEEN_CORE_SOURCES_PATH")
+            .map(PathBuf::from)
+            .unwrap_or_else(|| PathBuf::from("/opt/etc/xkeen-ui/core-sources.json"))
+    });
+    let core_sources = load_core_sources(core_sources_path.as_ref()).await?;
+
     let state = AppState {
         started: Instant::now(),
         port,
@@ -479,11 +600,15 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         access_token,
         platform: format!("{} / {}", std::env::consts::OS, std::env::consts::ARCH),
         mihomo: MihomoClient::from_env().map_err(|_| "invalid XKEEN_MIHOMO_URL")?,
+        core_sources: Arc::new(RwLock::new(core_sources)),
+        core_sources_path,
+        core_sources_lock: Arc::new(tokio::sync::Mutex::new(())),
     };
     let web = web_root();
     let index = web.join("index.html");
     let read_api = Router::new()
         .route("/api/v1/status", get(status))
+        .route("/api/v1/settings/core-sources", get(get_core_sources))
         .route("/api/v1/mihomo/version", get(mihomo_version))
         .route("/api/v1/mihomo/proxies", get(mihomo_proxies))
         .route("/api/v1/mihomo/connections", get(mihomo_connections))
@@ -492,16 +617,17 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             "/api/v1/mihomo/providers/proxies",
             get(mihomo_proxy_providers),
         )
-        .route(
-            "/api/v1/mihomo/providers/rules",
-            get(mihomo_rule_providers),
-        )
+        .route("/api/v1/mihomo/providers/rules", get(mihomo_rule_providers))
         .route("/api/v1/mihomo/dns/query", get(mihomo_dns_query))
         .route_layer(middleware::from_fn_with_state(
             state.clone(),
             require_access_token,
         ));
     let mutation_api = Router::new()
+        .route(
+            "/api/v1/settings/core-sources",
+            axum::routing::put(put_core_sources),
+        )
         .route(
             "/api/v1/mihomo/connections",
             axum::routing::delete(close_all_mihomo_connections),
@@ -544,7 +670,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
 #[cfg(test)]
 mod tests {
-    use super::{constant_time_equals, parse_load_average, same_origin};
+    use super::{constant_time_equals, load_core_sources, normalize_github_repo, parse_load_average, same_origin, save_core_sources, CoreSources};
     use axum::http::{header, HeaderMap, HeaderValue};
 
     #[test]
@@ -574,6 +700,32 @@ mod tests {
         assert_eq!("0".parse::<u16>().ok(), Some(0));
         assert!("1001".parse::<u16>().is_ok_and(|port| port > 0));
         assert!("65536".parse::<u16>().is_err());
+    }
+
+    #[test]
+    fn core_repository_urls_are_normalized_and_restricted_to_github_repo_roots() {
+        assert_eq!(normalize_github_repo("github.com/MetaCubeX/mihomo"), Some("https://github.com/MetaCubeX/mihomo".into()));
+        assert_eq!(normalize_github_repo("https://github.com/XTLS/Xray-core.git/"), Some("https://github.com/XTLS/Xray-core".into()));
+        assert_eq!(normalize_github_repo("https://github.com/owner/repo/releases"), None);
+        assert_eq!(normalize_github_repo("https://example.com/owner/repo"), None);
+        assert_eq!(normalize_github_repo("https://github.com/owner/repo?redirect=evil"), None);
+        assert_eq!(normalize_github_repo("https://github.com/owner"), None);
+    }
+
+    #[tokio::test]
+    async fn core_sources_round_trip_through_owned_settings_file() {
+        let nonce = std::time::SystemTime::now()
+            .duration_since(std::time::UNIX_EPOCH)
+            .unwrap()
+            .as_nanos();
+        let path = std::env::temp_dir().join(format!("xkeen-ui-sources-{}-{nonce}.json", std::process::id()));
+        let mut sources = CoreSources::default();
+        sources.xray = "https://github.com/example/xray-fork".into();
+        save_core_sources(&path, &sources).await.unwrap();
+        let loaded = load_core_sources(Some(&path)).await.unwrap();
+        assert_eq!(loaded.xray, sources.xray);
+        assert_eq!(loaded.mihomo, sources.mihomo);
+        std::fs::remove_file(&path).unwrap();
     }
 
     #[test]

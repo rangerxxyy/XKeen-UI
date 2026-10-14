@@ -1,5 +1,5 @@
 import './style.css';
-import { ApiError, closeAllMihomoConnections, closeMihomoConnection, getHealth, getMihomoConnections, getMihomoSelectors, getMihomoVersion, getStatus, hasAccessToken, queryMihomoDns, selectMihomoProxy, setAccessToken, type ApiState, type MihomoConnections, type MihomoDnsResult, type MihomoSelector, type ServiceStatus } from './api';
+import { ApiError, closeAllMihomoConnections, closeMihomoConnection, getCoreSources, getHealth, getMihomoConnections, getMihomoSelectors, getMihomoVersion, getStatus, hasAccessToken, queryMihomoDns, saveCoreSources, selectMihomoProxy, setAccessToken, type ApiState, type CoreSources, type MihomoConnections, type MihomoDnsResult, type MihomoSelector, type ServiceStatus } from './api';
 import { renderConnections, renderSelectors } from './mihomo-view';
 import { renderDns } from './dns-view';
 import { mountYamlEditor, unmountYamlEditor } from './yaml-editor';
@@ -128,7 +128,7 @@ function renderConfiguration(): string {
   return `<section class="page-heading"><div><div class="eyebrow"><span class="eyebrow-line"></span> РАБОЧАЯ ОБЛАСТЬ</div><h1>Конфигурация</h1><p>Изолированные черновики файлов и списков XKeen без доступа к файлам роутера.</p></div><span class="runtime-badge"><span class="runtime-dot"></span> Режим черновика</span></section>
   <section class="editor-workspace" aria-label="Редактор конфигурации Mihomo">
     <div class="config-file-tabs" role="group" aria-label="Файлы конфигурации">${[['config','config'],['ip_exclude','ip_exclude'],['port_exclude','port_exclude'],['port_proxying','port_proxying'],['xkeen','xkeen'],['xray_json','Xray JSON'],['xray_jsonc','Xray JSONC']].map(([id,label]) => `<button class="config-file-tab" data-config-file="${id}" type="button" aria-pressed="${id === 'config'}">${label}</button>`).join('')}</div>
-    <div class="editor-toolbar"><div class="editor-file"><span class="file-mark">⌘</span><div><strong id="editor-filename">config.yaml</strong><small id="editor-file-hint">Локальная вкладка · не файл роутера</small></div><span class="draft-pill">Черновик</span></div><div class="editor-actions"><button class="editor-button" id="yaml-template" data-structured-only title="Выбрать шаблон конфигурации">Шаблоны zxc-rv</button><button class="editor-button" id="yaml-validate" data-structured-only><span>✓</span> Проверить</button><button class="editor-button" id="yaml-format" data-structured-only><span>⌘</span> Формат</button><button class="editor-button editor-button-primary" id="yaml-download"><span>↓</span> Скачать</button></div></div>
+    <div class="editor-toolbar"><div class="editor-file"><span class="file-mark">⌘</span><div><strong id="editor-filename">config.yaml</strong><small id="editor-file-hint">Локальная вкладка · не файл роутера</small></div><span class="draft-pill">Черновик</span></div><div class="editor-actions"><details class="editor-utilities" data-structured-only><summary class="editor-button">⋯ Утилиты</summary><div class="editor-utilities-menu" role="menu" aria-label="Утилиты конфигурации"><button type="button" role="menuitem" id="yaml-template">▤ Шаблоны конфигураций</button><button type="button" role="menuitem" id="yaml-validate">✓ Проверить</button><button type="button" role="menuitem" id="yaml-format">⌘ Форматировать</button><button type="button" role="menuitem" id="yaml-download">↓ Скачать черновик</button></div></details></div></div>
     <div class="editor-callout"><span class="callout-mark">i</span><p>Черновик хранится только в текущей вкладке браузера. Он не загружается и не применяется на роутере. Проверка проверяет YAML, но не схему конкретной версии Mihomo.</p></div>
     <div class="code-editor-shell"><div class="editor-gutter-label" id="editor-language">YAML · Mihomo</div><div class="code-editor" id="yaml-editor" aria-label="Текст локального черновика конфигурации"></div></div>
     <div class="editor-statusbar"><span id="yaml-validation" class="editor-validation">Черновик пуст</span><span class="editor-encoding">UTF-8 <span>·</span> YAML 1.2 <span>·</span> Mihomo</span></div>
@@ -334,11 +334,11 @@ function openAccessDialog(): void {
 function openSettings(): void {
   const modal = document.createElement('dialog');
   modal.className = 'modal';
-  modal.innerHTML = `<form method="dialog" class="modal-panel"><div class="modal-heading"><span class="modal-icon">⚙</span><h2>Настройки панели</h2><button class="icon-button" aria-label="Закрыть">×</button></div><div class="modal-tabs" role="tablist" aria-label="Разделы настроек"><button class="settings-tab selected" id="settings-general" type="button" role="tab" aria-selected="true">Общие</button><button class="settings-tab" id="settings-security" type="button" role="tab" aria-selected="false">Безопасность</button></div><div id="settings-content" role="tabpanel"></div><button class="button button-primary modal-close">Готово</button></form>`;
+  modal.innerHTML = `<form method="dialog" class="modal-panel"><div class="modal-heading"><span class="modal-icon">⚙</span><h2>Настройки панели</h2><button class="icon-button" aria-label="Закрыть">×</button></div><div class="modal-tabs" role="tablist" aria-label="Разделы настроек"><button class="settings-tab selected" id="settings-general" type="button" role="tab" aria-selected="true">Общие</button><button class="settings-tab" id="settings-sources" type="button" role="tab" aria-selected="false">Источники ядер</button><button class="settings-tab" id="settings-security" type="button" role="tab" aria-selected="false">Безопасность</button></div><div id="settings-content" role="tabpanel"></div><button class="button button-primary modal-close">Готово</button></form>`;
   document.body.append(modal);
   modal.showModal();
   const content = modal.querySelector<HTMLElement>('#settings-content');
-  const renderSettingsTab = (tab: 'general' | 'security') => {
+  const renderSettingsTab = (tab: 'general' | 'security' | 'sources') => {
     modal.querySelectorAll<HTMLButtonElement>('.settings-tab').forEach((button) => {
       const selected = button.id === `settings-${tab}`;
       button.classList.toggle('selected', selected);
@@ -349,12 +349,46 @@ function openSettings(): void {
       content.innerHTML = `<div class="setting-row"><div><strong>Порт панели</strong><small>Адрес локального Rust API и интерфейса</small></div><span class="setting-value">${state.status?.port ?? 1001}</span></div><div class="setting-row"><div><strong>Backend</strong><small>${state.connected ? 'Соединение установлено' : 'Соединение отсутствует'}</small></div><span class="state-pill ${state.connected ? 'state-running' : 'state-unavailable'}">${state.connected ? 'На связи' : 'Ожидание'}</span></div><div class="setting-row"><div><strong>Режим</strong><small>Источник системных сведений</small></div><span class="setting-value">${state.status?.mode === 'router' ? 'Роутер' : 'Симуляция'}</span></div><div class="setting-row"><div><strong>Версия XKeen UI</strong><small>Сборка панели</small></div><span class="setting-value">${escapeHtml(state.status?.appVersion ?? '0.1.0')}</span></div>`;
       return;
     }
+    if (tab === 'sources') {
+      const sourceStorageNote = state.status?.mode === 'router'
+        ? 'В режиме роутера значения хранятся в собственном файле настроек XKeen UI.'
+        : 'В локальной симуляции значения хранятся в памяти до перезапуска backend.';
+      content.innerHTML = `<p class="modal-note">Укажите GitHub-репозитории релизов для будущих установок и обновлений. Это URL источника форка; путь установленного исполняемого файла панель не меняет. ${sourceStorageNote}</p><label class="source-field"><span><strong>Источник Xray</strong><small>Формат: github.com/владелец/репозиторий</small></span><input id="source-xray" type="url" autocomplete="url" placeholder="https://github.com/XTLS/Xray-core"></label><label class="source-field"><span><strong>Источник Mihomo</strong><small>Поддерживаются совместимые репозитории и форки</small></span><input id="source-mihomo" type="url" autocomplete="url" placeholder="https://github.com/MetaCubeX/mihomo"></label><div class="source-save-row"><span class="sources-feedback" id="sources-feedback" aria-live="polite">Загружаем сохранённые значения…</span><button class="editor-button editor-button-primary" type="button" id="save-core-sources">Сохранить источники</button></div>`;
+      const xrayInput = content.querySelector<HTMLInputElement>('#source-xray');
+      const mihomoInput = content.querySelector<HTMLInputElement>('#source-mihomo');
+      const feedback = content.querySelector<HTMLElement>('#sources-feedback');
+      void getCoreSources().then((sources) => {
+        if (xrayInput) xrayInput.value = sources.xray;
+        if (mihomoInput) mihomoInput.value = sources.mihomo;
+        if (feedback) feedback.textContent = 'Сохранённые настройки загружены.';
+      }).catch((error: unknown) => {
+        if (feedback) feedback.textContent = error instanceof Error ? error.message : 'Не удалось загрузить настройки.';
+      });
+      content.querySelector<HTMLButtonElement>('#save-core-sources')?.addEventListener('click', async (event) => {
+        const button = event.currentTarget as HTMLButtonElement;
+        if (!xrayInput || !mihomoInput || !feedback) return;
+        button.disabled = true;
+        feedback.textContent = 'Сохраняем…';
+        try {
+          const saved: CoreSources = await saveCoreSources({ xray: xrayInput.value, mihomo: mihomoInput.value });
+          xrayInput.value = saved.xray;
+          mihomoInput.value = saved.mihomo;
+          feedback.textContent = 'Источники ядер сохранены.';
+        } catch (error) {
+          feedback.textContent = error instanceof Error ? error.message : 'Не удалось сохранить настройки.';
+        } finally {
+          button.disabled = false;
+        }
+      });
+      return;
+    }
     const tokenPresent = hasAccessToken();
     content.innerHTML = `<div class="setting-row"><div><strong>Ключ API</strong><small>${tokenPresent ? 'Хранится только в sessionStorage этой вкладки' : 'Ключ этой вкладки не сохранён'}</small></div><span class="state-pill ${tokenPresent ? 'state-running' : 'state-unavailable'}">${tokenPresent ? 'Установлен' : 'Не задан'}</span></div><div class="security-actions"><button class="editor-button" id="replace-token">${tokenPresent ? 'Заменить ключ' : 'Добавить ключ'}</button>${tokenPresent ? '<button class="editor-button danger-button" id="forget-token">Забыть ключ</button>' : ''}</div><p class="modal-note">Секрет не отображается и не записывается в localStorage.${tokenPresent ? ' Удаление ключа отключит запросы к защищённому API.' : ''}</p>`;
     modal.querySelector<HTMLButtonElement>('#replace-token')?.addEventListener('click', () => { modal.close(); openAccessDialog(); });
     modal.querySelector<HTMLButtonElement>('#forget-token')?.addEventListener('click', () => { setAccessToken(null); modal.close(); void refresh(); });
   };
   modal.querySelector<HTMLButtonElement>('#settings-general')?.addEventListener('click', () => renderSettingsTab('general'));
+  modal.querySelector<HTMLButtonElement>('#settings-sources')?.addEventListener('click', () => renderSettingsTab('sources'));
   modal.querySelector<HTMLButtonElement>('#settings-security')?.addEventListener('click', () => renderSettingsTab('security'));
   renderSettingsTab('general');
   modal.addEventListener('close', () => modal.remove(), { once: true });

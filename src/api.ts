@@ -17,6 +17,11 @@ export interface SystemStatus {
   notice: string;
 }
 
+export interface CoreSources {
+  xray: string;
+  mihomo: string;
+}
+
 export interface ApiState {
   connected: boolean;
   status: SystemStatus | null;
@@ -240,6 +245,32 @@ async function getMihomoJson(path: string, operation: string, signal?: AbortSign
     signal,
   });
   return readJson(response, operation);
+}
+
+export async function getCoreSources(): Promise<CoreSources> {
+  const payload = await getMihomoJson('/api/v1/settings/core-sources', 'Получение источников ядер');
+  if (!isRecord(payload) || typeof payload.xray !== 'string' || typeof payload.mihomo !== 'string') {
+    throw new Error('Backend вернул некорректные источники ядер');
+  }
+  return { xray: payload.xray, mihomo: payload.mihomo };
+}
+
+export async function saveCoreSources(sources: CoreSources): Promise<CoreSources> {
+  const token = sessionStorage.getItem(TOKEN_KEY);
+  const response = await fetch('/api/v1/settings/core-sources', {
+    method: 'PUT',
+    headers: {
+      Accept: 'application/json',
+      'Content-Type': 'application/json',
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    },
+    body: JSON.stringify(sources),
+  });
+  const payload = await readJson(response, 'Сохранение источников ядер');
+  if (!isRecord(payload) || typeof payload.xray !== 'string' || typeof payload.mihomo !== 'string') {
+    throw new Error('Backend вернул некорректные источники ядер после сохранения');
+  }
+  return { xray: payload.xray, mihomo: payload.mihomo };
 }
 
 export async function getHealth(signal?: AbortSignal): Promise<{ status: string }> {

@@ -187,10 +187,12 @@ export function mountYamlEditor(): void {
     });
   });
 
-  document.querySelector<HTMLButtonElement>('#yaml-validate')?.addEventListener('click', () => {
+  document.querySelector<HTMLButtonElement>('#yaml-validate')?.addEventListener('click', (event) => {
+    (event.currentTarget as HTMLButtonElement).closest('details')?.removeAttribute('open');
     if (editor) validateStructuredDocument(editor.state.doc.toString());
   });
-  document.querySelector<HTMLButtonElement>('#yaml-format')?.addEventListener('click', () => {
+  document.querySelector<HTMLButtonElement>('#yaml-format')?.addEventListener('click', (event) => {
+    (event.currentTarget as HTMLButtonElement).closest('details')?.removeAttribute('open');
     if (!editor || currentFile().format === 'text') return;
     const source = editor.state.doc.toString();
     if (!validateStructuredDocument(source)) {
@@ -208,7 +210,8 @@ export function mountYamlEditor(): void {
     editor.dispatch({ changes: { from: 0, to: editor.state.doc.length, insert: formatted } });
     setValidation(`Форматирование ${file.format.toUpperCase()} выполнено; совместимость со схемой не проверялась.`, true);
   });
-  document.querySelector<HTMLButtonElement>('#yaml-template')?.addEventListener('click', () => {
+  document.querySelector<HTMLButtonElement>('#yaml-template')?.addEventListener('click', (event) => {
+    (event.currentTarget as HTMLButtonElement).closest('details')?.removeAttribute('open');
     const file = currentFile();
     if (!editor || (file.format !== 'yaml' && file.format !== 'json' && file.format !== 'jsonc')) return;
     const current = editor.state.doc.toString();
@@ -224,7 +227,8 @@ export function mountYamlEditor(): void {
       setValidation(error instanceof Error ? `Не удалось открыть каталог: ${error.message}` : 'Не удалось открыть каталог шаблонов.', false);
     });
   });
-  document.querySelector<HTMLButtonElement>('#yaml-download')?.addEventListener('click', () => {
+  document.querySelector<HTMLButtonElement>('#yaml-download')?.addEventListener('click', (event) => {
+    (event.currentTarget as HTMLButtonElement).closest('details')?.removeAttribute('open');
     if (editor) downloadDraft(editor.state.doc.toString());
   });
 }

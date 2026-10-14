@@ -281,6 +281,10 @@ mod tests {
             .unwrap()
             .to_string_lossy()
             .starts_with(".mihomo-config-"));
-        assert!(first.ends_with("yaml"));
+        assert!(first
+            .file_name()
+            .unwrap()
+            .to_string_lossy()
+            .ends_with(".yaml"));
     }
 }

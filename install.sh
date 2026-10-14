@@ -6,19 +6,25 @@ PREFIX=${XKEEN_PREFIX:-/opt}
 if [ "$#" -eq 0 ] && [ -r /dev/tty ]; then
   printf '\033[38;5;141m'
   cat <<'BANNER'
-   _  __ _  __                       _   _ ___
-   \ \/ /| |/ / ___  ___ _ __        | | | |_ _|
-    \  / | ' / / -_)| -_) '_ \       | |_| || |
-    /_/  |_|\_\ \___|___| .__/        \___/|___|
-                         |_|  XKeen UI
+       __  __  __                    _   __  __
+      / / / / / /  ____  ___  ____  / | / / / /
+     / /_/ / / /  / __ \/ _ \/ __ \/  |/ / / /
+    / __  / / /__/ /_/ /  __/ / / / /|  / /_/
+   /_/ /_/ /____/\____/\___/_/ /_/_/ |_/\__/
+                       XKeen UI
 BANNER
-  printf '\033[38;5;75m  ── ROUTER CONTROL PANEL ─────────────────────\033[0m\n'
-  printf '  Архитектура: \033[38;5;114m%s\033[0m\n' "$(uname -m 2>/dev/null || printf unknown)"
+  printf '\033[38;5;51m  Архитектура: %s\033[0m\n' "$(uname -m 2>/dev/null || printf unknown)"
   if [ -x "$PREFIX/share/xkeen-ui/xkeen-ui" ]; then
-    "$PREFIX/share/xkeen-ui/xkeen-ui" service status --prefix "$PREFIX"
+    panel_status=$("$PREFIX/share/xkeen-ui/xkeen-ui" service status --prefix "$PREFIX" 2>/dev/null || true)
+    case "$panel_status" in
+      *остановлен*) panel_status=остановлена ;;
+      *запущен*) panel_status=запущена ;;
+      *) panel_status=неизвестно ;;
+    esac
   else
-    printf '  Статус панели: не установлена\n'
+    panel_status=не_установлена
   fi
+  printf '\033[38;5;51m  Статус панели: %s\033[0m\n' "$panel_status"
   printf '\n  1. Установить / переустановить\n  2. Обновить\n  3. Удалить\n  0. Выход\n\n> '
   IFS= read -r choice < /dev/tty || exit 0
   case "$choice" in

@@ -59,6 +59,8 @@ export interface MihomoProxyOption {
   icon: string | null;
   alive: boolean | null;
   delay: number | null;
+  udp?: boolean;
+  xudp?: boolean;
 }
 
 export interface MihomoSelector {
@@ -202,6 +204,8 @@ export async function getMihomoSelectors(signal?: AbortSignal): Promise<MihomoSe
         icon: isRecord(option) && typeof option.icon === 'string' ? option.icon : null,
         alive: isRecord(option) && typeof option.alive === 'boolean' ? option.alive : null,
         delay,
+        ...(typeof option.udp === 'boolean' ? { udp: option.udp } : {}),
+        ...(typeof option.xudp === 'boolean' ? { xudp: option.xudp } : {}),
       }];
     });
     return [{ name: typeof raw.name === 'string' ? raw.name : key, icon: typeof raw.icon === 'string' ? raw.icon : null, current: typeof raw.now === 'string' ? raw.now : null, options }];

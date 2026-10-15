@@ -37,7 +37,7 @@ describe('renderSelectors', () => {
     const html = renderSelectors(groups, false, null);
     expect(html).toContain('data-ping-proxy="Finland"');
     expect(html).toContain('data-ping-group="Main"');
-    expect(html).toContain('aria-label="Проверить задержку узла Finland"');
+    expect(html).toContain('aria-label="Проверить ping узла Finland"');
   });
 });
 

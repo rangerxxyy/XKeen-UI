@@ -96,7 +96,7 @@ function renderHeader(): string {
   const controls = canControl
     ? `${xkeenStatus?.running === false
       ? `<button class="header-service-action" data-xkeen-action="start" type="button" title="Запустить XKeen" aria-label="Запустить XKeen" ${xkeenControlBusy ? 'disabled' : ''}>▶</button>`
-      : `<button class="header-service-action" data-xkeen-action="restart" type="button" title="Перезапустить XKeen" aria-label="Перезапустить XKeen" ${xkeenControlBusy ? 'disabled' : ''}>↻</button><button class="header-service-action header-service-stop" data-xkeen-action="stop" type="button" title="Остановить XKeen" aria-label="Остановить XKeen" ${xkeenControlBusy || xkeenStatus?.running !== true ? 'disabled' : ''}>■</button>`}`
+      : `<button class="header-service-action" data-xkeen-action="restart" type="button" title="Перезапустить XKeen" aria-label="Перезапустить XKeen" ${xkeenControlBusy ? 'disabled' : ''}><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 7v5h-5M4.9 9a7.5 7.5 0 0 1 12.4-2L20 12M4 17v-5h5m10.1 3a7.5 7.5 0 0 1-12.4 2L4 12"/></svg></button><button class="header-service-action header-service-stop" data-xkeen-action="stop" type="button" title="Остановить XKeen" aria-label="Остановить XKeen" ${xkeenControlBusy || xkeenStatus?.running !== true ? 'disabled' : ''}>■</button>`}`
     : '';
   return `<header class="topbar">
     <div class="top-status-cluster"><div class="top-status" aria-label="Состояние панели"><span class="connection-led ${state.connected ? 'is-online' : 'is-offline'}"></span><span><strong>${escapeHtml(serviceText)}</strong><small>${state.connected ? `${memory} · ${cpu}` : 'Ожидание соединения с backend'}</small></span></div><div class="header-service-controls" aria-label="Управление XKeen">${controls}</div></div>
@@ -326,12 +326,6 @@ function render(): void {
 
 async function runXkeenAction(action: string | undefined): Promise<void> {
   if (action !== 'start' && action !== 'stop' && action !== 'restart') return;
-  const prompt = action === 'start'
-    ? 'Запустить XKeen? Это активирует проксирование согласно текущей конфигурации роутера.'
-    : action === 'stop'
-      ? 'Остановить XKeen? Трафик роутера перестанет идти через прокси.'
-      : 'Перезапустить XKeen? Активные соединения могут прерваться.';
-  if (!window.confirm(prompt)) return;
   xkeenControlBusy = true;
   render();
   let notice = '';
@@ -394,7 +388,7 @@ function bindMihomoInteractions(): void {
   document.querySelectorAll<HTMLButtonElement>('.ping-group').forEach((button) => {
     button.addEventListener('click', () => void pingGroupFromUi(button));
   });
-  document.querySelectorAll<HTMLButtonElement>('.ping-proxy').forEach((button) => {
+  document.querySelectorAll<HTMLButtonElement>('.proxy-ping-value').forEach((button) => {
     button.addEventListener('click', () => void pingProxyFromUi(button));
   });
   document.querySelectorAll<HTMLButtonElement>('[data-close-connection]').forEach((button) => {
@@ -436,7 +430,8 @@ async function pingProxyFromUi(button: HTMLButtonElement): Promise<void> {
   const name = button.dataset.pingProxy;
   if (!group || !name || button.disabled) return;
   button.disabled = true;
-  button.textContent = '…';
+  const value = button.querySelector('span');
+  if (value) value.textContent = '…';
   try {
     const result = await pingMihomoProxy(group, name, mihomoController?.signal);
     if (result) selectors = applyPingResults(selectors, [result]);
@@ -445,7 +440,8 @@ async function pingProxyFromUi(button: HTMLButtonElement): Promise<void> {
     button.title = error instanceof Error ? error.message : 'Не удалось проверить узел';
   } finally {
     button.disabled = false;
-    button.textContent = 'ϟ';
+    const latest = selectors.flatMap((selector) => selector.options).find((option) => option.name === name)?.delay;
+    if (value?.isConnected) value.textContent = latest === null || latest === undefined ? '—' : `${latest} мс`;
   }
 }
 

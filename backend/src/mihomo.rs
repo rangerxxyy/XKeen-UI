@@ -693,7 +693,10 @@ mod tests {
         assert_eq!(result["results"][0]["name"], "Finland");
         assert_eq!(result["results"][0]["delay"], 42);
         assert_eq!(next_request(&mut requests).await.1, "/proxies");
-        assert!(next_request(&mut requests).await.1.starts_with("/proxies/Finland/delay?"));
+        assert!(next_request(&mut requests)
+            .await
+            .1
+            .starts_with("/proxies/Finland/delay?"));
         server.abort();
     }
 

@@ -57,6 +57,11 @@ const LOG_SOURCES: &[LogSource] = &[
         label: "XKeen UI · xkeen-ui.log",
         path: "/opt/var/log/xkeen-ui.log",
     },
+    LogSource {
+        id: "app-update",
+        label: "XKeen UI · update.log",
+        path: "/opt/var/log/xkeen-ui-update.log",
+    },
 ];
 
 pub(super) async fn read_logs(

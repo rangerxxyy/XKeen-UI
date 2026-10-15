@@ -350,10 +350,34 @@ async fn update_app(
         )
             .into_response();
     }
-    let command = format!("sleep 2; curl -fsSL https://raw.githubusercontent.com/rangerxxyy/XKeen-UI/main/install.sh | /bin/sh -s -- update --prefix /opt --version {}", request.tag);
+    // Keep update diagnostics on disk: this process is detached before the UI
+    // service restarts, so stdout/stderr cannot be returned to the requester.
+    const UPDATE_SCRIPT: &str = r#"
+sleep 2
+LOG=/opt/var/log/xkeen-ui-update.log
+mkdir -p /opt/var/log || exit 1
+exec >>"$LOG" 2>&1
+printf '\n[%s] Starting XKeen UI update to %s\n' "$(date -u '+%Y-%m-%dT%H:%M:%SZ' 2>/dev/null || date)" "$1"
+tmp=$(mktemp /tmp/xkeen-ui-install.XXXXXX) || { echo 'ERROR: cannot create temporary installer'; exit 1; }
+trap 'rm -f "$tmp"' EXIT HUP INT TERM
+if ! curl -fLsS --connect-timeout 15 --max-time 90 https://raw.githubusercontent.com/rangerxxyy/XKeen-UI/main/install.sh -o "$tmp"; then
+  echo 'ERROR: could not download install.sh from raw.githubusercontent.com'
+  exit 1
+fi
+if ! grep -q 'Minimal Entware bootstrap' "$tmp"; then
+  echo 'ERROR: downloaded installer failed its content check'
+  exit 1
+fi
+/bin/sh "$tmp" update --prefix /opt --version "$1"
+result=$?
+if [ "$result" -eq 0 ]; then echo "SUCCESS: XKeen UI $1 installed"; else echo "ERROR: installer exited with code $result"; fi
+exit "$result"
+"#;
     match std::process::Command::new("/bin/sh")
         .arg("-c")
-        .arg(&command)
+        .arg(UPDATE_SCRIPT)
+        .arg("xkeen-ui-update")
+        .arg(&request.tag)
         .stdin(std::process::Stdio::null())
         .stdout(std::process::Stdio::null())
         .stderr(std::process::Stdio::null())

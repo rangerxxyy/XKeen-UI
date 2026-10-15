@@ -1012,7 +1012,10 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         .route("/api/v1/xkeen", get(xkeen_status))
         .route("/api/v1/logs", get(logs::read_logs))
         .route("/api/v1/config/active", get(active_config))
-        .route("/api/v1/config/files/{file}", get(config_files::read_user_file))
+        .route(
+            "/api/v1/config/files/{file}",
+            get(config_files::read_user_file),
+        )
         .route("/api/v1/settings/core-sources", get(get_core_sources))
         .route("/api/v1/mihomo/version", get(mihomo_version))
         .route("/api/v1/mihomo/proxies", get(mihomo_proxies))
@@ -1052,7 +1055,10 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             "/api/v1/config/active",
             axum::routing::put(config_files::apply_active),
         )
-        .route("/api/v1/config/files/{file}", axum::routing::put(config_files::save_user_file))
+        .route(
+            "/api/v1/config/files/{file}",
+            axum::routing::put(config_files::save_user_file),
+        )
         .route_layer(DefaultBodyLimit::max(9 * 1024 * 1024))
         .route_layer(middleware::from_fn(require_same_origin));
     let app = Router::new()

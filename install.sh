@@ -50,6 +50,22 @@ VERSION=
 fail() { printf 'Ошибка: %s\n' "$*" >&2; exit 1; }
 has() { command -v "$1" >/dev/null 2>&1; }
 
+download_github_file() {
+  source_url=$1
+  output_file=$2
+  max_bytes=$3
+  for proxy in direct https://gh-proxy.com https://ghfast.top; do
+    if [ "$proxy" = direct ]; then candidate=$source_url; else candidate=$proxy/$source_url; fi
+    printf 'Загрузка через %s\n' "$proxy"
+    if curl -fsSL --retry 1 --connect-timeout 15 --max-time 120 --max-filesize "$max_bytes" "$candidate" -o "$output_file.part"; then
+      mv "$output_file.part" "$output_file" || return 1
+      return 0
+    fi
+    rm -f "$output_file.part"
+  done
+  return 1
+}
+
 while [ "$#" -gt 0 ]; do
   case "$1" in
     --port) [ "$#" -ge 2 ] || fail 'укажите порт'; PORT=$2; shift ;;
@@ -81,14 +97,15 @@ trap 'rm -rf "$WORK"' 0
 trap 'exit 1' HUP INT TERM
 ARCHIVE="xkeen-ui-linux-$ARCH.tar.gz"
 if [ -z "$VERSION" ]; then
-RELEASE_JSON=$(curl -fsSL --retry 2 --connect-timeout 15 --max-filesize 1048576 "https://api.github.com/repos/$REPOSITORY/releases/latest") || fail 'не удалось определить стабильный release'
+download_github_file "https://api.github.com/repos/$REPOSITORY/releases/latest" "$WORK/release.json" 1048576 || fail 'не удалось определить стабильный release напрямую или через GitHub Proxy'
+RELEASE_JSON=$(cat "$WORK/release.json")
 VERSION=$(printf '%s\n' "$RELEASE_JSON" | sed -n 's/^[[:space:]]*"tag_name":[[:space:]]*"\([A-Za-z0-9._-][A-Za-z0-9._-]*\)"[,]\{0,1\}$/\1/p' | sed -n '1p')
 [ -n "$VERSION" ] || fail 'GitHub не вернул tag стабильного release'
 fi
 printf '%s\n' "$VERSION" | awk '!/^v(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)$/ {exit 1}' || fail 'версия должна иметь формат vX.Y.Z'
 BASE="https://github.com/$REPOSITORY/releases/download/$VERSION"
-curl -fsSL --retry 2 --connect-timeout 15 --max-filesize 52428800 "$BASE/$ARCHIVE" -o "$WORK/$ARCHIVE" || fail 'не удалось получить release'
-curl -fsSL --retry 2 --connect-timeout 15 "$BASE/SHA256SUMS" -o "$WORK/SHA256SUMS" || fail 'не удалось получить SHA256SUMS'
+download_github_file "$BASE/$ARCHIVE" "$WORK/$ARCHIVE" 52428800 || fail 'не удалось получить release напрямую или через GitHub Proxy'
+download_github_file "$BASE/SHA256SUMS" "$WORK/SHA256SUMS" 1048576 || fail 'не удалось получить SHA256SUMS напрямую или через GitHub Proxy'
 EXPECTED=$(awk -v file="$ARCHIVE" '$2 == file || $2 == "*" file {print $1; exit}' "$WORK/SHA256SUMS")
 [ -n "$EXPECTED" ] || fail "в SHA256SUMS нет записи для $ARCHIVE"
 ACTUAL=$(sha256sum "$WORK/$ARCHIVE" | awk '{print $1}')

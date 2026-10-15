@@ -360,8 +360,17 @@ exec >>"$LOG" 2>&1
 printf '\n[%s] Starting XKeen UI update to %s\n' "$(date -u '+%Y-%m-%dT%H:%M:%SZ' 2>/dev/null || date)" "$1"
 tmp=$(mktemp /tmp/xkeen-ui-install.XXXXXX) || { echo 'ERROR: cannot create temporary installer'; exit 1; }
 trap 'rm -f "$tmp"' EXIT HUP INT TERM
-if ! curl -fLsS --connect-timeout 15 --max-time 90 https://raw.githubusercontent.com/rangerxxyy/XKeen-UI/main/install.sh -o "$tmp"; then
-  echo 'ERROR: could not download install.sh from raw.githubusercontent.com'
+fetch_installer() {
+  source_url=$1
+  for proxy in direct https://gh-proxy.com https://ghfast.top; do
+    if [ "$proxy" = direct ]; then candidate=$source_url; else candidate=$proxy/$source_url; fi
+    echo "Fetching installer via $proxy"
+    if curl -fLsS --connect-timeout 15 --max-time 90 "$candidate" -o "$tmp"; then return 0; fi
+  done
+  return 1
+}
+if ! fetch_installer https://raw.githubusercontent.com/rangerxxyy/XKeen-UI/main/install.sh; then
+  echo 'ERROR: could not download install.sh directly or through GitHub proxies'
   exit 1
 fi
 if ! grep -q 'Minimal Entware bootstrap' "$tmp"; then

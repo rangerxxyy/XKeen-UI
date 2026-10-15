@@ -1,4 +1,26 @@
 import type { MihomoConnection, MihomoConnections, MihomoPingResult, MihomoSelector } from './api';
+import { parseDocument } from 'yaml';
+
+export function orderSelectorsByConfig(groups: MihomoSelector[], content: string): MihomoSelector[] {
+  try {
+    const config = parseDocument(content, { uniqueKeys: false }).toJS() as { 'proxy-groups'?: unknown } | null;
+    const configured = config?.['proxy-groups'];
+    if (!Array.isArray(configured)) return groups;
+    const order = new Map<string, number>();
+    for (const [index, group] of configured.entries()) {
+      if (group && typeof group === 'object' && 'name' in group && typeof group.name === 'string') {
+        order.set(group.name, index);
+      }
+    }
+    if (order.size === 0) return groups;
+    return groups.map((group, index) => ({ group, index })).sort((left, right) =>
+      (order.get(left.group.name) ?? Number.MAX_SAFE_INTEGER) - (order.get(right.group.name) ?? Number.MAX_SAFE_INTEGER)
+      || left.index - right.index,
+    ).map(({ group }) => group);
+  } catch {
+    return groups;
+  }
+}
 
 export function applyPingResults(groups: MihomoSelector[], results: MihomoPingResult[]): MihomoSelector[] {
   const resultByName = new Map(results.map((result) => [result.name, result]));

@@ -557,3 +557,39 @@ body { color:var(--text); -webkit-font-smoothing:antialiased; }
   .config-layout .editor-actions { justify-content:flex-end; }
   .app-releases-panel { padding:13px; }
 }
+
+/* Compact header controls and configuration files in the right end of the main navigation. */
+.app-shell { max-width:1460px; }
+.top-status-cluster { display:flex; align-items:center; gap:12px; min-width:0; }
+.top-status { cursor:default; }
+.top-status:hover strong { color:#d7e0f0; }
+.header-service-controls { display:flex; align-items:center; gap:5px; }
+.header-service-action { width:30px; height:30px; display:grid; place-items:center; border:1px solid #35405a; border-radius:8px; color:#dbe5f4; background:#0a1120; font-size:15px; line-height:1; cursor:pointer; transition:background .15s,border-color .15s,color .15s; }
+.header-service-action:hover:not(:disabled) { color:#fff; border-color:#637da9; background:#1b2b43; }
+.header-service-stop { color:#ff7d86; }
+.header-service-stop:hover:not(:disabled) { border-color:#a84b5a; background:#3a1e2b; }
+.header-service-action:disabled { opacity:.45; cursor:wait; }
+.navigation-spacer { flex:1 1 auto; }
+.navigation-config { gap:5px; }
+.config-file-nav { display:flex; align-items:center; gap:2px; margin-left:auto; padding:4px; border-radius:11px; background:#1a2232; }
+.config-file-nav .config-file-tab { min-height:34px; padding:0 10px; border:1px solid transparent; border-radius:8px; color:#9eb0c9; background:transparent; font-size:12px; white-space:nowrap; cursor:pointer; }
+.config-file-nav .config-file-tab:hover { color:#fff; background:#25344b; }
+.config-file-nav .config-file-tab.selected { color:#fff; border-color:#283752; background:#080e1c; box-shadow:0 1px 2px #0005; }
+.config-layout { display:block; height:calc(100vh - 180px); }
+.config-editor-main { height:100%; }
+.config-sidebar { display:none; }
+@media(max-width:900px) {
+  .navigation-config { flex-wrap:wrap; justify-content:flex-start; overflow:visible; }
+  .navigation-config .navigation-spacer { display:none; }
+  .config-file-nav { width:100%; margin:0; overflow-x:auto; }
+  .config-file-nav .config-file-tab { flex:0 0 auto; }
+}
+@media(max-width:600px) {
+  .top-status-cluster { grid-column:1; grid-row:2; gap:7px; }
+  .header-service-controls { gap:4px; }
+  .header-service-action { width:28px; height:28px; }
+  .top-status small { max-width:190px; font-size:9px; }
+  .config-layout { height:min(80vh,760px); }
+  .config-layout .editor-statusbar { align-items:stretch; flex-direction:column; }
+  .config-layout .editor-actions { justify-content:flex-end; }
+}

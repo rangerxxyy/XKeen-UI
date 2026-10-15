@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { applyPingResults } from './mihomo-view';
+import { applyPingResults, orderSelectorsByConfig } from './mihomo-view';
 import type { MihomoSelector } from './api';
 
 describe('applyPingResults', () => {
@@ -26,5 +26,27 @@ describe('applyPingResults', () => {
     ] }];
     expect(applyPingResults(groups, [{ name: 'Offline', delay: null }])[0]?.options[0])
       .toMatchObject({ alive: false, delay: null });
+  });
+});
+
+describe('orderSelectorsByConfig', () => {
+  it('uses proxy-groups order from the active YAML and keeps unlisted groups last', () => {
+    const groups: MihomoSelector[] = [
+      { name: 'AI', icon: null, current: null, options: [] },
+      { name: 'YouTube', icon: null, current: null, options: [] },
+      { name: 'Main⚡', icon: null, current: null, options: [] },
+      { name: 'Unlisted', icon: null, current: null, options: [] },
+    ];
+    const ordered = orderSelectorsByConfig(groups, `proxy-groups:\n  - name: Main⚡\n  - name: YouTube\n  - name: AI\n`);
+    expect(ordered.map((group) => group.name)).toEqual(['Main⚡', 'YouTube', 'AI', 'Unlisted']);
+  });
+
+  it('preserves runtime order when the config is invalid or has no proxy-groups', () => {
+    const groups: MihomoSelector[] = [
+      { name: 'AI', icon: null, current: null, options: [] },
+      { name: 'Main', icon: null, current: null, options: [] },
+    ];
+    expect(orderSelectorsByConfig(groups, 'bad: [yaml')).toEqual(groups);
+    expect(orderSelectorsByConfig(groups, 'dns:\n  enable: true\n')).toEqual(groups);
   });
 });

@@ -1,8 +1,8 @@
 import '@fontsource-variable/inter';
 import '@fontsource-variable/jetbrains-mono';
 import './style.css';
-import { closeAllMihomoConnections, closeMihomoConnection, controlXkeen, getCoreSources, getHealth, getMihomoConnections, getMihomoSelectors, getMihomoVersion, getStatus, getSystemLog, getXkeenStatus, pingMihomoGroup, queryMihomoDns, requestAppUpdate, saveCoreSources, selectMihomoProxy, type ApiState, type CoreSources, type MihomoConnections, type MihomoDnsResult, type MihomoSelector, type ServiceStatus, type SystemLog, type XkeenStatus } from './api';
-import { applyPingResults, renderConnections, renderSelectors } from './mihomo-view';
+import { closeAllMihomoConnections, closeMihomoConnection, controlXkeen, getActiveMihomoConfig, getCoreSources, getHealth, getMihomoConnections, getMihomoSelectors, getMihomoVersion, getStatus, getSystemLog, getXkeenStatus, pingMihomoGroup, queryMihomoDns, requestAppUpdate, saveCoreSources, selectMihomoProxy, type ApiState, type CoreSources, type MihomoConnections, type MihomoDnsResult, type MihomoSelector, type SystemLog, type XkeenStatus } from './api';
+import { applyPingResults, orderSelectorsByConfig, renderConnections, renderSelectors } from './mihomo-view';
 import { renderDns } from './dns-view';
 import { bindCoreReleaseChecks, openCoreReleaseDialog } from './core-releases';
 import { listAppReleases, type AppRelease } from './app-update';
@@ -39,7 +39,6 @@ let dnsPanel: 'mihomo' | 'handoff' = 'mihomo';
 let dnsController: AbortController | undefined;
 let mihomoVersion: string | null = null;
 let xkeenStatus: XkeenStatus | null = null;
-let xkeenControlMessage = '';
 let xkeenControlBusy = false;
 const logFiles = [
   { id: 'xray-error', label: 'Xray · error.log' },
@@ -85,48 +84,44 @@ function formatAppReleaseNotes(value: string): string {
   }).join('<br>');
 }
 
-function serviceBadge(service: ServiceStatus): string {
-  const label: Record<ServiceStatus['state'], string> = {
-    running: 'Активен', stopped: 'Остановлен', unavailable: 'Недоступен', unknown: 'Неизвестно',
-  };
-  return `<span class="state-pill state-${service.state}"><span class="state-dot"></span>${label[service.state]}</span>`;
-}
-
 function renderHeader(): string {
   const status = state.status;
   const service = status?.services.find((item) => item.name.toLowerCase() === 'mihomo');
   const formatVersion = (version: string) => `v${escapeHtml(version.replace(/^v+/i, ''))}`;
   const coreLabel = mihomoVersion ? formatVersion(mihomoVersion) : service ? (service.version ? formatVersion(service.version) : service.state === 'running' ? 'Активен' : service.state === 'stopped' ? 'Остановлен' : 'Недоступен') : state.connected ? 'Не проверен' : 'Ожидание';
-  const serviceText = service ? (service.state === 'running' ? 'Сервис активен' : service.state === 'stopped' ? 'Сервис остановлен' : 'Статус недоступен') : 'Состояние загружается';
+  const serviceText = service ? (service.state === 'running' ? 'Сервис запущен' : service.state === 'stopped' ? 'Сервис остановлен' : 'Статус недоступен') : 'Состояние загружается';
   const memory = status?.memory ? `RAM ${status.memory.usedMb}/${status.memory.totalMb} MB` : 'RAM —';
   const cpu = status?.cpuPercent === null || status?.cpuPercent === undefined ? 'CPU —' : `CPU ${Math.round(status.cpuPercent)}%`;
+  const canControl = status?.mode === 'router' && Boolean(xkeenStatus?.installed);
+  const controls = canControl
+    ? `${xkeenStatus?.running === false
+      ? `<button class="header-service-action" data-xkeen-action="start" type="button" title="Запустить XKeen" aria-label="Запустить XKeen" ${xkeenControlBusy ? 'disabled' : ''}>▶</button>`
+      : `<button class="header-service-action" data-xkeen-action="restart" type="button" title="Перезапустить XKeen" aria-label="Перезапустить XKeen" ${xkeenControlBusy ? 'disabled' : ''}>↻</button><button class="header-service-action header-service-stop" data-xkeen-action="stop" type="button" title="Остановить XKeen" aria-label="Остановить XKeen" ${xkeenControlBusy || xkeenStatus?.running !== true ? 'disabled' : ''}>■</button>`}`
+    : '';
   return `<header class="topbar">
-    <button class="top-status" id="services" type="button" aria-label="Открыть состояние сервисов"><span class="connection-led ${state.connected ? 'is-online' : 'is-offline'}"></span><span><strong>${escapeHtml(serviceText)}</strong><small>${state.connected ? `${memory} · ${cpu}` : 'Ожидание соединения с backend'}</small></span></button>
+    <div class="top-status-cluster"><div class="top-status" aria-label="Состояние панели"><span class="connection-led ${state.connected ? 'is-online' : 'is-offline'}"></span><span><strong>${escapeHtml(serviceText)}</strong><small>${state.connected ? `${memory} · ${cpu}` : 'Ожидание соединения с backend'}</small></span></div><div class="header-service-controls" aria-label="Управление XKeen">${controls}</div></div>
     <a class="brand" href="#selectors" aria-label="XKeen UI, селекторы"><span class="brand-mark">X</span><span>XKeen <b>UI</b></span></a>
     <div class="top-actions"><button class="version-chip core-chip core-version-button" id="core-version" type="button" title="Выбрать релиз Mihomo"><span class="chip-icon">◈</span> Mihomo <b>${coreLabel}</b><span class="chip-chevron" aria-hidden="true">⌄</span></button><button class="version-chip app-version-button" id="app-version" type="button" title="Выбрать релиз XKeen UI"><span class="chip-icon">⬡</span> XKeen UI <b>v${status?.appVersion ?? APP_VERSION}</b><span class="chip-chevron" aria-hidden="true">⌄</span></button><button class="icon-button" id="refresh" title="Обновить статус" aria-label="Обновить статус">↻</button><button class="icon-button" id="settings" title="Настройки" aria-label="Настройки">⚙</button></div>
   </header>`;
 }
 
 function renderNavigation(): string {
-  return `<nav class="navigation" aria-label="Разделы панели">${pages.map((page) => `<button class="nav-item ${activePage === page.id ? 'active' : ''}" data-page="${page.id}" ${activePage === page.id ? 'aria-current="page"' : ''}><span class="nav-icon">${page.icon}</span>${page.label}</button>`).join('')}</nav>`;
+  const fileButtons = activePage === 'configuration' ? renderConfigFileButtons() : '';
+  return `<nav class="navigation ${activePage === 'configuration' ? 'navigation-config' : ''}" aria-label="Разделы панели">${pages.map((page) => `<button class="nav-item ${activePage === page.id ? 'active' : ''}" data-page="${page.id}" ${activePage === page.id ? 'aria-current="page"' : ''}><span class="nav-icon">${page.icon}</span>${page.label}</button>`).join('')}<span class="navigation-spacer"></span>${fileButtons}</nav>`;
 }
 
-function renderServiceCard(service: ServiceStatus): string {
-  const isXkeen = service.name.toLowerCase() === 'xkeen';
-  const effectiveService: ServiceStatus = isXkeen && xkeenStatus
-    ? { ...service, state: !xkeenStatus.installed ? 'unavailable' : xkeenStatus.running === null ? 'unknown' : xkeenStatus.running ? 'running' : 'stopped', version: xkeenStatus.version, detail: xkeenStatus.detail }
-    : service;
-  const icon = service.name === 'Xray' ? '✳' : service.name === 'Mihomo' ? '◉' : '⌂';
-  const summary = isXkeen && xkeenStatus?.version ? `Версия ${escapeHtml(xkeenStatus.version)}` : service.version ? `Версия ${escapeHtml(service.version)}` : escapeHtml(effectiveService.detail);
-  const canControl = isXkeen && state.status?.mode === 'router' && xkeenStatus?.installed;
-  const actions = canControl
-    ? `<div class="service-controls" aria-label="Управление XKeen"><button class="editor-button" data-xkeen-action="start" ${xkeenControlBusy || xkeenStatus?.running ? 'disabled' : ''}>Запустить</button><button class="editor-button" data-xkeen-action="restart" ${xkeenControlBusy ? 'disabled' : ''}>Перезапустить</button><button class="editor-button danger-button" data-xkeen-action="stop" ${xkeenControlBusy || xkeenStatus?.running === false ? 'disabled' : ''}>Остановить</button></div>${xkeenStatus?.initPath ? `<small class="service-path">Init: ${escapeHtml(xkeenStatus.initPath)} · ${escapeHtml(xkeenStatus.core ?? 'ядро не определено')}</small>` : ''}${xkeenControlMessage ? `<p class="xkeen-control-message" role="status">${escapeHtml(xkeenControlMessage)}</p>` : ''}`
-    : '';
-  return `<article class="service-card"><div class="service-heading"><span class="service-icon">${icon}</span><div class="service-name"><strong>${escapeHtml(service.name)}</strong><small>${summary}</small></div>${serviceBadge(effectiveService)}</div><div class="service-foot"><span>${effectiveService.state === 'running' ? 'Работает' : effectiveService.state === 'unavailable' ? 'Проверка недоступна' : effectiveService.state === 'stopped' ? 'Остановлен' : 'Нет подтверждения запуска'}</span>${isXkeen && xkeenStatus?.detail ? `<span>${escapeHtml(xkeenStatus.detail)}</span>` : ''}</div>${actions}</article>`;
-}
-
-function emptyCard(title: string, body: string): string {
-  return `<div class="empty-card"><span class="empty-icon">◌</span><strong>${title}</strong><p>${body}</p></div>`;
+function renderConfigFileButtons(): string {
+  const xray = xkeenStatus?.core === 'xray';
+  const ids = ['config', 'ip_exclude', 'port_exclude', 'port_proxying', 'xkeen', ...(xray ? ['xray_jsonc'] : [])];
+  const defaultFile = xray ? 'xray_json' : 'config';
+  const savedFile = sessionStorage.getItem('xkeen-ui:draft-active-file');
+  const activeFile = ids.includes(savedFile ?? '') || (xray && savedFile === 'xray_json') ? savedFile : defaultFile;
+  const labels: Record<string, string> = { config: 'config', xray_json: 'config', ip_exclude: 'ip_exclude', port_exclude: 'port_exclude', port_proxying: 'port_proxying', xkeen: 'xkeen', xray_jsonc: 'routing' };
+  return `<div class="config-file-nav" aria-label="Файлы конфигурации">${ids.map((id) => {
+    const fileId = id === 'config' && xray ? 'xray_json' : id;
+    const selected = fileId === activeFile;
+    return `<button class="config-file-tab ${selected ? 'selected' : ''}" data-config-file="${fileId}" type="button" aria-pressed="${selected}">${labels[id] ?? id}</button>`;
+  }).join('')}</div>`;
 }
 
 function renderComingSoon(page: Page): string {
@@ -142,13 +137,7 @@ function renderComingSoon(page: Page): string {
 }
 
 function renderConfiguration(): string {
-  const configFile = xkeenStatus?.core === 'xray' ? 'xray_json' : 'config';
   return `<section class="editor-workspace config-layout" aria-label="Редактор конфигурации">
-    <aside class="config-sidebar" aria-label="Файлы конфигурации">
-      <button class="config-file-tab" data-config-file="${configFile}" type="button" aria-pressed="true">config</button>
-      ${[['ip_exclude','ip_exclude'],['port_exclude','port_exclude'],['port_proxying','port_proxying'],['xkeen','xkeen']].map(([id,label]) => `<button class="config-file-tab" data-config-file="${id}" type="button" aria-pressed="false">${label}</button>`).join('')}
-      ${xkeenStatus?.core === 'xray' ? '<button class="config-file-tab" data-config-file="xray_jsonc" type="button" aria-pressed="false">routing</button>' : ''}
-    </aside>
     <div class="config-editor-main">
       <strong id="editor-filename" class="sr-only">config.yaml</strong><span id="editor-language" class="sr-only">YAML · Mihomo</span><span id="editor-file-hint" class="sr-only">Локальный черновик</span>
       <div class="code-editor-shell"><div class="code-editor" id="yaml-editor" aria-label="Текст конфигурации"></div></div>
@@ -272,22 +261,6 @@ function bindJournal(): void {
   if (!logData && !logError && !logLoading) void loadSystemLog();
 }
 
-function renderServicesDialog(): void {
-  let dialog = document.querySelector<HTMLDialogElement>('#services-dialog');
-  if (!dialog) {
-    dialog = document.createElement('dialog');
-    dialog.id = 'services-dialog';
-    dialog.className = 'modal';
-    document.body.append(dialog);
-    dialog.addEventListener('close', () => dialog?.remove(), { once: true });
-  }
-  const services = state.status?.services ?? [];
-  dialog.innerHTML = `<div class="modal-panel services-modal"><div class="modal-heading"><span class="modal-icon">◈</span><h2>Состояние сервисов</h2><button class="icon-button" id="services-close" type="button" aria-label="Закрыть">×</button></div><div class="service-grid">${services.length ? services.map(renderServiceCard).join('') : emptyCard('Состояние недоступно', 'Подключите backend, чтобы увидеть сервисы.')}</div><p class="service-dialog-note">Управление XKeen применяет команды к системной службе роутера.</p></div>`;
-  if (!dialog.open) dialog.showModal();
-  dialog.querySelector<HTMLButtonElement>('#services-close')?.addEventListener('click', () => dialog?.close());
-  dialog.querySelectorAll<HTMLButtonElement>('[data-xkeen-action]').forEach((button) => button.addEventListener('click', () => void runXkeenAction(button.dataset.xkeenAction)));
-}
-
 async function mountConfigurationEditor(): Promise<void> {
   try {
     yamlEditorLoad ??= import('./yaml-editor');
@@ -331,10 +304,7 @@ function render(): void {
   document.querySelector<HTMLButtonElement>('#core-version')?.addEventListener('click', () => void openCoreReleaseDialog(
     'mihomo', async () => (await getCoreSources()).mihomo, mihomoVersion,
   ));
-  document.querySelector<HTMLButtonElement>('#services')?.addEventListener('click', renderServicesDialog);
-  document.querySelectorAll<HTMLButtonElement>('[data-xkeen-action]').forEach((button) => {
-    button.addEventListener('click', () => void runXkeenAction(button.dataset.xkeenAction));
-  });
+  bindXkeenControls(app);
   document.querySelector<HTMLFormElement>('#dns-query-form')?.addEventListener('submit', (event) => {
     event.preventDefault();
     const form = event.currentTarget as HTMLFormElement;
@@ -363,18 +333,37 @@ async function runXkeenAction(action: string | undefined): Promise<void> {
       : 'Перезапустить XKeen? Активные соединения могут прерваться.';
   if (!window.confirm(prompt)) return;
   xkeenControlBusy = true;
-  xkeenControlMessage = `Выполняется команда ${action}…`;
   render();
+  let notice = '';
+  let noticeKind: 'success' | 'error' = 'success';
   try {
     xkeenStatus = await controlXkeen(action);
-    xkeenControlMessage = `Команда ${action} завершена.`;
+    notice = action === 'restart' ? 'XKeen перезапущен' : action === 'stop' ? 'XKeen остановлен' : 'XKeen запущен';
+    noticeKind = 'success';
   } catch (error) {
-    xkeenControlMessage = error instanceof Error ? error.message : 'Не удалось выполнить команду XKeen';
+    notice = error instanceof Error ? error.message : 'Не удалось выполнить команду XKeen';
+    noticeKind = 'error';
   } finally {
     xkeenControlBusy = false;
     render();
-    if (document.querySelector('#services-dialog')) renderServicesDialog();
+    showToast(notice, noticeKind);
   }
+}
+
+function bindXkeenControls(root: ParentNode): void {
+  root.querySelectorAll<HTMLButtonElement>('[data-xkeen-action]').forEach((button) => {
+    button.addEventListener('click', () => void runXkeenAction(button.dataset.xkeenAction));
+  });
+}
+
+function showToast(message: string, kind: 'success' | 'error'): void {
+  const region = document.querySelector<HTMLElement>('.toast-region');
+  if (!region) return;
+  const toast = document.createElement('div');
+  toast.className = `toast toast-${kind}`;
+  toast.textContent = message;
+  region.append(toast);
+  window.setTimeout(() => toast.remove(), 3500);
 }
 
 async function runDnsQuery(): Promise<void> {
@@ -484,7 +473,14 @@ async function loadMihomoPage(page: Page): Promise<void> {
   else { connectionsLoading = true; connectionsError = null; }
   if (activePage === page) render();
   try {
-    if (page === 'selectors') selectors = await getMihomoSelectors(signal);
+    if (page === 'selectors') {
+      const [groups, config] = await Promise.all([
+        getMihomoSelectors(signal),
+        getActiveMihomoConfig(signal).catch(() => null),
+      ]);
+      if (signal.aborted) return;
+      selectors = config ? orderSelectorsByConfig(groups, config.content) : groups;
+    }
     else connections = await getMihomoConnections(signal);
   } catch (error) {
     if (error instanceof DOMException && error.name === 'AbortError') return;
@@ -536,7 +532,7 @@ function updateChrome(): void {
     'mihomo', async () => (await getCoreSources()).mihomo, mihomoVersion,
   ));
   document.querySelector<HTMLButtonElement>('#settings')?.addEventListener('click', openSettings);
-  document.querySelector<HTMLButtonElement>('#services')?.addEventListener('click', renderServicesDialog);
+  bindXkeenControls(document);
 }
 
 async function openAppReleases(): Promise<void> {

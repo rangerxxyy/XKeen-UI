@@ -2,7 +2,10 @@ use std::{
     env,
     net::{IpAddr, SocketAddr},
     path::PathBuf,
-    sync::{Arc, RwLock},
+    sync::{
+        atomic::{AtomicBool, Ordering},
+        Arc, Mutex, RwLock,
+    },
     time::Instant,
 };
 
@@ -41,6 +44,8 @@ struct AppState {
     core_sources_path: Option<PathBuf>,
     core_sources_lock: Arc<tokio::sync::Mutex<()>>,
     core_update_lock: Arc<tokio::sync::Mutex<()>>,
+    cpu_sample: Arc<Mutex<Option<CpuTimes>>>,
+    app_update_running: Arc<AtomicBool>,
 }
 
 #[derive(Clone, Deserialize, Serialize)]
@@ -208,6 +213,7 @@ struct SystemStatus {
     platform: String,
     memory: Option<MemoryStatus>,
     load_average: Option<f32>,
+    cpu_percent: Option<f32>,
     services: Vec<ServiceStatus>,
     notice: &'static str,
 }
@@ -304,6 +310,56 @@ async fn install_core(
     }
 }
 
+async fn update_app(State(state): State<AppState>) -> Response {
+    if !state.router_mode || !cfg!(target_os = "linux") {
+        return (
+            StatusCode::SERVICE_UNAVAILABLE,
+            Json(serde_json::json!({"error":"Обновление панели доступно только на роутере"})),
+        )
+            .into_response();
+    }
+    if state
+        .app_update_running
+        .compare_exchange(false, true, Ordering::AcqRel, Ordering::Acquire)
+        .is_err()
+    {
+        return (
+            StatusCode::CONFLICT,
+            Json(serde_json::json!({"error":"Обновление панели уже запущено"})),
+        )
+            .into_response();
+    }
+    let command = "sleep 2; curl -fsSL https://raw.githubusercontent.com/rangerxxyy/XKeen-UI/main/install.sh | /bin/sh -s -- update --prefix /opt";
+    match std::process::Command::new("/bin/sh")
+        .args(["-c", command])
+        .stdin(std::process::Stdio::null())
+        .stdout(std::process::Stdio::null())
+        .stderr(std::process::Stdio::null())
+        .spawn()
+    {
+        Ok(mut child) => {
+            let running = Arc::clone(&state.app_update_running);
+            std::thread::spawn(move || {
+                let _ = child.wait();
+                running.store(false, Ordering::Release);
+            });
+            (
+                StatusCode::ACCEPTED,
+                Json(serde_json::json!({"status":"started"})),
+            )
+                .into_response()
+        }
+        Err(error) => {
+            state.app_update_running.store(false, Ordering::Release);
+            (
+                StatusCode::INTERNAL_SERVER_ERROR,
+                Json(serde_json::json!({"error":format!("Не удалось запустить обновление: {error}")})),
+            )
+                .into_response()
+        }
+    }
+}
+
 async fn status(State(state): State<AppState>) -> Json<SystemStatus> {
     let services = ["Xkeen", "Xray", "Mihomo"]
         .into_iter()
@@ -373,6 +429,10 @@ async fn status(State(state): State<AppState>) -> Json<SystemStatus> {
                     .ok()
                     .and_then(|contents| parse_load_average(&contents))
             })
+            .flatten(),
+        cpu_percent: state
+            .router_mode
+            .then(|| read_cpu_percent(&state.cpu_sample))
             .flatten(),
         services,
         notice: if state.router_mode {
@@ -714,6 +774,52 @@ fn parse_load_average(contents: &str) -> Option<f32> {
         .filter(|value| value.is_finite() && *value >= 0.0)
 }
 
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+struct CpuTimes {
+    total: u64,
+    idle: u64,
+}
+
+fn parse_cpu_times(contents: &str) -> Option<CpuTimes> {
+    let mut fields = contents
+        .lines()
+        .find(|line| line.starts_with("cpu "))?
+        .split_whitespace();
+    if fields.next()? != "cpu" {
+        return None;
+    }
+    let values: Vec<u64> = fields
+        .take(8)
+        .map(str::parse)
+        .collect::<Result<_, _>>()
+        .ok()?;
+    if values.len() < 4 {
+        return None;
+    }
+    let total = values
+        .iter()
+        .try_fold(0u64, |sum, value| sum.checked_add(*value))?;
+    let idle = values[3].checked_add(*values.get(4).unwrap_or(&0))?;
+    Some(CpuTimes { total, idle })
+}
+
+fn cpu_usage_percent(previous: CpuTimes, current: CpuTimes) -> Option<f32> {
+    let total = current.total.checked_sub(previous.total)?;
+    let idle = current.idle.checked_sub(previous.idle)?;
+    if total == 0 || idle > total {
+        return None;
+    }
+    Some(((total - idle) as f32 * 100.0 / total as f32).clamp(0.0, 100.0))
+}
+
+fn read_cpu_percent(sample: &Mutex<Option<CpuTimes>>) -> Option<f32> {
+    let current = parse_cpu_times(&std::fs::read_to_string("/proc/stat").ok()?)?;
+    let mut previous = sample.lock().ok()?;
+    let result = (*previous).and_then(|value| cpu_usage_percent(value, current));
+    *previous = Some(current);
+    result
+}
+
 fn process_is_running(service: &str) -> Option<bool> {
     let proc_dir = std::fs::read_dir("/proc").ok()?;
     for entry in proc_dir.flatten() {
@@ -791,6 +897,8 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         core_sources_path,
         core_sources_lock: Arc::new(tokio::sync::Mutex::new(())),
         core_update_lock: Arc::new(tokio::sync::Mutex::new(())),
+        cpu_sample: Arc::new(Mutex::new(None)),
+        app_update_running: Arc::new(AtomicBool::new(false)),
     };
     let web = web_root();
     let index = web.join("index.html");
@@ -813,6 +921,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let mutation_api = Router::new()
         .route("/api/v1/xkeen/control", axum::routing::post(control_xkeen))
         .route("/api/v1/cores/install", axum::routing::post(install_core))
+        .route("/api/v1/app/update", axum::routing::post(update_app))
         .route(
             "/api/v1/settings/core-sources",
             axum::routing::put(put_core_sources),
@@ -866,8 +975,8 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 #[cfg(test)]
 mod tests {
     use super::{
-        load_core_sources, normalize_github_repo, parse_load_average, same_origin,
-        save_core_sources, CoreSources,
+        cpu_usage_percent, load_core_sources, normalize_github_repo, parse_cpu_times,
+        parse_load_average, same_origin, save_core_sources, CoreSources, CpuTimes,
     };
     use axum::http::{header, HeaderMap, HeaderValue};
 
@@ -877,6 +986,28 @@ mod tests {
         assert_eq!(parse_load_average("not-a-number 0 0"), None);
         assert_eq!(parse_load_average("NaN 0 0"), None);
         assert_eq!(parse_load_average(""), None);
+    }
+
+    #[test]
+    fn cpu_usage_uses_proc_stat_deltas_and_ignores_idle_time() {
+        let before = parse_cpu_times("cpu 100 0 50 800 20 0 10 0 0 0\ncpu0 1 0 0 0").unwrap();
+        let after = parse_cpu_times("cpu 120 0 60 900 30 0 10 0 0 0\ncpu0 1 0 0 0").unwrap();
+        assert!((cpu_usage_percent(before, after).unwrap() - 21.42857).abs() < 0.001);
+        assert_eq!(cpu_usage_percent(after, before), None);
+        assert_eq!(parse_cpu_times("cpu broken"), None);
+        assert_eq!(
+            cpu_usage_percent(
+                CpuTimes {
+                    total: 10,
+                    idle: 10
+                },
+                CpuTimes {
+                    total: 10,
+                    idle: 10
+                }
+            ),
+            None
+        );
     }
 
     #[test]
@@ -897,6 +1028,10 @@ mod tests {
         assert_eq!(
             normalize_github_repo("github.com/MetaCubeX/mihomo"),
             Some("https://github.com/MetaCubeX/mihomo".into())
+        );
+        assert_eq!(
+            CoreSources::default().mihomo,
+            "https://github.com/MetaCubeX/mihomo"
         );
         assert_eq!(
             normalize_github_repo("https://github.com/XTLS/Xray-core.git/"),
@@ -929,6 +1064,7 @@ mod tests {
         ));
         let mut sources = CoreSources::default();
         sources.xray = "https://github.com/example/xray-fork".into();
+        sources.mihomo = "https://github.com/legiz-ru/Prizrak-Core".into();
         save_core_sources(&path, &sources).await.unwrap();
         let loaded = load_core_sources(Some(&path)).await.unwrap();
         assert_eq!(loaded.xray, sources.xray);

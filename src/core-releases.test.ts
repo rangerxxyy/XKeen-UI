@@ -3,6 +3,7 @@ import {
   fetchCoreReleases,
   findCompatibleCoreAsset,
   isCoreRelease,
+  isStableCompatibleRelease,
   normalizeCoreRepository,
   safeCoreReleaseLink,
 } from './core-releases';
@@ -79,6 +80,15 @@ describe('findCompatibleCoreAsset', () => {
   });
 });
 
+describe('stable core releases', () => {
+  it('allows only published stable releases that include a supported ARM64 binary', () => {
+    expect(isStableCompatibleRelease('xray', release())).toBe(true);
+    expect(isStableCompatibleRelease('xray', release({ prerelease: true }))).toBe(false);
+    expect(isStableCompatibleRelease('xray', release({ assets: [asset('Xray-linux-arm64.zip')] }))).toBe(false);
+    expect(isStableCompatibleRelease('mihomo', release({ assets: [asset('prizrak-core-linux-arm64-v1.19.32-r4.gz')] }))).toBe(true);
+  });
+});
+
 describe('safeCoreReleaseLink', () => {
   it('accepts a normal HTTPS GitHub release URL', () => {
     expect(safeCoreReleaseLink('https://github.com/owner/repo/releases/tag/v1.2.3'))
@@ -131,7 +141,7 @@ describe('fetchCoreReleases', () => {
     await expect(fetchCoreReleases('https://github.com/owner/repo.git'))
       .resolves.toHaveLength(1);
     expect(fetchMock).toHaveBeenCalledWith(
-      'https://api.github.com/repos/owner/repo/releases?per_page=1',
+      'https://api.github.com/repos/owner/repo/releases?per_page=30',
       expect.objectContaining({
         credentials: 'omit',
         cache: 'no-store',

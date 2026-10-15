@@ -1,7 +1,7 @@
 import '@fontsource-variable/inter';
 import '@fontsource-variable/jetbrains-mono';
 import './style.css';
-import { closeAllMihomoConnections, closeMihomoConnection, controlXkeen, getCoreSources, getHealth, getMihomoConnections, getMihomoSelectors, getMihomoVersion, getStatus, getSystemLog, getXkeenStatus, pingMihomoGroup, queryMihomoDns, saveCoreSources, selectMihomoProxy, type ApiState, type CoreSources, type MihomoConnections, type MihomoDnsResult, type MihomoSelector, type ServiceStatus, type SystemLog, type XkeenStatus } from './api';
+import { closeAllMihomoConnections, closeMihomoConnection, controlXkeen, getCoreSources, getHealth, getMihomoConnections, getMihomoSelectors, getMihomoVersion, getStatus, getSystemLog, getXkeenStatus, pingMihomoGroup, queryMihomoDns, requestAppUpdate, saveCoreSources, selectMihomoProxy, type ApiState, type CoreSources, type MihomoConnections, type MihomoDnsResult, type MihomoSelector, type ServiceStatus, type SystemLog, type XkeenStatus } from './api';
 import { applyPingResults, renderConnections, renderSelectors } from './mihomo-view';
 import { renderDns } from './dns-view';
 import { bindCoreReleaseChecks } from './core-releases';
@@ -61,6 +61,7 @@ let appRelease: AppRelease | null = null;
 let appUpdateMessage = 'Проверка ещё не выполнялась.';
 let appUpdateCheckedAt = 0;
 let appUpdatePending: Promise<void> | null = null;
+let appUpdateInstalling = false;
 
 const app = document.querySelector<HTMLDivElement>('#app');
 if (!app) throw new Error('Корневой элемент интерфейса #app не найден');
@@ -86,14 +87,13 @@ function renderHeader(): string {
   const formatVersion = (version: string) => `v${escapeHtml(version.replace(/^v+/i, ''))}`;
   const coreLabel = mihomoVersion ? formatVersion(mihomoVersion) : service ? (service.version ? formatVersion(service.version) : service.state === 'running' ? 'Активен' : service.state === 'stopped' ? 'Остановлен' : 'Недоступен') : state.connected ? 'Не проверен' : 'Ожидание';
   const serviceText = service ? (service.state === 'running' ? 'Сервис активен' : service.state === 'stopped' ? 'Сервис остановлен' : 'Статус недоступен') : 'Состояние загружается';
-  const stamp = state.checkedAt ? state.checkedAt.toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' }) : '—';
   const memory = status?.memory ? `RAM ${status.memory.usedMb}/${status.memory.totalMb} MB` : 'RAM —';
-  const load = status?.loadAverage === null || status?.loadAverage === undefined ? 'Load —' : `Load ${status.loadAverage.toFixed(2)}`;
+  const cpu = status?.cpuPercent === null || status?.cpuPercent === undefined ? 'CPU —' : `CPU ${Math.round(status.cpuPercent)}%`;
   const updateLink = appRelease
     ? `<a class="app-update-chip" href="${escapeHtml(appRelease.html_url)}" target="_blank" rel="noopener noreferrer" title="Открыть стабильный релиз XKeen UI">Доступно ${escapeHtml(appRelease.tag_name)} ↗</a>`
     : '';
   return `<header class="topbar">
-    <button class="top-status" id="services" type="button" aria-label="Открыть состояние сервисов"><span class="connection-led ${state.connected ? 'is-online' : 'is-offline'}"></span><span><strong>${escapeHtml(serviceText)}</strong><small>${state.connected ? `${memory} · ${load} · API :${status?.port ?? 1001} · ${stamp}` : 'Ожидание соединения с backend'}</small></span></button>
+    <button class="top-status" id="services" type="button" aria-label="Открыть состояние сервисов"><span class="connection-led ${state.connected ? 'is-online' : 'is-offline'}"></span><span><strong>${escapeHtml(serviceText)}</strong><small>${state.connected ? `${memory} · ${cpu}` : 'Ожидание соединения с backend'}</small></span></button>
     <a class="brand" href="#selectors" aria-label="XKeen UI, селекторы"><span class="brand-mark">X</span><span>XKeen <b>UI</b></span></a>
     <div class="top-actions"><span class="version-chip core-chip"><span class="chip-icon">◈</span> Mihomo <b>${coreLabel}</b></span><span class="version-chip"><span class="chip-icon">⬡</span> XKeen UI <b>v${status?.appVersion ?? APP_VERSION}</b></span>${updateLink}<button class="icon-button" id="refresh" title="Обновить статус" aria-label="Обновить статус">↻</button><button class="icon-button" id="settings" title="Настройки" aria-label="Настройки">⚙</button></div>
   </header>`;
@@ -396,7 +396,7 @@ async function runAppUpdateCheck(force = false): Promise<void> {
     try {
       appRelease = await checkAppUpdate(installedVersion);
       appUpdateMessage = appRelease
-        ? `Доступно обновление ${appRelease.tag_name}. Установка из панели пока не подключена.`
+        ? `Доступно обновление ${appRelease.tag_name}.`
         : 'Установлена последняя стабильная версия.';
       appUpdateCheckedAt = Date.now();
     } catch (error) {
@@ -406,8 +406,10 @@ async function runAppUpdateCheck(force = false): Promise<void> {
       appUpdatePending = null;
       const message = document.querySelector<HTMLElement>('#app-update-message');
       const button = document.querySelector<HTMLButtonElement>('#check-app-update');
+      const installButton = document.querySelector<HTMLButtonElement>('#install-app-update');
       if (message) message.textContent = appUpdateMessage;
       if (button) { button.disabled = false; button.textContent = 'Проверить'; }
+      if (installButton) installButton.hidden = !appRelease || state.status?.mode !== 'router';
       render();
     }
   })();
@@ -569,7 +571,9 @@ function openSettings(): void {
     });
     if (!content) return;
     if (tab === 'general') {
-      content.innerHTML = `<div class="setting-row"><div><strong>Порт панели</strong><small>Адрес локального Rust API и интерфейса</small></div><span class="setting-value">${state.status?.port ?? 1001}</span></div><div class="setting-row"><div><strong>Backend</strong><small>${state.connected ? 'Соединение установлено' : 'Соединение отсутствует'}</small></div><span class="state-pill ${state.connected ? 'state-running' : 'state-unavailable'}">${state.connected ? 'На связи' : 'Ожидание'}</span></div><div class="setting-row"><div><strong>Режим</strong><small>Источник системных сведений</small></div><span class="setting-value">${state.status?.mode === 'router' ? 'Роутер' : 'Симуляция'}</span></div><div class="setting-row"><div><strong>Версия XKeen UI</strong><small>Установленная сборка</small></div><span class="setting-value">${escapeHtml(state.status?.appVersion ?? APP_VERSION)}</span></div><div class="app-update-settings"><div><strong>Обновления панели</strong><small id="app-update-message" aria-live="polite">${escapeHtml(appUpdateMessage)}</small></div><button class="editor-button" id="check-app-update" type="button" ${appUpdatePending ? 'disabled' : ''}>${appUpdatePending ? 'Проверяем…' : 'Проверить'}</button></div>`;
+      content.innerHTML = `<div class="setting-row"><div><strong>Порт панели</strong><small>Адрес локального Rust API и интерфейса</small></div><span class="setting-value">${state.status?.port ?? 1001}</span></div><div class="setting-row"><div><strong>Backend</strong><small>${state.connected ? 'Соединение установлено' : 'Соединение отсутствует'}</small></div><span class="state-pill ${state.connected ? 'state-running' : 'state-unavailable'}">${state.connected ? 'На связи' : 'Ожидание'}</span></div><div class="setting-row"><div><strong>Режим</strong><small>Источник системных сведений</small></div><span class="setting-value">${state.status?.mode === 'router' ? 'Роутер' : 'Симуляция'}</span></div><div class="setting-row"><div><strong>Версия XKeen UI</strong><small>Установленная сборка</small></div><span class="setting-value">${escapeHtml(state.status?.appVersion ?? APP_VERSION)}</span></div><div class="app-update-settings"><div><strong>Обновления панели</strong><small id="app-update-message" aria-live="polite">${escapeHtml(appUpdateMessage)}</small></div><span><button class="editor-button" id="check-app-update" type="button" ${appUpdatePending ? 'disabled' : ''}>${appUpdatePending ? 'Проверяем…' : 'Проверить'}</button> <button class="editor-button editor-button-primary" id="install-app-update" type="button" ${appRelease && state.status?.mode === 'router' ? '' : 'hidden'} ${appUpdateInstalling ? 'disabled' : ''}>${appUpdateInstalling ? 'Устанавливаем…' : 'Установить'}</button></span></div>`;
+      content.querySelector<HTMLButtonElement>('#install-app-update')?.addEventListener('click', () => void installAppUpdate());
+      content.querySelector<HTMLButtonElement>('#check-app-update')?.addEventListener('click', () => void runAppUpdateCheck(true));
       return;
     }
     if (tab === 'sources') {
@@ -578,20 +582,31 @@ function openSettings(): void {
         : 'В локальной симуляции значения хранятся в памяти до перезапуска backend.';
       content.innerHTML = `<p class="modal-note">Задайте GitHub-репозитории форков Xray и Mihomo. Здесь хранится адрес источника релизов; установленный путь ядра не меняется. ${sourceStorageNote}</p>
         <label class="source-field"><span><strong>Источник Xray</strong><small>Формат: github.com/владелец/репозиторий</small></span><input id="source-xray" type="url" autocomplete="url" placeholder="https://github.com/XTLS/Xray-core"></label>
-        <label class="source-field"><span><strong>Источник Mihomo</strong><small>Поддерживаются совместимые репозитории и форки</small></span><input id="source-mihomo" type="url" autocomplete="url" placeholder="https://github.com/MetaCubeX/mihomo"></label>
+        <label class="source-field"><span><strong>Сборка Mihomo</strong></span><select id="source-mihomo-preset"><option value="official">Оригинальный Mihomo</option><option value="prizrak">Prizrak-Core</option><option value="custom">Другой форк</option></select></label>
+        <label class="source-field"><span><strong>GitHub-источник Mihomo</strong><small>Выбор источника не обновляет уже установленное ядро</small></span><input id="source-mihomo" type="url" autocomplete="url" placeholder="https://github.com/MetaCubeX/mihomo"></label>
         <div class="core-release-checks"><section><div><strong>Xray</strong><small>Проверить последние ARM64-релизы</small></div><button type="button" class="editor-button" data-core-release="xray">Проверить релизы</button></section><div id="releases-xray" aria-live="polite"></div>
         <section><div><strong>Mihomo</strong><small>Проверить последние ARM64-релизы</small></div><button type="button" class="editor-button" data-core-release="mihomo">Проверить релизы</button></section><div id="releases-mihomo" aria-live="polite"></div></div>
         <div class="source-save-row"><span class="sources-feedback" id="sources-feedback" aria-live="polite">Загружаем сохранённые значения…</span><button class="editor-button editor-button-primary" type="button" id="save-core-sources">Сохранить источники</button></div>`;
       bindCoreReleaseChecks();
       const xrayInput = content.querySelector<HTMLInputElement>('#source-xray');
       const mihomoInput = content.querySelector<HTMLInputElement>('#source-mihomo');
+      const mihomoPreset = content.querySelector<HTMLSelectElement>('#source-mihomo-preset');
       const feedback = content.querySelector<HTMLElement>('#sources-feedback');
       void getCoreSources().then((sources) => {
         if (xrayInput) xrayInput.value = sources.xray;
         if (mihomoInput) mihomoInput.value = sources.mihomo;
+        if (mihomoPreset) mihomoPreset.value = sources.mihomo === 'https://github.com/MetaCubeX/mihomo'
+          ? 'official' : sources.mihomo === 'https://github.com/legiz-ru/Prizrak-Core' ? 'prizrak' : 'custom';
         if (feedback) feedback.textContent = 'Сохранённые настройки загружены.';
       }).catch((error: unknown) => {
         if (feedback) feedback.textContent = error instanceof Error ? error.message : 'Не удалось загрузить настройки.';
+      });
+      mihomoPreset?.addEventListener('change', () => {
+        if (mihomoPreset.value === 'official' && mihomoInput) mihomoInput.value = 'https://github.com/MetaCubeX/mihomo';
+        if (mihomoPreset.value === 'prizrak' && mihomoInput) mihomoInput.value = 'https://github.com/legiz-ru/Prizrak-Core';
+      });
+      mihomoInput?.addEventListener('input', () => {
+        if (mihomoPreset && !['https://github.com/MetaCubeX/mihomo', 'https://github.com/legiz-ru/Prizrak-Core'].includes(mihomoInput.value.trim().replace(/\/$/, ''))) mihomoPreset.value = 'custom';
       });
       content.querySelector<HTMLButtonElement>('#save-core-sources')?.addEventListener('click', async (event) => {
         const button = event.currentTarget as HTMLButtonElement;
@@ -617,6 +632,43 @@ function openSettings(): void {
   modal.querySelector<HTMLButtonElement>('#settings-sources')?.addEventListener('click', () => renderSettingsTab('sources'));
   renderSettingsTab('general');
   modal.addEventListener('close', () => modal.remove(), { once: true });
+}
+
+async function installAppUpdate(): Promise<void> {
+  if (!appRelease || appUpdateInstalling || state.status?.mode !== 'router') return;
+  const expectedVersion = state.status.appVersion;
+  appUpdateInstalling = true;
+  appUpdateMessage = `Загружаем ${appRelease.tag_name} и перезапускаем панель…`;
+  const messageNode = document.querySelector<HTMLElement>('#app-update-message');
+  const installButton = document.querySelector<HTMLButtonElement>('#install-app-update');
+  if (messageNode) messageNode.textContent = appUpdateMessage;
+  if (installButton) { installButton.disabled = true; installButton.textContent = 'Устанавливаем…'; }
+  render();
+  try {
+    await requestAppUpdate();
+    const deadline = Date.now() + 120_000;
+    while (Date.now() < deadline) {
+      await new Promise((resolve) => window.setTimeout(resolve, 2500));
+      try {
+        const updated = await getStatus();
+        if (updated.appVersion !== expectedVersion) {
+          appUpdateMessage = `Установлена версия ${updated.appVersion}.`;
+          window.location.reload();
+          return;
+        }
+      } catch {
+        // The service restarts while the package is replaced; keep polling.
+      }
+    }
+    throw new Error('Панель не подтвердила обновление за 2 минуты. Проверьте статус службы и повторите проверку.');
+  } catch (error) {
+    appUpdateMessage = error instanceof Error ? error.message : 'Обновление панели завершилось ошибкой.';
+  } finally {
+    appUpdateInstalling = false;
+    const message = document.querySelector<HTMLElement>('#app-update-message');
+    if (message) message.textContent = appUpdateMessage;
+    render();
+  }
 }
 
 async function refresh(): Promise<void> {

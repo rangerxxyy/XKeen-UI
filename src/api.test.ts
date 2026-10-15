@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { applyActiveMihomoConfig, getMihomoSelectors, getSystemLog, pingMihomoGroup } from './api';
+import { applyActiveMihomoConfig, getMihomoSelectors, getSystemLog, pingMihomoGroup, requestAppUpdate } from './api';
 
 afterEach(() => vi.unstubAllGlobals());
 
@@ -29,6 +29,22 @@ describe('getSystemLog', () => {
     }), { headers: { 'Content-Type': 'application/json' } }));
 
     await expect(getSystemLog('xray-error')).rejects.toThrow('некорректный формат журнала');
+  });
+});
+
+describe('requestAppUpdate', () => {
+  it('starts the router updater through the fixed same-origin endpoint', async () => {
+    const fetchMock = vi.fn(async () => new Response(JSON.stringify({ status: 'started' }), {
+      status: 202,
+      headers: { 'Content-Type': 'application/json' },
+    }));
+    vi.stubGlobal('fetch', fetchMock);
+
+    await expect(requestAppUpdate()).resolves.toBeUndefined();
+    expect(fetchMock).toHaveBeenCalledWith('/api/v1/app/update', {
+      method: 'POST',
+      headers: { Accept: 'application/json' },
+    });
   });
 });
 

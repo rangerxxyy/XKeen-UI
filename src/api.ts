@@ -13,6 +13,7 @@ export interface SystemStatus {
   platform: string;
   memory: { usedMb: number; totalMb: number } | null;
   loadAverage: number | null;
+  cpuPercent: number | null;
   services: ServiceStatus[];
   notice: string;
 }
@@ -133,6 +134,17 @@ export async function getStatus(signal?: AbortSignal): Promise<SystemStatus> {
     signal,
   });
   return parseSystemStatus(await readJson(response, 'Получение статуса'));
+}
+
+export async function requestAppUpdate(): Promise<void> {
+  const response = await fetch('/api/v1/app/update', {
+    method: 'POST',
+    headers: { Accept: 'application/json' },
+  });
+  const payload = await readJson(response, 'Обновление XKeen UI');
+  if (!isRecord(payload) || payload.status !== 'started') {
+    throw new Error('Backend не подтвердил запуск обновления панели');
+  }
 }
 
 export async function getMihomoSelectors(signal?: AbortSignal): Promise<MihomoSelector[]> {
@@ -462,7 +474,7 @@ function isNonNegativeInteger(value: unknown): value is number {
 
 function parseSystemStatus(value: unknown): SystemStatus {
   if (!isRecord(value)) throw new Error('Получение статуса: backend вернул некорректный объект');
-  const { appVersion, mode, port, uptimeSeconds, platform, memory, loadAverage, services, notice } = value;
+  const { appVersion, mode, port, uptimeSeconds, platform, memory, loadAverage, cpuPercent, services, notice } = value;
   if (typeof appVersion !== 'string' || !['router', 'simulation'].includes(String(mode)) ||
       !isNonNegativeInteger(port) || port < 1 || port > 65535 || !isNonNegativeInteger(uptimeSeconds) ||
       typeof platform !== 'string' || typeof notice !== 'string' || !Array.isArray(services)) {
@@ -494,6 +506,9 @@ function parseSystemStatus(value: unknown): SystemStatus {
   if (loadAverage !== null && (typeof loadAverage !== 'number' || !Number.isFinite(loadAverage) || loadAverage < 0)) {
     throw new Error('Получение статуса: получено некорректное значение нагрузки');
   }
+  if (cpuPercent !== undefined && cpuPercent !== null && (typeof cpuPercent !== 'number' || !Number.isFinite(cpuPercent) || cpuPercent < 0 || cpuPercent > 100)) {
+    throw new Error('Получение статуса: получено некорректное значение CPU');
+  }
 
   return {
     appVersion,
@@ -503,6 +518,7 @@ function parseSystemStatus(value: unknown): SystemStatus {
     platform,
     memory: parsedMemory,
     loadAverage,
+    cpuPercent: cpuPercent ?? null,
     services: parsedServices,
     notice,
   };

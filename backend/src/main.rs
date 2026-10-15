@@ -315,7 +315,10 @@ struct AppUpdateRequest {
     tag: String,
 }
 
-async fn update_app(State(state): State<AppState>, Json(request): Json<AppUpdateRequest>) -> Response {
+async fn update_app(
+    State(state): State<AppState>,
+    Json(request): Json<AppUpdateRequest>,
+) -> Response {
     if !state.router_mode || !cfg!(target_os = "linux") {
         return (
             StatusCode::SERVICE_UNAVAILABLE,
@@ -325,9 +328,16 @@ async fn update_app(State(state): State<AppState>, Json(request): Json<AppUpdate
     }
     if !request.tag.strip_prefix('v').is_some_and(|version| {
         let parts: Vec<_> = version.split('.').collect();
-        parts.len() == 3 && parts.iter().all(|part| !part.is_empty() && part.bytes().all(|byte| byte.is_ascii_digit()))
+        parts.len() == 3
+            && parts
+                .iter()
+                .all(|part| !part.is_empty() && part.bytes().all(|byte| byte.is_ascii_digit()))
     }) {
-        return (StatusCode::BAD_REQUEST, Json(serde_json::json!({"error":"Некорректный tag стабильного релиза"}))).into_response();
+        return (
+            StatusCode::BAD_REQUEST,
+            Json(serde_json::json!({"error":"Некорректный tag стабильного релиза"})),
+        )
+            .into_response();
     }
     if state
         .app_update_running
@@ -909,7 +919,11 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         core_sources_path,
         core_sources_lock: Arc::new(tokio::sync::Mutex::new(())),
         core_update_lock: Arc::new(tokio::sync::Mutex::new(())),
-        cpu_sample: Arc::new(Mutex::new(std::fs::read_to_string("/proc/stat").ok().and_then(|contents| parse_cpu_times(&contents)))),
+        cpu_sample: Arc::new(Mutex::new(
+            std::fs::read_to_string("/proc/stat")
+                .ok()
+                .and_then(|contents| parse_cpu_times(&contents)),
+        )),
         app_update_running: Arc::new(AtomicBool::new(false)),
     };
     let web = web_root();

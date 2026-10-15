@@ -4,7 +4,7 @@ import './style.css';
 import { closeAllMihomoConnections, closeMihomoConnection, controlXkeen, getCoreSources, getHealth, getMihomoConnections, getMihomoSelectors, getMihomoVersion, getStatus, getSystemLog, getXkeenStatus, pingMihomoGroup, queryMihomoDns, requestAppUpdate, saveCoreSources, selectMihomoProxy, type ApiState, type CoreSources, type MihomoConnections, type MihomoDnsResult, type MihomoSelector, type ServiceStatus, type SystemLog, type XkeenStatus } from './api';
 import { applyPingResults, renderConnections, renderSelectors } from './mihomo-view';
 import { renderDns } from './dns-view';
-import { bindCoreReleaseChecks } from './core-releases';
+import { bindCoreReleaseChecks, openCoreReleaseDialog } from './core-releases';
 import { checkAppUpdate, listAppReleases, type AppRelease } from './app-update';
 
 type Page = 'selectors' | 'connections' | 'configuration' | 'dns';
@@ -96,7 +96,7 @@ function renderHeader(): string {
   return `<header class="topbar">
     <button class="top-status" id="services" type="button" aria-label="Открыть состояние сервисов"><span class="connection-led ${state.connected ? 'is-online' : 'is-offline'}"></span><span><strong>${escapeHtml(serviceText)}</strong><small>${state.connected ? `${memory} · ${cpu}` : 'Ожидание соединения с backend'}</small></span></button>
     <a class="brand" href="#selectors" aria-label="XKeen UI, селекторы"><span class="brand-mark">X</span><span>XKeen <b>UI</b></span></a>
-    <div class="top-actions"><span class="version-chip core-chip"><span class="chip-icon">◈</span> Mihomo <b>${coreLabel}</b></span><button class="version-chip app-version-button" id="app-version" type="button" title="Показать последние стабильные релизы XKeen UI"><span class="chip-icon">⬡</span> XKeen UI <b>v${status?.appVersion ?? APP_VERSION}</b><span aria-hidden="true">⌄</span></button>${updateLink}<button class="icon-button" id="refresh" title="Обновить статус" aria-label="Обновить статус">↻</button><button class="icon-button" id="settings" title="Настройки" aria-label="Настройки">⚙</button></div>
+    <div class="top-actions"><button class="version-chip core-chip core-version-button" id="core-version" type="button" title="Показать последние стабильные релизы Mihomo"><span class="chip-icon">◈</span> Mihomo <b>${coreLabel}</b><span aria-hidden="true">⌄</span></button><button class="version-chip app-version-button" id="app-version" type="button" title="Показать последние стабильные релизы XKeen UI"><span class="chip-icon">⬡</span> XKeen UI <b>v${status?.appVersion ?? APP_VERSION}</b><span aria-hidden="true">⌄</span></button>${updateLink}<button class="icon-button" id="refresh" title="Обновить статус" aria-label="Обновить статус">↻</button><button class="icon-button" id="settings" title="Настройки" aria-label="Настройки">⚙</button></div>
   </header>`;
 }
 
@@ -318,6 +318,9 @@ function render(): void {
   document.querySelectorAll<HTMLButtonElement>('#refresh,#refresh-secondary,#retry').forEach((button) => button.addEventListener('click', () => void refresh()));
   document.querySelector<HTMLButtonElement>('#settings')?.addEventListener('click', openSettings);
   document.querySelector<HTMLButtonElement>('#app-version')?.addEventListener('click', () => void openAppReleases());
+  document.querySelector<HTMLButtonElement>('#core-version')?.addEventListener('click', () => void openCoreReleaseDialog(
+    'mihomo', async () => (await getCoreSources()).mihomo, mihomoVersion,
+  ));
   document.querySelector<HTMLButtonElement>('#services')?.addEventListener('click', renderServicesDialog);
   document.querySelector<HTMLButtonElement>('#check-app-update')?.addEventListener('click', () => void runAppUpdateCheck(true));
   document.querySelectorAll<HTMLButtonElement>('[data-xkeen-action]').forEach((button) => {
@@ -555,6 +558,9 @@ function updateChrome(): void {
   }
   document.querySelector<HTMLButtonElement>('#refresh')?.addEventListener('click', () => void refresh());
   document.querySelector<HTMLButtonElement>('#app-version')?.addEventListener('click', () => void openAppReleases());
+  document.querySelector<HTMLButtonElement>('#core-version')?.addEventListener('click', () => void openCoreReleaseDialog(
+    'mihomo', async () => (await getCoreSources()).mihomo, mihomoVersion,
+  ));
   document.querySelector<HTMLButtonElement>('#settings')?.addEventListener('click', openSettings);
   document.querySelector<HTMLButtonElement>('#services')?.addEventListener('click', renderServicesDialog);
 }

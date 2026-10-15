@@ -167,6 +167,35 @@ function renderReleaseList(target: HTMLElement, core: CoreName, releases: GitHub
   target.replaceChildren(list, ...(visible.length ? [note] : []));
 }
 
+export async function openCoreReleaseDialog(
+  core: CoreName,
+  repository: () => Promise<string>,
+  currentVersion?: string | null,
+): Promise<void> {
+  const dialog = document.createElement('dialog');
+  dialog.className = 'modal core-release-dialog';
+  const title = core === 'mihomo' ? 'Обновление Mihomo' : 'Обновление Xray';
+  dialog.innerHTML = `<form method="dialog" class="modal-panel core-release-dialog-panel"><div class="modal-heading"><span class="modal-icon">⇩</span><h2>${title}</h2><button class="icon-button" aria-label="Закрыть">×</button></div><div class="core-release-dialog-source"><span id="core-release-repository">Источник загружается…</span><span class="core-release-github">GitHub</span></div><p class="modal-note" id="core-release-dialog-status" aria-live="polite">Загружаем последние стабильные ARM64-релизы…</p><div id="core-release-dialog-list" class="core-release-dialog-list"></div><button class="button button-primary modal-close" type="submit">Готово</button></form>`;
+  document.body.append(dialog);
+  dialog.addEventListener('close', () => dialog.remove(), { once: true });
+  dialog.showModal();
+
+  const status = dialog.querySelector<HTMLElement>('#core-release-dialog-status')!;
+  const source = dialog.querySelector<HTMLElement>('#core-release-repository')!;
+  const target = dialog.querySelector<HTMLElement>('#core-release-dialog-list')!;
+  try {
+    const configuredRepository = await repository();
+    const repo = normalizeCoreRepository(configuredRepository);
+    source.textContent = repo;
+    const releases = await fetchCoreReleases(configuredRepository);
+    const visible = releases.filter((release) => isStableCompatibleRelease(core, release));
+    status.textContent = `${visible.length} стабильных ARM64-релизов${currentVersion ? ` · установлена ${currentVersion}` : ''}`;
+    renderReleaseList(target, core, releases);
+  } catch (error) {
+    status.textContent = error instanceof Error ? error.message : 'Не удалось загрузить релизы.';
+  }
+}
+
 async function installRelease(core: CoreName, tag: string, asset: string, sha256: string, button: HTMLButtonElement, list: HTMLElement): Promise<void> {
   const confirmed = window.confirm(
     `Установить ${core} ${tag} из выбранного GitHub-репозитория? Архив будет проверен по SHA-256. Если ядро сейчас обслуживает трафик, его конфигурация будет проверена, создана резервная копия, а сервис кратко перезапущен. При ошибке панель попробует восстановить прежний бинарник.`,

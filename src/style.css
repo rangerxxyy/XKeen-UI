@@ -393,10 +393,18 @@ body { background: #090a14; }
 .app-version-button { cursor:pointer; font:inherit; }
 .app-version-button:hover { color:var(--text); border-color:#59547b; background:#1a1930; }
 .app-releases-panel { max-width:34rem; }
+.core-version-button { cursor:pointer; font:inherit; }
+.core-version-button:hover { color:var(--text); border-color:#59547b; background:#1a1930; }
+.core-release-dialog { max-width:min(760px,calc(100vw - 26px)); }
+.core-release-dialog-panel { width:100%; }
+.core-release-dialog-source { display:flex; align-items:center; justify-content:flex-end; gap:8px; margin-top:8px; color:#a6b4ca; font-size:10px; }
+.core-release-github { padding:3px 8px; border-radius:999px; background:#063b31; color:#00dfa0; font-weight:650; }
+.core-release-dialog-list .core-release-list { max-height:min(56vh,480px); }
+.core-release-dialog-list .core-release-note { margin-bottom:0; }
 .app-release-actions { display:flex; justify-content:flex-end; gap:.55rem; padding:1rem 0; }
 .core-release-picker { display:grid; gap:.35rem; padding:.3rem .1rem .6rem; color:var(--muted); font-size:.75rem; }
 .core-release-picker select { width:100%; padding:.6rem .7rem; color:var(--text); background:#0b0c18; border:1px solid var(--stroke); border-radius:.55rem; font:inherit; }
-@media(max-width:600px) { .version-chip.app-version-button { display:flex; padding:0 .5rem; font-size:9px; } }
+@media(max-width:600px) { .version-chip.app-version-button,.version-chip.core-version-button { display:flex; padding:0 .5rem; font-size:9px; } }
 @media(max-width:600px) { .app-update-chip { font-size:.65rem; padding:.4rem .5rem; } }
 .dns-subnav { display:flex; gap:.45rem; margin:0 0 1rem; padding:.32rem; width:max-content; max-width:100%; border:1px solid var(--stroke); border-radius:.8rem; background:#0b0c17; }
 .dns-subnav-button { padding:.58rem .82rem; border:1px solid transparent; border-radius:.58rem; color:var(--muted); background:transparent; font:inherit; font-size:.83rem; cursor:pointer; }

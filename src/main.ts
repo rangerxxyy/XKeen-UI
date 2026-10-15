@@ -142,20 +142,17 @@ function renderComingSoon(page: Page): string {
 }
 
 function renderConfiguration(): string {
+  const configFile = xkeenStatus?.core === 'xray' ? 'xray_json' : 'config';
   return `<section class="editor-workspace config-layout" aria-label="Редактор конфигурации">
     <aside class="config-sidebar" aria-label="Файлы конфигурации">
-      <div class="config-sidebar-heading">Mihomo</div>
-      <button class="config-file-tab" data-config-file="config" type="button" aria-pressed="true">config.yaml</button>
-      <div class="config-sidebar-heading">XKeen</div>
+      <button class="config-file-tab" data-config-file="${configFile}" type="button" aria-pressed="true">config</button>
       ${[['ip_exclude','ip_exclude'],['port_exclude','port_exclude'],['port_proxying','port_proxying'],['xkeen','xkeen']].map(([id,label]) => `<button class="config-file-tab" data-config-file="${id}" type="button" aria-pressed="false">${label}</button>`).join('')}
-      <div class="config-sidebar-heading">Xray</div>
-      <button class="config-file-tab" data-config-file="xray_json" type="button" aria-pressed="false">config.json</button>
-      <button class="config-file-tab" data-config-file="xray_jsonc" type="button" aria-pressed="false">routing.jsonc</button>
+      ${xkeenStatus?.core === 'xray' ? '<button class="config-file-tab" data-config-file="xray_jsonc" type="button" aria-pressed="false">routing</button>' : ''}
     </aside>
     <div class="config-editor-main">
       <strong id="editor-filename" class="sr-only">config.yaml</strong><span id="editor-language" class="sr-only">YAML · Mihomo</span><span id="editor-file-hint" class="sr-only">Локальный черновик</span>
       <div class="code-editor-shell"><div class="code-editor" id="yaml-editor" aria-label="Текст конфигурации"></div></div>
-      <div class="editor-statusbar"><span id="yaml-validation" class="editor-validation">Черновик пуст</span><div class="editor-actions"><button class="editor-button" id="config-load-active" type="button" data-yaml-only title="Прочитать /opt/etc/mihomo/config.yaml">↻ Считать</button><button class="editor-button editor-button-primary" id="config-apply-active" type="button" data-yaml-only disabled title="Сначала считайте актуальный конфиг роутера">Применить</button><details class="editor-utilities"><summary class="editor-button">⋯ Утилиты</summary><div class="editor-utilities-menu" role="menu" aria-label="Утилиты конфигурации"><button type="button" role="menuitem" id="yaml-template" data-structured-only>▤ Шаблоны конфигураций</button><button type="button" role="menuitem" id="yaml-validate" data-structured-only>✓ Проверить</button><button type="button" role="menuitem" id="yaml-format" data-structured-only>⌘ Форматировать</button><button type="button" role="menuitem" id="yaml-download">↓ Скачать черновик</button></div></details></div></div>
+      <div class="editor-statusbar"><span id="yaml-validation" class="editor-validation">Черновик пуст</span><div class="editor-actions"><button class="editor-button" id="config-load-active" type="button" data-router-file title="Считать файл с роутера">↻ Считать</button><button class="editor-button editor-button-primary" id="config-apply-active" type="button" data-router-file disabled title="Сначала считайте актуальный файл роутера">Применить</button><details class="editor-utilities"><summary class="editor-button">⋯ Утилиты</summary><div class="editor-utilities-menu" role="menu" aria-label="Утилиты конфигурации"><button type="button" role="menuitem" id="yaml-template" data-structured-only>▤ Шаблоны конфигураций</button><button type="button" role="menuitem" id="yaml-validate" data-structured-only>✓ Проверить</button><button type="button" role="menuitem" id="yaml-format" data-structured-only>⌘ Форматировать</button><button type="button" role="menuitem" id="yaml-download">↓ Скачать черновик</button></div></details></div></div>
     </div>
   </section>`;
 }
@@ -295,7 +292,7 @@ async function mountConfigurationEditor(): Promise<void> {
   try {
     yamlEditorLoad ??= import('./yaml-editor');
     yamlEditorModule = await yamlEditorLoad;
-    if (activePage === 'configuration') yamlEditorModule.mountYamlEditor(state.status?.mode === 'router');
+    if (activePage === 'configuration') yamlEditorModule.mountYamlEditor(state.status?.mode === 'router', xkeenStatus?.core);
   } catch (error) {
     yamlEditorLoad = null;
     const status = document.querySelector<HTMLElement>('#yaml-validation');

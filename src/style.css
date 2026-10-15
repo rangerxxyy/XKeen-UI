@@ -499,8 +499,6 @@ body { color:var(--text); -webkit-font-smoothing:antialiased; }
 .main-content:has(.config-layout) { padding-top:14px; padding-bottom:8px; }
 .config-layout { display:grid; grid-template-columns:minmax(0,1fr) 190px; min-height:480px; height:calc(100vh - 180px); max-height:1000px; overflow:hidden; }
 .config-sidebar { grid-column:2; grid-row:1; min-width:0; padding:12px 8px; border-left:1px solid #2d3650; background:#0d1422; overflow:auto; }
-.config-sidebar-heading { padding:15px 10px 5px; color:#879bb7; font-size:10px; font-weight:700; letter-spacing:.07em; text-transform:uppercase; }
-.config-sidebar-heading:first-child { padding-top:3px; }
 .config-sidebar .config-file-tab { display:block; width:100%; min-height:36px; margin:2px 0; padding:0 10px; border:1px solid transparent; border-radius:8px; color:#b3c2d8; background:transparent; text-align:left; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
 .config-sidebar .config-file-tab:hover { color:#fff; border-color:#384962; background:#1a2639; }
 .config-sidebar .config-file-tab.selected { color:#fff; border-color:#637caf; background:#223351; box-shadow:inset 3px 0 #8eb4ff; }
@@ -551,11 +549,10 @@ body { color:var(--text); -webkit-font-smoothing:antialiased; }
 .settings-panel .sources-feedback { font-size:11px; line-height:1.4; }
 
 @media(max-width:700px) {
-  .config-layout { grid-template-columns:1fr; grid-template-rows:auto minmax(0,1fr); height:min(80vh,760px); }
-  .config-sidebar { grid-column:1; grid-row:1; display:flex; align-items:center; gap:5px; padding:8px; border-left:0; border-bottom:1px solid #2d3650; overflow-x:auto; overflow-y:hidden; }
-  .config-editor-main { grid-column:1; grid-row:2; }
-  .config-sidebar-heading { display:none; }
-  .config-sidebar .config-file-tab { flex:0 0 auto; width:auto; max-width:150px; min-height:33px; margin:0; padding:0 9px; text-align:center; font-size:11px; }
+  .config-layout { grid-template-columns:minmax(0,1fr) 132px; grid-template-rows:minmax(0,1fr); height:min(80vh,760px); }
+  .config-sidebar { grid-column:2; grid-row:1; display:block; padding:8px 5px; border-left:1px solid #2d3650; border-bottom:0; overflow-x:hidden; overflow-y:auto; }
+  .config-editor-main { grid-column:1; grid-row:1; }
+  .config-sidebar .config-file-tab { width:100%; min-height:33px; margin:2px 0; padding:0 7px; text-align:left; font-size:11px; }
   .config-layout .editor-statusbar { align-items:stretch; flex-direction:column; }
   .config-layout .editor-actions { justify-content:flex-end; }
   .app-releases-panel { padding:13px; }

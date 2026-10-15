@@ -7,16 +7,16 @@ import { json } from '@codemirror/lang-json';
 import { applyEdits, format as formatJsonc, parse as parseJsonc, printParseErrorCode, type ParseError } from 'jsonc-parser';
 import { parseDocument } from 'yaml';
 import { chooseReferenceTemplate, getDefaultTemplate } from './templates';
-import { applyActiveMihomoConfig, getActiveMihomoConfig } from './api';
+import { applyActiveMihomoConfig, getActiveMihomoConfig, getRouterConfigFile, saveRouterConfigFile, type RouterConfigFile } from './api';
 
 const draftKey = 'xkeen-ui:draft:';
 const activeFileKey = 'xkeen-ui:draft-active-file';
 const draftFiles = [
   { id: 'config', label: 'config', filename: 'config.yaml', format: 'yaml' },
-  { id: 'ip_exclude', label: 'ip_exclude', filename: 'ip_exclude', format: 'text' },
-  { id: 'port_exclude', label: 'port_exclude', filename: 'port_exclude', format: 'text' },
-  { id: 'port_proxying', label: 'port_proxying', filename: 'port_proxying', format: 'text' },
-  { id: 'xkeen', label: 'xkeen', filename: 'xkeen', format: 'text' },
+  { id: 'ip_exclude', label: 'ip_exclude', filename: 'ip_exclude.lst', format: 'text' },
+  { id: 'port_exclude', label: 'port_exclude', filename: 'port_exclude.lst', format: 'text' },
+  { id: 'port_proxying', label: 'port_proxying', filename: 'port_proxying.lst', format: 'text' },
+  { id: 'xkeen', label: 'xkeen', filename: 'xkeen.json', format: 'json' },
   { id: 'xray_json', label: 'xray_config.json', filename: 'config.json', format: 'json' },
   { id: 'xray_jsonc', label: '05_routing.jsonc', filename: '05_routing.jsonc', format: 'jsonc' },
 ] as const;
@@ -24,6 +24,16 @@ let editor: EditorView | null = null;
 let editorBindings: AbortController | null = null;
 let activeFile = sessionStorage.getItem(activeFileKey) ?? 'config';
 let activeConfigSnapshot: string | null = null;
+const listSnapshots = new Map<RouterConfigFile, string>();
+
+function isRouterConfigFile(file: string): file is RouterConfigFile {
+  return file === 'ip_exclude' || file === 'port_exclude' || file === 'port_proxying' || file === 'xkeen';
+}
+
+function currentSnapshot(): string | null {
+  return currentFile().id === 'config' ? activeConfigSnapshot
+    : isRouterConfigFile(currentFile().id) ? listSnapshots.get(currentFile().id as RouterConfigFile) ?? null : null;
+}
 
 function currentFile() {
   return draftFiles.find((file) => file.id === activeFile) ?? draftFiles[0];
@@ -35,19 +45,23 @@ function setEditorIdentity(): void {
   const language = document.querySelector<HTMLElement>('#editor-language');
   const hint = document.querySelector<HTMLElement>('#editor-file-hint');
   if (filename) filename.textContent = file.filename;
-  if (language) language.textContent = file.format === 'yaml' ? 'YAML · Mihomo' : file.format === 'text' ? 'TEXT · XKeen' : `${file.format.toUpperCase()} · Xray`;
+  if (language) language.textContent = file.format === 'yaml' ? 'YAML · Mihomo' : file.format === 'text' ? 'TEXT · XKeen' : `${file.format.toUpperCase()} · ${file.id === 'xkeen' ? 'XKeen' : 'Xray'}`;
   if (hint) hint.textContent = 'Локальный черновик';
   document.querySelectorAll<HTMLButtonElement>('[data-config-file]').forEach((button) => {
     const selected = button.dataset.configFile === file.id;
     button.classList.toggle('selected', selected);
     button.setAttribute('aria-pressed', String(selected));
   });
-  document.querySelectorAll<HTMLElement>('[data-yaml-only]').forEach((element) => {
-    element.hidden = file.format !== 'yaml';
+  document.querySelectorAll<HTMLElement>('[data-router-file]').forEach((element) => {
+    element.hidden = file.id !== 'config' && !isRouterConfigFile(file.id);
   });
+  const applyButton = document.querySelector<HTMLButtonElement>('#config-apply-active');
+  if (applyButton) applyButton.textContent = file.id === 'config' ? 'Применить' : 'Сохранить';
   document.querySelectorAll<HTMLElement>('[data-structured-only]').forEach((element) => {
     element.hidden = file.format === 'text';
   });
+  const templateButton = document.querySelector<HTMLElement>('#yaml-template');
+  if (templateButton) templateButton.hidden = file.id === 'xkeen' || file.format === 'text';
 }
 
 const editorTheme = EditorView.theme({
@@ -117,10 +131,10 @@ function validateStructuredDocument(text: string): boolean {
     return false;
   }
   if (!value || typeof value !== 'object' || Array.isArray(value)) {
-    setValidation(`${format.toUpperCase()} синтаксически корректен, но ожидается корневой объект Xray.`, false);
+    setValidation(`${format.toUpperCase()} синтаксически корректен, но ожидается корневой объект.`, false);
     return false;
   }
-  setValidation(`${format.toUpperCase()} синтаксически корректен. Схема версии Xray не проверялась.`, true);
+  setValidation(`${format.toUpperCase()} синтаксически корректен. Схема не проверялась.`, true);
   return true;
 }
 
@@ -145,22 +159,27 @@ export function unmountYamlEditor(): void {
   editor = null;
 }
 
-export function mountYamlEditor(routerMode = false): void {
+export function mountYamlEditor(routerMode = false, activeCore: 'mihomo' | 'xray' | null = 'mihomo'): void {
   const parent = editorElement();
   if (!parent) return;
+  if (activeCore === 'xray' && activeFile === 'config') activeFile = 'xray_json';
+  if (activeCore !== 'xray' && (activeFile === 'xray_json' || activeFile === 'xray_jsonc')) activeFile = 'config';
   unmountYamlEditor();
   editorBindings = new AbortController();
   const { signal } = editorBindings;
   const applyButton = document.querySelector<HTMLButtonElement>('#config-apply-active');
-  if (applyButton) applyButton.disabled = currentFile().id !== 'config' || activeConfigSnapshot === null;
+  if (applyButton) applyButton.disabled = currentSnapshot() === null;
 
   setEditorIdentity();
   const file = currentFile();
   const storedDraft = sessionStorage.getItem(`${draftKey}${file.id}`);
-  const startWithRouterConfig = routerMode && file.id === 'config';
-  const template = !startWithRouterConfig && (file.id === 'config' || file.id === 'xray_jsonc')
+  const startWithRouterFile = routerMode && (file.id === 'config' || isRouterConfigFile(file.id));
+  // A saved browser draft from an earlier visit must not hide the actual router file.
+  // Preserve in-session edits only after this editor has read a router snapshot.
+  const hasRouterSnapshot = currentSnapshot() !== null;
+  const template = !startWithRouterFile && (file.id === 'config' || file.id === 'xray_jsonc')
     ? getDefaultTemplate(file.id === 'config' ? 'mihomo' : 'xray').content : '';
-  const initial = storedDraft ?? (startWithRouterConfig ? '' : template);
+  const initial = startWithRouterFile && !hasRouterSnapshot ? '' : storedDraft ?? template;
   if (storedDraft === null && initial) sessionStorage.setItem(`${draftKey}${file.id}`, initial);
   const updateListener = EditorView.updateListener.of((update) => {
     if (!update.docChanged) return;
@@ -199,7 +218,7 @@ export function mountYamlEditor(routerMode = false): void {
       if (!nextFile || !draftFiles.some((candidate) => candidate.id === nextFile)) return;
       activeFile = nextFile;
       sessionStorage.setItem(activeFileKey, activeFile);
-      mountYamlEditor(routerMode);
+      mountYamlEditor(routerMode, activeCore);
       const activeEditor = document.querySelector<HTMLElement>('#yaml-editor .cm-content');
       activeEditor?.focus();
     }, { signal });
@@ -251,22 +270,24 @@ export function mountYamlEditor(routerMode = false): void {
   }, { signal });
   document.querySelector<HTMLButtonElement>('#config-load-active')?.addEventListener('click', async (event) => {
     const button = event.currentTarget as HTMLButtonElement;
-    if (!editor || currentFile().id !== 'config') return;
+    const fileId = currentFile().id;
+    if (!editor || (fileId !== 'config' && !isRouterConfigFile(fileId))) return;
     const requestedEditor = editor;
-    if (editor.state.doc.length && !window.confirm('Загрузить активный конфиг Mihomo с роутера вместо текущего текста редактора? На роутер ничего записываться не будет.')) return;
+    if (editor.state.doc.length && !window.confirm('Загрузить файл с роутера вместо текущего текста редактора? На роутер ничего записываться не будет.')) return;
     button.disabled = true;
     button.textContent = 'Читаем…';
     try {
-      const active = await getActiveMihomoConfig();
-      if (editor !== requestedEditor || currentFile().id !== 'config') return;
+      const active = fileId === 'config' ? await getActiveMihomoConfig() : await getRouterConfigFile(fileId);
+      if (editor !== requestedEditor || currentFile().id !== fileId) return;
       editor.dispatch({ changes: { from: 0, to: editor.state.doc.length, insert: active.content } });
       const hint = document.querySelector<HTMLElement>('#editor-file-hint');
       if (hint) hint.textContent = `Снимок с роутера · ${active.path}`;
-      activeConfigSnapshot = active.content;
+      if (fileId === 'config') activeConfigSnapshot = active.content;
+      else listSnapshots.set(fileId, active.content);
       const applyButton = document.querySelector<HTMLButtonElement>('#config-apply-active');
       if (applyButton) applyButton.disabled = false;
-      validateStructuredDocument(active.content);
-      setValidation(`Прочитан активный конфиг с роутера: ${active.path}.`, null);
+      if (fileId === 'config') validateStructuredDocument(active.content);
+      setValidation(`Прочитан файл ${active.path}.`, null);
     } catch (error) {
       setValidation(error instanceof Error ? `Не удалось прочитать конфиг: ${error.message}` : 'Не удалось прочитать конфиг роутера.', false);
     } finally {
@@ -276,46 +297,58 @@ export function mountYamlEditor(routerMode = false): void {
   }, { signal });
   document.querySelector<HTMLButtonElement>('#config-apply-active')?.addEventListener('click', async (event) => {
     const button = event.currentTarget as HTMLButtonElement;
-    if (!editor || currentFile().id !== 'config' || button.disabled) return;
+    const fileId = currentFile().id;
+    if (!editor || (fileId !== 'config' && !isRouterConfigFile(fileId)) || button.disabled) return;
     const requestedEditor = editor;
     const content = editor.state.doc.toString();
-    const expectedContent = activeConfigSnapshot;
+    const expectedContent = currentSnapshot();
     if (expectedContent === null) {
-      setValidation('Считайте актуальный конфиг с роутера перед применением.', false);
+      setValidation('Считайте актуальный файл с роутера перед сохранением.', false);
       return;
     }
-    if (!validateYaml(content)) return;
-    if (!window.confirm('Применить этот конфиг к Mihomo на роутере? Ядро проверит файл перед заменой. Будет создана резервная копия; если перезапуск не подтвердится, backend попробует восстановить предыдущий конфиг.')) return;
+    if (fileId === 'config' && !validateYaml(content)) return;
+    if (fileId === 'xkeen' && !validateStructuredDocument(content)) return;
+    if (!window.confirm(fileId === 'config'
+      ? 'Применить этот конфиг к Mihomo на роутере? Ядро проверит файл перед заменой. Будет создана резервная копия.'
+      : 'Сохранить этот список на роутере? Будет создана резервная копия. Для применения сетевых правил потребуется перезапуск XKeen.')) return;
     button.disabled = true;
-    button.textContent = 'Проверка и запись…';
+    button.textContent = fileId === 'config' ? 'Проверка и запись…' : 'Сохраняем…';
     try {
-      const result = await applyActiveMihomoConfig(content, expectedContent);
-      if (editor !== requestedEditor || currentFile().id !== 'config') return;
-      activeConfigSnapshot = content;
+      const result = fileId === 'config'
+        ? await applyActiveMihomoConfig(content, expectedContent)
+        : await saveRouterConfigFile(fileId, content, expectedContent);
+      if (editor !== requestedEditor || currentFile().id !== fileId) return;
+      if (fileId === 'config') activeConfigSnapshot = content;
+      else listSnapshots.set(fileId, content);
       const hint = document.querySelector<HTMLElement>('#editor-file-hint');
-      if (hint) hint.textContent = `Активный конфиг · ${result.path}`;
+      if (hint) hint.textContent = `Файл на роутере · ${result.path}`;
       setValidation(`${result.detail}. Резервная копия: ${result.backup}`, true);
     } catch (error) {
-      if (error instanceof Error && error.message.includes('HTTP 409')) activeConfigSnapshot = null;
+      if (error instanceof Error && error.message.includes('HTTP 409')) {
+        if (fileId === 'config') activeConfigSnapshot = null;
+        else listSnapshots.delete(fileId);
+      }
       setValidation(error instanceof Error ? `Применение не выполнено: ${error.message}` : 'Применение конфигурации завершилось ошибкой.', false);
     } finally {
-      button.disabled = activeConfigSnapshot === null;
-      button.textContent = 'Применить';
+      button.disabled = currentSnapshot() === null;
+      button.textContent = fileId === 'config' ? 'Применить' : 'Сохранить';
     }
   }, { signal });
 
-  if (startWithRouterConfig && storedDraft === null) {
+  if (startWithRouterFile && !hasRouterSnapshot) {
     const requestedEditor = editor;
-    setValidation('Считываем активный config.yaml…', null);
-    void getActiveMihomoConfig(signal).then((active) => {
-      if (editor !== requestedEditor || !editor || editor.state.doc.length || sessionStorage.getItem(`${draftKey}config`) !== null) return;
+    setValidation(`Считываем ${file.filename} с роутера…`, null);
+    const loaded = file.id === 'config' ? getActiveMihomoConfig(signal) : getRouterConfigFile(file.id as RouterConfigFile, signal);
+    void loaded.then((active) => {
+      if (editor !== requestedEditor || !editor || editor.state.doc.length) return;
       editor.dispatch({ changes: { from: 0, to: 0, insert: active.content } });
-      activeConfigSnapshot = active.content;
+      if (file.id === 'config') activeConfigSnapshot = active.content;
+      else listSnapshots.set(file.id as RouterConfigFile, active.content);
       const applyButton = document.querySelector<HTMLButtonElement>('#config-apply-active');
       if (applyButton) applyButton.disabled = false;
-      setValidation(`Активный config.yaml · ${editor.state.doc.lines} строк`, null);
+      setValidation(`${active.path} · ${editor.state.doc.lines} строк`, null);
     }).catch((error: unknown) => {
-      if (!signal.aborted) setValidation(error instanceof Error ? `Не удалось считать config.yaml: ${error.message}` : 'Не удалось считать config.yaml.', false);
+      if (!signal.aborted) setValidation(error instanceof Error ? `Не удалось считать ${file.filename}: ${error.message}` : `Не удалось считать ${file.filename}.`, false);
     });
   }
 }

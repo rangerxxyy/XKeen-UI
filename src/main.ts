@@ -5,7 +5,7 @@ import { closeAllMihomoConnections, closeMihomoConnection, controlXkeen, getCore
 import { applyPingResults, renderConnections, renderSelectors } from './mihomo-view';
 import { renderDns } from './dns-view';
 import { bindCoreReleaseChecks, openCoreReleaseDialog } from './core-releases';
-import { checkAppUpdate, listAppReleases, type AppRelease } from './app-update';
+import { listAppReleases, type AppRelease } from './app-update';
 
 type Page = 'selectors' | 'connections' | 'configuration' | 'dns';
 
@@ -47,6 +47,7 @@ const logFiles = [
   { id: 'web-error', label: 'Web · error.log' },
   { id: 'nfqws2', label: 'nfqws2.log' },
   { id: 'xkeen-ui', label: 'XKeen UI · xkeen-ui.log' },
+  { id: 'app-update', label: 'XKeen UI · update.log' },
 ];
 let selectedLog = 'xray-error';
 let logData: SystemLog | null = null;
@@ -59,9 +60,7 @@ let logController: AbortController | undefined;
 let logRefreshTimer: number | undefined;
 let appRelease: AppRelease | null = null;
 let appReleases: AppRelease[] = [];
-let appUpdateMessage = 'Проверка ещё не выполнялась.';
-let appUpdateCheckedAt = 0;
-let appUpdatePending: Promise<void> | null = null;
+let appUpdateMessage = 'Подготовка обновления…';
 let appUpdateInstalling = false;
 
 const app = document.querySelector<HTMLDivElement>('#app');
@@ -73,6 +72,17 @@ function escapeHtml(value: string): string {
     const entities: Record<string, string> = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' };
     return entities[character] ?? character;
   });
+}
+
+function formatAppReleaseNotes(value: string): string {
+  return value.split(/\r?\n/).map((line) => {
+    const trimmed = line.trim();
+    if (!trimmed) return '<br>';
+    const heading = trimmed.match(/^#{1,4}\s+(.+)$/);
+    if (heading) return `<strong>${escapeHtml(heading[1] ?? '')}</strong>`;
+    if (/^[-*]\s+/.test(trimmed)) return `<span class="app-release-bullet">•</span> ${escapeHtml(trimmed.replace(/^[-*]\s+/, '').replace(/`([^`]+)`/g, '$1'))}`;
+    return escapeHtml(trimmed.replace(/`([^`]+)`/g, '$1').replace(/\[([^\]]+)\]\((https?:\/\/[^)]+)\)/g, '$1 ($2)'));
+  }).join('<br>');
 }
 
 function serviceBadge(service: ServiceStatus): string {
@@ -90,13 +100,10 @@ function renderHeader(): string {
   const serviceText = service ? (service.state === 'running' ? 'Сервис активен' : service.state === 'stopped' ? 'Сервис остановлен' : 'Статус недоступен') : 'Состояние загружается';
   const memory = status?.memory ? `RAM ${status.memory.usedMb}/${status.memory.totalMb} MB` : 'RAM —';
   const cpu = status?.cpuPercent === null || status?.cpuPercent === undefined ? 'CPU —' : `CPU ${Math.round(status.cpuPercent)}%`;
-  const updateLink = appRelease && !isInstalledNewerOrEqual(status?.appVersion ?? APP_VERSION, appRelease.tag_name)
-    ? `<a class="app-update-chip" href="${escapeHtml(appRelease.html_url)}" target="_blank" rel="noopener noreferrer" title="Открыть стабильный релиз XKeen UI">Доступно ${escapeHtml(appRelease.tag_name)} ↗</a>`
-    : '';
   return `<header class="topbar">
     <button class="top-status" id="services" type="button" aria-label="Открыть состояние сервисов"><span class="connection-led ${state.connected ? 'is-online' : 'is-offline'}"></span><span><strong>${escapeHtml(serviceText)}</strong><small>${state.connected ? `${memory} · ${cpu}` : 'Ожидание соединения с backend'}</small></span></button>
     <a class="brand" href="#selectors" aria-label="XKeen UI, селекторы"><span class="brand-mark">X</span><span>XKeen <b>UI</b></span></a>
-    <div class="top-actions"><button class="version-chip core-chip core-version-button" id="core-version" type="button" title="Показать последние стабильные релизы Mihomo"><span class="chip-icon">◈</span> Mihomo <b>${coreLabel}</b><span aria-hidden="true">⌄</span></button><button class="version-chip app-version-button" id="app-version" type="button" title="Показать последние стабильные релизы XKeen UI"><span class="chip-icon">⬡</span> XKeen UI <b>v${status?.appVersion ?? APP_VERSION}</b><span aria-hidden="true">⌄</span></button>${updateLink}<button class="icon-button" id="refresh" title="Обновить статус" aria-label="Обновить статус">↻</button><button class="icon-button" id="settings" title="Настройки" aria-label="Настройки">⚙</button></div>
+    <div class="top-actions"><button class="version-chip core-chip core-version-button" id="core-version" type="button" title="Выбрать релиз Mihomo"><span class="chip-icon">◈</span> Mihomo <b>${coreLabel}</b><span class="chip-chevron" aria-hidden="true">⌄</span></button><button class="version-chip app-version-button" id="app-version" type="button" title="Выбрать релиз XKeen UI"><span class="chip-icon">⬡</span> XKeen UI <b>v${status?.appVersion ?? APP_VERSION}</b><span class="chip-chevron" aria-hidden="true">⌄</span></button><button class="icon-button" id="refresh" title="Обновить статус" aria-label="Обновить статус">↻</button><button class="icon-button" id="settings" title="Настройки" aria-label="Настройки">⚙</button></div>
   </header>`;
 }
 
@@ -322,7 +329,6 @@ function render(): void {
     'mihomo', async () => (await getCoreSources()).mihomo, mihomoVersion,
   ));
   document.querySelector<HTMLButtonElement>('#services')?.addEventListener('click', renderServicesDialog);
-  document.querySelector<HTMLButtonElement>('#check-app-update')?.addEventListener('click', () => void runAppUpdateCheck(true));
   document.querySelectorAll<HTMLButtonElement>('[data-xkeen-action]').forEach((button) => {
     button.addEventListener('click', () => void runXkeenAction(button.dataset.xkeenAction));
   });
@@ -386,41 +392,6 @@ async function runDnsQuery(): Promise<void> {
       if (activePage === 'dns') render();
     }
   }
-}
-
-async function runAppUpdateCheck(force = false): Promise<void> {
-  if (appUpdatePending) return appUpdatePending;
-  if (!force && Date.now() - appUpdateCheckedAt < 6 * 60 * 60 * 1000) return;
-  const installedVersion = state.status?.appVersion ?? APP_VERSION;
-  appUpdateMessage = 'Проверяем стабильные релизы GitHub…';
-  const messageNode = document.querySelector<HTMLElement>('#app-update-message');
-  const checkButton = document.querySelector<HTMLButtonElement>('#check-app-update');
-  if (messageNode) messageNode.textContent = appUpdateMessage;
-  if (checkButton) { checkButton.disabled = true; checkButton.textContent = 'Проверяем…'; }
-  const pending = (async () => {
-    try {
-      appRelease = await checkAppUpdate(installedVersion);
-      appUpdateMessage = appRelease
-        ? `Доступно обновление ${appRelease.tag_name}.`
-        : 'Установлена последняя стабильная версия.';
-      appUpdateCheckedAt = Date.now();
-    } catch (error) {
-      appUpdateMessage = error instanceof Error ? error.message : 'Не удалось проверить обновления.';
-      appUpdateCheckedAt = Date.now() - 5 * 60 * 60 * 1000;
-    } finally {
-      appUpdatePending = null;
-      const message = document.querySelector<HTMLElement>('#app-update-message');
-      const button = document.querySelector<HTMLButtonElement>('#check-app-update');
-      const installButton = document.querySelector<HTMLButtonElement>('#install-app-update');
-      if (message) message.textContent = appUpdateMessage;
-      if (button) { button.disabled = false; button.textContent = 'Проверить'; }
-      if (installButton) installButton.hidden = !appRelease || state.status?.mode !== 'router';
-      render();
-    }
-  })();
-  appUpdatePending = pending;
-  render();
-  await pending;
 }
 
 function bindMihomoInteractions(): void {
@@ -568,41 +539,50 @@ function updateChrome(): void {
 async function openAppReleases(): Promise<void> {
   const dialog = document.createElement('dialog');
   dialog.className = 'modal';
-  dialog.innerHTML = `<form method="dialog" class="modal-panel app-releases-panel"><div class="modal-heading"><span class="modal-icon">⬡</span><h2>Релизы XKeen UI</h2><button class="icon-button" aria-label="Закрыть">×</button></div><p class="modal-note" id="app-releases-status" aria-live="polite">Загружаем последние стабильные версии GitHub…</p><label class="source-field"><span><strong>Версия</strong><small>Показаны стабильные ARM64-сборки</small></span><select id="app-release-select" disabled><option>Загрузка…</option></select></label><div class="app-release-actions"><a id="app-release-link" class="editor-button" target="_blank" rel="noopener noreferrer" hidden>Открыть релиз ↗</a><button id="app-release-install" class="editor-button editor-button-primary" type="button" disabled>Установить выбранную</button></div><button class="button button-primary modal-close">Готово</button></form>`;
+  dialog.innerHTML = `<form method="dialog" class="modal-panel app-releases-panel"><div class="modal-heading"><span class="modal-icon">⬡</span><h2>Обновление XKeen UI</h2><button class="icon-button" aria-label="Закрыть">×</button></div><div class="core-release-dialog-source"><span>zxc-rv/XKeen-UI</span><span class="core-release-github">GitHub</span></div><p class="modal-note" id="app-releases-status" aria-live="polite">Загружаем последние стабильные сборки…</p><div id="app-release-list" class="app-release-list" aria-label="Стабильные релизы XKeen UI"></div><div class="app-release-actions"><a id="app-release-link" class="editor-button" target="_blank" rel="noopener noreferrer" hidden>Открыть релиз ↗</a><button id="app-release-install" class="editor-button editor-button-primary" type="button" disabled>Установить</button></div><button class="button button-primary modal-close">Закрыть</button></form>`;
   document.body.append(dialog);
   dialog.showModal();
   dialog.addEventListener('close', () => dialog.remove(), { once: true });
   const status = dialog.querySelector<HTMLElement>('#app-releases-status')!;
-  const select = dialog.querySelector<HTMLSelectElement>('#app-release-select')!;
+  const list = dialog.querySelector<HTMLElement>('#app-release-list')!;
   const link = dialog.querySelector<HTMLAnchorElement>('#app-release-link')!;
   const install = dialog.querySelector<HTMLButtonElement>('#app-release-install')!;
   const choose = () => {
-    appRelease = appReleases.find((release) => release.tag_name === select.value) ?? null;
+    appRelease = appReleases.find((release) => release.tag_name === list.querySelector<HTMLElement>('.app-release-card.is-selected')?.dataset.releaseTag) ?? null;
     const installed = state.status?.appVersion ?? APP_VERSION;
     const downgrade = appRelease ? isInstalledNewerOrEqual(installed, appRelease.tag_name) && !isInstalledNewerOrEqual(appRelease.tag_name, installed) : false;
     link.href = appRelease?.html_url ?? '#';
     link.hidden = !appRelease;
     install.disabled = !appRelease || state.status?.mode !== 'router' || appUpdateInstalling || downgrade;
     install.textContent = downgrade ? 'Выбрана версия старее установленной'
-      : appRelease && !isInstalledNewerOrEqual(installed, appRelease.tag_name) ? 'Установить выбранную' : 'Переустановить выбранную';
+      : appRelease && !isInstalledNewerOrEqual(installed, appRelease.tag_name) ? 'Установить' : 'Переустановить';
   };
-  select.addEventListener('change', choose);
+  list.addEventListener('click', (event) => {
+    const card = (event.target as HTMLElement).closest<HTMLButtonElement>('.app-release-card');
+    if (!card) return;
+    list.querySelectorAll('.app-release-card').forEach((item) => item.classList.toggle('is-selected', item === card));
+    list.querySelectorAll('.app-release-card').forEach((item) => item.setAttribute('aria-pressed', String(item === card)));
+    choose();
+  });
   install.addEventListener('click', () => {
     if (appRelease && window.confirm(`Установить XKeen UI ${appRelease.tag_name}? Панель перезапустится.`)) {
+      install.disabled = true;
+      install.textContent = 'Устанавливаем…';
       void installAppUpdate();
     }
   });
   try {
     appReleases = await listAppReleases();
     if (!appReleases.length) throw new Error('Стабильные ARM64-релизы не найдены.');
-    select.replaceChildren(...appReleases.map((release) => {
-      const option = document.createElement('option');
-      option.value = release.tag_name;
-      option.textContent = `${release.tag_name}${release.tag_name === `v${state.status?.appVersion}` ? ' · установлена' : ''}`;
-      return option;
-    }));
-    select.disabled = false;
-    status.textContent = `Загружено релизов: ${appReleases.length}. Текущая версия: v${state.status?.appVersion ?? APP_VERSION}.`;
+    const installed = `v${(state.status?.appVersion ?? APP_VERSION).replace(/^v/i, '')}`;
+    list.innerHTML = appReleases.map((release, index) => {
+      const title = release.name?.trim() || release.tag_name;
+      const date = release.published_at ? new Date(release.published_at).toLocaleDateString('ru-RU') : 'дата не указана';
+      const notes = (release.body ?? '').trim().slice(0, 1800);
+      return `<button type="button" class="app-release-card${index === 0 ? ' is-selected' : ''}" data-release-tag="${escapeHtml(release.tag_name)}" aria-pressed="${index === 0}"><span class="app-release-card-heading"><strong>${escapeHtml(title)}</strong><span class="app-release-radio" aria-hidden="true"></span></span><span class="app-release-date">${escapeHtml(release.tag_name === installed ? `${date} · установлена` : date)}</span>${notes ? `<span class="app-release-notes">${formatAppReleaseNotes(notes)}</span>` : ''}</button>`;
+    }).join('');
+    status.textContent = `Выберите версию · установлена ${installed}`;
+    appRelease = appReleases[0] ?? null;
     choose();
   } catch (error) {
     status.textContent = error instanceof Error ? error.message : 'Не удалось загрузить релизы.';
@@ -634,9 +614,7 @@ function openSettings(): void {
     });
     if (!content) return;
     if (tab === 'general') {
-      content.innerHTML = `<div class="setting-row"><div><strong>Порт панели</strong><small>Адрес локального Rust API и интерфейса</small></div><span class="setting-value">${state.status?.port ?? 1001}</span></div><div class="setting-row"><div><strong>Backend</strong><small>${state.connected ? 'Соединение установлено' : 'Соединение отсутствует'}</small></div><span class="state-pill ${state.connected ? 'state-running' : 'state-unavailable'}">${state.connected ? 'На связи' : 'Ожидание'}</span></div><div class="setting-row"><div><strong>Режим</strong><small>Источник системных сведений</small></div><span class="setting-value">${state.status?.mode === 'router' ? 'Роутер' : 'Симуляция'}</span></div><div class="setting-row"><div><strong>Версия XKeen UI</strong><small>Установленная сборка</small></div><span class="setting-value">${escapeHtml(state.status?.appVersion ?? APP_VERSION)}</span></div><div class="app-update-settings"><div><strong>Обновления панели</strong><small id="app-update-message" aria-live="polite">${escapeHtml(appUpdateMessage)}</small></div><span><button class="editor-button" id="check-app-update" type="button" ${appUpdatePending ? 'disabled' : ''}>${appUpdatePending ? 'Проверяем…' : 'Проверить'}</button> <button class="editor-button editor-button-primary" id="install-app-update" type="button" ${appRelease && state.status?.mode === 'router' ? '' : 'hidden'} ${appUpdateInstalling ? 'disabled' : ''}>${appUpdateInstalling ? 'Устанавливаем…' : 'Установить'}</button></span></div>`;
-      content.querySelector<HTMLButtonElement>('#install-app-update')?.addEventListener('click', () => void installAppUpdate());
-      content.querySelector<HTMLButtonElement>('#check-app-update')?.addEventListener('click', () => void runAppUpdateCheck(true));
+      content.innerHTML = `<div class="setting-row"><div><strong>Порт панели</strong><small>Адрес локального Rust API и интерфейса</small></div><span class="setting-value">${state.status?.port ?? 1001}</span></div><div class="setting-row"><div><strong>Backend</strong><small>${state.connected ? 'Соединение установлено' : 'Соединение отсутствует'}</small></div><span class="state-pill ${state.connected ? 'state-running' : 'state-unavailable'}">${state.connected ? 'На связи' : 'Ожидание'}</span></div><div class="setting-row"><div><strong>Режим</strong><small>Источник системных сведений</small></div><span class="setting-value">${state.status?.mode === 'router' ? 'Роутер' : 'Симуляция'}</span></div><div class="setting-row"><div><strong>Версия XKeen UI</strong><small>Релизы доступны по нажатию версии в верхней панели</small></div><span class="setting-value">${escapeHtml(state.status?.appVersion ?? APP_VERSION)}</span></div>`;
       return;
     }
     if (tab === 'sources') {
@@ -702,14 +680,17 @@ async function installAppUpdate(): Promise<void> {
   const expectedVersion = state.status.appVersion;
   appUpdateInstalling = true;
   appUpdateMessage = `Загружаем ${appRelease.tag_name} и перезапускаем панель…`;
-  const messageNode = document.querySelector<HTMLElement>('#app-update-message');
-  const installButton = document.querySelector<HTMLButtonElement>('#install-app-update');
+  const messageNode = document.querySelector<HTMLElement>('#app-releases-status');
+  const installButton = document.querySelector<HTMLButtonElement>('#app-release-install');
   if (messageNode) messageNode.textContent = appUpdateMessage;
   if (installButton) { installButton.disabled = true; installButton.textContent = 'Устанавливаем…'; }
   render();
   try {
     await requestAppUpdate(appRelease.tag_name);
-    const deadline = Date.now() + 120_000;
+    // Direct GitHub and both configured proxy fallbacks may each need a
+    // connection timeout on constrained router links.
+    const deadline = Date.now() + 8 * 60_000;
+    let lastDiagnosticCheck = 0;
     while (Date.now() < deadline) {
       await new Promise((resolve) => window.setTimeout(resolve, 2500));
       try {
@@ -722,14 +703,45 @@ async function installAppUpdate(): Promise<void> {
       } catch {
         // The service restarts while the package is replaced; keep polling.
       }
+      if (Date.now() - lastDiagnosticCheck >= 10_000) {
+        lastDiagnosticCheck = Date.now();
+        try {
+          const updateLog = await getSystemLog('app-update', AbortSignal.timeout(5000));
+          const entries = [...updateLog.lines].reverse();
+          const success = entries.find((line) => line.includes(`SUCCESS: XKeen UI ${appRelease?.tag_name} installed`));
+          if (success && appRelease?.tag_name === `v${expectedVersion.replace(/^v/i, '')}`) {
+            appUpdateMessage = `Переустановка ${appRelease.tag_name} завершена.`;
+            window.location.reload();
+            return;
+          }
+          const failure = entries.find((line) => line.includes('ERROR:'));
+          if (failure) throw new Error(`Обновление остановлено: ${failure.replace(/^.*?ERROR:\s*/, '')}`);
+        } catch (error) {
+          if (error instanceof Error && error.message.startsWith('Обновление остановлено:')) throw error;
+          // The update log is created after the detached updater starts.
+        }
+      }
     }
-    throw new Error('Панель не подтвердила обновление за 2 минуты. Проверьте статус службы и повторите проверку.');
+    let diagnostic = '';
+    try {
+      const updateLog = await getSystemLog('app-update', AbortSignal.timeout(5000));
+      const details = updateLog.lines.slice(-8).join(' · ');
+      if (details) diagnostic = ` Последняя диагностика: ${details}`;
+    } catch {
+      // The installer may not have created its log yet if startup itself failed.
+    }
+    throw new Error(`Обновление не подтвердилось за 8 минут.${diagnostic || ' Откройте журнал «XKeen UI · update.log» для причины.'}`);
   } catch (error) {
     appUpdateMessage = error instanceof Error ? error.message : 'Обновление панели завершилось ошибкой.';
   } finally {
     appUpdateInstalling = false;
-    const message = document.querySelector<HTMLElement>('#app-update-message');
+    const message = document.querySelector<HTMLElement>('#app-releases-status');
     if (message) message.textContent = appUpdateMessage;
+    if (installButton) {
+      installButton.disabled = false;
+      installButton.textContent = appRelease && !isInstalledNewerOrEqual(state.status?.appVersion ?? APP_VERSION, appRelease.tag_name)
+        ? 'Установить выбранную' : 'Переустановить выбранную';
+    }
     render();
   }
 }
@@ -753,7 +765,6 @@ async function refresh(): Promise<void> {
   if (activePage === 'configuration') updateChrome();
   else render();
   if (activePage === 'selectors' || activePage === 'connections') void loadMihomoPage(activePage);
-  void runAppUpdateCheck();
 }
 
 render();

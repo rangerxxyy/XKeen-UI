@@ -2,6 +2,8 @@ export interface AppRelease {
   tag_name: string;
   name: string | null;
   html_url: string;
+  published_at: string | null;
+  body: string | null;
   prerelease: boolean;
   draft: boolean;
   assets: Array<{ name: string }>;
@@ -14,6 +16,8 @@ function validateReleaseList(value: unknown): AppRelease[] {
     const release = item as Partial<AppRelease>;
     return typeof release.tag_name === 'string' && versionParts(release.tag_name) !== null
       && (typeof release.name === 'string' || release.name === null)
+      && (release.published_at === undefined || typeof release.published_at === 'string' || release.published_at === null)
+      && (release.body === undefined || typeof release.body === 'string' || release.body === null)
       && typeof release.html_url === 'string' && release.prerelease === false && release.draft === false
       && Array.isArray(release.assets)
       && release.assets.every((asset) => asset && typeof asset.name === 'string')

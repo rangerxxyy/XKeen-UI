@@ -687,7 +687,9 @@ async function installAppUpdate(): Promise<void> {
   render();
   try {
     await requestAppUpdate(appRelease.tag_name);
-    const deadline = Date.now() + 120_000;
+    // Direct GitHub and both configured proxy fallbacks may each need a
+    // connection timeout on constrained router links.
+    const deadline = Date.now() + 8 * 60_000;
     let lastDiagnosticCheck = 0;
     while (Date.now() < deadline) {
       await new Promise((resolve) => window.setTimeout(resolve, 2500));
@@ -728,7 +730,7 @@ async function installAppUpdate(): Promise<void> {
     } catch {
       // The installer may not have created its log yet if startup itself failed.
     }
-    throw new Error(`Обновление не подтвердилось за 2 минуты.${diagnostic || ' Откройте журнал «XKeen UI · update.log» для причины.'}`);
+    throw new Error(`Обновление не подтвердилось за 8 минут.${diagnostic || ' Откройте журнал «XKeen UI · update.log» для причины.'}`);
   } catch (error) {
     appUpdateMessage = error instanceof Error ? error.message : 'Обновление панели завершилось ошибкой.';
   } finally {

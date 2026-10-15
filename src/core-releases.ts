@@ -19,7 +19,9 @@ type GitHubRelease = {
   assets: GitHubAsset[];
 };
 
-const RESPONSE_LIMIT = 512 * 1024;
+// GitHub release objects include markdown notes. Keep the payload bounded, but
+// request a small page so popular forks do not exceed the limit unnecessarily.
+const RESPONSE_LIMIT = 2 * 1024 * 1024;
 
 export function normalizeCoreRepository(value: string): string {
   const trimmed = value.trim();
@@ -100,11 +102,29 @@ function element<K extends keyof HTMLElementTagNameMap>(tag: K, className?: stri
 function renderReleaseList(target: HTMLElement, core: CoreName, releases: GitHubRelease[]): void {
   const list = element('div', 'core-release-list');
   const visible = releases.filter((release) => isStableCompatibleRelease(core, release));
+  if (visible.length) {
+    const picker = element('label', 'core-release-picker');
+    picker.append(element('span', undefined, 'Версия'));
+    const select = element('select', 'editor-select');
+    select.setAttribute('aria-label', `Выберите версию ${core}`);
+    for (const release of visible) {
+      const option = document.createElement('option');
+      option.value = release.tag_name;
+      option.textContent = `${release.name || release.tag_name} · ${release.tag_name}`;
+      select.append(option);
+    }
+    select.addEventListener('change', () => {
+      list.querySelector<HTMLElement>(`[data-release-tag="${CSS.escape(select.value)}"]`)?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    });
+    picker.append(select);
+    list.append(picker);
+  }
   if (!visible.length) {
     list.append(element('p', 'core-release-empty', 'Стабильного релиза с архивом для ARM64 пока нет.'));
   }
   for (const release of visible) {
     const card = element('article', 'core-release-card');
+    card.dataset.releaseTag = release.tag_name;
     const heading = element('div', 'core-release-heading');
     const title = element('strong', undefined, release.name || release.tag_name);
     const badges = element('span', 'core-release-badges');
@@ -147,6 +167,35 @@ function renderReleaseList(target: HTMLElement, core: CoreName, releases: GitHub
   target.replaceChildren(list, ...(visible.length ? [note] : []));
 }
 
+export async function openCoreReleaseDialog(
+  core: CoreName,
+  repository: () => Promise<string>,
+  currentVersion?: string | null,
+): Promise<void> {
+  const dialog = document.createElement('dialog');
+  dialog.className = 'modal core-release-dialog';
+  const title = core === 'mihomo' ? 'Обновление Mihomo' : 'Обновление Xray';
+  dialog.innerHTML = `<form method="dialog" class="modal-panel core-release-dialog-panel"><div class="modal-heading"><span class="modal-icon">⇩</span><h2>${title}</h2><button class="icon-button" aria-label="Закрыть">×</button></div><div class="core-release-dialog-source"><span id="core-release-repository">Источник загружается…</span><span class="core-release-github">GitHub</span></div><p class="modal-note" id="core-release-dialog-status" aria-live="polite">Загружаем последние стабильные ARM64-релизы…</p><div id="core-release-dialog-list" class="core-release-dialog-list"></div><button class="button button-primary modal-close" type="submit">Готово</button></form>`;
+  document.body.append(dialog);
+  dialog.addEventListener('close', () => dialog.remove(), { once: true });
+  dialog.showModal();
+
+  const status = dialog.querySelector<HTMLElement>('#core-release-dialog-status')!;
+  const source = dialog.querySelector<HTMLElement>('#core-release-repository')!;
+  const target = dialog.querySelector<HTMLElement>('#core-release-dialog-list')!;
+  try {
+    const configuredRepository = await repository();
+    const repo = normalizeCoreRepository(configuredRepository);
+    source.textContent = repo;
+    const releases = await fetchCoreReleases(configuredRepository);
+    const visible = releases.filter((release) => isStableCompatibleRelease(core, release));
+    status.textContent = `${visible.length} стабильных ARM64-релизов${currentVersion ? ` · установлена ${currentVersion}` : ''}`;
+    renderReleaseList(target, core, releases);
+  } catch (error) {
+    status.textContent = error instanceof Error ? error.message : 'Не удалось загрузить релизы.';
+  }
+}
+
 async function installRelease(core: CoreName, tag: string, asset: string, sha256: string, button: HTMLButtonElement, list: HTMLElement): Promise<void> {
   const confirmed = window.confirm(
     `Установить ${core} ${tag} из выбранного GitHub-репозитория? Архив будет проверен по SHA-256. Если ядро сейчас обслуживает трафик, его конфигурация будет проверена, создана резервная копия, а сервис кратко перезапущен. При ошибке панель попробует восстановить прежний бинарник.`,
@@ -172,7 +221,7 @@ async function installRelease(core: CoreName, tag: string, asset: string, sha256
 
 export async function fetchCoreReleases(repository: string): Promise<GitHubRelease[]> {
   const repo = normalizeCoreRepository(repository);
-  const response = await fetch(`https://api.github.com/repos/${repo}/releases?per_page=30`, {
+  const response = await fetch(`https://api.github.com/repos/${repo}/releases?per_page=5`, {
     headers: { Accept: 'application/vnd.github+json', 'X-GitHub-Api-Version': '2022-11-28' },
     credentials: 'omit',
     cache: 'no-store',

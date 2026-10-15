@@ -4,8 +4,8 @@ import './style.css';
 import { closeAllMihomoConnections, closeMihomoConnection, controlXkeen, getCoreSources, getHealth, getMihomoConnections, getMihomoSelectors, getMihomoVersion, getStatus, getSystemLog, getXkeenStatus, pingMihomoGroup, queryMihomoDns, requestAppUpdate, saveCoreSources, selectMihomoProxy, type ApiState, type CoreSources, type MihomoConnections, type MihomoDnsResult, type MihomoSelector, type ServiceStatus, type SystemLog, type XkeenStatus } from './api';
 import { applyPingResults, renderConnections, renderSelectors } from './mihomo-view';
 import { renderDns } from './dns-view';
-import { bindCoreReleaseChecks } from './core-releases';
-import { checkAppUpdate, type AppRelease } from './app-update';
+import { bindCoreReleaseChecks, openCoreReleaseDialog } from './core-releases';
+import { checkAppUpdate, listAppReleases, type AppRelease } from './app-update';
 
 type Page = 'selectors' | 'connections' | 'configuration' | 'dns';
 
@@ -58,6 +58,7 @@ let logFilter = '';
 let logController: AbortController | undefined;
 let logRefreshTimer: number | undefined;
 let appRelease: AppRelease | null = null;
+let appReleases: AppRelease[] = [];
 let appUpdateMessage = 'Проверка ещё не выполнялась.';
 let appUpdateCheckedAt = 0;
 let appUpdatePending: Promise<void> | null = null;
@@ -89,13 +90,13 @@ function renderHeader(): string {
   const serviceText = service ? (service.state === 'running' ? 'Сервис активен' : service.state === 'stopped' ? 'Сервис остановлен' : 'Статус недоступен') : 'Состояние загружается';
   const memory = status?.memory ? `RAM ${status.memory.usedMb}/${status.memory.totalMb} MB` : 'RAM —';
   const cpu = status?.cpuPercent === null || status?.cpuPercent === undefined ? 'CPU —' : `CPU ${Math.round(status.cpuPercent)}%`;
-  const updateLink = appRelease
+  const updateLink = appRelease && !isInstalledNewerOrEqual(status?.appVersion ?? APP_VERSION, appRelease.tag_name)
     ? `<a class="app-update-chip" href="${escapeHtml(appRelease.html_url)}" target="_blank" rel="noopener noreferrer" title="Открыть стабильный релиз XKeen UI">Доступно ${escapeHtml(appRelease.tag_name)} ↗</a>`
     : '';
   return `<header class="topbar">
     <button class="top-status" id="services" type="button" aria-label="Открыть состояние сервисов"><span class="connection-led ${state.connected ? 'is-online' : 'is-offline'}"></span><span><strong>${escapeHtml(serviceText)}</strong><small>${state.connected ? `${memory} · ${cpu}` : 'Ожидание соединения с backend'}</small></span></button>
     <a class="brand" href="#selectors" aria-label="XKeen UI, селекторы"><span class="brand-mark">X</span><span>XKeen <b>UI</b></span></a>
-    <div class="top-actions"><span class="version-chip core-chip"><span class="chip-icon">◈</span> Mihomo <b>${coreLabel}</b></span><span class="version-chip"><span class="chip-icon">⬡</span> XKeen UI <b>v${status?.appVersion ?? APP_VERSION}</b></span>${updateLink}<button class="icon-button" id="refresh" title="Обновить статус" aria-label="Обновить статус">↻</button><button class="icon-button" id="settings" title="Настройки" aria-label="Настройки">⚙</button></div>
+    <div class="top-actions"><button class="version-chip core-chip core-version-button" id="core-version" type="button" title="Показать последние стабильные релизы Mihomo"><span class="chip-icon">◈</span> Mihomo <b>${coreLabel}</b><span aria-hidden="true">⌄</span></button><button class="version-chip app-version-button" id="app-version" type="button" title="Показать последние стабильные релизы XKeen UI"><span class="chip-icon">⬡</span> XKeen UI <b>v${status?.appVersion ?? APP_VERSION}</b><span aria-hidden="true">⌄</span></button>${updateLink}<button class="icon-button" id="refresh" title="Обновить статус" aria-label="Обновить статус">↻</button><button class="icon-button" id="settings" title="Настройки" aria-label="Настройки">⚙</button></div>
   </header>`;
 }
 
@@ -316,6 +317,10 @@ function render(): void {
   });
   document.querySelectorAll<HTMLButtonElement>('#refresh,#refresh-secondary,#retry').forEach((button) => button.addEventListener('click', () => void refresh()));
   document.querySelector<HTMLButtonElement>('#settings')?.addEventListener('click', openSettings);
+  document.querySelector<HTMLButtonElement>('#app-version')?.addEventListener('click', () => void openAppReleases());
+  document.querySelector<HTMLButtonElement>('#core-version')?.addEventListener('click', () => void openCoreReleaseDialog(
+    'mihomo', async () => (await getCoreSources()).mihomo, mihomoVersion,
+  ));
   document.querySelector<HTMLButtonElement>('#services')?.addEventListener('click', renderServicesDialog);
   document.querySelector<HTMLButtonElement>('#check-app-update')?.addEventListener('click', () => void runAppUpdateCheck(true));
   document.querySelectorAll<HTMLButtonElement>('[data-xkeen-action]').forEach((button) => {
@@ -552,8 +557,66 @@ function updateChrome(): void {
     currentFooter.replaceWith(container.firstElementChild!);
   }
   document.querySelector<HTMLButtonElement>('#refresh')?.addEventListener('click', () => void refresh());
+  document.querySelector<HTMLButtonElement>('#app-version')?.addEventListener('click', () => void openAppReleases());
+  document.querySelector<HTMLButtonElement>('#core-version')?.addEventListener('click', () => void openCoreReleaseDialog(
+    'mihomo', async () => (await getCoreSources()).mihomo, mihomoVersion,
+  ));
   document.querySelector<HTMLButtonElement>('#settings')?.addEventListener('click', openSettings);
   document.querySelector<HTMLButtonElement>('#services')?.addEventListener('click', renderServicesDialog);
+}
+
+async function openAppReleases(): Promise<void> {
+  const dialog = document.createElement('dialog');
+  dialog.className = 'modal';
+  dialog.innerHTML = `<form method="dialog" class="modal-panel app-releases-panel"><div class="modal-heading"><span class="modal-icon">⬡</span><h2>Релизы XKeen UI</h2><button class="icon-button" aria-label="Закрыть">×</button></div><p class="modal-note" id="app-releases-status" aria-live="polite">Загружаем последние стабильные версии GitHub…</p><label class="source-field"><span><strong>Версия</strong><small>Показаны стабильные ARM64-сборки</small></span><select id="app-release-select" disabled><option>Загрузка…</option></select></label><div class="app-release-actions"><a id="app-release-link" class="editor-button" target="_blank" rel="noopener noreferrer" hidden>Открыть релиз ↗</a><button id="app-release-install" class="editor-button editor-button-primary" type="button" disabled>Установить выбранную</button></div><button class="button button-primary modal-close">Готово</button></form>`;
+  document.body.append(dialog);
+  dialog.showModal();
+  dialog.addEventListener('close', () => dialog.remove(), { once: true });
+  const status = dialog.querySelector<HTMLElement>('#app-releases-status')!;
+  const select = dialog.querySelector<HTMLSelectElement>('#app-release-select')!;
+  const link = dialog.querySelector<HTMLAnchorElement>('#app-release-link')!;
+  const install = dialog.querySelector<HTMLButtonElement>('#app-release-install')!;
+  const choose = () => {
+    appRelease = appReleases.find((release) => release.tag_name === select.value) ?? null;
+    const installed = state.status?.appVersion ?? APP_VERSION;
+    const downgrade = appRelease ? isInstalledNewerOrEqual(installed, appRelease.tag_name) && !isInstalledNewerOrEqual(appRelease.tag_name, installed) : false;
+    link.href = appRelease?.html_url ?? '#';
+    link.hidden = !appRelease;
+    install.disabled = !appRelease || state.status?.mode !== 'router' || appUpdateInstalling || downgrade;
+    install.textContent = downgrade ? 'Выбрана версия старее установленной'
+      : appRelease && !isInstalledNewerOrEqual(installed, appRelease.tag_name) ? 'Установить выбранную' : 'Переустановить выбранную';
+  };
+  select.addEventListener('change', choose);
+  install.addEventListener('click', () => {
+    if (appRelease && window.confirm(`Установить XKeen UI ${appRelease.tag_name}? Панель перезапустится.`)) {
+      void installAppUpdate();
+    }
+  });
+  try {
+    appReleases = await listAppReleases();
+    if (!appReleases.length) throw new Error('Стабильные ARM64-релизы не найдены.');
+    select.replaceChildren(...appReleases.map((release) => {
+      const option = document.createElement('option');
+      option.value = release.tag_name;
+      option.textContent = `${release.tag_name}${release.tag_name === `v${state.status?.appVersion}` ? ' · установлена' : ''}`;
+      return option;
+    }));
+    select.disabled = false;
+    status.textContent = `Загружено релизов: ${appReleases.length}. Текущая версия: v${state.status?.appVersion ?? APP_VERSION}.`;
+    choose();
+  } catch (error) {
+    status.textContent = error instanceof Error ? error.message : 'Не удалось загрузить релизы.';
+  }
+}
+
+function isInstalledNewerOrEqual(installed: string, selected: string): boolean {
+  const parts = (value: string) => value.replace(/^v/, '').split('.').map(Number);
+  const current = parts(installed);
+  const target = parts(selected);
+  for (let i = 0; i < 3; i += 1) {
+    if ((current[i] ?? 0) !== (target[i] ?? 0)) return (current[i] ?? 0) > (target[i] ?? 0);
+  }
+  return true;
 }
 
 function openSettings(): void {
@@ -582,8 +645,8 @@ function openSettings(): void {
         : 'В локальной симуляции значения хранятся в памяти до перезапуска backend.';
       content.innerHTML = `<p class="modal-note">Задайте GitHub-репозитории форков Xray и Mihomo. Здесь хранится адрес источника релизов; установленный путь ядра не меняется. ${sourceStorageNote}</p>
         <label class="source-field"><span><strong>Источник Xray</strong><small>Формат: github.com/владелец/репозиторий</small></span><input id="source-xray" type="url" autocomplete="url" placeholder="https://github.com/XTLS/Xray-core"></label>
-        <label class="source-field"><span><strong>Сборка Mihomo</strong></span><select id="source-mihomo-preset"><option value="official">Оригинальный Mihomo</option><option value="prizrak">Prizrak-Core</option><option value="custom">Другой форк</option></select></label>
-        <label class="source-field"><span><strong>GitHub-источник Mihomo</strong><small>Выбор источника не обновляет уже установленное ядро</small></span><input id="source-mihomo" type="url" autocomplete="url" placeholder="https://github.com/MetaCubeX/mihomo"></label>
+        <label class="source-field"><span><strong>Источник релизов Mihomo</strong><small>Можно указать репозиторий установленного форка или другой GitHub-репозиторий</small></span><select id="source-mihomo-preset"><option value="official">Оригинальный Mihomo · MetaCubeX</option><option value="prizrak">Prizrak-Core</option><option value="custom">Другой форк</option></select></label>
+        <label class="source-field"><span><strong>Репозиторий</strong><small>Проверка релизов использует это значение; сохранение не заменяет установленное ядро</small></span><input id="source-mihomo" type="url" autocomplete="url" placeholder="https://github.com/MetaCubeX/mihomo"></label>
         <div class="core-release-checks"><section><div><strong>Xray</strong><small>Проверить последние ARM64-релизы</small></div><button type="button" class="editor-button" data-core-release="xray">Проверить релизы</button></section><div id="releases-xray" aria-live="polite"></div>
         <section><div><strong>Mihomo</strong><small>Проверить последние ARM64-релизы</small></div><button type="button" class="editor-button" data-core-release="mihomo">Проверить релизы</button></section><div id="releases-mihomo" aria-live="polite"></div></div>
         <div class="source-save-row"><span class="sources-feedback" id="sources-feedback" aria-live="polite">Загружаем сохранённые значения…</span><button class="editor-button editor-button-primary" type="button" id="save-core-sources">Сохранить источники</button></div>`;
@@ -645,7 +708,7 @@ async function installAppUpdate(): Promise<void> {
   if (installButton) { installButton.disabled = true; installButton.textContent = 'Устанавливаем…'; }
   render();
   try {
-    await requestAppUpdate();
+    await requestAppUpdate(appRelease.tag_name);
     const deadline = Date.now() + 120_000;
     while (Date.now() < deadline) {
       await new Promise((resolve) => window.setTimeout(resolve, 2500));

@@ -40,10 +40,11 @@ describe('requestAppUpdate', () => {
     }));
     vi.stubGlobal('fetch', fetchMock);
 
-    await expect(requestAppUpdate()).resolves.toBeUndefined();
+    await expect(requestAppUpdate('v0.3.0')).resolves.toBeUndefined();
     expect(fetchMock).toHaveBeenCalledWith('/api/v1/app/update', {
       method: 'POST',
-      headers: { Accept: 'application/json' },
+      headers: { Accept: 'application/json', 'Content-Type': 'application/json' },
+      body: JSON.stringify({ tag: 'v0.3.0' }),
     });
   });
 });

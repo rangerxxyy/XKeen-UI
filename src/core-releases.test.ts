@@ -141,7 +141,7 @@ describe('fetchCoreReleases', () => {
     await expect(fetchCoreReleases('https://github.com/owner/repo.git'))
       .resolves.toHaveLength(1);
     expect(fetchMock).toHaveBeenCalledWith(
-      'https://api.github.com/repos/owner/repo/releases?per_page=30',
+      'https://api.github.com/repos/owner/repo/releases?per_page=5',
       expect.objectContaining({
         credentials: 'omit',
         cache: 'no-store',
@@ -180,7 +180,7 @@ describe('fetchCoreReleases', () => {
   it('enforces the response byte limit when content length is omitted', async () => {
     const body = new ReadableStream<Uint8Array>({
       start(controller) {
-        controller.enqueue(new Uint8Array(512 * 1024));
+        controller.enqueue(new Uint8Array(2 * 1024 * 1024));
         controller.enqueue(new Uint8Array(1));
       },
     });

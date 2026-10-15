@@ -8,6 +8,7 @@
 | API-01 | Версионируемые API-контракты и ошибки | [ ] | Контракты документированы, некорректные запросы имеют проверяемые ответы |
 | AUTH-01 | Локальная авторизация и защита панели | [~] | Router API требует токен; изменяющие Mihomo requests проверяют точное совпадение Origin/Host; полноценные accounts/session и reverse-proxy сценарии ещё не реализованы |
 | CORE-REPO-01 | Источники GitHub-релизов Xray/Mihomo в ⚙ | [~] | URL отдельно сохраняются; UI читает GitHub API и показывает ARM64 assets. Rust updater проверяет asset, SHA-256 и ELF/AArch64, сохраняет backup и умеет rollback; реальные пользовательские ядра не обновлялись |
+| APP-UPD-01 | Обновление XKeen UI из панели и показ CPU | [~] | Проверка обновлений предлагает установку стабильного релиза; backend запускает штатный `install.sh update`; статус показывает CPU по дельте `/proc/stat`. Требуются Rust CI и установка тестовой сборки на роутер |
 | XRAY-01 | Интеграция Xray и диагностики | [ ] | Состояние подтверждается API или штатной проверкой целевого ядра |
 | MIHOMO-01 | Clash API: группы, selectors, connections и logs | [~] | Чтение proxies/connections/rules/version и переключение Selector подключены; фильтр и явное подтверждение закрытия одного/всех connections готовы; runtime-проверка управляющих действий на реальном ядре не выполнена |
 | DNS-01 | Отдельные DNS Mihomo и Xray | [~] | Read-only Mihomo DNS lookup подключён; DNS settings, Xray DNS, validation, backup, apply, rollback не реализованы |

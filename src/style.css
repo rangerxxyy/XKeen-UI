@@ -325,6 +325,7 @@ body { background: #090a14; }
 .source-field strong { font-size: .9rem; }
 .source-field small { color: var(--muted); font-size: .78rem; }
 .source-field input { min-width: 0; width: 100%; padding: .7rem .8rem; color: var(--text); background: #080e1b; border: 1px solid #30415d; border-radius: .55rem; font: inherit; }
+.source-field select { min-width: 0; width: 100%; padding: .7rem .8rem; color: var(--text); background: #080e1b; border: 1px solid #30415d; border-radius: .55rem; font: inherit; }
 .source-field input:focus-visible { outline: 2px solid var(--cyan); outline-offset: 2px; }
 .source-save-row { display: flex; align-items: center; justify-content: space-between; gap: 1rem; padding-top: 1rem; }
 .sources-feedback { color: var(--muted); font-size: .78rem; }

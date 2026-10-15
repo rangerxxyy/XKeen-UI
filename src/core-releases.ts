@@ -68,6 +68,10 @@ export function findCompatibleCoreAsset(core: CoreName, assets: GitHubAsset[]): 
     && !/\.sha256(?:sum)?$/i.test(asset.name));
 }
 
+export function isStableCompatibleRelease(core: CoreName, release: GitHubRelease): boolean {
+  return !release.draft && !release.prerelease && Boolean(findCompatibleCoreAsset(core, release.assets));
+}
+
 export function safeCoreReleaseLink(value: string): string | undefined {
   try {
     const url = new URL(value);
@@ -95,16 +99,16 @@ function element<K extends keyof HTMLElementTagNameMap>(tag: K, className?: stri
 
 function renderReleaseList(target: HTMLElement, core: CoreName, releases: GitHubRelease[]): void {
   const list = element('div', 'core-release-list');
-  const visible = releases.filter((release) => !release.draft);
+  const visible = releases.filter((release) => isStableCompatibleRelease(core, release));
   if (!visible.length) {
-    list.append(element('p', 'core-release-empty', 'В репозитории нет опубликованных релизов.'));
+    list.append(element('p', 'core-release-empty', 'Стабильного релиза с архивом для ARM64 пока нет.'));
   }
   for (const release of visible) {
     const card = element('article', 'core-release-card');
     const heading = element('div', 'core-release-heading');
     const title = element('strong', undefined, release.name || release.tag_name);
     const badges = element('span', 'core-release-badges');
-    badges.append(element('span', `core-release-badge${release.prerelease ? ' is-preview' : ''}`, release.prerelease ? 'Предварительная' : 'Стабильная'));
+    badges.append(element('span', 'core-release-badge', 'Стабильная'));
     const asset = findCompatibleCoreAsset(core, release.assets);
     badges.append(element('span', `core-release-badge${asset ? ' is-ready' : ' is-muted'}`, asset ? 'ARM64' : 'Нет архива ARM64'));
     heading.append(title, badges);
@@ -140,7 +144,7 @@ function renderReleaseList(target: HTMLElement, core: CoreName, releases: GitHub
     list.append(card);
   }
   const note = element('p', 'core-release-note', 'Перед заменой активного ядра панель проверяет его конфигурацию и сохраняет предыдущий бинарник. Если перезапуск не подтвердится, выполняется откат.');
-  target.replaceChildren(list, note);
+  target.replaceChildren(list, ...(visible.length ? [note] : []));
 }
 
 async function installRelease(core: CoreName, tag: string, asset: string, sha256: string, button: HTMLButtonElement, list: HTMLElement): Promise<void> {
@@ -168,7 +172,7 @@ async function installRelease(core: CoreName, tag: string, asset: string, sha256
 
 export async function fetchCoreReleases(repository: string): Promise<GitHubRelease[]> {
   const repo = normalizeCoreRepository(repository);
-  const response = await fetch(`https://api.github.com/repos/${repo}/releases?per_page=1`, {
+  const response = await fetch(`https://api.github.com/repos/${repo}/releases?per_page=30`, {
     headers: { Accept: 'application/vnd.github+json', 'X-GitHub-Api-Version': '2022-11-28' },
     credentials: 'omit',
     cache: 'no-store',

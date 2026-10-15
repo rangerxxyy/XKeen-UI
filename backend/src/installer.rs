@@ -739,16 +739,16 @@ mod tests {
 
     #[test]
     fn automatic_port_selection_uses_1001_then_the_next_free_port() {
-        let port = first_available_port(20_000).unwrap();
-        let _occupied = TcpListener::bind(("0.0.0.0", port)).unwrap();
+        let occupied = TcpListener::bind(("0.0.0.0", 0)).unwrap();
+        let port = occupied.local_addr().unwrap().port();
         assert!(first_available_port(port).unwrap() > port);
         assert!(choose_port(None).unwrap() >= DEFAULT_PORT);
     }
 
     #[test]
     fn explicit_port_is_rejected_when_already_in_use() {
-        let port = first_available_port(20_000).unwrap();
-        let _occupied = TcpListener::bind(("0.0.0.0", port)).unwrap();
+        let occupied = TcpListener::bind(("0.0.0.0", 0)).unwrap();
+        let port = occupied.local_addr().unwrap().port();
         assert_eq!(
             choose_port(Some(port)).unwrap_err().kind(),
             std::io::ErrorKind::AddrInUse

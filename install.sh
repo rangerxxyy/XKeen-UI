@@ -55,7 +55,7 @@ while [ "$#" -gt 0 ]; do
     --port) [ "$#" -ge 2 ] || fail 'укажите порт'; PORT=$2; shift ;;
     --prefix) [ "$#" -ge 2 ] || fail 'укажите каталог'; PREFIX=$2; APP_DIR=$PREFIX/share/xkeen-ui; shift ;;
     --version) [ "$#" -ge 2 ] || fail 'укажите версию'; VERSION=$2; shift ;;
-    -h|--help) printf 'install.sh [install|update|remove] [--port PORT] [--prefix DIR]\n'; exit 0 ;;
+    -h|--help) printf 'install.sh [install|update|remove] [--port PORT] [--prefix DIR] [--version vX.Y.Z]\n'; exit 0 ;;
     *) fail "неизвестный аргумент: $1" ;;
   esac
   shift

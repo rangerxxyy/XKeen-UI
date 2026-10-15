@@ -559,7 +559,7 @@ body { color:var(--text); -webkit-font-smoothing:antialiased; }
 }
 
 /* Compact header controls and configuration files in the right end of the main navigation. */
-.app-shell { max-width:1460px; }
+.app-shell { max-width:1436px; }
 .top-status-cluster { display:flex; align-items:center; gap:12px; min-width:0; }
 .top-status { cursor:default; }
 .top-status:hover strong { color:#d7e0f0; }
@@ -569,6 +569,7 @@ body { color:var(--text); -webkit-font-smoothing:antialiased; }
 .header-service-stop { color:#ff7d86; }
 .header-service-stop:hover:not(:disabled) { border-color:#a84b5a; background:#3a1e2b; }
 .header-service-action:disabled { opacity:.45; cursor:wait; }
+.header-service-action svg { width:15px; height:15px; fill:none; stroke:currentColor; stroke-width:1.8; stroke-linecap:round; stroke-linejoin:round; }
 .navigation-spacer { flex:1 1 auto; }
 .navigation-config { gap:5px; }
 .config-file-nav { display:flex; align-items:center; gap:2px; margin-left:auto; padding:4px; border-radius:11px; background:#1a2232; }
@@ -593,3 +594,19 @@ body { color:var(--text); -webkit-font-smoothing:antialiased; }
   .config-layout .editor-statusbar { align-items:stretch; flex-direction:column; }
   .config-layout .editor-actions { justify-content:flex-end; }
 }
+
+/* Runtime protocol flags and per-node ping stay visible on compact selector cards. */
+.proxy-option { display:flex; flex-direction:column; min-height:70px; padding:7px 9px 6px; }
+.proxy-option-select { width:100%; min-width:0; min-height:0; flex:1; display:flex; flex-direction:column; justify-content:flex-start; padding:0; border:0; background:transparent; color:inherit; font:inherit; text-align:left; cursor:pointer; }
+.proxy-option-select:focus-visible { outline:2px solid var(--cyan); outline-offset:-2px; }
+.proxy-option-select[aria-current="true"] { cursor:default; }
+.proxy-option-name { display:flex; align-items:center; gap:7px; min-width:0; overflow:hidden; margin:0!important; font-size:13px!important; line-height:1.35; text-overflow:ellipsis; white-space:nowrap; }
+.proxy-option-bottom { width:100%; padding-top:5px; }
+.proxy-transport-badges { display:flex; align-items:center; gap:4px; min-width:0; }
+.proxy-protocol-badge,.proxy-transport-badge { display:inline-flex; align-items:center; min-height:16px; padding:0 6px; border:1px solid #35435b; border-radius:999px; color:#b9c8df; background:#0b1321; font-size:9px; font-weight:600; line-height:1; letter-spacing:.01em; }
+.proxy-transport-badge.is-udp { border-color:#275f61; color:#75d9cb; background:#102625; }
+.proxy-transport-badge.is-xudp { border-color:#3657a0; color:#a9c6ff; background:#111d39; }
+.proxy-ping-value { padding:2px 4px; border:1px solid transparent; border-radius:5px; background:transparent; cursor:pointer; transition:background .15s,border-color .15s; }
+.proxy-ping-value:hover,.proxy-ping-value:focus-visible { border-color:#3e5475; background:#14243a; }
+.proxy-ping-value:disabled { cursor:wait; opacity:.7; }
+@media(max-width:600px) { .proxy-option { min-height:72px; padding:7px 8px 6px; } }

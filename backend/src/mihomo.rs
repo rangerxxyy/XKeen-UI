@@ -241,6 +241,68 @@ impl MihomoClient {
         Ok(json!({"results": results}))
     }
 
+    pub async fn ping_proxy_in_group(&self, group: &str, name: &str) -> Result<Value, MihomoError> {
+        if !valid_name(group) || !valid_name(name) {
+            return Err(MihomoError::InvalidSelection);
+        }
+        let payload = self.get_json(Endpoint::Proxies).await?;
+        let proxies = payload
+            .get("proxies")
+            .and_then(Value::as_object)
+            .ok_or(MihomoError::InvalidSelection)?;
+        let group_data = proxies.get(group).ok_or(MihomoError::InvalidSelection)?;
+        if group_data.get("type").and_then(Value::as_str) != Some("Selector")
+            || !group_data
+                .get("all")
+                .and_then(Value::as_array)
+                .is_some_and(|entries| entries.iter().any(|entry| entry.as_str() == Some(name)))
+        {
+            return Err(MihomoError::InvalidSelection);
+        }
+
+        let mut proxy = proxies.get(name).cloned();
+        if proxy.is_none() {
+            if let Ok(provider_payload) = self.get_json(Endpoint::ProxyProviders).await {
+                proxy = provider_payload
+                    .get("providers")
+                    .and_then(Value::as_object)
+                    .into_iter()
+                    .flat_map(|providers| providers.values())
+                    .filter_map(|provider| provider.get("proxies").and_then(Value::as_array))
+                    .flatten()
+                    .find(|entry| entry.get("name").and_then(Value::as_str) == Some(name))
+                    .cloned();
+            }
+        }
+        let proxy_type = proxy
+            .as_ref()
+            .and_then(|proxy| proxy.get("type"))
+            .and_then(Value::as_str);
+        if proxy.is_none()
+            || matches!(
+                proxy_type,
+                Some(
+                    "Selector"
+                        | "URLTest"
+                        | "LoadBalance"
+                        | "Fallback"
+                        | "Direct"
+                        | "Reject"
+                        | "Compatible"
+                )
+            )
+        {
+            return Err(MihomoError::InvalidSelection);
+        }
+
+        let delay = self
+            .ping_proxy(name)
+            .await
+            .ok()
+            .and_then(|value| value.get("delay").and_then(Value::as_u64));
+        Ok(json!({"results": [{"name": name, "delay": delay}]}))
+    }
+
     async fn ping_proxy(&self, name: &str) -> Result<Value, MihomoError> {
         let name = utf8_percent_encode(name, NON_ALPHANUMERIC);
         let url = utf8_percent_encode("https://www.gstatic.com/generate_204", NON_ALPHANUMERIC);
@@ -618,6 +680,37 @@ mod tests {
         assert!(paths
             .iter()
             .any(|path| path.starts_with("/proxies/Sweden/delay?")));
+        server.abort();
+    }
+
+    #[tokio::test]
+    async fn ping_proxy_in_group_checks_only_the_requested_real_node() {
+        let (client, mut requests, server) = mock_controller(vec![
+            (StatusCode::OK, r#"{"proxies":{"Main":{"type":"Selector","all":["Finland","Sweden","Auto"]},"Finland":{"type":"VLESS"},"Auto":{"type":"URLTest"}}}"#.into()),
+            (StatusCode::OK, r#"{"delay":42}"#.into()),
+        ]).await;
+        let result = client.ping_proxy_in_group("Main", "Finland").await.unwrap();
+        assert_eq!(result["results"][0]["name"], "Finland");
+        assert_eq!(result["results"][0]["delay"], 42);
+        assert_eq!(next_request(&mut requests).await.1, "/proxies");
+        assert!(next_request(&mut requests)
+            .await
+            .1
+            .starts_with("/proxies/Finland/delay?"));
+        server.abort();
+    }
+
+    #[tokio::test]
+    async fn ping_proxy_in_group_rejects_nodes_outside_the_group() {
+        let (client, mut requests, server) = mock_controller(vec![(
+            StatusCode::OK,
+            r#"{"proxies":{"Main":{"type":"Selector","all":["Finland"]},"Sweden":{"type":"VLESS"}}}"#.into(),
+        )]).await;
+        assert!(matches!(
+            client.ping_proxy_in_group("Main", "Sweden").await,
+            Err(MihomoError::InvalidSelection)
+        ));
+        assert_eq!(next_request(&mut requests).await.1, "/proxies");
         server.abort();
     }
 

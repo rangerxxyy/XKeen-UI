@@ -308,9 +308,6 @@ export function mountYamlEditor(routerMode = false, activeCore: 'mihomo' | 'xray
     }
     if (fileId === 'config' && !validateYaml(content)) return;
     if (fileId === 'xkeen' && !validateStructuredDocument(content)) return;
-    if (!window.confirm(fileId === 'config'
-      ? 'Применить этот конфиг к Mihomo на роутере? Ядро проверит файл перед заменой. Будет создана резервная копия.'
-      : 'Сохранить этот список на роутере? Будет создана резервная копия. Для применения сетевых правил потребуется перезапуск XKeen.')) return;
     button.disabled = true;
     button.textContent = fileId === 'config' ? 'Проверка и запись…' : 'Сохраняем…';
     try {

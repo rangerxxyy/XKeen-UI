@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { applyActiveMihomoConfig, getMihomoSelectors, getRouterConfigFile, getSystemLog, pingMihomoGroup, requestAppUpdate, saveRouterConfigFile } from './api';
+import { applyActiveMihomoConfig, getMihomoSelectors, getRouterConfigFile, getSystemLog, pingMihomoGroup, pingMihomoProxy, requestAppUpdate, saveRouterConfigFile } from './api';
 
 afterEach(() => vi.unstubAllGlobals());
 
@@ -127,6 +127,22 @@ describe('pingMihomoGroup', () => {
       method: 'POST',
       headers: { Accept: 'application/json', 'Content-Type': 'application/json' },
       body: JSON.stringify({ group: 'Main' }),
+      signal: undefined,
+    });
+  });
+});
+
+describe('pingMihomoProxy', () => {
+  it('checks one named node in the selected group', async () => {
+    const fetchMock = vi.fn(async () => new Response(JSON.stringify({ results: [{ name: 'Finland', delay: 42 }] }), {
+      headers: { 'Content-Type': 'application/json' },
+    }));
+    vi.stubGlobal('fetch', fetchMock);
+    await expect(pingMihomoProxy('Main', 'Finland')).resolves.toEqual({ name: 'Finland', delay: 42 });
+    expect(fetchMock).toHaveBeenCalledWith('/api/v1/mihomo/proxies/ping-one', {
+      method: 'POST',
+      headers: { Accept: 'application/json', 'Content-Type': 'application/json' },
+      body: JSON.stringify({ group: 'Main', name: 'Finland' }),
       signal: undefined,
     });
   });

@@ -63,11 +63,16 @@ function proxyCard(group: MihomoSelector): string {
     const selected = option.name === group.current;
     const state = option.alive === null ? 'Проверка недоступна' : option.alive ? 'Узел отвечает' : 'Узел не отвечает';
     const delay = option.delay === null ? '—' : `${option.delay} мс`;
+    const badges = [
+      option.type && option.type !== 'Unknown' ? `<span class="proxy-protocol-badge">${escapeHtml(option.type.toLowerCase())}</span>` : '',
+      option.xudp === true ? '<span class="proxy-transport-badge is-xudp">xudp</span>' : option.udp === true ? '<span class="proxy-transport-badge is-udp">udp</span>' : '',
+    ].filter(Boolean).join('');
     const icon = option.icon ? `<img class="proxy-option-icon" src="${escapeHtml(option.icon)}" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.hidden=true">` : '';
-    return `<button class="proxy-option ${selected ? 'is-selected' : ''}" type="button" data-proxy-group="${escapeHtml(group.name)}" data-proxy-name="${escapeHtml(option.name)}" ${selected ? 'aria-current="true"' : ''} aria-label="${selected ? 'Текущий узел' : 'Выбрать узел'}: ${escapeHtml(option.name)}">
-      <strong class="proxy-option-name" title="${escapeHtml(option.name)}">${icon}${escapeHtml(option.name)}</strong>
-      <div class="proxy-option-bottom"><span class="proxy-type">${escapeHtml(option.type)}</span><span class="proxy-health ${option.alive === true ? 'is-alive' : option.alive === false ? 'is-dead' : ''}" title="${state}"><i></i>${delay}</span></div>
-    </button>`;
+    return `<div class="proxy-option ${selected ? 'is-selected' : ''}">
+      <button class="proxy-option-select" type="button" data-proxy-group="${escapeHtml(group.name)}" data-proxy-name="${escapeHtml(option.name)}" ${selected ? 'aria-current="true"' : ''} aria-label="${selected ? 'Текущий узел' : 'Выбрать узел'}: ${escapeHtml(option.name)}">
+        <strong class="proxy-option-name" title="${escapeHtml(option.name)}">${icon}${escapeHtml(option.name)}</strong>
+      </button><div class="proxy-option-bottom"><span class="proxy-transport-badges">${badges}</span><button class="proxy-health proxy-ping-value ${option.alive === true ? 'is-alive' : option.alive === false ? 'is-dead' : ''}" type="button" data-ping-proxy="${escapeHtml(option.name)}" data-ping-group="${escapeHtml(group.name)}" title="${state}. Нажмите, чтобы проверить ping" aria-label="Проверить ping узла ${escapeHtml(option.name)}"><i></i><span>${delay}</span></button></div>
+    </div>`;
   }).join('');
   const groupIcon = group.icon ? `<img class="selector-group-icon" src="${escapeHtml(group.icon)}" alt="" referrerpolicy="no-referrer" onerror="this.hidden=true">` : '';
   return `<section class="selector-card"><header class="selector-card-heading"><div><h2>${groupIcon}${escapeHtml(group.name)}</h2></div><div class="selector-heading-actions"><button class="ping-group" type="button" data-ping-group="${escapeHtml(group.name)}" aria-label="Пинг всех серверов группы ${escapeHtml(group.name)}" title="Пинг всех серверов группы">ϟ</button></div></header>

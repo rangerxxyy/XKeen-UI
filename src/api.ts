@@ -59,6 +59,8 @@ export interface MihomoProxyOption {
   icon: string | null;
   alive: boolean | null;
   delay: number | null;
+  udp?: boolean;
+  xudp?: boolean;
 }
 
 export interface MihomoSelector {
@@ -86,6 +88,20 @@ export async function pingMihomoGroup(group: string, signal?: AbortSignal): Prom
     if (!isRecord(raw) || typeof raw.name !== 'string' || !(raw.delay === null || (typeof raw.delay === 'number' && Number.isFinite(raw.delay)))) return [];
     return [{ name: raw.name, delay: raw.delay }];
   });
+}
+
+export async function pingMihomoProxy(group: string, name: string, signal?: AbortSignal): Promise<MihomoPingResult | null> {
+  const response = await fetch('/api/v1/mihomo/proxies/ping-one', {
+    method: 'POST',
+    headers: { Accept: 'application/json', 'Content-Type': 'application/json' },
+    body: JSON.stringify({ group, name }),
+    signal,
+  });
+  const payload = await readJson(response, 'Проверка узла');
+  if (!isRecord(payload) || !Array.isArray(payload.results)) throw new Error('Backend вернул некорректные результаты ping');
+  const raw = payload.results.find((result) => isRecord(result) && result.name === name);
+  if (!isRecord(raw) || !(raw.delay === null || (typeof raw.delay === 'number' && Number.isFinite(raw.delay)))) return null;
+  return { name, delay: raw.delay };
 }
 
 export interface MihomoConnections {
@@ -188,6 +204,8 @@ export async function getMihomoSelectors(signal?: AbortSignal): Promise<MihomoSe
         icon: isRecord(option) && typeof option.icon === 'string' ? option.icon : null,
         alive: isRecord(option) && typeof option.alive === 'boolean' ? option.alive : null,
         delay,
+        ...(typeof option.udp === 'boolean' ? { udp: option.udp } : {}),
+        ...(typeof option.xudp === 'boolean' ? { xudp: option.xudp } : {}),
       }];
     });
     return [{ name: typeof raw.name === 'string' ? raw.name : key, icon: typeof raw.icon === 'string' ? raw.icon : null, current: typeof raw.now === 'string' ? raw.now : null, options }];

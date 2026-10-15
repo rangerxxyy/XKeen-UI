@@ -1,7 +1,7 @@
 import '@fontsource-variable/inter';
 import '@fontsource-variable/jetbrains-mono';
 import './style.css';
-import { closeAllMihomoConnections, closeMihomoConnection, controlXkeen, getActiveMihomoConfig, getCoreSources, getHealth, getMihomoConnections, getMihomoSelectors, getMihomoVersion, getStatus, getSystemLog, getXkeenStatus, pingMihomoGroup, queryMihomoDns, requestAppUpdate, saveCoreSources, selectMihomoProxy, type ApiState, type CoreSources, type MihomoConnections, type MihomoDnsResult, type MihomoSelector, type SystemLog, type XkeenStatus } from './api';
+import { closeAllMihomoConnections, closeMihomoConnection, controlXkeen, getActiveMihomoConfig, getCoreSources, getHealth, getMihomoConnections, getMihomoSelectors, getMihomoVersion, getStatus, getSystemLog, getXkeenStatus, pingMihomoGroup, pingMihomoProxy, queryMihomoDns, requestAppUpdate, saveCoreSources, selectMihomoProxy, type ApiState, type CoreSources, type MihomoConnections, type MihomoDnsResult, type MihomoSelector, type SystemLog, type XkeenStatus } from './api';
 import { applyPingResults, orderSelectorsByConfig, renderConnections, renderSelectors } from './mihomo-view';
 import { renderDns } from './dns-view';
 import { bindCoreReleaseChecks, openCoreReleaseDialog } from './core-releases';
@@ -388,11 +388,14 @@ async function runDnsQuery(): Promise<void> {
 
 function bindMihomoInteractions(): void {
   document.querySelector<HTMLButtonElement>('#mihomo-retry')?.addEventListener('click', () => void loadMihomoPage(activePage));
-  document.querySelectorAll<HTMLButtonElement>('.proxy-option').forEach((button) => {
+  document.querySelectorAll<HTMLButtonElement>('.proxy-option-select').forEach((button) => {
     button.addEventListener('click', () => void selectProxyFromUi(button));
   });
-  document.querySelectorAll<HTMLButtonElement>('[data-ping-group]').forEach((button) => {
+  document.querySelectorAll<HTMLButtonElement>('.ping-group').forEach((button) => {
     button.addEventListener('click', () => void pingGroupFromUi(button));
+  });
+  document.querySelectorAll<HTMLButtonElement>('.ping-proxy').forEach((button) => {
+    button.addEventListener('click', () => void pingProxyFromUi(button));
   });
   document.querySelectorAll<HTMLButtonElement>('[data-close-connection]').forEach((button) => {
     button.addEventListener('click', () => void closeConnectionFromUi(button));
@@ -422,6 +425,24 @@ async function pingGroupFromUi(button: HTMLButtonElement): Promise<void> {
     render();
   } catch (error) {
     button.title = error instanceof Error ? error.message : 'Не удалось проверить серверы';
+  } finally {
+    button.disabled = false;
+    button.textContent = 'ϟ';
+  }
+}
+
+async function pingProxyFromUi(button: HTMLButtonElement): Promise<void> {
+  const group = button.dataset.pingGroup;
+  const name = button.dataset.pingProxy;
+  if (!group || !name || button.disabled) return;
+  button.disabled = true;
+  button.textContent = '…';
+  try {
+    const result = await pingMihomoProxy(group, name, mihomoController?.signal);
+    if (result) selectors = applyPingResults(selectors, [result]);
+    render();
+  } catch (error) {
+    button.title = error instanceof Error ? error.message : 'Не удалось проверить узел';
   } finally {
     button.disabled = false;
     button.textContent = 'ϟ';
@@ -500,8 +521,7 @@ async function selectProxyFromUi(button: HTMLButtonElement): Promise<void> {
   const group = button.dataset.proxyGroup;
   const name = button.dataset.proxyName;
   if (button.getAttribute('aria-current') === 'true') return;
-  if (!group || !name || !window.confirm(`Переключить группу «${group}» на узел «${name}»? Новые соединения группы пойдут через выбранный узел.`)) return;
-  button.disabled = true;
+  if (!group || !name) return;
   button.disabled = true;
   try {
     await selectMihomoProxy(group, name, mihomoController?.signal);

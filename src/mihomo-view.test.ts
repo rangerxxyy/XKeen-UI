@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { applyPingResults, orderSelectorsByConfig } from './mihomo-view';
+import { applyPingResults, orderSelectorsByConfig, renderSelectors } from './mihomo-view';
 import type { MihomoSelector } from './api';
 
 describe('applyPingResults', () => {
@@ -26,6 +26,18 @@ describe('applyPingResults', () => {
     ] }];
     expect(applyPingResults(groups, [{ name: 'Offline', delay: null }])[0]?.options[0])
       .toMatchObject({ alive: false, delay: null });
+  });
+});
+
+describe('renderSelectors', () => {
+  it('renders an independent ping control on each node card', () => {
+    const groups: MihomoSelector[] = [{ name: 'Main', icon: null, current: null, options: [
+      { name: 'Finland', type: 'VLESS', icon: null, alive: null, delay: null },
+    ] }];
+    const html = renderSelectors(groups, false, null);
+    expect(html).toContain('data-ping-proxy="Finland"');
+    expect(html).toContain('data-ping-group="Main"');
+    expect(html).toContain('aria-label="Проверить задержку узла Finland"');
   });
 });
 

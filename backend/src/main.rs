@@ -239,6 +239,13 @@ struct ProxyGroupPing {
 }
 
 #[derive(Deserialize)]
+#[serde(deny_unknown_fields)]
+struct ProxyNodePing {
+    group: String,
+    name: String,
+}
+
+#[derive(Deserialize)]
 struct DnsQuery {
     name: String,
     #[serde(rename = "type")]
@@ -762,6 +769,27 @@ async fn ping_mihomo_group(
     }
 }
 
+async fn ping_mihomo_proxy(
+    State(state): State<AppState>,
+    Json(request): Json<ProxyNodePing>,
+) -> Response {
+    if !state.router_mode {
+        return (
+            StatusCode::SERVICE_UNAVAILABLE,
+            Json(serde_json::json!({"error":"Проверка узлов недоступна в режиме симуляции"})),
+        )
+            .into_response();
+    }
+    match state
+        .mihomo
+        .ping_proxy_in_group(&request.group, &request.name)
+        .await
+    {
+        Ok(result) => Json(result).into_response(),
+        Err(error) => mihomo_error_response(error),
+    }
+}
+
 async fn require_same_origin(request: Request<axum::body::Body>, next: Next) -> Response {
     if same_origin(request.headers()) {
         next.run(request).await
@@ -1050,6 +1078,10 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         .route(
             "/api/v1/mihomo/proxies/ping",
             axum::routing::post(ping_mihomo_group),
+        )
+        .route(
+            "/api/v1/mihomo/proxies/ping-one",
+            axum::routing::post(ping_mihomo_proxy),
         )
         .route(
             "/api/v1/config/active",

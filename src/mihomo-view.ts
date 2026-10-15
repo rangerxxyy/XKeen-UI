@@ -56,8 +56,7 @@ function proxyCard(group: MihomoSelector): string {
 
 export function renderSelectors(groups: MihomoSelector[], loading: boolean, error: string | null): string {
   const state = loadState(loading, error, 'группы');
-  return `<section class="selector-toolbar"><div class="selector-toolbar-title"><h1>Селекторы</h1>${loading ? '<span class="selector-count">Загрузка…</span>' : error ? '' : `<span class="selector-count">${groups.length}</span>`}</div></section>
-  ${state || (groups.length === 0 ? '<section class="mihomo-empty"><span class="mihomo-error-mark">◇</span><strong>Группы Selector не найдены</strong><p>API Mihomo ответил, но не вернул выбираемых групп.</p></section>' : `<div class="selector-list">${groups.map(proxyCard).join('')}</div>`)}
+  return `${state || (groups.length === 0 ? '<section class="mihomo-empty"><span class="mihomo-error-mark">◇</span><strong>Группы Selector не найдены</strong><p>API Mihomo ответил, но не вернул выбираемых групп.</p></section>' : `<div class="selector-list">${groups.map(proxyCard).join('')}</div>`)}
   `;
 }
 
@@ -71,8 +70,7 @@ function connectionRow(connection: MihomoConnection): string {
 export function renderConnections(data: MihomoConnections | null, loading: boolean, error: string | null): string {
   const state = loadState(loading, error, 'соединения');
   const connections = data?.connections ?? [];
-  return `<section class="page-heading mihomo-heading"><h1>Соединения</h1></section>
-  ${state || `<section class="connections-panel"><div class="connections-toolbar"><div class="connection-total"><span class="live-pulse"></span><strong>${connections.length}</strong><span>активных соединений</span></div><label class="connection-search"><span>⌕</span><input id="connection-filter" type="search" placeholder="Хост, маршрут или приложение" aria-label="Фильтр соединений"></label><button class="connection-close-all" id="close-all-connections" ${connections.length ? '' : 'disabled'}>Закрыть все</button></div>
+  return `${state || `<section class="connections-panel"><div class="connections-toolbar"><div class="connection-total"><span class="live-pulse"></span><strong>${connections.length}</strong><span>активных соединений</span></div><label class="connection-search"><span>⌕</span><input id="connection-filter" type="search" placeholder="Хост, маршрут или приложение" aria-label="Фильтр соединений"></label><button class="connection-close-all" id="close-all-connections" ${connections.length ? '' : 'disabled'}>Закрыть все</button></div>
     <div class="traffic-summary"><div><small>ПЕРЕДАНО</small><strong>↑ ${formatBytes(data?.uploadTotal ?? 0)}</strong></div><div><small>ПОЛУЧЕНО</small><strong>↓ ${formatBytes(data?.downloadTotal ?? 0)}</strong></div><span class="traffic-footnote">Счётчики Mihomo · суммарно с запуска ядра</span></div>
     <div class="connection-table-wrap"><table class="connection-table"><thead><tr><th>ХОСТ</th><th>ЦЕПОЧКА · ПРАВИЛО</th><th>ИСТОЧНИК</th><th>ТРАФИК</th><th>НАЧАЛО</th><th></th></tr></thead><tbody>${connections.map(connectionRow).join('')}</tbody></table>
       ${connections.length === 0 ? '<div class="connection-no-results">Сейчас нет активных соединений.</div>' : ''}<div class="connection-no-results is-filtered" hidden>По этому фильтру соединений нет.</div></div></section>`}

@@ -28,16 +28,53 @@ function validateReleaseList(value: unknown): AppRelease[] {
 }
 
 export async function listAppReleases(signal?: AbortSignal): Promise<AppRelease[]> {
-  const response = await fetch('https://api.github.com/repos/rangerxxyy/XKeen-UI/releases?per_page=20', {
-    headers: { Accept: 'application/vnd.github+json', 'X-GitHub-Api-Version': '2022-11-28' },
-    credentials: 'omit', cache: 'no-store', referrerPolicy: 'no-referrer',
-    signal: signal ?? AbortSignal.timeout(12_000),
+  try {
+    const response = await fetch('https://api.github.com/repos/rangerxxyy/XKeen-UI/releases?per_page=20', {
+      headers: { Accept: 'application/vnd.github+json', 'X-GitHub-Api-Version': '2022-11-28' },
+      credentials: 'omit', cache: 'no-store', referrerPolicy: 'no-referrer',
+      signal: signal ?? AbortSignal.timeout(12_000),
+    });
+    if (response.status === 403 || response.status === 429) return listAppReleasesFromFeed(signal);
+    if (!response.ok) throw new Error(`Проверка списка релизов вернула HTTP ${response.status}.`);
+    const length = Number(response.headers.get('Content-Length') || 0);
+    if (length > 1024 * 1024) throw new Error('Список релизов GitHub слишком большой.');
+    return validateReleaseList(await response.json());
+  } catch (error) {
+    if (signal?.aborted) throw error;
+    if (error instanceof TypeError) return listAppReleasesFromFeed(signal);
+    throw error;
+  }
+}
+
+async function listAppReleasesFromFeed(signal?: AbortSignal): Promise<AppRelease[]> {
+  const response = await fetch('/api/v1/app/releases', {
+    headers: { Accept: 'application/atom+xml' },
+    signal: signal ?? AbortSignal.timeout(16_000),
   });
-  if (response.status === 403 || response.status === 429) throw new Error('GitHub ограничил запросы проверки обновлений; повторите позже.');
-  if (!response.ok) throw new Error(`Проверка списка релизов вернула HTTP ${response.status}.`);
-  const length = Number(response.headers.get('Content-Length') || 0);
-  if (length > 1024 * 1024) throw new Error('Список релизов GitHub слишком большой.');
-  return validateReleaseList(await response.json());
+  if (!response.ok) throw new Error('Список релизов GitHub временно недоступен.');
+  const feed = await response.text();
+  if (feed.length > 1024 * 1024) throw new Error('Список релизов GitHub слишком большой.');
+  const xml = new DOMParser().parseFromString(feed, 'application/xml');
+  if (xml.querySelector('parsererror')) throw new Error('Не удалось прочитать список релизов GitHub.');
+  const entries = Array.from(xml.getElementsByTagNameNS('http://www.w3.org/2005/Atom', 'entry'));
+  const releases = entries.map((entry) => {
+    const value = (name: string) => entry.getElementsByTagNameNS('http://www.w3.org/2005/Atom', name)[0]?.textContent ?? '';
+    const link = entry.getElementsByTagNameNS('http://www.w3.org/2005/Atom', 'link')[0]?.getAttribute('href') ?? '';
+    const tag = link.match(/^https:\/\/github\.com\/rangerxxyy\/XKeen-UI\/releases\/tag\/(v\d+\.\d+\.\d+)$/)?.[1] ?? '';
+    const html = value('content').replace(/<li[^>]*>/gi, '- ').replace(/<\/(?:h[1-6]|p|li|ul)>/gi, '\n').replace(/<br\s*\/?\s*>/gi, '\n');
+    const body = new DOMParser().parseFromString(html, 'text/html').body.textContent?.trim() ?? '';
+    return {
+      tag_name: tag,
+      name: value('title'),
+      html_url: link,
+      published_at: value('updated'),
+      body,
+      prerelease: false,
+      draft: false,
+      assets: [{ name: 'xkeen-ui-linux-aarch64.tar.gz' }, { name: 'SHA256SUMS' }],
+    };
+  });
+  return validateReleaseList(releases);
 }
 
 function versionParts(value: string): number[] | null {

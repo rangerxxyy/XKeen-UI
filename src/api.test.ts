@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { applyActiveMihomoConfig, getMihomoSelectors, getSystemLog, pingMihomoGroup, requestAppUpdate } from './api';
+import { applyActiveMihomoConfig, getMihomoSelectors, getRouterConfigFile, getSystemLog, pingMihomoGroup, requestAppUpdate, saveRouterConfigFile } from './api';
 
 afterEach(() => vi.unstubAllGlobals());
 
@@ -46,6 +46,39 @@ describe('requestAppUpdate', () => {
       headers: { Accept: 'application/json', 'Content-Type': 'application/json' },
       body: JSON.stringify({ tag: 'v0.3.0' }),
     });
+  });
+});
+
+describe('XKeen configuration files', () => {
+  it('reads the actual port list from the fixed router endpoint', async () => {
+    const fetchMock = vi.fn(async () => new Response(JSON.stringify({
+      file: 'port_proxying', path: '/opt/etc/xkeen/port_proxying.lst', content: '80\n443\n',
+    }), { headers: { 'Content-Type': 'application/json' } }));
+    vi.stubGlobal('fetch', fetchMock);
+    await expect(getRouterConfigFile('port_proxying')).resolves.toEqual({
+      path: '/opt/etc/xkeen/port_proxying.lst', content: '80\n443\n',
+    });
+    expect(fetchMock).toHaveBeenCalledWith('/api/v1/config/files/port_proxying', {
+      headers: { Accept: 'application/json' }, signal: undefined,
+    });
+  });
+
+  it('saves with an exact-content precondition and rejects the wrong path', async () => {
+    const fetchMock = vi.fn(async () => new Response(JSON.stringify({
+      status: 'saved', path: '/opt/etc/xkeen/ip_exclude.lst', backup: '/opt/sbin/core-backup/ip_exclude.lst', detail: 'Сохранён',
+    }), { headers: { 'Content-Type': 'application/json' } }));
+    vi.stubGlobal('fetch', fetchMock);
+    await expect(saveRouterConfigFile('ip_exclude', '1.2.3.4\n', '# old\n')).resolves.toMatchObject({
+      path: '/opt/etc/xkeen/ip_exclude.lst',
+    });
+    expect(fetchMock).toHaveBeenCalledWith('/api/v1/config/files/ip_exclude', {
+      method: 'PUT', headers: { Accept: 'application/json', 'Content-Type': 'application/json' },
+      body: JSON.stringify({ content: '1.2.3.4\n', expectedContent: '# old\n' }),
+    });
+    vi.stubGlobal('fetch', async () => new Response(JSON.stringify({
+      file: 'ip_exclude', path: '/tmp/other', content: 'wrong',
+    }), { headers: { 'Content-Type': 'application/json' } }));
+    await expect(getRouterConfigFile('ip_exclude')).rejects.toThrow('некорректный файл');
   });
 });
 

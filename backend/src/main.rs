@@ -315,6 +315,51 @@ struct AppUpdateRequest {
     tag: String,
 }
 
+async fn app_release_feed() -> Response {
+    const FEED_URL: &str = "https://github.com/rangerxxyy/XKeen-UI/releases.atom";
+    let output = tokio::time::timeout(
+        std::time::Duration::from_secs(15),
+        tokio::process::Command::new("curl")
+            .args([
+                "-fLsS",
+                "--proto",
+                "=https",
+                "--proto-redir",
+                "=https",
+                "--connect-timeout",
+                "5",
+                "--max-time",
+                "12",
+                "--max-filesize",
+                "1048576",
+                FEED_URL,
+            ])
+            .output(),
+    )
+    .await;
+    match output {
+        Ok(Ok(output)) if output.status.success() && output.stdout.len() <= 1024 * 1024 => {
+            let feed = String::from_utf8(output.stdout).unwrap_or_default();
+            if feed.starts_with("<?xml")
+                && feed.contains("<feed ")
+                && feed.contains("https://github.com/rangerxxyy/XKeen-UI/releases")
+            {
+                return (
+                    [(header::CONTENT_TYPE, "application/atom+xml; charset=utf-8")],
+                    feed,
+                )
+                    .into_response();
+            }
+        }
+        _ => {}
+    }
+    (
+        StatusCode::BAD_GATEWAY,
+        Json(serde_json::json!({"error":"Не удалось загрузить список релизов GitHub"})),
+    )
+        .into_response()
+}
+
 async fn update_app(
     State(state): State<AppState>,
     Json(request): Json<AppUpdateRequest>,
@@ -354,10 +399,11 @@ async fn update_app(
     // service restarts, so stdout/stderr cannot be returned to the requester.
     const UPDATE_SCRIPT: &str = r#"
 sleep 2
+target_tag=$XKEEN_UI_TARGET_TAG
 LOG=/opt/var/log/xkeen-ui-update.log
 mkdir -p /opt/var/log || exit 1
 exec >>"$LOG" 2>&1
-printf '\n[%s] Starting XKeen UI update to %s\n' "$(date -u '+%Y-%m-%dT%H:%M:%SZ' 2>/dev/null || date)" "$1"
+printf '\n[%s] Starting XKeen UI update to %s\n' "$(date -u '+%Y-%m-%dT%H:%M:%SZ' 2>/dev/null || date)" "$target_tag"
 tmp=$(mktemp /tmp/xkeen-ui-install.XXXXXX) || { echo 'ERROR: cannot create temporary installer'; exit 1; }
 trap 'rm -f "$tmp"' EXIT HUP INT TERM
 fetch_installer() {
@@ -377,16 +423,15 @@ if ! grep -q 'Minimal Entware bootstrap' "$tmp"; then
   echo 'ERROR: downloaded installer failed its content check'
   exit 1
 fi
-/bin/sh "$tmp" update --prefix /opt --version "$1"
+/bin/sh "$tmp" update --prefix /opt --version "$target_tag"
 result=$?
-if [ "$result" -eq 0 ]; then echo "SUCCESS: XKeen UI $1 installed"; else echo "ERROR: installer exited with code $result"; fi
+if [ "$result" -eq 0 ]; then echo "SUCCESS: XKeen UI $target_tag installed"; else echo "ERROR: installer exited with code $result"; fi
 exit "$result"
 "#;
     match std::process::Command::new("/bin/sh")
         .arg("-c")
         .arg(UPDATE_SCRIPT)
-        .arg("xkeen-ui-update")
-        .arg(&request.tag)
+        .env("XKEEN_UI_TARGET_TAG", &request.tag)
         .stdin(std::process::Stdio::null())
         .stdout(std::process::Stdio::null())
         .stderr(std::process::Stdio::null())
@@ -963,9 +1008,14 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let index = web.join("index.html");
     let read_api = Router::new()
         .route("/api/v1/status", get(status))
+        .route("/api/v1/app/releases", get(app_release_feed))
         .route("/api/v1/xkeen", get(xkeen_status))
         .route("/api/v1/logs", get(logs::read_logs))
         .route("/api/v1/config/active", get(active_config))
+        .route(
+            "/api/v1/config/files/{file}",
+            get(config_files::read_user_file),
+        )
         .route("/api/v1/settings/core-sources", get(get_core_sources))
         .route("/api/v1/mihomo/version", get(mihomo_version))
         .route("/api/v1/mihomo/proxies", get(mihomo_proxies))
@@ -1004,6 +1054,10 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         .route(
             "/api/v1/config/active",
             axum::routing::put(config_files::apply_active),
+        )
+        .route(
+            "/api/v1/config/files/{file}",
+            axum::routing::put(config_files::save_user_file),
         )
         .route_layer(DefaultBodyLimit::max(9 * 1024 * 1024))
         .route_layer(middleware::from_fn(require_same_origin));

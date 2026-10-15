@@ -7,7 +7,7 @@ use std::{
 };
 
 use axum::{
-    extract::State,
+    extract::{Path as UrlPath, State},
     http::StatusCode,
     response::{IntoResponse, Json, Response},
 };
@@ -20,6 +20,165 @@ const CONFIG: &str = "/opt/etc/mihomo/config.yaml";
 const CONFIG_DIR: &str = "/opt/etc/mihomo";
 const BACKUP_DIR: &str = "/opt/sbin/core-backup";
 const MAX_CONFIG: usize = 4 * 1024 * 1024;
+const MAX_LIST: usize = 1024 * 1024;
+
+fn user_file_path(file: &str) -> Option<&'static str> {
+    match file {
+        "ip_exclude" => Some("/opt/etc/xkeen/ip_exclude.lst"),
+        "port_exclude" => Some("/opt/etc/xkeen/port_exclude.lst"),
+        "port_proxying" => Some("/opt/etc/xkeen/port_proxying.lst"),
+        "xkeen" => Some("/opt/etc/xkeen/xkeen.json"),
+        _ => None,
+    }
+}
+
+pub async fn read_user_file(
+    State(state): State<AppState>,
+    UrlPath(file): UrlPath<String>,
+) -> Response {
+    if !state.router_mode {
+        return error(
+            StatusCode::SERVICE_UNAVAILABLE,
+            "Чтение файлов доступно только на роутере",
+        );
+    }
+    let Some(path) = user_file_path(&file) else {
+        return error(StatusCode::NOT_FOUND, "Неизвестный файл конфигурации");
+    };
+    let metadata = match tokio::fs::symlink_metadata(path).await {
+        Ok(value) if value.is_file() && !value.file_type().is_symlink() => value,
+        Ok(_) => {
+            return error(
+                StatusCode::UNPROCESSABLE_ENTITY,
+                "Файл не является обычным файлом",
+            )
+        }
+        Err(err) if err.kind() == io::ErrorKind::NotFound => {
+            return error(StatusCode::NOT_FOUND, "Файл на роутере не найден")
+        }
+        Err(_) => {
+            return error(
+                StatusCode::INTERNAL_SERVER_ERROR,
+                "Не удалось проверить файл",
+            )
+        }
+    };
+    if metadata.len() > MAX_LIST as u64 {
+        return error(StatusCode::PAYLOAD_TOO_LARGE, "Файл больше 1 MiB");
+    }
+    match tokio::fs::read_to_string(path).await {
+        Ok(content) => Json(serde_json::json!({ "file": file, "path": path, "content": content }))
+            .into_response(),
+        Err(_) => error(
+            StatusCode::INTERNAL_SERVER_ERROR,
+            "Не удалось прочитать файл как UTF-8",
+        ),
+    }
+}
+
+pub async fn save_user_file(
+    State(state): State<AppState>,
+    UrlPath(file): UrlPath<String>,
+    Json(request): Json<ApplyRequest>,
+) -> Response {
+    if !state.router_mode {
+        return error(
+            StatusCode::SERVICE_UNAVAILABLE,
+            "Сохранение файлов доступно только на роутере",
+        );
+    }
+    let Some(path) = user_file_path(&file) else {
+        return error(StatusCode::NOT_FOUND, "Неизвестный файл конфигурации");
+    };
+    if request.content.len() > MAX_LIST || request.expected_content.len() > MAX_LIST {
+        return error(StatusCode::PAYLOAD_TOO_LARGE, "Файл больше 1 MiB");
+    }
+    let _guard = state.core_update_lock.lock().await;
+    match save_list(path, &file, &request.content, &request.expected_content).await {
+        Ok(backup) => Json(serde_json::json!({
+            "status": "saved", "path": path, "backup": backup,
+            "detail": "Файл сохранён на роутере; для применения сетевых правил перезапустите XKeen"
+        }))
+        .into_response(),
+        Err(message) => error(
+            if message.starts_with("Файл на роутере изменился") {
+                StatusCode::CONFLICT
+            } else {
+                StatusCode::UNPROCESSABLE_ENTITY
+            },
+            &message,
+        ),
+    }
+}
+
+async fn save_list(
+    path: &str,
+    file: &str,
+    content: &str,
+    expected: &str,
+) -> Result<String, String> {
+    if file == "xkeen"
+        && !matches!(
+            serde_json::from_str::<serde_json::Value>(content),
+            Ok(serde_json::Value::Object(_))
+        )
+    {
+        return Err("xkeen.json должен содержать корректный JSON-объект".into());
+    }
+    let metadata = tokio::fs::symlink_metadata(path)
+        .await
+        .map_err(|e| format!("Не удалось проверить файл: {e}"))?;
+    if !metadata.is_file() || metadata.file_type().is_symlink() || metadata.len() > MAX_LIST as u64
+    {
+        return Err("Файл не является обычным файлом размером до 1 MiB".into());
+    }
+    let current = tokio::fs::read_to_string(path)
+        .await
+        .map_err(|e| format!("Не удалось прочитать файл: {e}"))?;
+    if current != expected {
+        return Err("Файл на роутере изменился после чтения. Считайте его заново".into());
+    }
+    let backup_dir = Path::new(BACKUP_DIR);
+    ensure_backup_dir(backup_dir).await?;
+    let extension = if file == "xkeen" { "json" } else { "lst" };
+    let backup = unique_file(backup_dir, file, extension);
+    tokio::fs::copy(path, &backup)
+        .await
+        .map_err(|e| format!("Не удалось создать резервную копию: {e}"))?;
+    tokio::fs::set_permissions(&backup, fs::Permissions::from_mode(0o600))
+        .await
+        .map_err(|e| format!("Не удалось защитить резервную копию: {e}"))?;
+    let staged = unique_file(Path::new("/opt/etc/xkeen"), file, extension);
+    let mut output = tokio::fs::OpenOptions::new()
+        .write(true)
+        .create_new(true)
+        .mode(metadata.permissions().mode() & 0o777)
+        .open(&staged)
+        .await
+        .map_err(|e| format!("Не удалось создать временный файл: {e}"))?;
+    let write_result = async {
+        output.write_all(content.as_bytes()).await?;
+        output.sync_all().await
+    }
+    .await;
+    drop(output);
+    if let Err(err) = write_result {
+        let _ = tokio::fs::remove_file(&staged).await;
+        return Err(format!("Не удалось записать файл: {err}"));
+    }
+    let latest = tokio::fs::read_to_string(path)
+        .await
+        .map_err(|e| format!("Не удалось повторно проверить файл: {e}"))?;
+    if latest != expected {
+        let _ = tokio::fs::remove_file(&staged).await;
+        return Err("Файл на роутере изменился во время записи. Считайте его заново".into());
+    }
+    if let Err(err) = tokio::fs::rename(&staged, path).await {
+        let _ = tokio::fs::remove_file(&staged).await;
+        return Err(format!("Не удалось заменить файл: {err}"));
+    }
+    Ok(backup.to_string_lossy().into_owned())
+}
 
 #[derive(Deserialize)]
 #[serde(deny_unknown_fields)]
@@ -268,7 +427,7 @@ fn error(status: StatusCode, message: &str) -> Response {
 
 #[cfg(test)]
 mod tests {
-    use super::unique_file;
+    use super::{unique_file, user_file_path};
     use std::path::Path;
 
     #[test]
@@ -286,5 +445,23 @@ mod tests {
             .unwrap()
             .to_string_lossy()
             .ends_with(".yaml"));
+    }
+
+    #[test]
+    fn user_lists_resolve_only_to_fixed_xkeen_paths() {
+        assert_eq!(
+            user_file_path("ip_exclude"),
+            Some("/opt/etc/xkeen/ip_exclude.lst")
+        );
+        assert_eq!(
+            user_file_path("port_exclude"),
+            Some("/opt/etc/xkeen/port_exclude.lst")
+        );
+        assert_eq!(
+            user_file_path("port_proxying"),
+            Some("/opt/etc/xkeen/port_proxying.lst")
+        );
+        assert_eq!(user_file_path("xkeen"), Some("/opt/etc/xkeen/xkeen.json"));
+        assert_eq!(user_file_path("../config.yaml"), None);
     }
 }

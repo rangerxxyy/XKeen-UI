@@ -209,6 +209,36 @@ export async function getActiveMihomoConfig(signal?: AbortSignal): Promise<Activ
   return { core: 'mihomo', path: payload.path, content: payload.content, modified: typeof payload.modified === 'string' ? payload.modified : null };
 }
 
+export type RouterConfigFile = 'ip_exclude' | 'port_exclude' | 'port_proxying' | 'xkeen';
+const routerConfigPaths: Record<RouterConfigFile, string> = {
+  ip_exclude: '/opt/etc/xkeen/ip_exclude.lst',
+  port_exclude: '/opt/etc/xkeen/port_exclude.lst',
+  port_proxying: '/opt/etc/xkeen/port_proxying.lst',
+  xkeen: '/opt/etc/xkeen/xkeen.json',
+};
+
+export async function getRouterConfigFile(file: RouterConfigFile, signal?: AbortSignal): Promise<{ path: string; content: string }> {
+  const payload = await getMihomoJson(`/api/v1/config/files/${file}`, 'Чтение файла XKeen', signal);
+  if (!isRecord(payload) || payload.file !== file || payload.path !== routerConfigPaths[file] || typeof payload.content !== 'string') {
+    throw new Error('Backend вернул некорректный файл XKeen');
+  }
+  return { path: payload.path, content: payload.content };
+}
+
+export async function saveRouterConfigFile(file: RouterConfigFile, content: string, expectedContent: string): Promise<{ path: string; backup: string; detail: string }> {
+  const response = await fetch(`/api/v1/config/files/${file}`, {
+    method: 'PUT',
+    headers: { Accept: 'application/json', 'Content-Type': 'application/json' },
+    body: JSON.stringify({ content, expectedContent }),
+  });
+  const payload = await readJson(response, 'Сохранение файла XKeen');
+  if (!isRecord(payload) || payload.status !== 'saved' || payload.path !== routerConfigPaths[file] ||
+      typeof payload.backup !== 'string' || typeof payload.detail !== 'string') {
+    throw new Error('Backend вернул некорректный результат сохранения файла XKeen');
+  }
+  return { path: payload.path, backup: payload.backup, detail: payload.detail };
+}
+
 export interface ApplyMihomoConfigResult {
   status: 'saved' | 'applied';
   path: string;

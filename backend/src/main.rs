@@ -310,13 +310,24 @@ async fn install_core(
     }
 }
 
-async fn update_app(State(state): State<AppState>) -> Response {
+#[derive(Deserialize)]
+struct AppUpdateRequest {
+    tag: String,
+}
+
+async fn update_app(State(state): State<AppState>, Json(request): Json<AppUpdateRequest>) -> Response {
     if !state.router_mode || !cfg!(target_os = "linux") {
         return (
             StatusCode::SERVICE_UNAVAILABLE,
             Json(serde_json::json!({"error":"Обновление панели доступно только на роутере"})),
         )
             .into_response();
+    }
+    if !request.tag.strip_prefix('v').is_some_and(|version| {
+        let parts: Vec<_> = version.split('.').collect();
+        parts.len() == 3 && parts.iter().all(|part| !part.is_empty() && part.bytes().all(|byte| byte.is_ascii_digit()))
+    }) {
+        return (StatusCode::BAD_REQUEST, Json(serde_json::json!({"error":"Некорректный tag стабильного релиза"}))).into_response();
     }
     if state
         .app_update_running
@@ -329,9 +340,10 @@ async fn update_app(State(state): State<AppState>) -> Response {
         )
             .into_response();
     }
-    let command = "sleep 2; curl -fsSL https://raw.githubusercontent.com/rangerxxyy/XKeen-UI/main/install.sh | /bin/sh -s -- update --prefix /opt";
+    let command = format!("sleep 2; curl -fsSL https://raw.githubusercontent.com/rangerxxyy/XKeen-UI/main/install.sh | /bin/sh -s -- update --prefix /opt --version {}", request.tag);
     match std::process::Command::new("/bin/sh")
-        .args(["-c", command])
+        .arg("-c")
+        .arg(&command)
         .stdin(std::process::Stdio::null())
         .stdout(std::process::Stdio::null())
         .stderr(std::process::Stdio::null())
@@ -897,7 +909,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         core_sources_path,
         core_sources_lock: Arc::new(tokio::sync::Mutex::new(())),
         core_update_lock: Arc::new(tokio::sync::Mutex::new(())),
-        cpu_sample: Arc::new(Mutex::new(None)),
+        cpu_sample: Arc::new(Mutex::new(std::fs::read_to_string("/proc/stat").ok().and_then(|contents| parse_cpu_times(&contents)))),
         app_update_running: Arc::new(AtomicBool::new(false)),
     };
     let web = web_root();

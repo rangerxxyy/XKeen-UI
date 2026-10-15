@@ -136,10 +136,11 @@ export async function getStatus(signal?: AbortSignal): Promise<SystemStatus> {
   return parseSystemStatus(await readJson(response, 'Получение статуса'));
 }
 
-export async function requestAppUpdate(): Promise<void> {
+export async function requestAppUpdate(tag: string): Promise<void> {
   const response = await fetch('/api/v1/app/update', {
     method: 'POST',
-    headers: { Accept: 'application/json' },
+    headers: { Accept: 'application/json', 'Content-Type': 'application/json' },
+    body: JSON.stringify({ tag }),
   });
   const payload = await readJson(response, 'Обновление XKeen UI');
   if (!isRecord(payload) || payload.status !== 'started') {

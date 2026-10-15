@@ -21,6 +21,7 @@ const draftFiles = [
   { id: 'xray_jsonc', label: '05_routing.jsonc', filename: '05_routing.jsonc', format: 'jsonc' },
 ] as const;
 let editor: EditorView | null = null;
+let editorBindings: AbortController | null = null;
 let activeFile = sessionStorage.getItem(activeFileKey) ?? 'config';
 let activeConfigSnapshot: string | null = null;
 
@@ -35,7 +36,7 @@ function setEditorIdentity(): void {
   const hint = document.querySelector<HTMLElement>('#editor-file-hint');
   if (filename) filename.textContent = file.filename;
   if (language) language.textContent = file.format === 'yaml' ? 'YAML · Mihomo' : file.format === 'text' ? 'TEXT · XKeen' : `${file.format.toUpperCase()} · Xray`;
-  if (hint) hint.textContent = file.format === 'yaml' ? 'Локальная вкладка · не файл роутера' : 'Локальный черновик · не файл роутера';
+  if (hint) hint.textContent = 'Локальный черновик';
   document.querySelectorAll<HTMLButtonElement>('[data-config-file]').forEach((button) => {
     const selected = button.dataset.configFile === file.id;
     button.classList.toggle('selected', selected);
@@ -138,22 +139,28 @@ function downloadDraft(text: string): void {
 }
 
 export function unmountYamlEditor(): void {
+  editorBindings?.abort();
+  editorBindings = null;
   editor?.destroy();
   editor = null;
 }
 
-export function mountYamlEditor(): void {
+export function mountYamlEditor(routerMode = false): void {
   const parent = editorElement();
   if (!parent) return;
   unmountYamlEditor();
-  activeConfigSnapshot = null;
+  editorBindings = new AbortController();
+  const { signal } = editorBindings;
   const applyButton = document.querySelector<HTMLButtonElement>('#config-apply-active');
-  if (applyButton) applyButton.disabled = true;
+  if (applyButton) applyButton.disabled = currentFile().id !== 'config' || activeConfigSnapshot === null;
 
   setEditorIdentity();
   const file = currentFile();
   const storedDraft = sessionStorage.getItem(`${draftKey}${file.id}`);
-  const initial = storedDraft ?? (file.id === 'config' || file.id === 'xray_jsonc' ? getDefaultTemplate(file.id === 'config' ? 'mihomo' : 'xray').content : '');
+  const startWithRouterConfig = routerMode && file.id === 'config';
+  const template = !startWithRouterConfig && (file.id === 'config' || file.id === 'xray_jsonc')
+    ? getDefaultTemplate(file.id === 'config' ? 'mihomo' : 'xray').content : '';
+  const initial = storedDraft ?? (startWithRouterConfig ? '' : template);
   if (storedDraft === null && initial) sessionStorage.setItem(`${draftKey}${file.id}`, initial);
   const updateListener = EditorView.updateListener.of((update) => {
     if (!update.docChanged) return;
@@ -173,7 +180,6 @@ export function mountYamlEditor(): void {
         ...(file.format === 'yaml' ? [yaml()] : file.format === 'text' ? [] : [json()]),
         syntaxHighlighting(defaultHighlightStyle),
         editorTheme,
-        EditorView.lineWrapping,
         updateListener,
       ],
     }),
@@ -193,16 +199,16 @@ export function mountYamlEditor(): void {
       if (!nextFile || !draftFiles.some((candidate) => candidate.id === nextFile)) return;
       activeFile = nextFile;
       sessionStorage.setItem(activeFileKey, activeFile);
-      mountYamlEditor();
+      mountYamlEditor(routerMode);
       const activeEditor = document.querySelector<HTMLElement>('#yaml-editor .cm-content');
       activeEditor?.focus();
-    });
+    }, { signal });
   });
 
   document.querySelector<HTMLButtonElement>('#yaml-validate')?.addEventListener('click', (event) => {
     (event.currentTarget as HTMLButtonElement).closest('details')?.removeAttribute('open');
     if (editor) validateStructuredDocument(editor.state.doc.toString());
-  });
+  }, { signal });
   document.querySelector<HTMLButtonElement>('#yaml-format')?.addEventListener('click', (event) => {
     (event.currentTarget as HTMLButtonElement).closest('details')?.removeAttribute('open');
     if (!editor || currentFile().format === 'text') return;
@@ -221,7 +227,7 @@ export function mountYamlEditor(): void {
     }
     editor.dispatch({ changes: { from: 0, to: editor.state.doc.length, insert: formatted } });
     setValidation(`Форматирование ${file.format.toUpperCase()} выполнено; совместимость со схемой не проверялась.`, true);
-  });
+  }, { signal });
   document.querySelector<HTMLButtonElement>('#yaml-template')?.addEventListener('click', (event) => {
     (event.currentTarget as HTMLButtonElement).closest('details')?.removeAttribute('open');
     const file = currentFile();
@@ -238,11 +244,11 @@ export function mountYamlEditor(): void {
     }).catch((error: unknown) => {
       setValidation(error instanceof Error ? `Не удалось открыть каталог: ${error.message}` : 'Не удалось открыть каталог шаблонов.', false);
     });
-  });
+  }, { signal });
   document.querySelector<HTMLButtonElement>('#yaml-download')?.addEventListener('click', (event) => {
     (event.currentTarget as HTMLButtonElement).closest('details')?.removeAttribute('open');
     if (editor) downloadDraft(editor.state.doc.toString());
-  });
+  }, { signal });
   document.querySelector<HTMLButtonElement>('#config-load-active')?.addEventListener('click', async (event) => {
     const button = event.currentTarget as HTMLButtonElement;
     if (!editor || currentFile().id !== 'config') return;
@@ -265,9 +271,9 @@ export function mountYamlEditor(): void {
       setValidation(error instanceof Error ? `Не удалось прочитать конфиг: ${error.message}` : 'Не удалось прочитать конфиг роутера.', false);
     } finally {
       button.disabled = false;
-      button.textContent = '↓ Считать конфиг роутера';
+      button.textContent = '↻ Считать';
     }
-  });
+  }, { signal });
   document.querySelector<HTMLButtonElement>('#config-apply-active')?.addEventListener('click', async (event) => {
     const button = event.currentTarget as HTMLButtonElement;
     if (!editor || currentFile().id !== 'config' || button.disabled) return;
@@ -294,7 +300,22 @@ export function mountYamlEditor(): void {
       setValidation(error instanceof Error ? `Применение не выполнено: ${error.message}` : 'Применение конфигурации завершилось ошибкой.', false);
     } finally {
       button.disabled = activeConfigSnapshot === null;
-      button.textContent = 'Применить на роутер';
+      button.textContent = 'Применить';
     }
-  });
+  }, { signal });
+
+  if (startWithRouterConfig && storedDraft === null) {
+    const requestedEditor = editor;
+    setValidation('Считываем активный config.yaml…', null);
+    void getActiveMihomoConfig(signal).then((active) => {
+      if (editor !== requestedEditor || !editor || editor.state.doc.length || sessionStorage.getItem(`${draftKey}config`) !== null) return;
+      editor.dispatch({ changes: { from: 0, to: 0, insert: active.content } });
+      activeConfigSnapshot = active.content;
+      const applyButton = document.querySelector<HTMLButtonElement>('#config-apply-active');
+      if (applyButton) applyButton.disabled = false;
+      setValidation(`Активный config.yaml · ${editor.state.doc.lines} строк`, null);
+    }).catch((error: unknown) => {
+      if (!signal.aborted) setValidation(error instanceof Error ? `Не удалось считать config.yaml: ${error.message}` : 'Не удалось считать config.yaml.', false);
+    });
+  }
 }

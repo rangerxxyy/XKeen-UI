@@ -478,3 +478,85 @@ body { font-size: 14px; }
   .editor-button,.config-file-tab { font-size:11px; }
   .editor-file small,.editor-callout p,.editor-validation { font-size:11px; }
 }
+
+/* One readable type system across navigation, controls and release dialogs. */
+:root { --text:#f0f2f8; --muted:#aeb9ce; --subtle:#8998b0; }
+body,button,input,select,textarea { font-family:"Inter Variable",Inter,ui-sans-serif,system-ui,sans-serif; }
+body { color:var(--text); -webkit-font-smoothing:antialiased; }
+.brand,.page-heading h1 { font-family:"Inter Variable",Inter,ui-sans-serif,system-ui,sans-serif; }
+.brand { font-size:20px; font-weight:750; }
+.page-heading h1 { font-size:21px; }
+.navigation .nav-item,.editor-button,.config-file-tab,.settings-tab { font-size:13px; }
+.nav-item.active { color:#fff; }
+.setting-row strong,.setting-value,.modal-note { font-size:12px; }
+.setting-row small,.core-release-meta,.core-release-note { font-size:11px; line-height:1.5; }
+.modal-heading h2 { font-size:17px; color:#fff; }
+.editor-button,.button,.icon-button,.journal-icon-button { border-color:#45516b; }
+.editor-button:focus-visible,.config-file-tab:focus-visible,.app-release-card:focus-visible { outline:2px solid #93b8ff; outline-offset:2px; }
+
+/* File navigation stays visible while editing; actions stay next to validation. */
+.sr-only { position:absolute!important; width:1px; height:1px; padding:0; margin:-1px; overflow:hidden; clip:rect(0,0,0,0); white-space:nowrap; border:0; }
+.main-content:has(.config-layout) { padding-top:14px; padding-bottom:8px; }
+.config-layout { display:grid; grid-template-columns:minmax(0,1fr) 190px; min-height:480px; height:calc(100vh - 180px); max-height:1000px; overflow:hidden; }
+.config-sidebar { grid-column:2; grid-row:1; min-width:0; padding:12px 8px; border-left:1px solid #2d3650; background:#0d1422; overflow:auto; }
+.config-sidebar-heading { padding:15px 10px 5px; color:#879bb7; font-size:10px; font-weight:700; letter-spacing:.07em; text-transform:uppercase; }
+.config-sidebar-heading:first-child { padding-top:3px; }
+.config-sidebar .config-file-tab { display:block; width:100%; min-height:36px; margin:2px 0; padding:0 10px; border:1px solid transparent; border-radius:8px; color:#b3c2d8; background:transparent; text-align:left; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.config-sidebar .config-file-tab:hover { color:#fff; border-color:#384962; background:#1a2639; }
+.config-sidebar .config-file-tab.selected { color:#fff; border-color:#637caf; background:#223351; box-shadow:inset 3px 0 #8eb4ff; }
+.config-editor-main { grid-column:1; grid-row:1; display:flex; flex-direction:column; min-width:0; min-height:0; background:#0b1220; }
+.config-editor-caption { min-height:37px; display:flex; align-items:center; gap:12px; padding:0 14px; border-bottom:1px solid #28344a; color:#d6e4f7; }
+.config-editor-caption strong { font-size:12px; font-weight:650; }
+.config-editor-caption>span:not(.sr-only) { color:#899bb4; font-size:11px; }
+.config-layout .code-editor-shell { min-height:0; flex:1; margin:0; border:0; border-radius:0; }
+.config-layout .code-editor { height:100%; min-height:0; }
+.config-layout .editor-statusbar { min-height:51px; padding:8px 12px; gap:10px; }
+.config-layout .editor-validation { min-width:0; font-size:11px; }
+.config-layout .editor-actions { flex:0 0 auto; }
+.config-layout .editor-button { min-height:34px; white-space:nowrap; }
+.config-layout .editor-utilities-menu { bottom:calc(100% + 6px); min-width:220px; }
+
+/* Release dialog has one footer and an independent, bounded list. */
+.modal.app-release-dialog { width:min(680px,calc(100vw - 24px)); max-width:none; max-height:90vh; }
+.app-releases-panel { display:flex; flex-direction:column; width:100%; max-width:none; max-height:90vh; padding:18px; overflow:hidden; }
+.app-releases-panel .core-release-dialog-source { flex:0 0 auto; margin-top:6px; font-size:11px; }
+.app-releases-panel .modal-note { flex:0 0 auto; margin:9px 0 12px; }
+.app-release-list { display:grid; flex:1 1 auto; align-content:start; gap:8px; min-height:0; max-height:none; overflow-y:auto; padding:1px 5px 4px 1px; }
+.app-release-card { gap:5px; padding:11px 13px; border-color:#40506a; background:#111c2c; }
+.app-release-card:hover { border-color:#82a9de; }
+.app-release-card-heading { font-size:13px; }
+.app-release-date { font-size:11px; }
+.app-release-notes { display:none; margin-top:5px; color:#bdcce0; font-size:12px; line-height:1.5; white-space:normal; }
+.app-release-card.is-selected .app-release-notes { display:block; }
+.app-release-actions { position:static; flex:0 0 auto; display:flex; align-items:center; gap:9px; margin:12px 0 0; padding:12px 0 0; border-top:1px solid #303c53; background:none; }
+.app-release-actions .editor-button { display:inline-flex; align-items:center; justify-content:center; text-decoration:none; font-size:12px; }
+.app-release-actions .editor-button[hidden] { display:none; }
+.app-release-actions .editor-button-primary { flex:1; min-height:39px; }
+.editor-utilities-menu [hidden] { display:none; }
+
+/* Settings keep their header visible and let only the form content scroll. */
+.modal.settings-dialog { width:min(640px,calc(100vw - 24px)); max-width:none; max-height:90vh; }
+.settings-panel { display:flex; flex-direction:column; width:100%; max-height:90vh; padding:18px; overflow:hidden; }
+.settings-panel .modal-heading,.settings-panel .modal-tabs { flex:0 0 auto; }
+.settings-panel .modal-tabs { gap:22px; margin:15px 0 0; padding-bottom:0; font-size:13px; }
+.settings-panel .modal-tabs .settings-tab { min-height:40px; margin-bottom:0; padding:0 2px; border-bottom-width:2px; color:#a9b8cf; }
+.settings-panel .modal-tabs .settings-tab.selected { color:#fff; }
+.settings-panel #settings-content { min-height:0; overflow-y:auto; padding:4px 3px 10px 0; scrollbar-color:#455775 #111a2b; }
+.settings-panel .setting-row { min-height:55px; padding:12px 2px; }
+.settings-panel .setting-row strong { font-size:13px; color:#f0f3fb; }
+.settings-panel .modal-note { margin:13px 0; color:#aebbd0; }
+.settings-panel .source-field strong { color:#f0f3fb; font-size:13px; }
+.settings-panel .source-field small { color:#a4b2c8; font-size:11px; line-height:1.45; }
+.settings-panel .source-field input,.settings-panel .source-field select { min-height:39px; color:#f0f3fb; font-size:13px; }
+.settings-panel .sources-feedback { font-size:11px; line-height:1.4; }
+
+@media(max-width:700px) {
+  .config-layout { grid-template-columns:1fr; grid-template-rows:auto minmax(0,1fr); height:min(80vh,760px); }
+  .config-sidebar { grid-column:1; grid-row:1; display:flex; align-items:center; gap:5px; padding:8px; border-left:0; border-bottom:1px solid #2d3650; overflow-x:auto; overflow-y:hidden; }
+  .config-editor-main { grid-column:1; grid-row:2; }
+  .config-sidebar-heading { display:none; }
+  .config-sidebar .config-file-tab { flex:0 0 auto; width:auto; max-width:150px; min-height:33px; margin:0; padding:0 9px; text-align:center; font-size:11px; }
+  .config-layout .editor-statusbar { align-items:stretch; flex-direction:column; }
+  .config-layout .editor-actions { justify-content:flex-end; }
+  .app-releases-panel { padding:13px; }
+}

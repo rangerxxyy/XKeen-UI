@@ -108,7 +108,7 @@ function renderHeader(): string {
 }
 
 function renderNavigation(): string {
-  return `<nav class="navigation" aria-label="Разделы панели">${pages.map((page) => `<button class="nav-item ${activePage === page.id ? 'active' : ''}" data-page="${page.id}" ${activePage === page.id ? 'aria-current="page"' : ''}><span class="nav-icon">${page.icon}</span>${page.label}</button>`).join('')}<span class="nav-spacer"></span><span class="environment-tag"><span class="tiny-dot"></span>${state.status?.mode === 'router' ? 'Роутер' : 'Локальная среда'}</span></nav>`;
+  return `<nav class="navigation" aria-label="Разделы панели">${pages.map((page) => `<button class="nav-item ${activePage === page.id ? 'active' : ''}" data-page="${page.id}" ${activePage === page.id ? 'aria-current="page"' : ''}><span class="nav-icon">${page.icon}</span>${page.label}</button>`).join('')}</nav>`;
 }
 
 function renderServiceCard(service: ServiceStatus): string {
@@ -142,16 +142,22 @@ function renderComingSoon(page: Page): string {
 }
 
 function renderConfiguration(): string {
-  const router = state.status?.mode === 'router';
-  return `<section class="page-heading"><h1>Конфигурация</h1><span class="runtime-badge"><span class="runtime-dot"></span> ${router ? 'Роутер' : 'Черновик'}</span></section>
-  <section class="editor-workspace" aria-label="Редактор конфигурации Mihomo">
-    <div class="config-file-tabs" role="group" aria-label="Файлы конфигурации">${[['config','config'],['ip_exclude','ip_exclude'],['port_exclude','port_exclude'],['port_proxying','port_proxying'],['xkeen','xkeen'],['xray_json','Xray JSON'],['xray_jsonc','Xray routing']].map(([id,label]) => `<button class="config-file-tab" data-config-file="${id}" type="button" aria-pressed="${id === 'config'}">${label}</button>`).join('')}</div>
-    <div class="editor-toolbar"><div class="editor-file"><span class="file-mark">⌘</span><div><strong id="editor-filename">config.yaml</strong><small id="editor-file-hint">Локальная вкладка · не файл роутера</small></div><span class="draft-pill">Черновик</span></div><div class="editor-actions"><button class="editor-button" id="config-load-active" type="button" data-yaml-only title="Прочитать /opt/etc/mihomo/config.yaml">↓ Считать конфиг</button><button class="editor-button editor-button-primary" id="config-apply-active" type="button" data-yaml-only disabled title="Сначала считайте актуальный конфиг роутера">Применить на роутер</button><details class="editor-utilities" data-structured-only><summary class="editor-button">⋯ Утилиты</summary><div class="editor-utilities-menu" role="menu" aria-label="Утилиты конфигурации"><button type="button" role="menuitem" id="yaml-template">▤ Шаблоны конфигураций</button><button type="button" role="menuitem" id="yaml-validate">✓ Проверить</button><button type="button" role="menuitem" id="yaml-format">⌘ Форматировать</button><button type="button" role="menuitem" id="yaml-download">↓ Скачать черновик</button></div></details></div></div>
-    <div class="editor-callout"><span class="callout-mark">i</span><p>Перед применением конфиг проверяется, предыдущая версия сохраняется в резервную копию.</p></div>
-    <div class="code-editor-shell"><div class="editor-gutter-label" id="editor-language">YAML · Mihomo</div><div class="code-editor" id="yaml-editor" aria-label="Текст локального черновика конфигурации"></div></div>
-    <div class="editor-statusbar"><span id="yaml-validation" class="editor-validation">Черновик пуст</span><span class="editor-encoding">UTF-8 <span>·</span> YAML 1.2 <span>·</span> Mihomo</span></div>
-  </section>
-  ${router ? '' : '<section class="editor-next-step"><span>◇</span><div><strong>Режим предпросмотра</strong><p>Из этого окружения доступно только редактирование черновиков. Для чтения и применения конфига откройте панель на роутере.</p></div><span class="coming-tag">ЛОКАЛЬНЫЙ РЕЖИМ</span></section>'}`;
+  return `<section class="editor-workspace config-layout" aria-label="Редактор конфигурации">
+    <aside class="config-sidebar" aria-label="Файлы конфигурации">
+      <div class="config-sidebar-heading">Mihomo</div>
+      <button class="config-file-tab" data-config-file="config" type="button" aria-pressed="true">config.yaml</button>
+      <div class="config-sidebar-heading">XKeen</div>
+      ${[['ip_exclude','ip_exclude'],['port_exclude','port_exclude'],['port_proxying','port_proxying'],['xkeen','xkeen']].map(([id,label]) => `<button class="config-file-tab" data-config-file="${id}" type="button" aria-pressed="false">${label}</button>`).join('')}
+      <div class="config-sidebar-heading">Xray</div>
+      <button class="config-file-tab" data-config-file="xray_json" type="button" aria-pressed="false">config.json</button>
+      <button class="config-file-tab" data-config-file="xray_jsonc" type="button" aria-pressed="false">routing.jsonc</button>
+    </aside>
+    <div class="config-editor-main">
+      <strong id="editor-filename" class="sr-only">config.yaml</strong><span id="editor-language" class="sr-only">YAML · Mihomo</span><span id="editor-file-hint" class="sr-only">Локальный черновик</span>
+      <div class="code-editor-shell"><div class="code-editor" id="yaml-editor" aria-label="Текст конфигурации"></div></div>
+      <div class="editor-statusbar"><span id="yaml-validation" class="editor-validation">Черновик пуст</span><div class="editor-actions"><button class="editor-button" id="config-load-active" type="button" data-yaml-only title="Прочитать /opt/etc/mihomo/config.yaml">↻ Считать</button><button class="editor-button editor-button-primary" id="config-apply-active" type="button" data-yaml-only disabled title="Сначала считайте актуальный конфиг роутера">Применить</button><details class="editor-utilities"><summary class="editor-button">⋯ Утилиты</summary><div class="editor-utilities-menu" role="menu" aria-label="Утилиты конфигурации"><button type="button" role="menuitem" id="yaml-template" data-structured-only>▤ Шаблоны конфигураций</button><button type="button" role="menuitem" id="yaml-validate" data-structured-only>✓ Проверить</button><button type="button" role="menuitem" id="yaml-format" data-structured-only>⌘ Форматировать</button><button type="button" role="menuitem" id="yaml-download">↓ Скачать черновик</button></div></details></div></div>
+    </div>
+  </section>`;
 }
 
 function renderFooter(): string {
@@ -289,7 +295,7 @@ async function mountConfigurationEditor(): Promise<void> {
   try {
     yamlEditorLoad ??= import('./yaml-editor');
     yamlEditorModule = await yamlEditorLoad;
-    if (activePage === 'configuration') yamlEditorModule.mountYamlEditor();
+    if (activePage === 'configuration') yamlEditorModule.mountYamlEditor(state.status?.mode === 'router');
   } catch (error) {
     yamlEditorLoad = null;
     const status = document.querySelector<HTMLElement>('#yaml-validation');
@@ -538,11 +544,12 @@ function updateChrome(): void {
 
 async function openAppReleases(): Promise<void> {
   const dialog = document.createElement('dialog');
-  dialog.className = 'modal';
-  dialog.innerHTML = `<form method="dialog" class="modal-panel app-releases-panel"><div class="modal-heading"><span class="modal-icon">⬡</span><h2>Обновление XKeen UI</h2><button class="icon-button" aria-label="Закрыть">×</button></div><div class="core-release-dialog-source"><span>zxc-rv/XKeen-UI</span><span class="core-release-github">GitHub</span></div><p class="modal-note" id="app-releases-status" aria-live="polite">Загружаем последние стабильные сборки…</p><div id="app-release-list" class="app-release-list" aria-label="Стабильные релизы XKeen UI"></div><div class="app-release-actions"><a id="app-release-link" class="editor-button" target="_blank" rel="noopener noreferrer" hidden>Открыть релиз ↗</a><button id="app-release-install" class="editor-button editor-button-primary" type="button" disabled>Установить</button></div><button class="button button-primary modal-close">Закрыть</button></form>`;
+  dialog.className = 'modal app-release-dialog';
+  dialog.innerHTML = `<div class="modal-panel app-releases-panel"><div class="modal-heading"><span class="modal-icon">⬡</span><h2>Обновление XKeen UI</h2><button class="icon-button" id="app-releases-close" type="button" aria-label="Закрыть">×</button></div><div class="core-release-dialog-source"><span>rangerxxyy/XKeen-UI</span><span class="core-release-github">GitHub</span></div><p class="modal-note" id="app-releases-status" aria-live="polite">Загружаем последние стабильные сборки…</p><div id="app-release-list" class="app-release-list" aria-label="Стабильные релизы XKeen UI"></div><div class="app-release-actions"><a id="app-release-link" class="editor-button" target="_blank" rel="noopener noreferrer" hidden>Открыть релиз ↗</a><button id="app-release-install" class="editor-button editor-button-primary" type="button" disabled>Установить</button></div></div>`;
   document.body.append(dialog);
   dialog.showModal();
   dialog.addEventListener('close', () => dialog.remove(), { once: true });
+  dialog.querySelector<HTMLButtonElement>('#app-releases-close')?.addEventListener('click', () => dialog.close());
   const status = dialog.querySelector<HTMLElement>('#app-releases-status')!;
   const list = dialog.querySelector<HTMLElement>('#app-release-list')!;
   const link = dialog.querySelector<HTMLAnchorElement>('#app-release-link')!;
@@ -601,10 +608,11 @@ function isInstalledNewerOrEqual(installed: string, selected: string): boolean {
 
 function openSettings(): void {
   const modal = document.createElement('dialog');
-  modal.className = 'modal';
-  modal.innerHTML = `<form method="dialog" class="modal-panel"><div class="modal-heading"><span class="modal-icon">⚙</span><h2>Настройки панели</h2><button class="icon-button" aria-label="Закрыть">×</button></div><div class="modal-tabs" role="tablist" aria-label="Разделы настроек"><button class="settings-tab selected" id="settings-general" type="button" role="tab" aria-selected="true">Общие</button><button class="settings-tab" id="settings-sources" type="button" role="tab" aria-selected="false">Источники ядер</button></div><div id="settings-content" role="tabpanel"></div><button class="button button-primary modal-close">Готово</button></form>`;
+  modal.className = 'modal settings-dialog';
+  modal.innerHTML = `<div class="modal-panel settings-panel"><div class="modal-heading"><span class="modal-icon">⚙</span><h2>Настройки</h2><button class="icon-button" id="settings-close" type="button" aria-label="Закрыть">×</button></div><div class="modal-tabs" role="tablist" aria-label="Разделы настроек"><button class="settings-tab selected" id="settings-general" type="button" role="tab" aria-selected="true">Общие</button><button class="settings-tab" id="settings-sources" type="button" role="tab" aria-selected="false">Источники ядер</button></div><div id="settings-content" role="tabpanel"></div></div>`;
   document.body.append(modal);
   modal.showModal();
+  modal.querySelector<HTMLButtonElement>('#settings-close')?.addEventListener('click', () => modal.close());
   const content = modal.querySelector<HTMLElement>('#settings-content');
   const renderSettingsTab = (tab: 'general' | 'sources') => {
     modal.querySelectorAll<HTMLButtonElement>('.settings-tab').forEach((button) => {
@@ -614,14 +622,11 @@ function openSettings(): void {
     });
     if (!content) return;
     if (tab === 'general') {
-      content.innerHTML = `<div class="setting-row"><div><strong>Порт панели</strong><small>Адрес локального Rust API и интерфейса</small></div><span class="setting-value">${state.status?.port ?? 1001}</span></div><div class="setting-row"><div><strong>Backend</strong><small>${state.connected ? 'Соединение установлено' : 'Соединение отсутствует'}</small></div><span class="state-pill ${state.connected ? 'state-running' : 'state-unavailable'}">${state.connected ? 'На связи' : 'Ожидание'}</span></div><div class="setting-row"><div><strong>Режим</strong><small>Источник системных сведений</small></div><span class="setting-value">${state.status?.mode === 'router' ? 'Роутер' : 'Симуляция'}</span></div><div class="setting-row"><div><strong>Версия XKeen UI</strong><small>Релизы доступны по нажатию версии в верхней панели</small></div><span class="setting-value">${escapeHtml(state.status?.appVersion ?? APP_VERSION)}</span></div>`;
+      content.innerHTML = `<div class="setting-row"><div><strong>Порт панели</strong></div><span class="setting-value">${state.status?.port ?? 1001}</span></div><div class="setting-row"><div><strong>Соединение с API</strong></div><span class="state-pill ${state.connected ? 'state-running' : 'state-unavailable'}">${state.connected ? 'На связи' : 'Ожидание'}</span></div>`;
       return;
     }
     if (tab === 'sources') {
-      const sourceStorageNote = state.status?.mode === 'router'
-        ? 'В режиме роутера значения хранятся в собственном файле настроек XKeen UI.'
-        : 'В локальной симуляции значения хранятся в памяти до перезапуска backend.';
-      content.innerHTML = `<p class="modal-note">Задайте GitHub-репозитории форков Xray и Mihomo. Здесь хранится адрес источника релизов; установленный путь ядра не меняется. ${sourceStorageNote}</p>
+      content.innerHTML = `<p class="modal-note">GitHub-репозитории для релизов Xray и Mihomo.</p>
         <label class="source-field"><span><strong>Источник Xray</strong><small>Формат: github.com/владелец/репозиторий</small></span><input id="source-xray" type="url" autocomplete="url" placeholder="https://github.com/XTLS/Xray-core"></label>
         <label class="source-field"><span><strong>Источник релизов Mihomo</strong><small>Можно указать репозиторий установленного форка или другой GitHub-репозиторий</small></span><select id="source-mihomo-preset"><option value="official">Оригинальный Mihomo · MetaCubeX</option><option value="prizrak">Prizrak-Core</option><option value="custom">Другой форк</option></select></label>
         <label class="source-field"><span><strong>Репозиторий</strong><small>Проверка релизов использует это значение; сохранение не заменяет установленное ядро</small></span><input id="source-mihomo" type="url" autocomplete="url" placeholder="https://github.com/MetaCubeX/mihomo"></label>

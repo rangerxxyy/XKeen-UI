@@ -347,6 +347,18 @@ async function runXkeenAction(action: string | undefined): Promise<void> {
   let noticeKind: 'success' | 'error' = 'success';
   try {
     xkeenStatus = await controlXkeen(action);
+    if (state.status) {
+      const service = {
+        name: 'Xkeen',
+        state: xkeenStatus.running === true ? 'running' as const : xkeenStatus.running === false ? 'stopped' as const : 'unavailable' as const,
+        version: xkeenStatus.version,
+        detail: xkeenStatus.detail,
+      };
+      const hasService = state.status.services.some((item) => item.name.toLowerCase() === 'xkeen');
+      state.status.services = hasService
+        ? state.status.services.map((item) => item.name.toLowerCase() === 'xkeen' ? service : item)
+        : [...state.status.services, service];
+    }
     notice = action === 'restart' ? 'XKeen перезапущен' : action === 'stop' ? 'XKeen остановлен' : 'XKeen запущен';
     noticeKind = 'success';
   } catch (error) {

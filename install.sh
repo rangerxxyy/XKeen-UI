@@ -60,17 +60,6 @@ download_github_file() {
     return 0
   fi
   rm -f "$output_file.part"
-  proxies=${XKEEN_UI_GH_PROXIES:-"https://gh-proxy.com https://ghfast.top"}
-  # shellcheck disable=SC2086
-  for proxy in $proxies; do
-    candidate=$proxy/$source_url
-    printf 'Повторная загрузка через %s\n' "$proxy"
-    if curl -fL --connect-timeout 10 --max-time 30 --max-filesize "$max_bytes" "$candidate" -o "$output_file.part"; then
-      mv "$output_file.part" "$output_file" || return 1
-      return 0
-    fi
-    rm -f "$output_file.part"
-  done
   return 1
 }
 

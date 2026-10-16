@@ -30,16 +30,6 @@ case "$url" in
   https://github.com/*/SHA256SUMS)
     [ "${XKEEN_TEST_FAIL_DIRECT:-0}" = 1 ] && exit 22
     cp "$XKEEN_TEST_SUMS" "$output" ;;
-  https://gh-proxy.com/https://github.com/*/xkeen-ui-linux-aarch64.tar.gz)
-    [ "${XKEEN_TEST_FAIL_FIRST_PROXY:-0}" = 1 ] && exit 22
-    cp "$XKEEN_TEST_ARCHIVE" "$output" ;;
-  https://gh-proxy.com/https://github.com/*/SHA256SUMS)
-    [ "${XKEEN_TEST_FAIL_FIRST_PROXY:-0}" = 1 ] && exit 22
-    cp "$XKEEN_TEST_SUMS" "$output" ;;
-  https://ghfast.top/https://github.com/*/xkeen-ui-linux-aarch64.tar.gz)
-    cp "$XKEEN_TEST_ARCHIVE" "$output" ;;
-  https://ghfast.top/https://github.com/*/SHA256SUMS)
-    cp "$XKEEN_TEST_SUMS" "$output" ;;
   *) exit 22 ;;
 esac
 EOF
@@ -79,26 +69,33 @@ PATH="$TEMP/bin:$PATH" \
 XKEEN_TEST_URLS="$TEMP/urls.txt" \
 XKEEN_TEST_ARCHIVE="$TEMP/xkeen-ui-linux-aarch64.tar.gz" \
 XKEEN_TEST_SUMS="$TEMP/SHA256SUMS" \
-XKEEN_TEST_FAIL_DIRECT=1 \
-XKEEN_TEST_FAIL_FIRST_PROXY=1 \
   sh "$ROOT/install.sh" update --prefix "$TEMP/prefix" --version v0.2.23
 FIRST_PINNED_URL=$(sed -n '1p' "$TEMP/urls.txt")
 case "$FIRST_PINNED_URL" in
   https://github.com/*/releases/download/v0.2.23/xkeen-ui-linux-aarch64.tar.gz) ;;
-  *) printf 'Expected pinned direct GitHub asset path, got: %s\n' "$FIRST_PINNED_URL" >&2; exit 1 ;;
+  *) printf 'Expected direct GitHub asset path, got: %s\n' "$FIRST_PINNED_URL" >&2; exit 1 ;;
 esac
 SECOND_PINNED_URL=$(sed -n '2p' "$TEMP/urls.txt")
 case "$SECOND_PINNED_URL" in
-  https://gh-proxy.com/https://github.com/*/releases/download/v0.2.23/xkeen-ui-linux-aarch64.tar.gz) ;;
-  *) printf 'Expected first proxy fallback, got: %s\n' "$SECOND_PINNED_URL" >&2; exit 1 ;;
+  https://github.com/*/releases/download/v0.2.23/SHA256SUMS) ;;
+  *) printf 'Expected direct GitHub checksum path, got: %s\n' "$SECOND_PINNED_URL" >&2; exit 1 ;;
 esac
-THIRD_PINNED_URL=$(sed -n '3p' "$TEMP/urls.txt")
-case "$THIRD_PINNED_URL" in
-  https://ghfast.top/https://github.com/*/releases/download/v0.2.23/xkeen-ui-linux-aarch64.tar.gz) ;;
-  *) printf 'Expected fallback to ghfast.top, got: %s\n' "$THIRD_PINNED_URL" >&2; exit 1 ;;
-esac
-if [ "$(wc -l <"$TEMP/urls.txt" | tr -d '[:space:]')" -ne 6 ]; then
-  printf 'Expected one direct plus two proxy attempts for archive and checksum.\n' >&2
+if [ "$(wc -l <"$TEMP/urls.txt" | tr -d '[:space:]')" -ne 2 ]; then
+  printf 'Expected only the official GitHub archive and checksum requests.\n' >&2
   exit 1
 fi
-printf 'Installer used GitHub directly, then bounded proxy fallbacks when simulated failures occurred.\n'
+if grep -E 'gh-proxy|ghfast' "$TEMP/urls.txt"; then
+  printf 'Installer must not use proxy mirrors.\n' >&2
+  exit 1
+fi
+
+: >"$TEMP/urls.txt"
+if PATH="$TEMP/bin:$PATH" XKEEN_TEST_URLS="$TEMP/urls.txt" XKEEN_TEST_ARCHIVE="$TEMP/xkeen-ui-linux-aarch64.tar.gz" XKEEN_TEST_SUMS="$TEMP/SHA256SUMS" XKEEN_TEST_FAIL_DIRECT=1 sh "$ROOT/install.sh" install --prefix "$TEMP/prefix"; then
+  printf 'Installer unexpectedly succeeded when direct GitHub failed.\n' >&2
+  exit 1
+fi
+if [ "$(wc -l <"$TEMP/urls.txt" | tr -d '[:space:]')" -ne 1 ] || grep -E 'gh-proxy|ghfast' "$TEMP/urls.txt"; then
+  printf 'Installer must stop after the bounded direct GitHub request fails.\n' >&2
+  exit 1
+fi
+printf 'Installer uses official GitHub asset URLs only.\n'

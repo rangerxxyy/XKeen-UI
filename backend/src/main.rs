@@ -618,17 +618,6 @@ async fn update_app(
         )
             .into_response();
     }
-    let update_proxies = match state.update_proxies.read() {
-        Ok(proxies) => proxies.proxies.join(" "),
-        Err(_) => {
-            state.app_update_running.store(false, Ordering::Release);
-            return (
-                StatusCode::INTERNAL_SERVER_ERROR,
-                Json(serde_json::json!({"error":"Не удалось прочитать GitHub-прокси"})),
-            )
-                .into_response();
-        }
-    };
     // Keep update diagnostics on disk: this process is detached before the UI
     // service restarts, so stdout/stderr cannot be returned to the requester.
     const UPDATE_SCRIPT: &str = r#"
@@ -644,18 +633,10 @@ fetch_installer() {
   source_url=$1
   echo "Fetching installer from GitHub"
   if curl -fLsS --connect-timeout 10 --max-time 30 "$source_url" -o "$tmp"; then return 0; fi
-  proxies=$(printf '%s\n' "$XKEEN_UI_GH_PROXIES" | awk 'NF')
-  [ -n "$proxies" ] || proxies='https://gh-proxy.com https://ghfast.top'
-  # shellcheck disable=SC2086
-  for proxy in $proxies; do
-    candidate=$proxy/$source_url
-    echo "Retrying installer through $proxy"
-    if curl -fLsS --connect-timeout 10 --max-time 30 "$candidate" -o "$tmp"; then return 0; fi
-  done
   return 1
 }
 if ! fetch_installer https://raw.githubusercontent.com/rangerxxyy/XKeen-UI/main/install.sh; then
-  echo 'ERROR: could not download install.sh from GitHub'
+  echo 'ERROR: direct GitHub download of install.sh failed'
   exit 1
 fi
 if ! grep -q 'Minimal Entware bootstrap' "$tmp"; then
@@ -671,7 +652,6 @@ exit "$result"
         .arg("-c")
         .arg(UPDATE_SCRIPT)
         .env("XKEEN_UI_TARGET_TAG", &request.tag)
-        .env("XKEEN_UI_GH_PROXIES", update_proxies)
         .stdin(std::process::Stdio::null())
         .stdout(std::process::Stdio::null())
         .stderr(std::process::Stdio::null())

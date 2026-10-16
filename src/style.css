@@ -1217,3 +1217,6 @@ dialog.template-dialog.is-closing { animation: modal-panel-out .16s ease-in both
 .app-shell .settings-panel .setting-row small,.app-shell .github-proxy-settings .settings-inline-note { font-size:12px; line-height:1.45; }
 
 :root[data-theme="light"] .dns-handoff-intro .alert-warning p { color:#4c5d72; }
+
+:root:not([data-theme="light"]) .settings-panel .modal-tabs .settings-tab { color:#edf2fb; font-weight:700; }
+:root:not([data-theme="light"]) .settings-panel .modal-tabs .settings-tab.selected { color:#fff; }

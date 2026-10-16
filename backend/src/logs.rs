@@ -339,7 +339,8 @@ mod tests {
             std::env::temp_dir().join(format!("xkeen-ui-log-cap-{}", std::process::id()));
         std::fs::create_dir_all(&directory).unwrap();
         let path = directory.join("xkeen-ui.log");
-        append_log_file(&path, &["x".repeat(MAX_LIFECYCLE_WRITE_BYTES * 2)]).unwrap();
+        let entries = vec!["x".repeat(MAX_LIFECYCLE_ENTRY_BYTES); 8];
+        append_log_file(&path, &entries).unwrap();
         assert_eq!(
             std::fs::metadata(&path).unwrap().len(),
             MAX_LIFECYCLE_WRITE_BYTES as u64

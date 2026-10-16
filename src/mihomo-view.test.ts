@@ -41,6 +41,15 @@ describe('renderSelectors', () => {
     expect(html).toContain('data-proxy-name="fi ⚡ Finland · TCP"');
   });
 
+  it('replaces leading Unicode country flags from live Mihomo names with bundled SVG icons', () => {
+    const groups: MihomoSelector[] = [{ name: 'Main', icon: null, current: '🇫🇮 ⚡ Finland · TCP', options: [
+      { name: '🇫🇮 ⚡ Finland · TCP', type: 'VLESS', icon: null, alive: null, delay: null },
+    ] }];
+    const html = renderSelectors(groups, false, null);
+    expect(html).toContain('<span class="country-flag flag-fi" role="img" aria-label="FI"></span> ⚡ Finland · TCP');
+    expect(html.match(/country-flag flag-fi/g)).toHaveLength(2);
+  });
+
   it('does not treat ordinary words such as No ads as country prefixes', () => {
     const groups: MihomoSelector[] = [{ name: 'Main', icon: null, current: null, options: [
       { name: 'No ads YT', type: 'Hysteria2', icon: null, alive: null, delay: null },

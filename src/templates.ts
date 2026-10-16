@@ -6,6 +6,7 @@ export interface ReferenceTemplate {
 }
 
 import mihomoBlocked from './templates/mihomo-blocked.yaml?raw';
+import { bindDialogMotion, closeDialogWithMotion } from './dialog-motion';
 import mihomoProxyExceptRu from './templates/mihomo-proxy-except-ru.yaml?raw';
 import xrayBlocked from './templates/xray-blocked.jsonc?raw';
 import xrayProxyExceptRu from './templates/xray-proxy-except-ru.json?raw';
@@ -64,8 +65,7 @@ async function getTemplates(core: ReferenceCore): Promise<ReferenceTemplate[]> {
 }
 
 function closeDialog(dialog: HTMLDialogElement): void {
-  dialog.close();
-  dialog.remove();
+  closeDialogWithMotion(dialog);
 }
 
 export async function chooseReferenceTemplate(core: ReferenceCore): Promise<{ name: string; content: string } | null> {
@@ -135,6 +135,8 @@ export async function chooseReferenceTemplate(core: ReferenceCore): Promise<{ na
   form.append(title, description, select, status, actions);
   dialog.append(form);
   document.body.append(dialog);
+  dialog.addEventListener('close', () => dialog.remove(), { once: true });
+  bindDialogMotion(dialog);
   const result = new Promise<{ name: string; content: string } | null>((resolve) => {
     dialog.addEventListener('template-selected', (event) => resolve((event as CustomEvent<{ name: string; content: string }>).detail), { once: true });
     dialog.addEventListener('close', () => resolve(null), { once: true });

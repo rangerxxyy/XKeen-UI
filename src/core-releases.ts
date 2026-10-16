@@ -1,5 +1,6 @@
 import { installCoreRelease } from './api';
 import { confirmInApp } from './confirm-dialog';
+import { bindDialogMotion } from './dialog-motion';
 
 type CoreName = 'xray' | 'mihomo';
 
@@ -179,6 +180,7 @@ export async function openCoreReleaseDialog(
   dialog.innerHTML = `<form method="dialog" class="modal-panel core-release-dialog-panel"><div class="modal-heading"><span class="modal-icon">⇩</span><h2>${title}</h2><button class="icon-button" aria-label="Закрыть">×</button></div><div class="core-release-dialog-source"><span id="core-release-repository">Источник загружается…</span><span class="core-release-github">GitHub</span></div><p class="modal-note" id="core-release-dialog-status" aria-live="polite">Загружаем последние стабильные ARM64-релизы…</p><div id="core-release-dialog-list" class="core-release-dialog-list"></div><button class="button button-primary modal-close" type="submit">Готово</button></form>`;
   document.body.append(dialog);
   dialog.addEventListener('close', () => dialog.remove(), { once: true });
+  bindDialogMotion(dialog);
   dialog.showModal();
 
   const status = dialog.querySelector<HTMLElement>('#core-release-dialog-status')!;

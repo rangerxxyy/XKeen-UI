@@ -30,14 +30,24 @@ describe('applyPingResults', () => {
 });
 
 describe('renderSelectors', () => {
-  it('renders ISO country prefixes as emoji flags in node names and selected routes', () => {
+  it('renders ISO country prefixes with bundled SVG flag icons in node names and selected routes', () => {
     const groups: MihomoSelector[] = [{ name: 'Main', icon: null, current: 'fi ⚡ Finland · TCP', options: [
       { name: 'fi ⚡ Finland · TCP', type: 'VLESS', icon: null, alive: null, delay: null },
     ] }];
     const html = renderSelectors(groups, false, null);
-    expect(html).toContain('🇫🇮 ⚡ Finland · TCP');
+    expect(html).toContain('<span class="country-flag flag-fi" role="img" aria-label="FI"></span> ⚡ Finland · TCP');
+    expect(html).not.toContain('🇫🇮');
     expect(html).not.toContain('>fi ⚡ Finland · TCP<');
     expect(html).toContain('data-proxy-name="fi ⚡ Finland · TCP"');
+  });
+
+  it('does not treat ordinary words such as No ads as country prefixes', () => {
+    const groups: MihomoSelector[] = [{ name: 'Main', icon: null, current: null, options: [
+      { name: 'No ads YT', type: 'Hysteria2', icon: null, alive: null, delay: null },
+    ] }];
+    const html = renderSelectors(groups, false, null);
+    expect(html).toContain('>No ads YT</strong>');
+    expect(html).not.toContain('country-flag');
   });
 
   it('renders an independent ping control on each node card', () => {

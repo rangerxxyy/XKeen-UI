@@ -91,8 +91,7 @@ impl MihomoClient {
     pub async fn get_raw_json(&self, endpoint: Endpoint) -> Result<Bytes, MihomoError> {
         let response = self.send(Method::GET, endpoint.path(), None).await?;
         let body = self.read_body(response).await?;
-        serde_json::from_slice::<serde::de::IgnoredAny>(&body)
-            .map_err(MihomoError::InvalidJson)?;
+        serde_json::from_slice::<serde::de::IgnoredAny>(&body).map_err(MihomoError::InvalidJson)?;
         Ok(body)
     }
 

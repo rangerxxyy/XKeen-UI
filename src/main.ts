@@ -2,8 +2,8 @@ import '@fontsource-variable/inter';
 import '@fontsource-variable/jetbrains-mono';
 import './country-flags.css';
 import './style.css';
-import { applyActiveMihomoConfig, closeAllMihomoConnections, closeMihomoConnection, controlXkeen, getActiveMihomoConfig, getCoreSources, getHealth, getMihomoConnections, getMihomoSelectors, getMihomoVersion, getRouterDnsStatus, getStatus, getSystemLog, getUpdateProxies, getXkeenStatus, pingMihomoGroup, pingMihomoProxy, queryMihomoDns, requestAppUpdate, saveCoreSources, saveUpdateProxies, selectMihomoProxy, setRouterDnsManagement, type ApiState, type CoreSources, type MihomoConnections, type MihomoDnsResult, type MihomoSelector, type RouterDnsStatus, type SystemLog, type XkeenStatus } from './api';
-import { applyPingResults, orderSelectorsByConfig, renderConnections, renderSelectors } from './mihomo-view';
+import { applyActiveMihomoConfig, closeAllMihomoConnections, closeMihomoConnection, controlXkeen, getActiveMihomoConfig, getCoreSources, getHealth, getMihomoConnections, getMihomoSelectors, getMihomoVersion, getRouterDnsStatus, getStatus, getSystemLog, getUpdateProxies, getXkeenStatus, logUiError, pingMihomoGroup, pingMihomoProxy, queryMihomoDns, requestAppUpdate, saveCoreSources, saveUpdateProxies, selectMihomoProxy, setRouterDnsManagement, type ApiState, type CoreSources, type MihomoConnections, type MihomoDnsResult, type MihomoSelector, type RouterDnsStatus, type SystemLog, type XkeenStatus } from './api';
+import { applyPingResults, orderSelectorsByConfig, renderConnections, renderPingStatusIcon, renderSelectors } from './mihomo-view';
 import { patchDnsManagement, patchMihomoDnsSettings, readMihomoDnsSettings, renderDns, type MihomoDnsSettings } from './dns-view';
 import { bindCoreReleaseChecks, fetchCoreReleases, isStableCompatibleRelease, openCoreReleaseDialog } from './core-releases';
 import { isNewerVersion, listAppReleases, type AppRelease } from './app-update';
@@ -60,14 +60,10 @@ let xkeenStatus: XkeenStatus | null = null;
 let xkeenControlBusy = false;
 let xkeenControlAction: 'start' | 'stop' | 'restart' | null = null;
 const logFiles = [
-  { id: 'xray-error', label: 'Xray · error.log' },
-  { id: 'xray-access', label: 'Xray · access.log' },
-  { id: 'web-error', label: 'Web · error.log' },
-  { id: 'nfqws2', label: 'nfqws2.log' },
-  { id: 'xkeen-ui', label: 'XKeen UI · xkeen-ui.log' },
-  { id: 'app-update', label: 'XKeen UI · update.log' },
+  { id: 'xray-access', label: 'Access Log' },
+  { id: 'xkeen-ui', label: 'Error Log' },
 ];
-let selectedLog = 'xray-error';
+let selectedLog = 'xkeen-ui';
 let logData: SystemLog | null = null;
 let logError: string | null = null;
 let logLoading = false;
@@ -447,6 +443,7 @@ function bindXkeenControls(root: ParentNode): void {
 }
 
 function showToast(message: string, kind: 'success' | 'error' | 'info'): void {
+  if (kind === 'error') void logUiError('ui', message).catch(() => undefined);
   const region = document.querySelector<HTMLElement>('.toast-region');
   if (!region) return;
   const toast = document.createElement('div');
@@ -468,6 +465,7 @@ async function runDnsQuery(): Promise<void> {
   } catch (error) {
     if (error instanceof DOMException && error.name === 'AbortError') return;
     dnsError = error instanceof Error ? error.message : 'DNS-запрос завершился ошибкой';
+    void logUiError('ui', `DNS lookup: ${dnsError}`).catch(() => undefined);
   } finally {
     if (!controller.signal.aborted) {
       dnsLoading = false;
@@ -497,6 +495,7 @@ async function loadRouterDnsStatus(): Promise<void> {
     dnsManagementStatus = await getRouterDnsStatus();
   } catch (error) {
     dnsManagementError = error instanceof Error ? error.message : 'Не удалось прочитать состояние DNS';
+    void logUiError('ui', `DNS status: ${dnsManagementError}`).catch(() => undefined);
   } finally {
     dnsManagementLoading = false;
     if (activePage === 'dns') render();
@@ -513,6 +512,7 @@ async function loadMihomoDnsConfig(): Promise<void> {
   } catch (error) {
     dnsConfig = null;
     dnsConfigError = error instanceof Error ? error.message : 'Не удалось прочитать DNS-конфигурацию Mihomo';
+    void logUiError('config', `DNS config load: ${dnsConfigError}`).catch(() => undefined);
   } finally {
     dnsConfigLoading = false;
     if (activePage === 'dns') render();
@@ -609,7 +609,11 @@ function updatePingControls(): void {
     if (!option) return;
     button.classList.toggle('is-alive', option.alive === true);
     button.classList.toggle('is-dead', option.alive === false);
-    button.title = `${option.alive === null ? 'Проверка недоступна' : option.alive ? 'Узел отвечает' : 'Узел не отвечает'}. Нажмите, чтобы проверить ping`;
+    const pingLabel = option.alive === null ? 'Проверить ping' : option.alive ? 'Узел отвечает' : 'Узел не отвечает';
+    button.title = `${option.alive === null ? 'Проверка недоступна' : pingLabel}. Нажмите, чтобы проверить ping`;
+    button.setAttribute('aria-label', `${pingLabel}. Нажмите, чтобы повторить ping узла ${option.name}`);
+    const icon = button.querySelector('.ping-status-icon');
+    if (icon) icon.outerHTML = renderPingStatusIcon(option.alive);
     const value = button.querySelector('span');
     if (value) value.textContent = option.delay === null ? '—' : `${option.delay} мс`;
   });
@@ -630,6 +634,7 @@ async function pingGroupFromUi(button: HTMLButtonElement): Promise<void> {
     if (uiPreferences.hideUnavailableProxies && activePage === 'selectors') render();
   } catch (error) {
     button.title = error instanceof Error ? error.message : 'Не удалось проверить серверы';
+    void logUiError('ui', `Mihomo group ping: ${button.title}`).catch(() => undefined);
   } finally {
     button.disabled = false;
     button.classList.remove('is-pinging');
@@ -657,6 +662,7 @@ async function pingProxyFromUi(button: HTMLButtonElement): Promise<void> {
     if (result && uiPreferences.hideUnavailableProxies && activePage === 'selectors') render();
   } catch (error) {
     button.title = error instanceof Error ? error.message : 'Не удалось проверить узел';
+    void logUiError('ui', `Mihomo proxy ping: ${button.title}`).catch(() => undefined);
   } finally {
     button.disabled = false;
     button.classList.remove('is-pinging');
@@ -1120,9 +1126,10 @@ async function installAppUpdate(): Promise<void> {
     } catch {
       // The installer may not have created its log yet if startup itself failed.
     }
-    throw new Error(`Обновление не подтвердилось за 8 минут.${diagnostic || ' Откройте журнал «XKeen UI · update.log» для причины.'}`);
+    throw new Error(`Обновление не подтвердилось за 8 минут.${diagnostic || ' Проверьте системный журнал обновления.'}`);
   } catch (error) {
     appUpdateMessage = error instanceof Error ? error.message : 'Обновление панели завершилось ошибкой.';
+    void logUiError('update', appUpdateMessage).catch(() => undefined);
   } finally {
     appUpdateInstalling = false;
     const message = document.querySelector<HTMLElement>('#app-releases-status');

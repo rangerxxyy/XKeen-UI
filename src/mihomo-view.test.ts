@@ -66,7 +66,17 @@ describe('renderSelectors', () => {
     const html = renderSelectors(groups, false, null);
     expect(html).toContain('data-ping-proxy="Finland"');
     expect(html).toContain('data-ping-group="Main"');
-    expect(html).toContain('aria-label="Проверить ping узла Finland"');
+    expect(html).toContain('aria-label="Проверить ping. Нажмите, чтобы повторить ping узла Finland"');
+  });
+
+  it('shows a clear red failure marker when a node is unreachable', () => {
+    const groups: MihomoSelector[] = [{ name: 'Main', icon: null, current: null, options: [
+      { name: 'Offline', type: 'VLESS', icon: null, alive: false, delay: null },
+    ] }];
+    const html = renderSelectors(groups, false, null);
+    expect(html).toContain('proxy-health proxy-ping-value is-dead');
+    expect(html).toContain('class="ping-status-icon"');
+    expect(html).toContain('Узел не отвечает. Нажмите, чтобы проверить ping');
   });
 });
 

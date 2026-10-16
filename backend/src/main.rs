@@ -1324,6 +1324,10 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         .route("/api/v1/mihomo/dns/query", get(mihomo_dns_query));
     let read_api = read_api.route("/api/v1/dns", get(dns_control::status));
     let mutation_api = Router::new()
+        .route(
+            "/api/v1/logs/ui-error",
+            axum::routing::post(logs::append_ui_error),
+        )
         .route("/api/v1/dns", axum::routing::put(dns_control::toggle))
         .route("/api/v1/xkeen/control", axum::routing::post(control_xkeen))
         .route("/api/v1/cores/install", axum::routing::post(install_core))

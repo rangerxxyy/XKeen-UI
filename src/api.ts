@@ -598,6 +598,16 @@ export async function getSystemLog(file: string, signal?: AbortSignal): Promise<
   return { file: payload.file, lines: payload.lines as string[], truncated: payload.truncated };
 }
 
+export async function logUiError(source: 'yaml' | 'config' | 'ui' | 'update', message: string, signal?: AbortSignal): Promise<void> {
+  const response = await fetch('/api/v1/logs/ui-error', {
+    method: 'POST',
+    headers: { Accept: 'application/json', 'Content-Type': 'application/json' },
+    body: JSON.stringify({ source, message: message.slice(0, 512) }),
+    signal,
+  });
+  if (!response.ok) throw new Error(`Запись ошибки в журнал: HTTP ${response.status}`);
+}
+
 export async function getHealth(signal?: AbortSignal): Promise<{ status: string }> {
   const response = await fetch('/health', { signal });
   const payload = await readJson(response, 'Проверка API');

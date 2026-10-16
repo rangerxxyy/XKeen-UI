@@ -1,9 +1,13 @@
 export type JournalViewState = 'loading' | 'error' | 'cleared' | 'data' | 'empty';
 
 export function formatJournalTimestamp(line: string, timeZone: string): { timestamp: string; message: string } | null {
-  const match = line.match(/^\[?(\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d{1,9})?(?:Z|[+-]\d{2}:\d{2}))\]?\s+(.*)$/);
+  const match = line.match(/^\[?(\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d{1,9})?(?:Z|[+-]\d{2}:\d{2}))\]?\s+(.*)$/)
+    ?? line.match(/^unix=(\d{10})(?:\s+level=\w+)?\s+(.*)$/);
   if (!match) return null;
-  const date = new Date(match[1] ?? '');
+  const rawTimestamp = match[1] ?? '';
+  const date = rawTimestamp.length === 10 && /^\d{10}$/.test(rawTimestamp)
+    ? new Date(Number(rawTimestamp) * 1000)
+    : new Date(rawTimestamp);
   if (!Number.isFinite(date.getTime())) return null;
   try {
     const options: Intl.DateTimeFormatOptions = { dateStyle: 'short', timeStyle: 'medium', hourCycle: 'h23' };

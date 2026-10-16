@@ -1220,3 +1220,115 @@ dialog.template-dialog.is-closing { animation: modal-panel-out .16s ease-in both
 
 :root:not([data-theme="light"]) .settings-panel .modal-tabs .settings-tab { color:#edf2fb; font-weight:700; }
 :root:not([data-theme="light"]) .settings-panel .modal-tabs .settings-tab.selected { color:#fff; }
+
+/* Final readability pass: keep supporting copy comfortably readable and DNS controls in one clear column. */
+body { -webkit-font-smoothing:auto; }
+.app-shell .setting-row small,.app-shell .source-field small,
+.app-shell .github-proxy-settings .settings-inline-note,.app-shell .sources-feedback,
+.app-shell .core-release-meta,.app-shell .core-release-note,
+.app-shell .metric-note,.app-shell .metric-card p,.app-shell .section-title p,
+.app-shell .selector-card-meta,.app-shell .selector-kicker,.app-shell .selector-current small,
+.app-shell .service-name small,.app-shell .quick-card small,
+.app-shell .dns-runtime-list>div,.app-shell .dns-settings-form>label,
+.app-shell .dns-diagnostics>summary,.app-shell .dns-handoff-note,
+.app-shell .dns-no-answer,.app-shell .dns-record small,
+.app-shell .dns-feedback p,.app-shell .dns-result p,
+.app-shell .modal-note,.app-shell .confirmation-dialog .modal-note {
+  font-size:12px;
+  line-height:1.5;
+}
+.app-shell .settings-panel .setting-row small,
+.app-shell .source-field small,
+.app-shell .github-proxy-settings .settings-inline-note { color:#b0bdce; }
+.dns-settings-form { grid-template-columns:minmax(0,1fr); gap:12px; }
+.dns-settings-form>label,.dns-settings-form>.button { grid-column:1; }
+.dns-settings-form>label>span { color:#e7edf6; font-size:13px; font-weight:650; }
+.dns-settings-form select,.dns-settings-form textarea { min-height:40px; border-radius:9px; }
+.dns-settings-form textarea { min-height:74px; line-height:1.55; }
+.dns-settings-form>.button { justify-self:stretch; min-height:40px; }
+.dns-runtime-list { margin:8px 18px 14px; border-radius:10px; }
+.dns-runtime-list>div { min-height:42px; padding:9px 12px; }
+.dns-runtime-list>div strong:not(.state-pill) { color:#c5d0df; font-size:12px; font-weight:600; }
+.dns-runtime-list .state-pill { font-size:11px; }
+.dns-handoff-intro .alert-warning { border-color:#334763; background:#111d2e; }
+.dns-handoff-intro .alert-warning .alert-icon { color:#9bc4ff; background:#1b2e48; }
+.dns-handoff-intro .alert-warning strong { color:#e7edf6; font-size:13px; }
+.dns-handoff-intro .alert-warning p { color:#b7c4d5; font-size:12px; line-height:1.5; }
+.dns-diagnostics { margin-top:2px; border-color:#2a374a; }
+.dns-diagnostics>summary { padding:12px 0 2px; color:#c0cad8; font-weight:600; }
+.modal.app-release-dialog { width:min(760px,calc(100vw - 24px)); max-height:90vh; }
+.app-releases-panel { padding:18px; }
+.app-releases-panel .modal-note { color:#aebbd0; font-size:13px; }
+.app-releases-panel .core-release-dialog-source { font-size:12px; }
+.app-release-list { gap:7px; }
+.app-release-card { gap:6px; padding:12px 13px; border-color:#35445b; background:#111a2a; }
+.app-release-card:hover { border-color:#6f91c2; background:#142039; }
+.app-release-card.is-selected { border-color:#6da9ff; background:linear-gradient(135deg,#1b3a68,#142a4c); }
+.app-release-card-heading { font-size:14px; }
+.app-release-date { color:#aab8cc; font-size:12px; }
+.app-release-notes { color:#b8c5d8; font-size:12px; line-height:1.55; }
+.app-release-notes strong { color:#edf3fb; }
+.app-release-actions { margin-top:12px; padding-top:12px; border-color:#303c53; }
+.app-release-actions .editor-button-primary { min-height:40px; font-size:13px; font-weight:700; }
+@media(max-width:700px) {
+  .dns-settings-form { grid-template-columns:minmax(0,1fr); padding-right:14px; padding-left:14px; }
+  .dns-runtime-list { margin-right:14px; margin-left:14px; }
+}
+@media(max-width:600px) {
+  .app-shell .setting-row small,.app-shell .source-field small,
+  .app-shell .github-proxy-settings .settings-inline-note,
+  .app-shell .dns-settings-form>label,.app-shell .dns-diagnostics>summary,
+  .app-shell .dns-handoff-note,.app-shell .modal-note { font-size:12px; }
+  .app-release-card-heading { font-size:13px; }
+}
+.proxy-health { min-height:25px; gap:6px; padding:2px 7px; border:1px solid #35445a; border-radius:7px; color:#aebbd0; background:#111a28; font-size:11px; font-weight:650; line-height:1; }
+.proxy-health .ping-status-icon { display:inline-grid; width:15px; height:15px; flex:0 0 15px; place-items:center; border:0; border-radius:0; background:transparent; color:currentColor; }
+.proxy-health .ping-status-icon svg { display:block; width:15px; height:15px; fill:none; stroke:currentColor; stroke-width:1.8; stroke-linecap:round; stroke-linejoin:round; }
+.proxy-health.is-alive { border-color:#23654f; color:#69d8a9; background:#10261f; }
+.proxy-health.is-alive .ping-status-icon { background:transparent; box-shadow:none; }
+.proxy-health.is-dead { border-color:#713746; color:#ff7f8c; background:#2a1820; }
+.proxy-health.is-dead .ping-status-icon { background:transparent; box-shadow:none; }
+.proxy-health.is-pinging { border-color:#46618a; color:#b9d4ff; background:#142039; }
+.proxy-health.is-pinging .ping-status-icon { background:transparent; box-shadow:none; }
+.proxy-health.is-pinging .ping-status-icon svg { display:none; }
+.proxy-health.is-pinging .ping-status-icon::after { width:11px; height:11px; border:1.5px solid #60799f; border-top-color:#b9d4ff; border-radius:50%; content:""; animation:service-spin .7s linear infinite; }
+.proxy-health:focus-visible { outline:2px solid #ff8794; outline-offset:2px; }
+.config-layout #config-save-active:not(:disabled) { border-color:#4d77b7; color:#eff6ff; background:#203d65; }
+.config-layout #config-apply-active:not(:disabled) { border-color:#20815a; color:#edfff6; background:#116442; }
+.config-layout #config-save-active:disabled,.config-layout #config-apply-active:disabled { border-color:#303b4c; color:#7f8da1; background:#151d29; opacity:.62; cursor:not-allowed; box-shadow:none; }
+
+/* Readability baseline: supporting copy should remain easy to scan across every section. */
+.app-shell .setting-row small,.app-shell .source-field small,
+.app-shell .github-proxy-settings .settings-inline-note,.app-shell .sources-feedback,
+.app-shell .core-release-meta,.app-shell .core-release-note,
+.app-shell .metric-note,.app-shell .metric-card p,.app-shell .section-title p,
+.app-shell .selector-card-meta,.app-shell .selector-kicker,.app-shell .selector-current small,
+.app-shell .service-name small,.app-shell .quick-card small,
+.app-shell .dns-handoff-note,.app-shell .dns-no-answer,.app-shell .dns-record small,
+.app-shell .dns-feedback p,.app-shell .dns-result p,.app-shell .modal-note {
+  font-size:12px;
+  line-height:1.55;
+}
+.app-shell .setting-row small,.app-shell .source-field small,
+.app-shell .github-proxy-settings .settings-inline-note,.app-shell .core-release-meta,
+.app-shell .core-release-note,.app-shell .selector-card-meta,.app-shell .selector-kicker,
+.app-shell .selector-current small,.app-shell .service-name small,
+.app-shell .quick-card small,.app-shell .dns-handoff-note,.app-shell .dns-record small,
+.app-shell .modal-note { color:#b5c2d4; }
+.app-shell .settings-section>h3 { font-size:12px; font-weight:650; }
+.app-shell .setting-row strong,.app-shell .source-field label { font-size:14px; font-weight:650; }
+.app-shell .journal-lines { max-height:min(34vh,280px); }
+.app-shell .journal-line code { color:#eef3fb; font:500 12px/1.65 "JetBrains Mono Variable",monospace; }
+.app-shell .journal-line[data-level="error"] code,
+.app-shell .journal-line[data-level="warning"] code { color:#eef3fb; }
+.app-shell .journal-line[data-level="error"] .journal-line-number { color:#ff7f8c; }
+.app-shell .journal-line[data-level="warning"] .journal-line-number { color:#f1c56d; }
+.app-shell .journal-line-number { font-size:11px; }
+.app-shell .journal-filter input,.app-shell .journal-tools select { font-size:13px; }
+@media(max-width:600px) {
+  .app-shell .setting-row small,.app-shell .source-field small,
+  .app-shell .github-proxy-settings .settings-inline-note,
+  .app-shell .selector-card-meta,.app-shell .service-name small,
+  .app-shell .quick-card small,.app-shell .dns-handoff-note,.app-shell .modal-note { font-size:12px; }
+  .app-shell .journal-line code { font-size:11px; }
+}

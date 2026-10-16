@@ -15,7 +15,7 @@ describe('DNS workspaces', () => {
     expect(view).toContain('DNS Override');
     expect(view).toContain('Включить управление DNS');
     expect(view).toContain('Передача DNS через Mihomo');
-    expect(view).toContain('Статические IPv6 DNS сохраняются и могут обходить Mihomo;');
+    expect(view).toContain('Статические IPv6 DNS и DoH/DoT не меняются и могут обходить его.');
   });
 
   it('treats an enabled Mihomo DNS config as separate from router DNS handoff', () => {
@@ -86,7 +86,7 @@ describe('DNS workspaces', () => {
       loading: false, error: null, busy: false,
     });
     expect(view).toContain('id="mihomo-dns-settings"');
-    expect(view).toContain('Nameserver Policy');
+    expect(view).toContain('Правила DNS');
     expect(view).toContain('Проверка DNS');
   });
 });

@@ -109,12 +109,7 @@ fn enable_router_dns_commands(previous: &DnsRestoreState, br0_ip: &str) -> Vec<S
     let ipv6_servers: Vec<_> = previous
         .name_servers
         .iter()
-        .filter_map(|address| {
-            address
-                .parse::<IpAddr>()
-                .ok()
-                .filter(IpAddr::is_ipv6)
-        })
+        .filter_map(|address| address.parse::<IpAddr>().ok().filter(IpAddr::is_ipv6))
         .collect();
     let mut commands = vec!["no ip name-server".to_owned()];
     if !ipv6_servers.is_empty() {

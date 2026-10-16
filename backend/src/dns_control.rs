@@ -106,12 +106,16 @@ fn parse_restore_state(output: &str) -> DnsRestoreState {
 }
 
 fn enable_router_dns_commands(previous: &DnsRestoreState, br0_ip: &str) -> Vec<String> {
-    let ipv6_servers: Vec<_> = previous.name_servers.iter().filter_map(|address| {
-        address
-            .parse::<IpAddr>()
-            .ok()
-            .filter(IpAddr::is_ipv6)
-    }).collect();
+    let ipv6_servers: Vec<_> = previous
+        .name_servers
+        .iter()
+        .filter_map(|address| {
+            address
+                .parse::<IpAddr>()
+                .ok()
+                .filter(IpAddr::is_ipv6)
+        })
+        .collect();
     let mut commands = vec!["no ip name-server".to_owned()];
     if !ipv6_servers.is_empty() {
         commands.push("no ipv6 name-server".into());
@@ -490,11 +494,11 @@ async fn status_data() -> Option<DnsControlStatus> {
 async fn restore_router_dns(state: &DnsRestoreState) -> Result<(), String> {
     ndmc("no opkg dns-override").await?;
     ndmc("no ip name-server").await?;
-    if state
-        .name_servers
-        .iter()
-        .any(|address| address.parse::<IpAddr>().is_ok_and(|address| address.is_ipv6()))
-    {
+    if state.name_servers.iter().any(|address| {
+        address
+            .parse::<IpAddr>()
+            .is_ok_and(|address| address.is_ipv6())
+    }) {
         ndmc("no ipv6 name-server").await?;
     }
     for address in &state.name_servers {

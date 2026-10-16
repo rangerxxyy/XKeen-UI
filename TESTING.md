@@ -54,6 +54,8 @@ Invoke-RestMethod http://localhost:1001/api/v1/status | ConvertTo-Json -Depth 5
 
 ## Роутер: безопасная read-only проверка
 
+Задача `installer` в CI также запускает `sh tests/installer-proxy-priority.sh`: тест устанавливает mock-пакет через прокси, проверяет путь `releases/latest/download`, закреплённый tag и SHA-256.
+
 На пользовательском KeeneticOS/Entware AArch64 с glibc 2.27 проверено:
 
 - test binary собран с dynamic loader из `/opt/lib`;

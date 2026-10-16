@@ -138,5 +138,6 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - run: sh -n install.sh
+      - run: sh tests/installer-proxy-priority.sh
       - run: sudo apt-get update && sudo apt-get install -y shellcheck
       - run: shellcheck install.sh

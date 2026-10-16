@@ -149,6 +149,10 @@ fn mihomo_dns_listens_on_router_interface(content: &str) -> bool {
     false
 }
 
+fn mihomo_dns_preserves_router_handoff(content: &str) -> bool {
+    read_mihomo_dns_enabled(content) && mihomo_dns_listens_on_router_interface(content)
+}
+
 fn set_mihomo_dns(content: &str, enabled: bool) -> String {
     let mut lines: Vec<String> = content.lines().map(str::to_owned).collect();
     let mut dns_start = None;
@@ -313,7 +317,7 @@ pub async fn ensure_dns_safe_to_stop() -> Result<(), String> {
 pub async fn ensure_dns_config_safe(content: &str) -> Result<(), String> {
     let running = ndmc("show running-config").await?;
     if parse_restore_state(&running).dns_override
-        && (!read_mihomo_dns_enabled(content) || !mihomo_dns_listens_on_router_interface(content))
+        && !mihomo_dns_preserves_router_handoff(content)
     {
         return Err(
             "DNS Override KeeneticOS активен. Сначала верните DNS KeeneticOS, затем меняйте параметры DNS Mihomo или применяйте другой конфиг".into(),
@@ -588,8 +592,8 @@ fn truncate(value: &str, max_bytes: usize) -> String {
 #[cfg(test)]
 mod tests {
     use super::{
-        mihomo_dns_listens_on_router_interface, parse_restore_state, read_mihomo_dns_enabled,
-        set_mihomo_dns, DnsRestoreState,
+        mihomo_dns_listens_on_router_interface, mihomo_dns_preserves_router_handoff,
+        parse_restore_state, read_mihomo_dns_enabled, set_mihomo_dns, DnsRestoreState,
     };
 
     #[test]
@@ -631,5 +635,18 @@ mod tests {
         assert!(enabled.contains("proxies: []"));
         let disabled = set_mihomo_dns(&enabled, false);
         assert!(!read_mihomo_dns_enabled(&disabled));
+    }
+
+    #[test]
+    fn router_handoff_requires_enabled_dns_bound_to_router_interface() {
+        assert!(mihomo_dns_preserves_router_handoff(
+            "dns:\n  enable: true\n  listen: 0.0.0.0:53\n"
+        ));
+        assert!(!mihomo_dns_preserves_router_handoff(
+            "dns:\n  enable: false\n  listen: 0.0.0.0:53\n"
+        ));
+        assert!(!mihomo_dns_preserves_router_handoff(
+            "dns:\n  enable: true\n  listen: 127.0.0.1:53\n"
+        ));
     }
 }

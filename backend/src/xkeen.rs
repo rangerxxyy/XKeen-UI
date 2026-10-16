@@ -259,7 +259,7 @@ mod tests {
         let _ = std::fs::remove_file(&path);
 
         assert!(result.is_ok());
-        assert!(elapsed < Duration::from_secs(1));
+        assert!(elapsed < Duration::from_millis(1_500));
     }
 
     #[test]

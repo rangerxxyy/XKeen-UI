@@ -465,6 +465,7 @@ async function loadMihomoDnsConfig(): Promise<void> {
 
 async function saveMihomoDnsConfig(settings: MihomoDnsSettings): Promise<void> {
   if (!dnsConfig || dnsConfigBusy) return;
+  dnsConfig = { ...dnsConfig, values: settings };
   dnsConfigBusy = true;
   dnsConfigError = null;
   render();

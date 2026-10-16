@@ -27,20 +27,18 @@
 - Тестовый AArch64-бинарник собран в CI с Entware dynamic loader (`/opt/lib/ld-linux-aarch64.so.1`) и проверен на устройстве на loopback-порту 18473: `/health`, отказ API без bearer-токена, read-only status с токеном и раздача frontend.
 - В ходе перепроверки временный каталог `/tmp/xkeen-ui-readonly-2026101421` был найден после завершения сессии и удалён отдельно; порт 18473 не слушался. Вторая изолированная проверка использовала только loopback-порт 18474 и временный каталог; в конце каталог исчез, порт закрыт. Найденные штатные процессы не затрагивались. Её HTTP-коды не попали в сохранённый вывод, поэтому новые endpoint-журналы считаются проверенными CI, не роутером.
 - Основной JS чанк интерфейса сокращён примерно с 528 КБ до 65 КБ: CodeMirror и конфигурационный редактор загружаются динамически только при открытии вкладки конфигурации.
-- Репозиторий опубликован на GitHub. README отсутствует по просьбе пользователя. Стабильный v0.2.2 опубликован с ARM64 архивом и SHA256SUMS; пакет собран AArch64 CI из commit `2162ffb`. Этот архив содержал `xkeen-ui` без executable-бита, из-за чего меню ошибочно сообщало, что бинарник отсутствует; текущий bootstrap исправляет права после проверки SHA-256. Во время проверки `/releases/latest/download` вернул архив предыдущего релиза из-за устаревшего redirect-кэша; `install.sh` теперь берёт стабильный tag через GitHub API и скачивает файлы по tag URL. Порт по умолчанию — 1001.
-- Shell bootstrap в CI проходит `sh -n` и ShellCheck. Rust installer содержит unit-тесты и отдельный изолированный CI сценарий install → auth/static check → update → stop/remove. Установка на пользовательском роутере не выполнялась.
+- Репозиторий опубликован на GitHub. README отсутствует по просьбе пользователя. Стабильный v0.2.17 опубликован с ARM64 архивом и SHA256SUMS; пакет собран AArch64 CI из merge commit `f607c3b`. Этот архив содержал `xkeen-ui` без executable-бита, из-за чего меню ошибочно сообщало, что бинарник отсутствует; текущий bootstrap исправляет права после проверки SHA-256. Во время проверки `/releases/latest/download` вернул архив предыдущего релиза из-за устаревшего redirect-кэша; `install.sh` теперь берёт стабильный tag через GitHub API и скачивает файлы по tag URL. Порт по умолчанию — 1001.
+- Shell bootstrap в CI проходит `sh -n` и ShellCheck. Rust installer содержит unit-тесты и отдельный изолированный CI сценарий install → auth/static check → update → stop/remove. Релиз v0.2.17 установлен на пользовательский роутер штатным API обновления; проверены версия панели, состояние XKeen/Mihomo, CPU/RAM, ответ DNS API и неизменность источника Mihomo (`legiz-ru/Prizrak-Core`). Передача DNS не переключалась.
 - Последний опубликованный исходный commit: TypeScript — 130 835 байт, Rust — 108 345 байт, Shell — 5 245 байт (приблизительно 53.5% / 44.3% / 2.1% по GitHub Languages API). TypeScript пока ниже желаемых 55–60%, Rust выше ориентира 37–38%; показатели не подгоняются пустым кодом. Рабочий runtime не содержит ручного HTML-макета; Vite генерирует минимальный `index.html` как оболочку браузера.
 
 ## Среда
 
-- Доступны Git, GitHub CLI, Node.js и pnpm workspace runtime.
-- В текущем Windows workspace `cargo`, `rustfmt` и `shellcheck` не установлены. Rust, shell и AArch64 проверки следует считать подтверждёнными только после прохождения Linux CI.
-- CI `38618811134` для `2162ffb` прошёл полностью: frontend (typecheck/60 tests/build), Rust (fmt/tests/build и изолированный installer lifecycle), installer (`sh -n`/ShellCheck) и AArch64 cross-build. Локальный Rust test/build на Windows не запускается из-за отсутствующего MSVC linker.
-- Аудит структуры и исходников двух референсов собран в `docs/REFERENCE_AUDIT.md`; на устройстве проверена только read-only связность backend и выдача UI.
+- Доступны Git, GitHub CLI, Node.js и pnpm workspace runtime. В Windows `cargo`, `rustfmt` и `shellcheck` отсутствуют; Rust и AArch64 сборки подтверждаются GitHub Actions.
+- PR #8 влит в `main`; frontend (typecheck, 85 tests, build), installer, Rust fmt/tests/build, lifecycle smoke-test и AArch64 cross-build прошли CI для релизного commit `f607c3b`.
+- Панель v0.2.17 установлена на роутер штатным API обновления. Проверены HTTP 200, версия панели, состояние XKeen/Mihomo, CPU/RAM и read-only DNS API. Mihomo остался на `legiz-ru/Prizrak-Core`; настройки DNS при smoke-проверке не менялись.
 
-## Следующие шаги
+## Проверка v0.2.17
 
-1. Дождаться полного Rust fmt/test/build и AArch64 CI для текущего PR.
-2. Установить обновление XKeen UI через панель, не меняя установленное ядро Mihomo и его источник; проверить статус службы и read-only DNS API.
-3. Не включать DNS handoff во время smoke-проверки. Статические IPv6 DNS сохраняются в Keenetic и могут обходить Mihomo; DoH/DoT и фильтр контента не управляются.
-4. После успешной проверки опубликовать стабильный релиз с AArch64 архивом и SHA256SUMS.
+- Стабильный релиз опубликован с AArch64 архивом и `SHA256SUMS`.
+- DNS API после обновления сообщил, что DNS Override и DNS Mihomo включены. Мы их не переключали. Передача IPv6 DNS может обходить Mihomo; DoH/DoT и фильтр контента панелью не перенастраиваются.
+- Перед массовым включением DNS handoff следует отдельно проверить DNS поведение на целевых конфигурациях роутера и сохранить доступ к панели.

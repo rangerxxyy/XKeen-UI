@@ -88,6 +88,14 @@ impl MihomoClient {
         self.read_json(response).await
     }
 
+    pub async fn get_raw_json(&self, endpoint: Endpoint) -> Result<Bytes, MihomoError> {
+        let response = self.send(Method::GET, endpoint.path(), None).await?;
+        let body = self.read_body(response).await?;
+        serde_json::from_slice::<serde::de::IgnoredAny>(&body)
+            .map_err(MihomoError::InvalidJson)?;
+        Ok(body)
+    }
+
     pub async fn dns_query(&self, name: &str, record_type: &str) -> Result<Value, MihomoError> {
         if !valid_dns_name(name) || !valid_dns_type(record_type) {
             return Err(MihomoError::InvalidDnsQuery);
@@ -109,6 +117,14 @@ impl MihomoClient {
         &self,
         response: hyper::Response<hyper::body::Incoming>,
     ) -> Result<Value, MihomoError> {
+        let body = self.read_body(response).await?;
+        serde_json::from_slice(&body).map_err(MihomoError::InvalidJson)
+    }
+
+    async fn read_body(
+        &self,
+        response: hyper::Response<hyper::body::Incoming>,
+    ) -> Result<Bytes, MihomoError> {
         if !response.status().is_success() {
             return Err(MihomoError::UpstreamStatus(response.status().as_u16()));
         }
@@ -128,7 +144,7 @@ impl MihomoClient {
         })
         .await
         .map_err(|_| MihomoError::Timeout)??;
-        serde_json::from_slice(&body).map_err(MihomoError::InvalidJson)
+        Ok(Bytes::from(body))
     }
 
     pub async fn select_proxy(&self, group: &str, proxy: &str) -> Result<(), MihomoError> {
@@ -647,6 +663,36 @@ mod tests {
                 Some("Bearer mock-secret".into())
             )
         );
+        server.abort();
+    }
+
+    #[tokio::test]
+    async fn raw_json_preserves_the_capped_upstream_payload() {
+        let body = r#"{"proxies":{"Main":{"type":"Selector","all":["Finland"]}}}"#;
+        let (client, mut requests, server) =
+            mock_controller(vec![(StatusCode::OK, body.into())]).await;
+        let result = client.get_raw_json(Endpoint::Proxies).await.unwrap();
+        assert_eq!(result.as_ref(), body.as_bytes());
+        assert_eq!(next_request(&mut requests).await.1, "/proxies");
+        server.abort();
+    }
+
+    #[tokio::test]
+    async fn raw_json_rejects_invalid_json_and_oversized_payloads() {
+        let (client, _requests, server) =
+            mock_controller(vec![(StatusCode::OK, r#"{"proxies":}"#.into())]).await;
+        assert!(matches!(
+            client.get_raw_json(Endpoint::Proxies).await,
+            Err(MihomoError::InvalidJson(_))
+        ));
+        server.abort();
+
+        let body = format!("{{\"padding\":\"{}\"}}", "x".repeat(MAX_RESPONSE_BYTES));
+        let (client, _requests, server) = mock_controller(vec![(StatusCode::OK, body)]).await;
+        assert!(matches!(
+            client.get_raw_json(Endpoint::ProxyProviders).await,
+            Err(MihomoError::ResponseTooLarge)
+        ));
         server.abort();
     }
 

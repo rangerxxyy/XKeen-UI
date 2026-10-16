@@ -585,7 +585,9 @@ mod tests {
         let config = "# dns:\nlog-level: info\ndns:\n  enable: true\n  listen: 0.0.0.0:53\n";
         assert!(read_mihomo_dns_enabled(config));
         assert!(mihomo_dns_listens_on_router_interface(config));
-        assert!(read_mihomo_dns_enabled("dns:\n  enable: true\n  listen: 127.0.0.1:53\n"));
+        assert!(read_mihomo_dns_enabled(
+            "dns:\n  enable: true\n  listen: 127.0.0.1:53\n"
+        ));
         assert!(!mihomo_dns_listens_on_router_interface(
             "dns:\n  enable: true\n  listen: 127.0.0.1:53\n"
         ));

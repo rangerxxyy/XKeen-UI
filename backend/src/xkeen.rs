@@ -208,8 +208,14 @@ fn shell_assignment(text: &str, key: &str) -> Option<String> {
 
 #[cfg(test)]
 mod tests {
-    use super::{control_args, execute_init_command, resolve_init_path, safe_init_path, shell_assignment};
-    use std::{os::unix::fs::PermissionsExt, path::Path, time::{Duration, Instant}};
+    use super::{
+        control_args, execute_init_command, resolve_init_path, safe_init_path, shell_assignment,
+    };
+    use std::{
+        os::unix::fs::PermissionsExt,
+        path::Path,
+        time::{Duration, Instant},
+    };
 
     #[test]
     fn reads_xkeen_config_without_sourcing_shell() {
@@ -242,7 +248,8 @@ mod tests {
     #[cfg(unix)]
     #[tokio::test]
     async fn init_command_does_not_wait_for_a_background_daemon() {
-        let path = std::env::temp_dir().join(format!("xkeen-ui-control-test-{}.sh", std::process::id()));
+        let path =
+            std::env::temp_dir().join(format!("xkeen-ui-control-test-{}.sh", std::process::id()));
         std::fs::write(&path, "#!/bin/sh\n(sleep 2) &\nexit 0\n").unwrap();
         std::fs::set_permissions(&path, std::fs::Permissions::from_mode(0o700)).unwrap();
 

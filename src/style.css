@@ -554,34 +554,59 @@ body { color:var(--text); -webkit-font-smoothing:antialiased; }
 .settings-panel .source-field input,.settings-panel .source-field select { min-height:39px; color:#f0f3fb; font-size:13px; }
 .settings-panel .sources-feedback { font-size:11px; line-height:1.4; }
 
-/* Compact connection cards keep each flow readable without spanning the full panel. */
-.connection-grid-wrap { max-height:min(68vh,720px); overflow:auto; padding:10px; scrollbar-color:#354863 #0a111d; }
-.connection-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(min(100%,240px),1fr)); align-items:start; gap:8px; }
-.connection-card { min-width:0; padding:9px 10px 8px; border:1px solid #26354a; border-radius:10px; background:linear-gradient(145deg,#101a29,#0b1220); transition:border-color .15s,background .15s,transform .15s; }
-.connection-card:hover { border-color:#435b7d; background:#121e30; transform:translateY(-1px); }
-.connection-card[hidden] { display:none; }
-.connection-card-route,.connection-card-host,.connection-card-meta,.connection-card-footer { display:flex; min-width:0; align-items:center; }
-.connection-card-route { gap:7px; min-height:23px; }
-.connection-card-route .connection-route { min-width:0; overflow:hidden; color:#a9bde0; font-size:10px; font-weight:600; text-overflow:ellipsis; white-space:nowrap; }
-.connection-card-icon { display:grid; width:20px; height:20px; flex:0 0 20px; place-items:center; border:1px solid #30405a; border-radius:6px; color:#8ab8ec; background:#131f32; font-size:12px; line-height:1; }
-.connection-card-icon.is-route { color:#76cfe5; background:#102634; border-color:#24485a; }
-.connection-service-icon { display:grid; width:19px; height:19px; flex:0 0 19px; place-items:center; border:1px solid #30405a; border-radius:6px; color:#aebbd0; background:#131f32; font-size:10px; font-weight:750; line-height:1; }
-.connection-service-icon.is-youtube { color:#ff7780; border-color:#59323b; background:#291923; }
-.connection-service-icon.is-github { color:#f2f4fa; border-color:#424556; background:#202231; }
-.connection-service-icon.is-google { color:#69a6ff; border-color:#32466b; background:#15233a; }
-.connection-service-icon.is-microsoft { color:#66d0ff; border-color:#2e5364; background:#132733; }
-.connection-card .connection-close { width:22px; height:22px; flex:0 0 22px; margin-left:auto; border-color:transparent; background:transparent; }
-.connection-card-host { gap:7px; margin-top:7px; }
-.connection-card-host strong { min-width:0; overflow:hidden; color:#e5edf9; font-size:12px; font-weight:620; text-overflow:ellipsis; white-space:nowrap; }
-.connection-card-meta { gap:6px; margin-top:7px; }
-.connection-card-meta>span { display:flex; min-width:0; align-items:center; gap:5px; padding:3px 6px; overflow:hidden; border:1px solid #25354b; border-radius:6px; color:#aab8ce; background:#0b1422; font-size:9px; text-overflow:ellipsis; white-space:nowrap; }
-.connection-card-meta i { color:#7faee7; font-style:normal; }
-.connection-card-footer { gap:11px; margin-top:8px; padding-top:7px; border-top:1px solid #202d40; color:#9cacc2; font-size:9px; }
-.connection-card-traffic { display:inline-flex; align-items:center; gap:4px; white-space:nowrap; }
-.connection-card-traffic i { color:#54d7a5; font-style:normal; font-size:12px; font-weight:700; }
-.connection-card-traffic i.is-download { color:#78b6f1; }
-.connection-card-footer time { margin-left:auto; color:#788ba5; white-space:nowrap; }
-.connection-grid-wrap .connection-no-results { min-height:90px; display:grid; place-items:center; }
+/* Compact connection table: dense rows, readable icons and aligned metadata. */
+.connections-panel { border-radius:12px; }
+.connections-toolbar { min-height:47px; display:flex; gap:9px; padding:6px 9px; background:#0b111e; }
+.connection-counts { display:flex; flex:0 0 auto; gap:3px; padding:3px; border-radius:9px; background:#202b3c; }
+.connection-count-pill { display:inline-flex; min-width:46px; height:28px; align-items:center; justify-content:center; gap:6px; padding:0 8px; border-radius:7px; color:#edf4ff; background:#101a29; font-size:12px; }
+.connection-count-pill>svg { width:15px; height:15px; fill:none; stroke:#e6efff; stroke-linecap:round; stroke-linejoin:round; stroke-width:1.5; }
+.connection-count-pill strong { font-size:12px; font-weight:650; }
+.connection-count-pill.is-secondary { min-width:40px; background:transparent; color:#8fa4bf; }
+.connection-count-pill.is-secondary>svg { stroke:#8fa4bf; }
+.connection-search { width:auto; min-width:120px; flex:1 1 auto; min-height:34px; border-radius:8px; }
+.connection-search>svg { width:14px; height:14px; flex:0 0 14px; fill:none; stroke:#9aabc1; stroke-linecap:round; stroke-linejoin:round; stroke-width:1.4; }
+.connection-search input { font-size:11px; }
+.connection-search kbd { flex:0 0 auto; color:#8494aa; font:10px 'JetBrains Mono',monospace; }
+.connection-close-all { min-height:34px; padding:0 11px; white-space:nowrap; }
+.connection-close-all>span { margin-right:4px; }
+.connection-table-wrap { max-height:min(68vh,720px); overflow:auto; scrollbar-color:#354863 #0a111d; }
+.connection-table { width:100%; min-width:760px; border-collapse:separate; border-spacing:0; table-layout:fixed; }
+.connection-table th { top:0; padding:10px 11px; background:#0b111e; color:#e6edf8; font-size:11px; font-weight:650; letter-spacing:0; }
+.connection-table th span { margin-left:3px; color:#687a93; font-size:10px; }
+.connection-table th span.is-sorted { color:#62a6ff; }
+.connection-table th:nth-child(1) { width:31%; }
+.connection-table th:nth-child(2) { width:28%; }
+.connection-table th:nth-child(3) { width:5%; }
+.connection-table th:nth-child(4) { width:10%; }
+.connection-table th:nth-child(5) { width:14%; }
+.connection-table th:nth-child(6) { width:10%; }
+.connection-table th:nth-child(7) { width:2%; }
+.connection-table td { max-width:none; height:36px; padding:5px 11px; border-bottom:1px solid #202b3c; color:#aabbd1; font-size:11px; }
+.connection-table tbody tr:hover { background:#121d2c; }
+.connection-table tbody tr[hidden] { display:none; }
+.connection-table td.connection-route-cell { display:table-cell; white-space:nowrap; }
+.connection-app-icon { display:inline-grid; width:17px; height:17px; margin-right:6px; vertical-align:-4px; place-items:center; border:1px solid transparent; border-radius:50%; color:#43c8f2; font-size:13px; font-weight:750; line-height:1; }
+.connection-app-icon.is-web { border-color:#008ec0; font-size:14px; }
+.connection-app-icon.is-youtube { border-radius:5px; color:#fff; background:#e92835; font-size:9px; }
+.connection-app-icon.is-github { color:#e8b2f5; background:#533064; font-size:10px; }
+.connection-app-icon.is-google { color:#4285f4; font-size:16px; }
+.connection-app-icon.is-microsoft { color:#65d3ff; font-size:14px; }
+.connection-chain { display:inline-block; max-width:calc(100% - 28px); overflow:hidden; vertical-align:middle; color:#eef4fc; font-size:11px; font-weight:570; text-overflow:ellipsis; white-space:nowrap; }
+.connection-route-cell:not(.has-app-icon) .connection-chain { max-width:100%; }
+.connection-chain::first-letter { color:#d2d9e5; }
+.connection-table td.connection-host { overflow:hidden; color:#eef4fc; font-size:11px; font-weight:560; text-overflow:ellipsis; white-space:nowrap; }
+.connection-network { color:#93afd2!important; }
+.connection-source { overflow:hidden; color:#83b9f3!important; text-overflow:ellipsis; white-space:nowrap; }
+.connection-traffic { white-space:nowrap; }
+.connection-traffic>span { display:inline-block; margin-right:7px; color:#9bb9df; white-space:nowrap; }
+.connection-traffic i { margin-right:3px; color:#70b6ff; font-style:normal; font-size:12px; }
+.connection-traffic i.is-upload { color:#70b6ff; }
+.connection-traffic i.is-download { color:#70b6ff; }
+.connection-time { color:#90afd6!important; white-space:nowrap; }
+.connection-actions { padding:2px 5px!important; text-align:center; }
+.connection-table .connection-close { width:22px; height:24px; padding:0; border-color:transparent; background:transparent; color:#8997aa; font-size:16px; }
+.connection-table .connection-close:hover { color:#ff7f8e; background:#351923; }
+.connection-table-wrap .connection-no-results { min-height:70px; display:grid; place-items:center; }
 .dns-runtime-list { display:grid; gap:0; margin:3px 15px 12px; border:1px solid #26354a; border-radius:9px; background:#0b1320; }
 .dns-runtime-list>div { display:flex; align-items:center; justify-content:space-between; gap:14px; min-height:38px; padding:7px 10px; border-bottom:1px solid #1e2a3c; color:#b7c4d8; font-size:11px; }
 .dns-runtime-list>div:last-child { border-bottom:0; }
@@ -608,10 +633,9 @@ body { color:var(--text); -webkit-font-smoothing:antialiased; }
 .service-control-spinner { width:13px; height:13px; border:2px solid #627798; border-top-color:#e4efff; border-radius:50%; animation:service-spin .75s linear infinite; }
 @keyframes service-spin { to { transform:rotate(360deg); } }
 @media(max-width:600px) {
-  .connection-grid-wrap { max-height:58vh; padding:7px; }
-  .connection-grid { grid-template-columns:1fr; gap:7px; }
   .connections-toolbar { align-items:center; flex-direction:row; flex-wrap:wrap; }
   .connection-search { flex:1 1 100%; order:3; width:100%; }
+  .connection-table { min-width:720px; }
 }
 
 @media(max-width:700px) {

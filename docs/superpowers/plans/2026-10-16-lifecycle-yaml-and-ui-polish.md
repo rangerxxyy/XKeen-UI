@@ -54,13 +54,13 @@
 - Keep public control endpoint request shape unchanged; success still returns `XkeenStatus`.
 - Add a private append helper targeting only `/opt/var/log/xkeen-ui.log`, with bounded line length and sanitized content.
 
-- [ ] Add tests showing a running-before/running-after identical identity is not a verified restart and changed identity is.
-- [ ] Add tests showing lifecycle log formatting strips secrets/control chars and truncates long output.
-- [ ] Run the relevant Rust tests; verify the missing behavior fails first.
-- [ ] Capture init command output with a size limit; combine stdout/stderr in diagnostics and retain exit code.
-- [ ] Record requested action, command result, before/after state, and verification result to the allowlisted log. Do not log request secrets or arbitrary environment.
-- [ ] Make restart verification require a changed process identity when the old process was running; keep start/stop state checks and DNS block behavior.
-- [ ] Run `cargo fmt --check` and `cargo test` when Cargo is available; otherwise verify the corresponding CI workflow has the required commands.
+- [x] Add tests showing a running-before/running-after identical identity is not a verified restart and changed identity is.
+- [x] Add tests showing lifecycle event formatting strips secrets/control chars and bounds each record.
+- [ ] Run the relevant Rust tests in GitHub CI; local Windows has no Cargo.
+- [x] Keep init stdout/stderr detached so the API cannot wait for daemon-inherited pipe handles; retain the exit code.
+- [x] Record requested action, command result, before/after state, and verification result to the allowlisted log. Do not log request secrets or arbitrary environment. Log DNS-blocked stops as well.
+- [x] Make restart verification require a changed process identity when the old process was running; keep start/stop state checks and DNS block behavior.
+- [ ] Run `cargo fmt --check` and `cargo test` in GitHub CI.
 
 ### Task 3: Show lifecycle outcomes in Journal
 
@@ -73,10 +73,10 @@
 - After a completed lifecycle action, select `xkeen-ui` as the Journal source, refresh the log, and retain existing toast/status behavior.
 - Busy state remains set until action verification completes.
 
-- [ ] Extract and test a helper that selects the XKeen log after success and failure.
-- [ ] Run focused test and confirm the current action flow lacks Journal refresh behavior.
-- [ ] Implement action completion flow and ensure render does not clear a user draft or current config editor state.
-- [ ] Run typecheck and frontend tests.
+- [x] Extract and test a helper that selects the XKeen log after success and failure.
+- [x] Confirm prior action flow lacked Journal refresh behavior.
+- [x] Implement action completion flow, re-read backend status, and refresh the Journal without remounting the YAML editor.
+- [x] Run typecheck and frontend tests.
 
 ### Task 4: Improve Mihomo validation diagnostics without weakening safe apply
 
@@ -88,11 +88,11 @@
 - Validation errors include exit status and bounded useful stdout/stderr text.
 - The existing `ApplyResult` and HTTP 422 `{error: string}` contract remain unchanged.
 
-- [ ] Add tests for stderr-only, stdout-only, combined, and empty Mihomo diagnostics.
-- [ ] Run the config test and confirm stdout-only/empty diagnostics are currently reduced to an unhelpful error.
-- [ ] Combine output with deterministic ordering and a strict cap; preserve status code and active-config-on-failure guarantee.
-- [ ] Ensure the editor retains draft and expected-content snapshot after 422, while continuing to invalidate snapshot after 409.
-- [ ] Run frontend and Rust tests; verify no active config write occurs on validation failure through testable apply boundary.
+- [x] Add tests for stderr-only, stdout-only, combined, and empty Mihomo diagnostics.
+- [x] Combine output with deterministic ordering and a strict cap; preserve status code and active-config-on-failure guarantee.
+- [x] Ensure the editor retains draft and expected-content snapshot after 422, while continuing to invalidate snapshot after 409.
+- [x] Add a validate-only router endpoint and editor action so real drafts can be checked without writing/restarting the live config.
+- [ ] Run frontend and Rust tests in CI; exercise validate-only against the active config after installing the candidate.
 
 ### Task 5: Readability, verified compact width, and motion feedback
 
@@ -104,9 +104,9 @@
 - Define root typography/spacing tokens and one authoritative app-shell width variable.
 - Respect `prefers-reduced-motion` for new transitions.
 
-- [ ] Record viewport dimensions and measure the current panel and reference screenshot; set the shell width token to the measured reference target and remove duplicate shell caps.
-- [ ] Replace tiny scattered labels with the shared readable scale while preserving compact cards and table density.
-- [ ] Add short enter transitions for modals/pages and distinct pending/success/error feedback for ping and XKeen controls.
+- [x] Compare the supplied 1920 px screenshot's 1436 px panel cap with the existing cap; define one authoritative 1436 px shell width token and remove the duplicate cap.
+- [x] Improve the readable type scale and contrast while preserving compact cards and table density.
+- [x] Add short enter transitions for modals and distinct pending/success/error feedback for ping and XKeen controls.
 - [ ] Verify reduced-motion disables added motion and keyboard focus remains visible.
 - [ ] Run `pnpm typecheck`, `pnpm test`, `pnpm build`; inspect the rendered browser UI at the reference viewport and mobile width.
 
@@ -118,7 +118,7 @@
 **Interfaces:**
 - No router source/core or DNS behavior changes. A config apply remains opt-in and uses the currently loaded router file as `expectedContent`.
 
-- [ ] Read current router XKeen/Mihomo/DNS handoff state before any action.
+- [x] Read current router XKeen/Mihomo/DNS handoff state before any action. DNS Override and Mihomo DNS are active; stop is blocked.
 - [ ] Install the candidate build through the authorized panel update path; verify version, API health, and logs.
 - [ ] Test XKeen restart/start/stop only in states permitted by DNS safeguards; verify each Journal result against backend status and process identity.
 - [ ] Reproduce the YAML 422 with the user's active config or provided failing draft; verify the actual diagnostic is displayed. Do not apply different YAML content without a matching user request; preserve validation, backup, expected-content, and rollback protections.

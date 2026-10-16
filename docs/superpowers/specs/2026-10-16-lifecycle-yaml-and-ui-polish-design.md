@@ -16,13 +16,15 @@ Make XKeen service actions visibly verifiable, expose Mihomo configuration failu
 
 ### Service lifecycle and Journal
 
-Keep the existing authenticated router API and init-script control path. Record one sanitized, timestamped lifecycle entry for every accepted start, stop, and restart, including command exit status, before/after observed process state, and verification result. Append these entries to the existing `xkeen-ui.log` under the existing bounded log path; never record bearer tokens, environment variables, or arbitrary request data. Capture a bounded amount of init output and sanitize it before writing. For restart, compare the observed process identity before and after so an already-running process cannot make a no-op command look successful. Return an error when the process transition is not verified. After an action, refresh the Journal and show the XKeen UI log so the result is immediately visible.
+Keep the existing authenticated router API and init-script control path. Record one sanitized, timestamped lifecycle entry for every accepted start, stop, and restart, including command exit status, before/after observed process state, and verification result. Append these entries to the existing `xkeen-ui.log` under the existing bounded log path; never record bearer tokens, environment variables, or arbitrary request data. Do not pipe init output into the request: the init script can start a daemon that inherits stdout/stderr, so capturing those streams can make the request wait for the daemon. For restart, compare the observed process identity before and after so an already-running process cannot make a no-op command look successful. Return an error when the process transition is not verified. After an action, refresh the Journal and show the XKeen UI log so the result is immediately visible.
 
 Retain the existing DNS safety check that blocks stopping XKeen while DNS handoff depends on it. Keep the action busy indicator active until the backend confirms the requested final state. Explain failures through the existing toast and log without implying success.
 
 ### Mihomo YAML editing and apply diagnostics
 
 Keep the existing CodeMirror editor, per-file draft behavior, optimistic `expectedContent` check, Mihomo validation, private backup, atomic replacement, and rollback. Parse JSON error bodies on non-2xx API responses and surface a bounded backend message with the HTTP status. When Mihomo rejects a staged config, combine stdout and stderr, retain the exit code, and return the useful validation text in the existing 422 JSON response. Do not replace the active config on validation failure. Preserve local draft content and router snapshot semantics so users can correct and retry without losing work.
+
+Add an explicit validate-only action for router mode. It runs the selected draft through the active Mihomo binary using a private temporary file in the config directory, removes that file on every completed path, and never replaces the active YAML, creates a backup, or restarts the service. This makes the validator's exact diagnostic available before apply without risking the user's active config.
 
 Use the user's actual router config and returned Mihomo diagnostics during router verification before changing YAML semantics. Do not silently normalize or rewrite user YAML beyond edits made in the editor.
 
@@ -43,6 +45,7 @@ Avoid copying upstream source or pixel-reproducing its layout. Match the request
 ## Verification
 
 - Frontend tests cover JSON error detail preservation, HTTP status retention, and a failure response with no usable message.
+- Frontend tests cover the validate-only request shape and its Mihomo error detail.
 - Rust unit tests cover lifecycle transition verification and bounded/sanitized command output formatting, plus validation diagnostics sourced from stdout, stderr, or both.
 - Run frontend typecheck, full test suite, and production build. Run Rust formatting, tests, and target build in CI if the local Windows host lacks Cargo.
 - Inspect the UI in a browser at the reference viewport for width, text clarity, modal opening, ping feedback, and service-action busy/finished states.

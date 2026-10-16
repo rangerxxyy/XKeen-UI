@@ -296,6 +296,7 @@ async fn control_xkeen(
     let _control_guard = state.core_update_lock.lock().await;
     if request.action == "stop" {
         if let Err(message) = dns_control::ensure_dns_safe_to_stop().await {
+            xkeen::log_blocked_action(&request.action, &message);
             return (
                 StatusCode::CONFLICT,
                 Json(serde_json::json!({ "error": message })),
@@ -1114,6 +1115,10 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         .route(
             "/api/v1/config/active",
             axum::routing::put(config_files::apply_active),
+        )
+        .route(
+            "/api/v1/config/validate",
+            axum::routing::post(config_files::validate_draft),
         )
         .route(
             "/api/v1/config/files/{file}",

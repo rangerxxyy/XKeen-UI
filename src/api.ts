@@ -297,6 +297,25 @@ export interface ApplyMihomoConfigResult {
   detail: string;
 }
 
+export interface MihomoValidationResult {
+  valid: true;
+  detail: string;
+}
+
+export async function validateMihomoConfig(content: string, signal?: AbortSignal): Promise<MihomoValidationResult> {
+  const response = await fetch('/api/v1/config/validate', {
+    method: 'POST',
+    headers: { Accept: 'application/json', 'Content-Type': 'application/json' },
+    body: JSON.stringify({ content }),
+    signal,
+  });
+  const payload = await readJson(response, 'Проверка конфигурации Mihomo');
+  if (!isRecord(payload) || payload.valid !== true || typeof payload.detail !== 'string') {
+    throw new Error('Backend вернул некорректный результат проверки конфигурации Mihomo');
+  }
+  return { valid: true, detail: payload.detail };
+}
+
 export async function applyActiveMihomoConfig(content: string, expectedContent: string, signal?: AbortSignal): Promise<ApplyMihomoConfigResult> {
   const response = await fetch('/api/v1/config/active', {
     method: 'PUT',

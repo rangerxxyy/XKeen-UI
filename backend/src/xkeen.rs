@@ -4,13 +4,14 @@ use std::{
     os::unix::fs::PermissionsExt,
     path::{Path, PathBuf},
     process::Stdio,
-    time::Duration,
+    time::{Duration, SystemTime, UNIX_EPOCH},
 };
 use tokio::process::Command;
 
 const INFO_FILE: &str = "/opt/sbin/.xkeen/01_info/01_info_variable.sh";
 const INIT_DIR: &str = "/opt/etc/init.d";
 const ALLOWED_CLIENTS: [&str; 2] = ["mihomo", "xray"];
+const SERVICE_STATE_TIMEOUT: usize = 60;
 
 #[derive(Clone, Debug, Serialize)]
 #[serde(rename_all = "camelCase")]
@@ -27,6 +28,12 @@ pub struct XkeenStatus {
 #[serde(deny_unknown_fields)]
 pub struct ControlRequest {
     pub action: String,
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord)]
+struct ProcessIdentity {
+    pid: u32,
+    start_ticks: u64,
 }
 
 pub fn read_status() -> XkeenStatus {
@@ -79,28 +86,146 @@ pub fn read_status() -> XkeenStatus {
 }
 
 pub async fn control(action: &str) -> Result<XkeenStatus, String> {
-    let status = read_status();
-    let path = status
+    let before = read_status();
+    let before_processes = before
+        .core
+        .as_deref()
+        .map(process_identities)
+        .unwrap_or_default();
+    let path = before
         .init_path
         .as_deref()
-        .filter(|_| status.installed)
-        .ok_or_else(|| "Не найден исполняемый init-файл XKeen".to_owned())?;
-    let args = control_args(action)?;
-    execute_init_command(Path::new(path), args).await?;
-
-    let expected_running = action != "stop";
-    for _ in 0..20 {
-        let current = read_status();
-        if current.running == Some(expected_running) {
-            return Ok(current);
-        }
-        tokio::time::sleep(Duration::from_millis(250)).await;
+        .filter(|_| before.installed);
+    let mut command_result = "not-started";
+    let result = match control_args(action) {
+        Err(error) => Err(error),
+        Ok(args) => match path {
+            None => Err("Не найден исполняемый init-файл XKeen".to_owned()),
+            Some(path) => match execute_init_command(Path::new(path), args).await {
+                Err(error) => {
+                    command_result = "failed";
+                    Err(error)
+                }
+                Ok(()) => {
+                    command_result = "exit-0";
+                    let mut confirmed = None;
+                    for _ in 0..SERVICE_STATE_TIMEOUT {
+                        let current = before
+                            .core
+                            .as_deref()
+                            .map(process_identities)
+                            .unwrap_or_default();
+                        if process_transition_verified(action, &before_processes, &current) {
+                            confirmed = Some(read_status());
+                            break;
+                        }
+                        tokio::time::sleep(Duration::from_millis(250)).await;
+                    }
+                    confirmed.ok_or_else(|| {
+                        let current = read_status();
+                        format!(
+                            "Команда XKeen завершилась успешно, но действие не подтверждено: {}",
+                            current.detail
+                        )
+                    })
+                }
+            },
+        },
+    };
+    let after = read_status();
+    let after_processes = after
+        .core
+        .as_deref()
+        .map(process_identities)
+        .unwrap_or_default();
+    let result = require_verified_transition(action, result, &before_processes, &after_processes);
+    let verified = result.is_ok();
+    let action_name = match action {
+        "start" | "stop" | "restart" => action,
+        _ => "invalid",
+    };
+    let timestamp = SystemTime::now()
+        .duration_since(UNIX_EPOCH)
+        .unwrap_or_default()
+        .as_secs();
+    let mut event = format!(
+        "unix={timestamp} component=xkeen action={action_name} command={command_result} running_before={} running_after={} process_transition={} result={}",
+        display_running(before.running),
+        display_running(after.running),
+        if verified { "verified" } else { "unverified" },
+        if verified { "success" } else { "failure" },
+    );
+    if let Err(error) = &result {
+        event.push_str(" error=");
+        event.push_str(error);
     }
-    let current = read_status();
-    Err(format!(
-        "Команда XKeen завершилась успешно, но состояние службы не подтвердилось: {}",
-        current.detail
-    ))
+    let log_result = crate::logs::append_xkeen_lifecycle(&[event]);
+    if let Err(error) = &log_result {
+        tracing::warn!(%error, "Could not append XKeen lifecycle event to Journal log");
+    }
+    result.map(|_| {
+        let mut status = after;
+        if let Err(error) = log_result {
+            status.detail = format!("{}. Запись в журнал не удалась: {error}", status.detail);
+        }
+        status
+    })
+}
+
+pub(super) fn log_blocked_action(action: &str, reason: &str) {
+    let action = match action {
+        "start" | "stop" | "restart" => action,
+        _ => "invalid",
+    };
+    let timestamp = SystemTime::now()
+        .duration_since(UNIX_EPOCH)
+        .unwrap_or_default()
+        .as_secs();
+    let entry = format!(
+        "unix={timestamp} component=xkeen action={action} command=not-run process_transition=blocked result=blocked error={reason}"
+    );
+    if let Err(error) = crate::logs::append_xkeen_lifecycle(&[entry]) {
+        tracing::warn!(%error, "Could not append blocked XKeen action to Journal log");
+    }
+}
+
+fn require_verified_transition<T>(
+    action: &str,
+    result: Result<T, String>,
+    before: &[ProcessIdentity],
+    after: &[ProcessIdentity],
+) -> Result<T, String> {
+    match result {
+        Ok(value) if process_transition_verified(action, before, after) => Ok(value),
+        Ok(_) => Err(format!(
+            "Команда XKeen завершилась, но переход процесса для действия {action} не подтверждён"
+        )),
+        Err(error) => Err(error),
+    }
+}
+
+fn display_running(running: Option<bool>) -> &'static str {
+    match running {
+        Some(true) => "true",
+        Some(false) => "false",
+        None => "unknown",
+    }
+}
+
+fn process_transition_verified(
+    action: &str,
+    before: &[ProcessIdentity],
+    after: &[ProcessIdentity],
+) -> bool {
+    match action {
+        "start" => !after.is_empty(),
+        "stop" => after.is_empty(),
+        "restart" => {
+            !after.is_empty()
+                && (before.is_empty() || before.iter().all(|identity| !after.contains(identity)))
+        }
+        _ => false,
+    }
 }
 
 async fn execute_init_command(path: &Path, args: &[&str]) -> Result<(), String> {
@@ -138,16 +263,35 @@ fn control_args(action: &str) -> Result<&'static [&'static str], String> {
 }
 
 fn process_is_running(name: &str) -> bool {
-    fs::read_dir("/proc").is_ok_and(|entries| {
-        entries.flatten().any(|entry| {
-            entry
-                .file_name()
-                .to_str()
-                .is_some_and(|pid| pid.bytes().all(|byte| byte.is_ascii_digit()))
-                && fs::read_to_string(entry.path().join("comm"))
-                    .is_ok_and(|comm| comm.trim() == name)
+    !process_identities(name).is_empty()
+}
+
+fn process_identities(name: &str) -> Vec<ProcessIdentity> {
+    let mut identities = fs::read_dir("/proc")
+        .into_iter()
+        .flatten()
+        .flatten()
+        .filter_map(|entry| {
+            let pid = entry.file_name().to_str()?.parse::<u32>().ok()?;
+            let comm = fs::read_to_string(entry.path().join("comm")).ok()?;
+            if comm.trim() != name {
+                return None;
+            }
+            let stat = fs::read_to_string(entry.path().join("stat")).ok()?;
+            let start_ticks = process_start_ticks(&stat)?;
+            Some(ProcessIdentity { pid, start_ticks })
         })
-    })
+        .collect::<Vec<_>>();
+    identities.sort_unstable();
+    identities
+}
+
+fn process_start_ticks(stat: &str) -> Option<u64> {
+    let comm_end = stat.rfind(')')?;
+    stat[comm_end + 1..]
+        .split_whitespace()
+        .nth(19)?
+        .parse()
 }
 
 fn executable_file(path: &Path) -> bool {
@@ -209,7 +353,9 @@ fn shell_assignment(text: &str, key: &str) -> Option<String> {
 #[cfg(test)]
 mod tests {
     use super::{
-        control_args, execute_init_command, resolve_init_path, safe_init_path, shell_assignment,
+        control_args, execute_init_command, process_start_ticks, process_transition_verified,
+        require_verified_transition,
+        resolve_init_path, safe_init_path, shell_assignment, ProcessIdentity,
     };
     use std::{
         os::unix::fs::PermissionsExt,
@@ -243,6 +389,59 @@ mod tests {
         assert_eq!(control_args("stop").unwrap(), &["stop"]);
         assert_eq!(control_args("restart").unwrap(), &["restart", "on"]);
         assert!(control_args("invalid").is_err());
+    }
+
+    #[test]
+    fn restart_requires_a_new_process_identity() {
+        let old = ProcessIdentity { pid: 321, start_ticks: 900 };
+        assert!(!process_transition_verified("restart", &[old], &[old]));
+    }
+
+    #[test]
+    fn restart_accepts_a_replaced_process_and_start_from_stopped_state() {
+        let old = ProcessIdentity { pid: 321, start_ticks: 900 };
+        let new = ProcessIdentity { pid: 321, start_ticks: 901 };
+        assert!(process_transition_verified("restart", &[old], &[new]));
+        assert!(process_transition_verified("restart", &[], &[new]));
+    }
+
+    #[test]
+    fn start_and_stop_require_the_expected_process_presence() {
+        let identity = ProcessIdentity { pid: 321, start_ticks: 900 };
+        assert!(process_transition_verified("start", &[], &[identity]));
+        assert!(!process_transition_verified("start", &[], &[]));
+        assert!(process_transition_verified("stop", &[identity], &[]));
+        assert!(!process_transition_verified("stop", &[identity], &[identity]));
+    }
+
+    #[test]
+    fn refuses_to_return_success_when_final_restart_transition_is_unverified() {
+        let identity = ProcessIdentity { pid: 321, start_ticks: 900 };
+        let result = require_verified_transition("restart", Ok(()), &[identity], &[identity]);
+        assert!(result.unwrap_err().contains("не подтверждён"));
+    }
+
+    #[test]
+    fn preserves_command_failure_when_transition_is_unverified() {
+        let identity = ProcessIdentity { pid: 321, start_ticks: 900 };
+        let result = require_verified_transition(
+            "restart",
+            Err("XKeen завершил команду с кодом 1".to_owned()),
+            &[identity],
+            &[identity],
+        );
+        assert_eq!(result.unwrap_err(), "XKeen завершил команду с кодом 1");
+    }
+
+    #[test]
+    fn parses_process_start_time_after_comm_with_spaces_and_parentheses() {
+        let fields = std::iter::once("S")
+            .chain(std::iter::repeat_n("0", 18))
+            .chain(std::iter::once("98765"))
+            .collect::<Vec<_>>()
+            .join(" ");
+        let stat = format!("42 (mihomo (worker)) {fields}");
+        assert_eq!(process_start_ticks(&stat), Some(98765));
     }
 
     #[cfg(unix)]

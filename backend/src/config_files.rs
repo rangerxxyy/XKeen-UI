@@ -187,6 +187,45 @@ pub struct ApplyRequest {
     expected_content: String,
 }
 
+#[derive(Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct ValidateRequest {
+    content: String,
+}
+
+pub async fn validate_draft(
+    State(state): State<AppState>,
+    Json(request): Json<ValidateRequest>,
+) -> Response {
+    if !state.router_mode {
+        return error(
+            StatusCode::SERVICE_UNAVAILABLE,
+            "Проверка конфигурации доступна только на роутере",
+        );
+    }
+    if request.content.trim().is_empty() {
+        return error(StatusCode::BAD_REQUEST, "Черновик конфигурации пуст");
+    }
+    if request.content.len() > MAX_CONFIG {
+        return error(
+            StatusCode::PAYLOAD_TOO_LARGE,
+            "Черновик конфигурации превышает 4 MiB",
+        );
+    }
+    let _guard = state.core_update_lock.lock().await;
+    match validate_content(&request.content).await {
+        Ok(()) => Json(serde_json::json!({
+            "valid": true,
+            "detail": "Черновик прошёл проверку активным Mihomo; конфиг на роутере не изменялся"
+        }))
+        .into_response(),
+        Err(message) => error(
+            StatusCode::UNPROCESSABLE_ENTITY,
+            &format!("Проверка не пройдена; активный конфиг на роутере не изменялся: {message}"),
+        ),
+    }
+}
+
 #[derive(serde::Serialize)]
 #[serde(rename_all = "camelCase")]
 struct ApplyResult {
@@ -354,6 +393,44 @@ async fn apply(content: &str, expected_content: &str) -> Result<ApplyResult, Str
     })
 }
 
+async fn validate_content(content: &str) -> Result<(), String> {
+    let directory = Path::new(CONFIG_DIR);
+    let metadata = tokio::fs::symlink_metadata(directory)
+        .await
+        .map_err(|error| format!("Не удалось проверить каталог Mihomo: {error}"))?;
+    if !metadata.is_dir() || metadata.file_type().is_symlink() {
+        return Err("Каталог Mihomo не является обычным каталогом".into());
+    }
+    let core = ["/opt/sbin/mihomo", "/opt/bin/mihomo"]
+        .into_iter()
+        .find(|path| fs::metadata(path).is_ok_and(|meta| meta.is_file() && meta.permissions().mode() & 0o111 != 0))
+        .ok_or_else(|| "Исполняемый Mihomo не найден в /opt/sbin или /opt/bin".to_owned())?;
+    let staged = unique_file(directory, "xkeen-ui-validate", "yaml");
+    let mut file = tokio::fs::OpenOptions::new()
+        .write(true)
+        .create_new(true)
+        .mode(0o600)
+        .open(&staged)
+        .await
+        .map_err(|error| format!("Не удалось создать временный файл для проверки: {error}"))?;
+    let written = async {
+        file.write_all(content.as_bytes()).await?;
+        file.sync_all().await
+    }
+    .await;
+    drop(file);
+    let validation = match written {
+        Ok(()) => validate_config(core, &staged).await,
+        Err(error) => Err(format!("Не удалось записать временный файл: {error}")),
+    };
+    let cleanup = tokio::fs::remove_file(&staged).await;
+    match (validation, cleanup) {
+        (Ok(()), Ok(())) => Ok(()),
+        (Err(error), _) => Err(error),
+        (Ok(()), Err(error)) => Err(format!("Проверка прошла, но временный файл не удалён: {error}")),
+    }
+}
+
 pub(crate) async fn apply_managed_config(
     content: &str,
     expected_content: &str,
@@ -423,13 +500,31 @@ async fn validate_config(core: &str, staged: &Path) -> Result<(), String> {
     if output.status.success() {
         return Ok(());
     }
-    let text = String::from_utf8_lossy(&output.stderr);
-    let detail = text.chars().take(1024).collect::<String>();
-    Err(if detail.trim().is_empty() {
-        format!("код завершения {}", output.status)
-    } else {
-        detail.trim().to_owned()
-    })
+    Err(validation_detail(
+        &output.status.to_string(),
+        &output.stderr,
+        &output.stdout,
+    ))
+}
+
+fn validation_detail(status: &str, stderr: &[u8], stdout: &[u8]) -> String {
+    let details = [stderr, stdout]
+        .into_iter()
+        .map(String::from_utf8_lossy)
+        .flat_map(|text| {
+            text.lines()
+                .map(crate::logs::sanitize_line)
+                .collect::<Vec<_>>()
+        })
+        .map(|line| line.trim().to_owned())
+        .filter(|line| !line.is_empty())
+        .collect::<Vec<_>>()
+        .join("\n");
+    if details.is_empty() {
+        return format!("код завершения {status}; Mihomo не вернул диагностический текст");
+    }
+    let bounded = details.chars().take(1024).collect::<String>();
+    format!("код завершения {status}: {bounded}")
 }
 
 async fn ensure_backup_dir(path: &Path) -> Result<(), String> {
@@ -479,7 +574,7 @@ fn error(status: StatusCode, message: &str) -> Response {
 
 #[cfg(test)]
 mod tests {
-    use super::{unique_file, user_file_path};
+    use super::{unique_file, user_file_path, validation_detail};
     use std::path::Path;
 
     #[test]
@@ -515,5 +610,27 @@ mod tests {
         );
         assert_eq!(user_file_path("xkeen"), Some("/opt/etc/xkeen/xkeen.json"));
         assert_eq!(user_file_path("../config.yaml"), None);
+    }
+
+    #[test]
+    fn keeps_mihomo_diagnostics_from_both_output_streams() {
+        let result = validation_detail("exit status: 1", b"stderr detail\n", b"stdout detail\n");
+        assert!(result.contains("код завершения exit status: 1"));
+        assert!(result.contains("stderr detail\nstdout detail"));
+    }
+
+    #[test]
+    fn uses_stdout_when_mihomo_writes_no_stderr() {
+        let result = validation_detail("exit status: 1", b"", b"invalid rule at line 42\n");
+        assert!(result.contains("invalid rule at line 42"));
+    }
+
+    #[test]
+    fn reports_exit_status_when_mihomo_emits_no_diagnostic() {
+        let result = validation_detail("exit status: 2", b"", b"");
+        assert_eq!(
+            result,
+            "код завершения exit status: 2; Mihomo не вернул диагностический текст"
+        );
     }
 }

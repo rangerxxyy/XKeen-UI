@@ -379,6 +379,16 @@ pub async fn toggle(
             return error(StatusCode::INTERNAL_SERVER_ERROR, e);
         }
         info!("Передача DNS KeeneticOS в Mihomo начата");
+        if let Err(e) = config_files::apply_managed_config(&candidate, &current).await {
+            let cleanup = tokio::fs::remove_file(DNS_STATE_PATH).await;
+            return match cleanup {
+                Ok(()) => error(StatusCode::UNPROCESSABLE_ENTITY, e),
+                Err(cleanup_error) => error(
+                    StatusCode::INTERNAL_SERVER_ERROR,
+                    format!("{e}; конфиг остался прежним, но резерв не удалён: {cleanup_error}"),
+                ),
+            };
+        }
         for command in [
             "no ip name-server".to_owned(),
             format!("ip name-server {br0_ip}"),
@@ -386,11 +396,8 @@ pub async fn toggle(
             "system configuration save".into(),
         ] {
             if let Err(e) = ndmc(&command).await {
-                return rollback_enable(&previous, e).await;
+                return rollback_enable(&previous, &current, &candidate, e).await;
             }
-        }
-        if let Err(e) = config_files::apply_managed_config(&candidate, &current).await {
-            return rollback_enable(&previous, e).await;
         }
     } else {
         let backup = match read_restore_state().await {
@@ -403,19 +410,18 @@ pub async fn toggle(
             }
             Err(e) => return error(StatusCode::INTERNAL_SERVER_ERROR, e),
         };
-        if let Err(e) = config_files::apply_managed_config(&candidate, &current).await {
-            return error(StatusCode::UNPROCESSABLE_ENTITY, e);
-        }
         info!("Возврат DNS Mihomo в KeeneticOS начат");
         if let Err(e) = restore_router_dns(&backup).await {
-            let rollback = config_files::apply_managed_config(&current, &candidate).await;
-            let detail = rollback
-                .err()
-                .map(|rollback_error| {
-                    format!(" Не удалось вернуть прежний конфиг Mihomo: {rollback_error}.")
-                })
-                .unwrap_or_else(|| " Конфиг Mihomo восстановлен.".into());
-            return error(StatusCode::BAD_GATEWAY, format!("KeeneticOS не подтвердил возврат DNS; резерв сохранён для повтора. {e}.{detail}"));
+            return error(
+                StatusCode::BAD_GATEWAY,
+                format!("KeeneticOS не подтвердил возврат DNS; резерв сохранён для повтора. {e}"),
+            );
+        }
+        if let Err(e) = config_files::apply_managed_config(&candidate, &current).await {
+            return error(
+                StatusCode::UNPROCESSABLE_ENTITY,
+                format!("DNS роутера возвращён; DNS Mihomo остался включён в конфиге: {e}"),
+            );
         }
         if let Err(e) = tokio::fs::remove_file(DNS_STATE_PATH).await {
             return error(
@@ -460,14 +466,26 @@ async fn restore_router_dns(state: &DnsRestoreState) -> Result<(), String> {
     Ok(())
 }
 
-async fn rollback_enable(previous: &DnsRestoreState, cause: String) -> Response {
+async fn rollback_enable(
+    previous: &DnsRestoreState,
+    current: &str,
+    candidate: &str,
+    cause: String,
+) -> Response {
     match restore_router_dns(previous).await {
         Ok(()) => {
             warn!("Передача DNS в Mihomo не завершилась; исходные DNS KeeneticOS восстановлены");
+            let config_rollback = config_files::apply_managed_config(current, candidate).await;
+            if let Err(config_error) = config_rollback {
+                return error(
+                    StatusCode::BAD_GATEWAY,
+                    format!("{cause}; DNS роутера восстановлен, но DNS Mihomo в конфиге не удалось откатить: {config_error}. Резерв сохранён для проверки"),
+                );
+            }
             if let Err(remove_error) = tokio::fs::remove_file(DNS_STATE_PATH).await {
-                error(StatusCode::INTERNAL_SERVER_ERROR, format!("{cause}; DNS роутера восстановлен, но резерв остался: {remove_error}"))
+                error(StatusCode::INTERNAL_SERVER_ERROR, format!("{cause}; прежние DNS-настройки восстановлены, но резерв не удалён: {remove_error}"))
             } else {
-                error(StatusCode::UNPROCESSABLE_ENTITY, format!("{cause}; исходные DNS-настройки роутера восстановлены"))
+                error(StatusCode::UNPROCESSABLE_ENTITY, format!("{cause}; исходные DNS-настройки роутера и Mihomo восстановлены"))
             }
         }
         Err(rollback) => error(StatusCode::BAD_GATEWAY, format!("{cause}; откат KeeneticOS не завершён: {rollback}. Резерв сохранён в {DNS_STATE_PATH}")),

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { applyPingResults, orderSelectorsByConfig, renderConnections, renderSelectors } from './mihomo-view';
+import { applyPingResults, orderSelectorsByConfig, renderConnections, renderPingStatusIcon, renderSelectors } from './mihomo-view';
 import type { MihomoConnections, MihomoSelector } from './api';
 
 describe('applyPingResults', () => {
@@ -30,6 +30,12 @@ describe('applyPingResults', () => {
 });
 
 describe('renderSelectors', () => {
+  it('uses a check for an available node instead of a Wi-Fi glyph', () => {
+    const html = renderPingStatusIcon(true);
+    expect(html).toContain('M4.5 8.5l2.3 2.3 4.8-5.1');
+    expect(html).not.toContain('M2 5.4');
+  });
+
   it('renders ISO country prefixes with bundled SVG flag icons in node names and selected routes', () => {
     const groups: MihomoSelector[] = [{ name: 'Main', icon: null, current: 'fi ⚡ Finland · TCP', options: [
       { name: 'fi ⚡ Finland · TCP', type: 'VLESS', icon: null, alive: null, delay: null },
@@ -77,6 +83,16 @@ describe('renderSelectors', () => {
     expect(html).toContain('proxy-health proxy-ping-value is-dead');
     expect(html).toContain('class="ping-status-icon"');
     expect(html).toContain('Узел не отвечает. Нажмите, чтобы проверить ping');
+  });
+
+  it('keeps protocol and transport labels together for VLESS XUDP and Hysteria2 UDP nodes', () => {
+    const groups: MihomoSelector[] = [{ name: 'Main', icon: null, current: null, options: [
+      { name: 'VLESS node', type: 'VLESS', icon: null, alive: true, delay: 31, xudp: true },
+      { name: 'Hysteria node', type: 'Hysteria2', icon: null, alive: true, delay: 45, udp: true },
+    ] }];
+    const html = renderSelectors(groups, false, null);
+    expect(html).toContain('proxy-protocol-badge">vless</span><span class="proxy-transport-badge is-xudp">xudp</span>');
+    expect(html).toContain('proxy-protocol-badge">hysteria2</span><span class="proxy-transport-badge is-udp">udp</span>');
   });
 });
 

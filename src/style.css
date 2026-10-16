@@ -1332,3 +1332,35 @@ body { -webkit-font-smoothing:auto; }
   .app-shell .quick-card small,.app-shell .dns-handoff-note,.app-shell .modal-note { font-size:12px; }
   .app-shell .journal-line code { font-size:11px; }
 }
+
+/* Final UI pass: align text hierarchy with the supplied reference screens. */
+.app-shell .nav-item { font-size:13px; font-weight:600; }
+.app-shell .button,.app-shell .editor-button,.app-shell .text-button { font-size:12px; }
+.app-shell .page-heading p,.app-shell .service-dialog-note,
+.app-shell .placeholder-copy p,.app-shell .empty-card p,
+.app-shell .mihomo-empty p,.app-shell .mihomo-inline-empty,
+.app-shell .mihomo-privacy-note p,.app-shell .connection-no-results,
+.app-shell .journal-empty p,.app-shell .journal-empty strong,
+.app-shell .traffic-footnote,.app-shell .footer { font-size:12px; line-height:1.5; }
+.app-shell .section-title p,.app-shell .placeholder-note,
+.app-shell .summary-version,.app-shell .traffic-summary small,
+.app-shell .proxy-health,.app-shell .proxy-option-bottom,
+.app-shell .connection-total,.app-shell .connection-table th,
+.app-shell .connection-table td,.app-shell .journal-filter input,
+.app-shell .journal-tools select { font-size:12px; }
+.app-shell .modal-tabs .settings-tab { font-size:13px; font-weight:650; }
+.app-shell .modal-note,.app-shell .setting-row small { color:#b5c2d4; }
+.app-shell :where(button,a,select,input,textarea) { transition-duration:.18s; }
+.app-shell :where(button,a):focus-visible,
+.app-shell :where(select,input,textarea):focus-visible { outline-offset:2px; }
+:root[data-theme="light"] .app-shell .modal-note,
+:root[data-theme="light"] .app-shell .setting-row small { color:#53647a; }
+@media(max-width:700px) {
+  .app-shell .connection-table th,.app-shell .connection-table td { font-size:11px; }
+  .app-shell .nav-item { font-size:12px; }
+}
+.app-shell .proxy-protocol-badge,.app-shell .proxy-transport-badge { min-height:18px; padding-inline:7px; font-size:11px; }
+.app-shell .proxy-health { min-height:23px; gap:5px; padding:1px 5px; }
+.app-shell .proxy-health .ping-status-icon { width:13px; height:13px; flex-basis:13px; }
+.app-shell .proxy-health .ping-status-icon svg { width:13px; height:13px; }
+.app-shell .proxy-health > span { font-size:10px; }

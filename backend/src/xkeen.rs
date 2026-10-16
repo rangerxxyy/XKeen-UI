@@ -285,7 +285,11 @@ fn process_identities(name: &str) -> Vec<ProcessIdentity> {
 
 fn process_start_ticks(stat: &str) -> Option<u64> {
     let comm_end = stat.rfind(')')?;
-    stat[comm_end + 1..].split_whitespace().nth(19)?.parse().ok()
+    stat[comm_end + 1..]
+        .split_whitespace()
+        .nth(19)?
+        .parse()
+        .ok()
 }
 
 fn executable_file(path: &Path) -> bool {

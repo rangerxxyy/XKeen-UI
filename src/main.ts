@@ -128,11 +128,16 @@ function renderNavigation(): string {
 
 function renderConfigFileButtons(): string {
   const xray = xkeenStatus?.core === 'xray';
-  const ids = ['config', 'ip_exclude', 'port_exclude', 'port_proxying', 'xkeen', ...(xray ? ['xray_jsonc'] : [])];
+  const ids = ['config', 'ip_exclude', 'port_exclude', 'port_proxying', 'xkeen', ...(xray ? ['xray_routing'] : [])];
   const defaultFile = xray ? 'xray_json' : 'config';
   const savedFile = sessionStorage.getItem('xkeen-ui:draft-active-file');
-  const activeFile = ids.includes(savedFile ?? '') || (xray && savedFile === 'xray_json') ? savedFile : defaultFile;
-  const labels: Record<string, string> = { config: 'config', xray_json: 'config', ip_exclude: 'ip_exclude', port_exclude: 'port_exclude', port_proxying: 'port_proxying', xkeen: 'xkeen', xray_jsonc: 'routing' };
+  const activeFile = xray
+    ? savedFile === 'xray_routing' || savedFile === 'xray_jsonc' ? 'xray_routing'
+      : savedFile === 'config' || savedFile === 'xray_json' ? 'xray_json'
+        : ids.includes(savedFile ?? '') ? savedFile : defaultFile
+    : ids.includes(savedFile ?? '') && savedFile !== 'xray_json' && savedFile !== 'xray_routing' && savedFile !== 'xray_jsonc'
+      ? savedFile : defaultFile;
+  const labels: Record<string, string> = { config: 'config', xray_json: 'config', ip_exclude: 'ip_exclude', port_exclude: 'port_exclude', port_proxying: 'port_proxying', xkeen: 'xkeen', xray_routing: 'routing' };
   return `<div class="config-file-nav" aria-label="Файлы конфигурации">${ids.map((id) => {
     const fileId = id === 'config' && xray ? 'xray_json' : id;
     const selected = fileId === activeFile;
@@ -157,7 +162,7 @@ function renderConfiguration(): string {
     <div class="config-editor-main">
       <strong id="editor-filename" class="sr-only">config.yaml</strong><span id="editor-language" class="sr-only">YAML · Mihomo</span><span id="editor-file-hint" class="sr-only">Локальный черновик</span>
       <div class="code-editor-shell"><div class="code-editor" id="yaml-editor" aria-label="Текст конфигурации"></div></div>
-      <div class="editor-statusbar"><span id="yaml-validation" class="editor-validation">Черновик пуст</span><div class="editor-actions"><button class="editor-button" id="config-load-active" type="button" data-router-file title="Считать файл с роутера">↻ Считать</button><button class="editor-button" id="config-validate-mihomo" type="button" hidden title="Проверить черновик установленным Mihomo без применения">Проверить Mihomo</button><button class="editor-button editor-button-primary" id="config-apply-active" type="button" data-router-file disabled title="Сначала считайте актуальный файл роутера">Применить</button><details class="editor-utilities"><summary class="editor-button">⋯ Утилиты</summary><div class="editor-utilities-menu" role="menu" aria-label="Утилиты конфигурации"><button type="button" role="menuitem" id="yaml-template" data-structured-only>▤ Шаблоны конфигураций</button><button type="button" role="menuitem" id="yaml-validate" data-structured-only>✓ Проверить</button><button type="button" role="menuitem" id="yaml-format" data-structured-only>⌘ Форматировать</button><button type="button" role="menuitem" id="yaml-download">↓ Скачать черновик</button></div></details></div></div>
+      <div class="editor-statusbar"><span id="yaml-validation" class="editor-validation" aria-live="polite">Проверка конфигурации…</span><div class="editor-actions"><button class="editor-button" id="config-save-active" type="button" data-router-file disabled title="Сохранить файл на роутере без применения">Сохранить</button><button class="editor-button editor-button-primary" id="config-apply-active" type="button" data-router-file disabled title="Проверить, сохранить и перезапустить активное ядро">Применить и перезапустить</button><details class="editor-utilities"><summary class="editor-button">⋯ Утилиты</summary><div class="editor-utilities-menu" role="menu" aria-label="Утилиты конфигурации"><button type="button" role="menuitem" id="yaml-template" data-structured-only>▤ Шаблоны конфигураций</button><button type="button" role="menuitem" id="yaml-validate" data-structured-only>✓ Проверить</button><button type="button" role="menuitem" id="yaml-format" data-structured-only>⌘ Форматировать</button><button type="button" role="menuitem" id="yaml-download">↓ Скачать черновик</button></div></details></div></div>
     </div>
   </section>`;
 }

@@ -1071,6 +1071,10 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             "/api/v1/config/files/{file}",
             get(config_files::read_user_file),
         )
+        .route(
+            "/api/v1/config/xray/{file}",
+            get(config_files::read_user_file),
+        )
         .route("/api/v1/settings/core-sources", get(get_core_sources))
         .route("/api/v1/mihomo/version", get(mihomo_version))
         .route("/api/v1/mihomo/proxies", get(mihomo_proxies))
@@ -1117,12 +1121,24 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             axum::routing::put(config_files::apply_active),
         )
         .route(
+            "/api/v1/config/active/save",
+            axum::routing::put(config_files::save_active),
+        )
+        .route(
             "/api/v1/config/validate",
             axum::routing::post(config_files::validate_draft),
         )
         .route(
             "/api/v1/config/files/{file}",
             axum::routing::put(config_files::save_user_file),
+        )
+        .route(
+            "/api/v1/config/xray/{file}",
+            axum::routing::put(config_files::save_user_file),
+        )
+        .route(
+            "/api/v1/config/xray/{file}/apply",
+            axum::routing::put(config_files::apply_xray_file),
         )
         .route_layer(DefaultBodyLimit::max(9 * 1024 * 1024))
         .route_layer(middleware::from_fn(require_same_origin));

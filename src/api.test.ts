@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { applyActiveMihomoConfig, getMihomoSelectors, getRouterConfigFile, getSystemLog, pingMihomoGroup, pingMihomoProxy, requestAppUpdate, saveRouterConfigFile, validateMihomoConfig } from './api';
+import { applyActiveMihomoConfig, applyXrayConfigFile, getMihomoSelectors, getRouterConfigFile, getSystemLog, getXrayConfigFile, pingMihomoGroup, pingMihomoProxy, requestAppUpdate, saveActiveMihomoConfig, saveRouterConfigFile, saveXrayConfigFile, validateMihomoConfig } from './api';
 
 afterEach(() => vi.unstubAllGlobals());
 
@@ -151,6 +151,62 @@ describe('applyActiveMihomoConfig', () => {
     }));
     await expect(applyActiveMihomoConfig('mixed-port: 7890', 'old'))
       .rejects.toThrow('Применение конфигурации Mihomo: HTTP 422; backend не вернул сообщение об ошибке');
+  });
+});
+
+describe('saveActiveMihomoConfig', () => {
+  it('saves the validated YAML to the active path without applying or restarting it', async () => {
+    const fetchMock = vi.fn(async () => new Response(JSON.stringify({
+      status: 'saved', path: '/opt/etc/mihomo/config.yaml',
+      backup: '/opt/sbin/core-backup/mihomo-config-test.yaml',
+      restarted: false, detail: 'Конфигурация сохранена; ядро не перезапускалось',
+    }), { headers: { 'Content-Type': 'application/json' } }));
+    vi.stubGlobal('fetch', fetchMock);
+
+    await expect(saveActiveMihomoConfig('mixed-port: 7890\n', 'old\n')).resolves.toMatchObject({
+      status: 'saved', restarted: false, path: '/opt/etc/mihomo/config.yaml',
+    });
+    expect(fetchMock).toHaveBeenCalledWith('/api/v1/config/active/save', {
+      method: 'PUT',
+      headers: { Accept: 'application/json', 'Content-Type': 'application/json' },
+      body: JSON.stringify({ content: 'mixed-port: 7890\n', expectedContent: 'old\n' }),
+      signal: undefined,
+    });
+  });
+});
+
+describe('Xray configuration files', () => {
+  it('reads only a fixed routing file inside the active Xray config directory', async () => {
+    vi.stubGlobal('fetch', async () => new Response(JSON.stringify({
+      file: 'xray_routing', path: '/opt/etc/xray/configs/05_routing.json', content: '{"routing":{}}',
+    }), { headers: { 'Content-Type': 'application/json' } }));
+    await expect(getXrayConfigFile('xray_routing')).resolves.toEqual({
+      path: '/opt/etc/xray/configs/05_routing.json', content: '{"routing":{}}',
+    });
+  });
+
+  it('saves the selected Xray file through a fixed endpoint with an exact snapshot', async () => {
+    const fetchMock = vi.fn(async () => new Response(JSON.stringify({
+      status: 'saved', path: '/opt/etc/xray/configs/04_outbounds.json', backup: '/opt/sbin/core-backup/xray_outbounds-test.json', detail: 'Сохранено',
+    }), { headers: { 'Content-Type': 'application/json' } }));
+    vi.stubGlobal('fetch', fetchMock);
+    await expect(saveXrayConfigFile('xray_outbounds', '{"outbounds":[]}', '{}')).resolves.toMatchObject({
+      path: '/opt/etc/xray/configs/04_outbounds.json',
+    });
+    expect(fetchMock).toHaveBeenCalledWith('/api/v1/config/xray/xray_outbounds', {
+      method: 'PUT', headers: { Accept: 'application/json', 'Content-Type': 'application/json' },
+      body: JSON.stringify({ content: '{"outbounds":[]}', expectedContent: '{}' }),
+    });
+  });
+
+  it('applies an Xray file through its dedicated validated restart endpoint', async () => {
+    vi.stubGlobal('fetch', async () => new Response(JSON.stringify({
+      status: 'applied', path: '/opt/etc/xray/configs/05_routing.json', backup: '/opt/sbin/core-backup/xray_routing-test.json',
+      restarted: true, detail: 'Проверено и перезапущено',
+    }), { headers: { 'Content-Type': 'application/json' } }));
+    await expect(applyXrayConfigFile('xray_routing', '{"routing":{}}', '{}')).resolves.toMatchObject({
+      status: 'applied', restarted: true, path: '/opt/etc/xray/configs/05_routing.json',
+    });
   });
 });
 

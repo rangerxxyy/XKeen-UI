@@ -260,6 +260,7 @@ export async function getActiveMihomoConfig(signal?: AbortSignal): Promise<Activ
 }
 
 export type RouterConfigFile = 'ip_exclude' | 'port_exclude' | 'port_proxying' | 'xkeen';
+export type XrayConfigFile = 'xray_outbounds' | 'xray_routing';
 const routerConfigPaths: Record<RouterConfigFile, string> = {
   ip_exclude: '/opt/etc/xkeen/ip_exclude.lst',
   port_exclude: '/opt/etc/xkeen/port_exclude.lst',
@@ -271,6 +272,19 @@ export async function getRouterConfigFile(file: RouterConfigFile, signal?: Abort
   const payload = await getMihomoJson(`/api/v1/config/files/${file}`, 'Чтение файла XKeen', signal);
   if (!isRecord(payload) || payload.file !== file || payload.path !== routerConfigPaths[file] || typeof payload.content !== 'string') {
     throw new Error('Backend вернул некорректный файл XKeen');
+  }
+  return { path: payload.path, content: payload.content };
+}
+
+const xrayConfigPaths: Record<XrayConfigFile, string> = {
+  xray_outbounds: '/opt/etc/xray/configs/04_outbounds.json',
+  xray_routing: '/opt/etc/xray/configs/05_routing.json',
+};
+
+export async function getXrayConfigFile(file: XrayConfigFile, signal?: AbortSignal): Promise<{ path: string; content: string }> {
+  const payload = await getMihomoJson(`/api/v1/config/xray/${file}`, 'Чтение конфигурации Xray', signal);
+  if (!isRecord(payload) || payload.file !== file || payload.path !== xrayConfigPaths[file] || typeof payload.content !== 'string') {
+    throw new Error('Backend вернул некорректный файл Xray');
   }
   return { path: payload.path, content: payload.content };
 }
@@ -287,6 +301,35 @@ export async function saveRouterConfigFile(file: RouterConfigFile, content: stri
     throw new Error('Backend вернул некорректный результат сохранения файла XKeen');
   }
   return { path: payload.path, backup: payload.backup, detail: payload.detail };
+}
+
+export async function saveXrayConfigFile(file: XrayConfigFile, content: string, expectedContent: string): Promise<{ path: string; backup: string; detail: string }> {
+  const response = await fetch(`/api/v1/config/xray/${file}`, {
+    method: 'PUT',
+    headers: { Accept: 'application/json', 'Content-Type': 'application/json' },
+    body: JSON.stringify({ content, expectedContent }),
+  });
+  const payload = await readJson(response, 'Сохранение конфигурации Xray');
+  if (!isRecord(payload) || payload.status !== 'saved' || payload.path !== xrayConfigPaths[file] ||
+      typeof payload.backup !== 'string' || typeof payload.detail !== 'string') {
+    throw new Error('Backend вернул некорректный результат сохранения конфигурации Xray');
+  }
+  return { path: payload.path, backup: payload.backup, detail: payload.detail };
+}
+
+export async function applyXrayConfigFile(file: XrayConfigFile, content: string, expectedContent: string, signal?: AbortSignal): Promise<ApplyMihomoConfigResult> {
+  const response = await fetch(`/api/v1/config/xray/${file}/apply`, {
+    method: 'PUT',
+    headers: { Accept: 'application/json', 'Content-Type': 'application/json' },
+    body: JSON.stringify({ content, expectedContent }),
+    signal,
+  });
+  const payload = await readJson(response, 'Применение конфигурации Xray');
+  if (!isRecord(payload) || !['saved', 'applied'].includes(String(payload.status)) || payload.path !== xrayConfigPaths[file] ||
+      typeof payload.backup !== 'string' || typeof payload.restarted !== 'boolean' || typeof payload.detail !== 'string') {
+    throw new Error('Backend вернул некорректный результат применения конфигурации Xray');
+  }
+  return { status: payload.status as ApplyMihomoConfigResult['status'], path: payload.path, backup: payload.backup, restarted: payload.restarted, detail: payload.detail };
 }
 
 export interface ApplyMihomoConfigResult {
@@ -336,6 +379,21 @@ export async function applyActiveMihomoConfig(content: string, expectedContent: 
     restarted: payload.restarted,
     detail: payload.detail,
   };
+}
+
+export async function saveActiveMihomoConfig(content: string, expectedContent: string, signal?: AbortSignal): Promise<ApplyMihomoConfigResult> {
+  const response = await fetch('/api/v1/config/active/save', {
+    method: 'PUT',
+    headers: { Accept: 'application/json', 'Content-Type': 'application/json' },
+    body: JSON.stringify({ content, expectedContent }),
+    signal,
+  });
+  const payload = await readJson(response, 'Сохранение конфигурации Mihomo');
+  if (!isRecord(payload) || payload.status !== 'saved' || payload.path !== '/opt/etc/mihomo/config.yaml' ||
+      typeof payload.backup !== 'string' || payload.restarted !== false || typeof payload.detail !== 'string') {
+    throw new Error('Backend вернул некорректный результат сохранения конфигурации Mihomo');
+  }
+  return { status: 'saved', path: payload.path, backup: payload.backup, restarted: false, detail: payload.detail };
 }
 
 export async function getMihomoVersion(signal?: AbortSignal): Promise<string> {

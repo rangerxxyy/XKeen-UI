@@ -1,4 +1,5 @@
 import { installCoreRelease } from './api';
+import { confirmInApp } from './confirm-dialog';
 
 type CoreName = 'xray' | 'mihomo';
 
@@ -197,8 +198,10 @@ export async function openCoreReleaseDialog(
 }
 
 async function installRelease(core: CoreName, tag: string, asset: string, sha256: string, button: HTMLButtonElement, list: HTMLElement): Promise<void> {
-  const confirmed = window.confirm(
-    `Установить ${core} ${tag} из выбранного GitHub-репозитория? Архив будет проверен по SHA-256. Если ядро сейчас обслуживает трафик, его конфигурация будет проверена, создана резервная копия, а сервис кратко перезапущен. При ошибке панель попробует восстановить прежний бинарник.`,
+  const confirmed = await confirmInApp(
+    `Установить ${core} ${tag}?`,
+    'Архив проверится по SHA-256. Активная конфигурация будет проверена, сохранится резервная копия, а сервис кратко перезапустится. При ошибке панель попробует вернуть прежний бинарник.',
+    'Установить',
   );
   if (!confirmed) return;
   button.disabled = true;

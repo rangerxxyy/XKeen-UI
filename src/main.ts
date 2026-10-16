@@ -6,6 +6,7 @@ import { applyPingResults, orderSelectorsByConfig, renderConnections, renderSele
 import { patchDnsManagement, renderDns } from './dns-view';
 import { bindCoreReleaseChecks, openCoreReleaseDialog } from './core-releases';
 import { listAppReleases, type AppRelease } from './app-update';
+import { confirmInApp } from './confirm-dialog';
 
 type Page = 'selectors' | 'connections' | 'configuration' | 'dns';
 
@@ -521,7 +522,7 @@ async function pingProxyFromUi(button: HTMLButtonElement): Promise<void> {
 
 async function closeConnectionFromUi(button: HTMLButtonElement): Promise<void> {
   const id = button.dataset.closeConnection;
-  if (!id || !window.confirm('Закрыть выбранное соединение? Текущий сетевой запрос может прерваться.')) return;
+  if (!id || !(await confirmInApp('Закрыть соединение?', 'Текущий сетевой запрос этого устройства может прерваться.', 'Закрыть'))) return;
   button.disabled = true;
   try {
     await closeMihomoConnection(id, mihomoController?.signal);
@@ -535,7 +536,7 @@ async function closeConnectionFromUi(button: HTMLButtonElement): Promise<void> {
 
 async function closeAllConnectionsFromUi(): Promise<void> {
   const count = connections?.connections.length ?? 0;
-  if (!count || !window.confirm(`Закрыть все ${count} активных соединений? Это может прервать текущие запросы устройств.`)) return;
+  if (!count || !(await confirmInApp('Закрыть все соединения?', `Будут закрыты ${count} активных соединений. Текущие запросы устройств могут прерваться.`, 'Закрыть все'))) return;
   const button = document.querySelector<HTMLButtonElement>('#close-all-connections');
   if (button) { button.disabled = true; button.textContent = 'Закрываем…'; }
   try {
@@ -654,8 +655,8 @@ async function openAppReleases(): Promise<void> {
     list.querySelectorAll('.app-release-card').forEach((item) => item.setAttribute('aria-pressed', String(item === card)));
     choose();
   });
-  install.addEventListener('click', () => {
-    if (appRelease && window.confirm(`Установить XKeen UI ${appRelease.tag_name}? Панель перезапустится.`)) {
+  install.addEventListener('click', async () => {
+    if (appRelease && await confirmInApp('Установить XKeen UI?', `Версия ${appRelease.tag_name}. Панель перезапустится после установки.`, 'Установить')) {
       install.disabled = true;
       install.textContent = 'Устанавливаем…';
       void installAppUpdate();

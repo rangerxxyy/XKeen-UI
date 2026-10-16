@@ -530,6 +530,11 @@ body { color:var(--text); -webkit-font-smoothing:antialiased; }
 .app-release-actions .editor-button { display:inline-flex; align-items:center; justify-content:center; text-decoration:none; font-size:12px; }
 .app-release-actions .editor-button[hidden] { display:none; }
 .app-release-actions .editor-button-primary { flex:1; min-height:39px; }
+.confirmation-dialog .modal-panel { padding:20px; }
+.confirmation-dialog .modal-note { margin:12px 0 18px; color:#b5c3d8; font-size:12px; line-height:1.55; }
+.confirmation-actions { display:flex; justify-content:flex-end; gap:8px; }
+.confirmation-actions .editor-button { min-height:36px; padding:0 14px; }
+.confirmation-actions .editor-button-primary { min-width:104px; }
 .editor-utilities-menu [hidden] { display:none; }
 
 /* Settings keep their header visible and let only the form content scroll. */

@@ -8,6 +8,7 @@ import { applyEdits, format as formatJsonc, parse as parseJsonc, printParseError
 import { parseDocument } from 'yaml';
 import { chooseReferenceTemplate, getDefaultTemplate } from './templates';
 import { applyActiveMihomoConfig, getActiveMihomoConfig, getRouterConfigFile, saveRouterConfigFile, type RouterConfigFile } from './api';
+import { confirmInApp } from './confirm-dialog';
 
 const draftKey = 'xkeen-ui:draft:';
 const activeFileKey = 'xkeen-ui:draft-active-file';
@@ -247,12 +248,12 @@ export function mountYamlEditor(routerMode = false, activeCore: 'mihomo' | 'xray
     editor.dispatch({ changes: { from: 0, to: editor.state.doc.length, insert: formatted } });
     setValidation(`Форматирование ${file.format.toUpperCase()} выполнено; совместимость со схемой не проверялась.`, true);
   }, { signal });
-  document.querySelector<HTMLButtonElement>('#yaml-template')?.addEventListener('click', (event) => {
+  document.querySelector<HTMLButtonElement>('#yaml-template')?.addEventListener('click', async (event) => {
     (event.currentTarget as HTMLButtonElement).closest('details')?.removeAttribute('open');
     const file = currentFile();
     if (!editor || (file.format !== 'yaml' && file.format !== 'json' && file.format !== 'jsonc')) return;
     const current = editor.state.doc.toString();
-    if (current.trim() && !window.confirm('Загрузить шаблон вместо текущего черновика? Текущий текст останется только в истории undo до закрытия вкладки.')) return;
+    if (current.trim() && !(await confirmInApp('Заменить текущий черновик?', 'Шаблон загрузится в редактор. Текущий текст останется только в истории отмены до закрытия вкладки.', 'Загрузить шаблон'))) return;
     void chooseReferenceTemplate(file.format === 'yaml' ? 'mihomo' : 'xray').then((template) => {
       if (!template || !editor) return;
       editor.dispatch({ changes: { from: 0, to: editor.state.doc.length, insert: template.content } });
@@ -273,7 +274,7 @@ export function mountYamlEditor(routerMode = false, activeCore: 'mihomo' | 'xray
     const fileId = currentFile().id;
     if (!editor || (fileId !== 'config' && !isRouterConfigFile(fileId))) return;
     const requestedEditor = editor;
-    if (editor.state.doc.length && !window.confirm('Загрузить файл с роутера вместо текущего текста редактора? На роутер ничего записываться не будет.')) return;
+    if (editor.state.doc.length && !(await confirmInApp('Загрузить файл с роутера?', 'Текст редактора будет заменён содержимым файла. На роутер ничего записываться не будет.', 'Загрузить файл'))) return;
     button.disabled = true;
     button.textContent = 'Читаем…';
     try {

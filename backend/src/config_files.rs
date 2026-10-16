@@ -28,6 +28,8 @@ fn user_file_path(file: &str) -> Option<&'static str> {
         "port_exclude" => Some("/opt/etc/xkeen/port_exclude.lst"),
         "port_proxying" => Some("/opt/etc/xkeen/port_proxying.lst"),
         "xkeen" => Some("/opt/etc/xkeen/xkeen.json"),
+        "xray_outbounds" => Some("/opt/etc/xray/configs/04_outbounds.json"),
+        "xray_routing" => Some("/opt/etc/xray/configs/05_routing.json"),
         _ => None,
     }
 }
@@ -111,13 +113,167 @@ pub async fn save_user_file(
     }
 }
 
+pub async fn apply_xray_file(
+    State(state): State<AppState>,
+    UrlPath(file): UrlPath<String>,
+    Json(request): Json<ApplyRequest>,
+) -> Response {
+    if !state.router_mode {
+        return error(
+            StatusCode::SERVICE_UNAVAILABLE,
+            "Применение Xray доступно только на роутере",
+        );
+    }
+    let Some(path) = user_file_path(&file).filter(|_| file.starts_with("xray_")) else {
+        return error(StatusCode::NOT_FOUND, "Неизвестный файл конфигурации Xray");
+    };
+    if request.content.len() > MAX_LIST || request.expected_content.len() > MAX_LIST {
+        return error(
+            StatusCode::PAYLOAD_TOO_LARGE,
+            "Файл Xray должен быть не больше 1 MiB",
+        );
+    }
+    let _guard = state.core_update_lock.lock().await;
+    match apply_xray(path, &file, &request.content, &request.expected_content).await {
+        Ok(result) => Json(result).into_response(),
+        Err(message) => {
+            let status = if message.starts_with("Файл на роутере изменился") {
+                StatusCode::CONFLICT
+            } else {
+                StatusCode::UNPROCESSABLE_ENTITY
+            };
+            error(status, &message)
+        }
+    }
+}
+
+#[derive(serde::Serialize)]
+#[serde(rename_all = "camelCase")]
+struct XrayApplyResult {
+    status: &'static str,
+    path: &'static str,
+    backup: String,
+    restarted: bool,
+    detail: String,
+}
+
+async fn apply_xray(
+    path: &'static str,
+    file: &str,
+    content: &str,
+    expected: &str,
+) -> Result<XrayApplyResult, String> {
+    if !matches!(
+        serde_json::from_str::<serde_json::Value>(content),
+        Ok(serde_json::Value::Object(_))
+    ) {
+        return Err("Xray отклонил файл: ожидается корректный JSON-объект".into());
+    }
+    let binary = ["/opt/sbin/xray", "/opt/bin/xray"]
+        .into_iter()
+        .find(|candidate| {
+            fs::metadata(candidate)
+                .is_ok_and(|meta| meta.is_file() && meta.permissions().mode() & 0o111 != 0)
+        })
+        .ok_or_else(|| "Исполняемый Xray не найден в /opt/sbin или /opt/bin".to_owned())?;
+    let backup = save_list(path, file, content, expected).await?;
+    let output = match tokio::time::timeout(
+        Duration::from_secs(20),
+        Command::new(binary)
+            .args(["run", "-test"])
+            .env_clear()
+            .env("PATH", "/opt/bin:/opt/sbin:/usr/bin:/bin")
+            .env("XRAY_LOCATION_CONFDIR", "/opt/etc/xray/configs")
+            .env("XRAY_LOCATION_ASSET", "/opt/etc/xray/dat")
+            .current_dir("/opt/etc/xray")
+            .stdin(Stdio::null())
+            .kill_on_drop(true)
+            .output(),
+    )
+    .await
+    {
+        Ok(Ok(output)) => output,
+        Ok(Err(error)) => {
+            restore_user_file(path, &backup).await?;
+            return Err(format!(
+                "Не удалось запустить проверку Xray; прежний файл восстановлен: {error}"
+            ));
+        }
+        Err(_) => {
+            restore_user_file(path, &backup).await?;
+            return Err("Проверка Xray превысила 20 секунд; прежний файл восстановлен".into());
+        }
+    };
+    if !output.status.success() {
+        restore_user_file(path, &backup).await?;
+        return Err(format!(
+            "Xray отклонил конфигурацию; прежний файл восстановлен: {}",
+            validation_detail(&output.status.to_string(), &output.stderr, &output.stdout)
+        ));
+    }
+    let runtime = xkeen::read_status();
+    let restart = runtime.running == Some(true) && runtime.core.as_deref() == Some("xray");
+    if restart
+        && !matches!(xkeen::control("restart").await, Ok(status) if status.running == Some(true))
+    {
+        let rollback = restore_user_file(path, &backup).await;
+        let restart_old = xkeen::control("restart").await;
+        let detail = match (rollback, restart_old) {
+            (Ok(()), Ok(status)) if status.running == Some(true) => {
+                "исходный файл восстановлен, Xray запущен".to_owned()
+            }
+            (Ok(()), _) => "исходный файл восстановлен, но запуск Xray не подтверждён".to_owned(),
+            (Err(e), _) => format!("откат не удался: {e}"),
+        };
+        return Err(format!(
+            "Не удалось подтвердить перезапуск Xray; {detail}. Резервная копия: {backup}"
+        ));
+    }
+    Ok(XrayApplyResult {
+        status: if restart { "applied" } else { "saved" },
+        path,
+        backup,
+        restarted: restart,
+        detail: if restart {
+            "Файл проверен Xray, сохранён с резервной копией и ядро перезапущено".into()
+        } else {
+            "Файл проверен Xray и сохранён с резервной копией; Xray сейчас не работает".into()
+        },
+    })
+}
+
+async fn restore_user_file(path: &str, backup: &str) -> Result<(), String> {
+    let metadata = tokio::fs::symlink_metadata(path)
+        .await
+        .map_err(|e| format!("Не удалось проверить файл перед откатом: {e}"))?;
+    if !metadata.is_file() || metadata.file_type().is_symlink() {
+        return Err("Файл для отката небезопасен".into());
+    }
+    let parent = Path::new(path)
+        .parent()
+        .ok_or("Не удалось определить каталог файла")?;
+    let staged = unique_file(parent, "xkeen-ui-rollback", "json");
+    tokio::fs::copy(backup, &staged)
+        .await
+        .map_err(|e| format!("Не удалось подготовить откат: {e}"))?;
+    tokio::fs::set_permissions(
+        &staged,
+        fs::Permissions::from_mode(metadata.permissions().mode() & 0o777),
+    )
+    .await
+    .map_err(|e| format!("Не удалось назначить права при откате: {e}"))?;
+    tokio::fs::rename(staged, path)
+        .await
+        .map_err(|e| format!("Не удалось восстановить исходный файл: {e}"))
+}
+
 async fn save_list(
     path: &str,
     file: &str,
     content: &str,
     expected: &str,
 ) -> Result<String, String> {
-    if file == "xkeen"
+    if matches!(file, "xkeen" | "xray_outbounds" | "xray_routing")
         && !matches!(
             serde_json::from_str::<serde_json::Value>(content),
             Ok(serde_json::Value::Object(_))
@@ -140,7 +296,11 @@ async fn save_list(
     }
     let backup_dir = Path::new(BACKUP_DIR);
     ensure_backup_dir(backup_dir).await?;
-    let extension = if file == "xkeen" { "json" } else { "lst" };
+    let extension = if file == "xkeen" || file.starts_with("xray_") {
+        "json"
+    } else {
+        "lst"
+    };
     let backup = unique_file(backup_dir, file, extension);
     tokio::fs::copy(path, &backup)
         .await
@@ -148,7 +308,10 @@ async fn save_list(
     tokio::fs::set_permissions(&backup, fs::Permissions::from_mode(0o600))
         .await
         .map_err(|e| format!("Не удалось защитить резервную копию: {e}"))?;
-    let staged = unique_file(Path::new("/opt/etc/xkeen"), file, extension);
+    let parent = Path::new(path)
+        .parent()
+        .ok_or("Не удалось определить каталог файла")?;
+    let staged = unique_file(parent, file, extension);
     let mut output = tokio::fs::OpenOptions::new()
         .write(true)
         .create_new(true)
@@ -182,6 +345,7 @@ async fn save_list(
 
 #[derive(Deserialize)]
 #[serde(deny_unknown_fields)]
+#[serde(rename_all = "camelCase")]
 pub struct ApplyRequest {
     content: String,
     expected_content: String,
@@ -234,6 +398,121 @@ struct ApplyResult {
     backup: String,
     restarted: bool,
     detail: String,
+}
+
+pub async fn save_active(
+    State(state): State<AppState>,
+    Json(request): Json<ApplyRequest>,
+) -> Response {
+    if !state.router_mode {
+        return error(
+            StatusCode::SERVICE_UNAVAILABLE,
+            "Сохранение конфигурации доступно только на роутере",
+        );
+    }
+    if request.content.is_empty()
+        || request.content.len() > MAX_CONFIG
+        || request.expected_content.len() > MAX_CONFIG
+    {
+        return error(
+            StatusCode::PAYLOAD_TOO_LARGE,
+            "Текущий конфиг и черновик должны быть не больше 4 MiB каждый",
+        );
+    }
+    let _guard = state.core_update_lock.lock().await;
+    if let Err(message) = crate::dns_control::ensure_dns_config_safe(&request.content).await {
+        return error(StatusCode::CONFLICT, &message);
+    }
+    match save_config_only(&request.content, &request.expected_content).await {
+        Ok(result) => Json(result).into_response(),
+        Err(message) => {
+            let status = if message.starts_with("Конфиг на роутере изменился")
+            {
+                StatusCode::CONFLICT
+            } else {
+                StatusCode::UNPROCESSABLE_ENTITY
+            };
+            error(status, &message)
+        }
+    }
+}
+
+async fn save_config_only(content: &str, expected_content: &str) -> Result<ApplyResult, String> {
+    validate_content(content).await.map_err(|message| {
+        format!("Mihomo отклонил конфигурацию; активный файл не менялся: {message}")
+    })?;
+    let meta = tokio::fs::symlink_metadata(CONFIG)
+        .await
+        .map_err(|e| format!("Не удалось проверить активный конфиг Mihomo: {e}"))?;
+    if !meta.is_file() || meta.file_type().is_symlink() || meta.len() > MAX_CONFIG as u64 {
+        return Err("Активный конфиг Mihomo не является обычным файлом допустимого размера".into());
+    }
+    let current = tokio::fs::read_to_string(CONFIG)
+        .await
+        .map_err(|e| format!("Не удалось прочитать активный конфиг Mihomo: {e}"))?;
+    if current != expected_content {
+        return Err(
+            "Конфиг на роутере изменился после чтения. Считайте его заново перед сохранением"
+                .into(),
+        );
+    }
+    let staged = unique_file(Path::new(CONFIG_DIR), "xkeen-ui-save", "yaml");
+    let mut output = tokio::fs::OpenOptions::new()
+        .write(true)
+        .create_new(true)
+        .mode(meta.permissions().mode() & 0o777)
+        .open(&staged)
+        .await
+        .map_err(|e| format!("Не удалось создать временный конфиг: {e}"))?;
+    let result = async {
+        output.write_all(content.as_bytes()).await?;
+        output.sync_all().await
+    }
+    .await;
+    drop(output);
+    if let Err(e) = result {
+        let _ = tokio::fs::remove_file(&staged).await;
+        return Err(format!("Не удалось записать временный конфиг: {e}"));
+    }
+    let latest = tokio::fs::read_to_string(CONFIG)
+        .await
+        .map_err(|e| format!("Не удалось повторно проверить активный конфиг: {e}"))?;
+    if latest != expected_content {
+        let _ = tokio::fs::remove_file(&staged).await;
+        return Err("Конфиг на роутере изменился во время записи. Считайте его заново".into());
+    }
+    let backup_dir = Path::new(BACKUP_DIR);
+    if let Err(error) = ensure_backup_dir(backup_dir).await {
+        let _ = tokio::fs::remove_file(&staged).await;
+        return Err(error);
+    }
+    let backup = unique_file(backup_dir, "mihomo-config", "yaml");
+    if let Err(error) = tokio::fs::copy(CONFIG, &backup).await {
+        let _ = tokio::fs::remove_file(&staged).await;
+        return Err(format!("Не удалось создать резервную копию: {error}"));
+    }
+    if let Err(error) = tokio::fs::set_permissions(&backup, fs::Permissions::from_mode(0o600)).await
+    {
+        let _ = tokio::fs::remove_file(&backup).await;
+        let _ = tokio::fs::remove_file(&staged).await;
+        return Err(format!("Не удалось защитить резервную копию: {error}"));
+    }
+    tokio::fs::rename(&staged, CONFIG).await.map_err(|e| {
+        let _ = std::fs::remove_file(&staged);
+        format!(
+            "Не удалось сохранить конфиг; бэкап: {}: {e}",
+            backup.display()
+        )
+    })?;
+    Ok(ApplyResult {
+        status: "saved",
+        path: CONFIG,
+        backup: backup.to_string_lossy().into_owned(),
+        restarted: false,
+        detail:
+            "Конфигурация проверена Mihomo и сохранена с резервной копией; ядро не перезапускалось"
+                .into(),
+    })
 }
 
 pub async fn apply_active(
@@ -336,13 +615,20 @@ async fn apply(content: &str, expected_content: &str) -> Result<ApplyResult, Str
     }
 
     let backup_dir = Path::new(BACKUP_DIR);
-    ensure_backup_dir(backup_dir).await?;
+    if let Err(error) = ensure_backup_dir(backup_dir).await {
+        let _ = tokio::fs::remove_file(&staged).await;
+        return Err(error);
+    }
     let backup = unique_file(backup_dir, "mihomo-config", "yaml");
-    tokio::fs::copy(CONFIG, &backup)
-        .await
-        .map_err(|e| format!("Не удалось создать резервную копию; конфиг не менялся: {e}"))?;
+    if let Err(error) = tokio::fs::copy(CONFIG, &backup).await {
+        let _ = tokio::fs::remove_file(&staged).await;
+        return Err(format!(
+            "Не удалось создать резервную копию; конфиг не менялся: {error}"
+        ));
+    }
     if let Err(e) = tokio::fs::set_permissions(&backup, fs::Permissions::from_mode(0o600)).await {
         let _ = tokio::fs::remove_file(&backup).await;
+        let _ = tokio::fs::remove_file(&staged).await;
         return Err(format!(
             "Не удалось защитить резервную копию; конфиг не менялся: {e}"
         ));
@@ -579,7 +865,7 @@ fn error(status: StatusCode, message: &str) -> Response {
 
 #[cfg(test)]
 mod tests {
-    use super::{unique_file, user_file_path, validation_detail};
+    use super::{unique_file, user_file_path, validation_detail, ApplyRequest};
     use std::path::Path;
 
     #[test]
@@ -614,7 +900,25 @@ mod tests {
             Some("/opt/etc/xkeen/port_proxying.lst")
         );
         assert_eq!(user_file_path("xkeen"), Some("/opt/etc/xkeen/xkeen.json"));
+        assert_eq!(
+            user_file_path("xray_outbounds"),
+            Some("/opt/etc/xray/configs/04_outbounds.json")
+        );
+        assert_eq!(
+            user_file_path("xray_routing"),
+            Some("/opt/etc/xray/configs/05_routing.json")
+        );
         assert_eq!(user_file_path("../config.yaml"), None);
+    }
+
+    #[test]
+    fn accepts_frontend_camel_case_expected_content_for_config_writes() {
+        let parsed =
+            serde_json::from_str::<ApplyRequest>(r#"{"content":"new","expectedContent":"old"}"#);
+        assert!(
+            parsed.is_ok(),
+            "frontend sends expectedContent in camel case"
+        );
     }
 
     #[test]

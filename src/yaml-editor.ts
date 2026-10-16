@@ -1,13 +1,14 @@
 import { EditorState } from '@codemirror/state';
 import { EditorView, highlightActiveLine, keymap, lineNumbers } from '@codemirror/view';
 import { defaultKeymap, history, historyKeymap } from '@codemirror/commands';
-import { defaultHighlightStyle, syntaxHighlighting } from '@codemirror/language';
+import { HighlightStyle, syntaxHighlighting } from '@codemirror/language';
+import { tags } from '@lezer/highlight';
 import { yaml } from '@codemirror/lang-yaml';
 import { json } from '@codemirror/lang-json';
 import { applyEdits, format as formatJsonc, parse as parseJsonc, printParseErrorCode, type ParseError } from 'jsonc-parser';
 import { parseDocument } from 'yaml';
 import { chooseReferenceTemplate, getDefaultTemplate } from './templates';
-import { applyActiveMihomoConfig, getActiveMihomoConfig, getRouterConfigFile, saveRouterConfigFile, validateMihomoConfig, type RouterConfigFile } from './api';
+import { applyActiveMihomoConfig, applyXrayConfigFile, getActiveMihomoConfig, getRouterConfigFile, getXrayConfigFile, saveActiveMihomoConfig, saveRouterConfigFile, saveXrayConfigFile, type RouterConfigFile, type XrayConfigFile } from './api';
 import { confirmInApp } from './confirm-dialog';
 
 const draftKey = 'xkeen-ui:draft:';
@@ -18,29 +19,40 @@ const draftFiles = [
   { id: 'port_exclude', label: 'port_exclude', filename: 'port_exclude.lst', format: 'text' },
   { id: 'port_proxying', label: 'port_proxying', filename: 'port_proxying.lst', format: 'text' },
   { id: 'xkeen', label: 'xkeen', filename: 'xkeen.json', format: 'json' },
-  { id: 'xray_json', label: 'xray_config.json', filename: 'config.json', format: 'json' },
-  { id: 'xray_jsonc', label: '05_routing.jsonc', filename: '05_routing.jsonc', format: 'jsonc' },
+  { id: 'xray_json', label: 'config', filename: '04_outbounds.json', format: 'json' },
+  { id: 'xray_routing', label: 'routing', filename: '05_routing.json', format: 'jsonc' },
 ] as const;
 let editor: EditorView | null = null;
 let editorBindings: AbortController | null = null;
 let activeFile = sessionStorage.getItem(activeFileKey) ?? 'config';
+if (activeFile === 'xray_jsonc') activeFile = 'xray_routing';
 let activeConfigSnapshot: string | null = null;
 const listSnapshots = new Map<RouterConfigFile, string>();
+const xraySnapshots = new Map<XrayConfigFile, string>();
 
 function isRouterConfigFile(file: string): file is RouterConfigFile {
   return file === 'ip_exclude' || file === 'port_exclude' || file === 'port_proxying' || file === 'xkeen';
 }
 
+function isXrayConfigFile(file: string): file is XrayConfigFile {
+  return file === 'xray_json' || file === 'xray_routing';
+}
+
+function xrayApiFile(file: string): XrayConfigFile {
+  return file === 'xray_json' ? 'xray_outbounds' : 'xray_routing';
+}
+
 function currentSnapshot(): string | null {
   return currentFile().id === 'config' ? activeConfigSnapshot
-    : isRouterConfigFile(currentFile().id) ? listSnapshots.get(currentFile().id as RouterConfigFile) ?? null : null;
+    : isRouterConfigFile(currentFile().id) ? listSnapshots.get(currentFile().id as RouterConfigFile) ?? null
+      : isXrayConfigFile(currentFile().id) ? xraySnapshots.get(xrayApiFile(currentFile().id)) ?? null : null;
 }
 
 function currentFile() {
   return draftFiles.find((file) => file.id === activeFile) ?? draftFiles[0];
 }
 
-function setEditorIdentity(): void {
+function setEditorIdentity(routerMode: boolean): void {
   const file = currentFile();
   const filename = document.querySelector<HTMLElement>('#editor-filename');
   const language = document.querySelector<HTMLElement>('#editor-language');
@@ -54,10 +66,12 @@ function setEditorIdentity(): void {
     button.setAttribute('aria-pressed', String(selected));
   });
   document.querySelectorAll<HTMLElement>('[data-router-file]').forEach((element) => {
-    element.hidden = file.id !== 'config' && !isRouterConfigFile(file.id);
+    element.hidden = file.id !== 'config' && !isRouterConfigFile(file.id) && !isXrayConfigFile(file.id);
   });
   const applyButton = document.querySelector<HTMLButtonElement>('#config-apply-active');
-  if (applyButton) applyButton.textContent = file.id === 'config' ? 'Применить' : 'Сохранить';
+  if (applyButton) applyButton.hidden = file.id !== 'config' && !isXrayConfigFile(file.id);
+  const saveButton = document.querySelector<HTMLButtonElement>('#config-save-active');
+  if (saveButton) saveButton.hidden = !routerMode;
   document.querySelectorAll<HTMLElement>('[data-structured-only]').forEach((element) => {
     element.hidden = file.format === 'text';
   });
@@ -66,8 +80,8 @@ function setEditorIdentity(): void {
 }
 
 const editorTheme = EditorView.theme({
-  '&': { height: '100%', color: '#d9e4f5', backgroundColor: '#080e1b' },
-  '.cm-scroller': { overflow: 'auto', fontFamily: '"JetBrains Mono Variable", "JetBrains Mono", ui-monospace, SFMono-Regular, Consolas, monospace', lineHeight: '1.65' },
+  '&': { height: '100%', color: '#e1e9f8', backgroundColor: '#080e1b', fontSize: '14px', fontWeight: '500' },
+  '.cm-scroller': { overflow: 'auto', fontFamily: '"JetBrains Mono Variable", "JetBrains Mono", ui-monospace, SFMono-Regular, Consolas, monospace', lineHeight: '1.6' },
   '.cm-content': { padding: '14px 0', caretColor: '#65c9ff' },
   '.cm-gutters': { color: '#566a88', backgroundColor: '#0a1120', borderRight: '1px solid #1e2b40' },
   '.cm-activeLine': { backgroundColor: '#111e31' },
@@ -75,6 +89,16 @@ const editorTheme = EditorView.theme({
   '&.cm-focused .cm-cursor': { borderLeftColor: '#65c9ff' },
   '&.cm-focused .cm-selectionBackground, .cm-selectionBackground': { backgroundColor: '#244775 !important' },
 });
+
+const editorHighlight = HighlightStyle.define([
+  { tag: tags.propertyName, color: '#62a8ff', fontWeight: '600' },
+  { tag: [tags.string, tags.special(tags.string)], color: '#9cda78' },
+  { tag: [tags.number, tags.integer, tags.float], color: '#ff9b55' },
+  { tag: [tags.bool, tags.null, tags.atom], color: '#d58bff' },
+  { tag: tags.comment, color: '#777ca7', fontStyle: 'italic' },
+  { tag: [tags.punctuation, tags.bracket], color: '#a8bad4' },
+  { tag: [tags.keyword, tags.operator], color: '#68c9e8' },
+]);
 
 function editorElement(): HTMLElement | null {
   return document.querySelector<HTMLElement>('#yaml-editor');
@@ -105,7 +129,7 @@ function validateYaml(text: string): boolean {
     setValidation('YAML синтаксически корректен, но корнем документа ожидается объект Mihomo.', false);
     return false;
   }
-  setValidation('YAML синтаксически корректен. Совместимость со схемой ядра ещё не проверена.', true);
+  setValidation('✓ YAML валиден · проверка Mihomo при сохранении', true);
   return true;
 }
 
@@ -135,7 +159,7 @@ function validateStructuredDocument(text: string): boolean {
     setValidation(`${format.toUpperCase()} синтаксически корректен, но ожидается корневой объект.`, false);
     return false;
   }
-  setValidation(`${format.toUpperCase()} синтаксически корректен. Схема не проверялась.`, true);
+  setValidation(`✓ ${format.toUpperCase()} валиден · проверка Xray при применении`, true);
   return true;
 }
 
@@ -164,23 +188,23 @@ export function mountYamlEditor(routerMode = false, activeCore: 'mihomo' | 'xray
   const parent = editorElement();
   if (!parent) return;
   if (activeCore === 'xray' && activeFile === 'config') activeFile = 'xray_json';
-  if (activeCore !== 'xray' && (activeFile === 'xray_json' || activeFile === 'xray_jsonc')) activeFile = 'config';
+  if (activeCore !== 'xray' && (activeFile === 'xray_json' || activeFile === 'xray_routing')) activeFile = 'config';
   unmountYamlEditor();
   editorBindings = new AbortController();
   const { signal } = editorBindings;
   const applyButton = document.querySelector<HTMLButtonElement>('#config-apply-active');
   if (applyButton) applyButton.disabled = currentSnapshot() === null;
-  const mihomoValidateButton = document.querySelector<HTMLButtonElement>('#config-validate-mihomo');
-  if (mihomoValidateButton) mihomoValidateButton.hidden = !routerMode || activeFile !== 'config';
+  const saveButton = document.querySelector<HTMLButtonElement>('#config-save-active');
+  if (saveButton) saveButton.disabled = currentSnapshot() === null;
 
-  setEditorIdentity();
+  setEditorIdentity(routerMode);
   const file = currentFile();
   const storedDraft = sessionStorage.getItem(`${draftKey}${file.id}`);
-  const startWithRouterFile = routerMode && (file.id === 'config' || isRouterConfigFile(file.id));
+  const startWithRouterFile = routerMode && (file.id === 'config' || isRouterConfigFile(file.id) || isXrayConfigFile(file.id));
   // A saved browser draft from an earlier visit must not hide the actual router file.
   // Preserve in-session edits only after this editor has read a router snapshot.
   const hasRouterSnapshot = currentSnapshot() !== null;
-  const template = !startWithRouterFile && (file.id === 'config' || file.id === 'xray_jsonc')
+  const template = !startWithRouterFile && (file.id === 'config' || file.id === 'xray_routing')
     ? getDefaultTemplate(file.id === 'config' ? 'mihomo' : 'xray').content : '';
   const initial = startWithRouterFile && !hasRouterSnapshot ? '' : storedDraft ?? template;
   if (storedDraft === null && initial) sessionStorage.setItem(`${draftKey}${file.id}`, initial);
@@ -188,7 +212,7 @@ export function mountYamlEditor(routerMode = false, activeCore: 'mihomo' | 'xray
     if (!update.docChanged) return;
     const text = update.state.doc.toString();
     sessionStorage.setItem(`${draftKey}${file.id}`, text);
-    setValidation(`Черновик ${file.filename} · ${update.state.doc.lines} строк · не применён`, null);
+    validateStructuredDocument(text);
   });
   editor = new EditorView({
     parent,
@@ -200,20 +224,15 @@ export function mountYamlEditor(routerMode = false, activeCore: 'mihomo' | 'xray
         lineNumbers(),
         highlightActiveLine(),
         ...(file.format === 'yaml' ? [yaml()] : file.format === 'text' ? [] : [json()]),
-        syntaxHighlighting(defaultHighlightStyle),
+        syntaxHighlighting(editorHighlight),
         editorTheme,
         updateListener,
       ],
     }),
   });
-  setValidation(initial.trim()
-    ? `Черновик ${file.filename} · ${editor.state.doc.lines} строк · не применён`
-    : file.format === 'yaml' ? 'Черновик пуст. Можно вставить шаблон или начать ввод.' : 'Локальный черновик пуст.', null);
-  if (storedDraft === null && initial.trim()) {
-    setValidation(file.format === 'yaml'
-      ? 'Загружен локальный стартовый шаблон Mihomo «Только заблокированное»; это черновик.'
-      : 'Загружен локальный шаблон Xray Routing «Только заблокированное»; это фрагмент конфигурации.', null);
-  }
+  if (initial.trim()) validateStructuredDocument(initial);
+  else setValidation(file.format === 'yaml' ? 'Начните редактирование YAML-конфигурации' : 'Локальный файл пуст.', null);
+  if (storedDraft === null && initial.trim()) validateStructuredDocument(initial);
 
   document.querySelectorAll<HTMLButtonElement>('[data-config-file]').forEach((button) => {
     button.addEventListener('click', () => {
@@ -230,21 +249,6 @@ export function mountYamlEditor(routerMode = false, activeCore: 'mihomo' | 'xray
   document.querySelector<HTMLButtonElement>('#yaml-validate')?.addEventListener('click', (event) => {
     (event.currentTarget as HTMLButtonElement).closest('details')?.removeAttribute('open');
     if (editor) validateStructuredDocument(editor.state.doc.toString());
-  }, { signal });
-  mihomoValidateButton?.addEventListener('click', async () => {
-    if (!editor || currentFile().id !== 'config' || !validateYaml(editor.state.doc.toString())) return;
-    const button = mihomoValidateButton;
-    button.disabled = true;
-    button.textContent = 'Проверяем…';
-    try {
-      const result = await validateMihomoConfig(editor.state.doc.toString(), signal);
-      if (editor) setValidation(result.detail, true);
-    } catch (error) {
-      if (!signal.aborted) setValidation(error instanceof Error ? `Проверка не пройдена: ${error.message}` : 'Проверка конфигурации Mihomo завершилась ошибкой.', false);
-    } finally {
-      button.disabled = false;
-      button.textContent = 'Проверить Mihomo';
-    }
   }, { signal });
   document.querySelector<HTMLButtonElement>('#yaml-format')?.addEventListener('click', (event) => {
     (event.currentTarget as HTMLButtonElement).closest('details')?.removeAttribute('open');
@@ -286,82 +290,103 @@ export function mountYamlEditor(routerMode = false, activeCore: 'mihomo' | 'xray
     (event.currentTarget as HTMLButtonElement).closest('details')?.removeAttribute('open');
     if (editor) downloadDraft(editor.state.doc.toString());
   }, { signal });
-  document.querySelector<HTMLButtonElement>('#config-load-active')?.addEventListener('click', async (event) => {
-    const button = event.currentTarget as HTMLButtonElement;
-    const fileId = currentFile().id;
-    if (!editor || (fileId !== 'config' && !isRouterConfigFile(fileId))) return;
-    const requestedEditor = editor;
-    if (editor.state.doc.length && !(await confirmInApp('Загрузить файл с роутера?', 'Текст редактора будет заменён содержимым файла. На роутер ничего записываться не будет.', 'Загрузить файл'))) return;
-    button.disabled = true;
-    button.textContent = 'Читаем…';
-    try {
-      const active = fileId === 'config' ? await getActiveMihomoConfig() : await getRouterConfigFile(fileId);
-      if (editor !== requestedEditor || currentFile().id !== fileId) return;
-      editor.dispatch({ changes: { from: 0, to: editor.state.doc.length, insert: active.content } });
-      const hint = document.querySelector<HTMLElement>('#editor-file-hint');
-      if (hint) hint.textContent = `Снимок с роутера · ${active.path}`;
-      if (fileId === 'config') activeConfigSnapshot = active.content;
-      else listSnapshots.set(fileId, active.content);
-      const applyButton = document.querySelector<HTMLButtonElement>('#config-apply-active');
-      if (applyButton) applyButton.disabled = false;
-      if (fileId === 'config') validateStructuredDocument(active.content);
-      setValidation(`Прочитан файл ${active.path}.`, null);
-    } catch (error) {
-      setValidation(error instanceof Error ? `Не удалось прочитать конфиг: ${error.message}` : 'Не удалось прочитать конфиг роутера.', false);
-    } finally {
-      button.disabled = false;
-      button.textContent = '↻ Считать';
-    }
-  }, { signal });
   document.querySelector<HTMLButtonElement>('#config-apply-active')?.addEventListener('click', async (event) => {
     const button = event.currentTarget as HTMLButtonElement;
     const fileId = currentFile().id;
-    if (!editor || (fileId !== 'config' && !isRouterConfigFile(fileId)) || button.disabled) return;
+    if (!editor || (fileId !== 'config' && !isXrayConfigFile(fileId)) || button.disabled) return;
     const requestedEditor = editor;
     const content = editor.state.doc.toString();
     const expectedContent = currentSnapshot();
     if (expectedContent === null) {
-      setValidation('Считайте актуальный файл с роутера перед сохранением.', false);
+      setValidation('Файл ещё загружается с роутера. Повторите действие через секунду.', false);
       return;
     }
-    if (fileId === 'config' && !validateYaml(content)) return;
-    if (fileId === 'xkeen' && !validateStructuredDocument(content)) return;
+    if (!validateStructuredDocument(content)) return;
     button.disabled = true;
-    button.textContent = fileId === 'config' ? 'Проверка и запись…' : 'Сохраняем…';
+    const saveButton = document.querySelector<HTMLButtonElement>('#config-save-active');
+    if (saveButton) saveButton.disabled = true;
+    button.textContent = 'Проверка и перезапуск…';
     try {
+      const apiFile = xrayApiFile(fileId);
+      const normalized = fileId === 'xray_routing' ? JSON.stringify(parseJsonc(content, []), null, 2) : content;
       const result = fileId === 'config'
-        ? await applyActiveMihomoConfig(content, expectedContent)
-        : await saveRouterConfigFile(fileId, content, expectedContent);
+        ? await applyActiveMihomoConfig(normalized, expectedContent, signal)
+        : await applyXrayConfigFile(apiFile, normalized, expectedContent, signal);
       if (editor !== requestedEditor || currentFile().id !== fileId) return;
-      if (fileId === 'config') activeConfigSnapshot = content;
-      else listSnapshots.set(fileId, content);
+      if (normalized !== content) editor.dispatch({ changes: { from: 0, to: editor.state.doc.length, insert: normalized } });
+      if (fileId === 'config') activeConfigSnapshot = normalized;
+      else xraySnapshots.set(apiFile, normalized);
       const hint = document.querySelector<HTMLElement>('#editor-file-hint');
       if (hint) hint.textContent = `Файл на роутере · ${result.path}`;
-      setValidation(`${result.detail}. Резервная копия: ${result.backup}`, true);
+      setValidation(`✓ ${result.detail}. Резервная копия: ${result.backup}`, true);
     } catch (error) {
       if (error instanceof Error && error.message.includes('HTTP 409')) {
         if (fileId === 'config') activeConfigSnapshot = null;
-        else listSnapshots.delete(fileId);
+        else xraySnapshots.delete(xrayApiFile(fileId));
       }
       setValidation(error instanceof Error ? `Применение не выполнено: ${error.message}` : 'Применение конфигурации завершилось ошибкой.', false);
     } finally {
       button.disabled = currentSnapshot() === null;
-      button.textContent = fileId === 'config' ? 'Применить' : 'Сохранить';
+      if (saveButton) saveButton.disabled = currentSnapshot() === null;
+      button.textContent = 'Применить и перезапустить';
+    }
+  }, { signal });
+
+  document.querySelector<HTMLButtonElement>('#config-save-active')?.addEventListener('click', async (event) => {
+    const button = event.currentTarget as HTMLButtonElement;
+    const fileId = currentFile().id;
+    if (!editor || (!isRouterConfigFile(fileId) && fileId !== 'config' && !isXrayConfigFile(fileId)) || button.disabled) return;
+    const requestedEditor = editor;
+    const expectedContent = currentSnapshot();
+    if (expectedContent === null) { setValidation('Файл ещё загружается с роутера. Повторите действие через секунду.', false); return; }
+    const rawContent = editor.state.doc.toString();
+    const isStructured = !isRouterConfigFile(fileId) || fileId === 'xkeen';
+    if (isStructured && !validateStructuredDocument(rawContent)) return;
+    const apiFile = isXrayConfigFile(fileId) ? xrayApiFile(fileId) : null;
+    const content = fileId === 'xray_routing' ? JSON.stringify(parseJsonc(rawContent, []), null, 2) : rawContent;
+    button.disabled = true;
+    const applyButton = document.querySelector<HTMLButtonElement>('#config-apply-active');
+    if (applyButton) applyButton.disabled = true;
+    button.textContent = 'Сохраняем…';
+    try {
+      const result = fileId === 'config'
+        ? await saveActiveMihomoConfig(content, expectedContent, signal)
+        : apiFile ? await saveXrayConfigFile(apiFile, content, expectedContent)
+          : await saveRouterConfigFile(fileId as RouterConfigFile, content, expectedContent);
+      if (editor !== requestedEditor || currentFile().id !== fileId) return;
+      if (content !== rawContent) editor.dispatch({ changes: { from: 0, to: editor.state.doc.length, insert: content } });
+      if (fileId === 'config') activeConfigSnapshot = content;
+      else if (apiFile) xraySnapshots.set(apiFile, content);
+      else listSnapshots.set(fileId as RouterConfigFile, content);
+      const hint = document.querySelector<HTMLElement>('#editor-file-hint');
+      if (hint) hint.textContent = `Файл на роутере · ${result.path}`;
+      setValidation(`✓ Сохранено. ${result.path}. Резервная копия: ${result.backup}`, true);
+    } catch (error) {
+      setValidation(error instanceof Error ? `Сохранение не выполнено: ${error.message}` : 'Сохранение завершилось ошибкой.', false);
+    } finally {
+      button.disabled = currentSnapshot() === null;
+      if (applyButton) applyButton.disabled = currentSnapshot() === null;
+      button.textContent = 'Сохранить';
     }
   }, { signal });
 
   if (startWithRouterFile && !hasRouterSnapshot) {
     const requestedEditor = editor;
     setValidation(`Считываем ${file.filename} с роутера…`, null);
-    const loaded = file.id === 'config' ? getActiveMihomoConfig(signal) : getRouterConfigFile(file.id as RouterConfigFile, signal);
+    const loaded = file.id === 'config' ? getActiveMihomoConfig(signal)
+      : isXrayConfigFile(file.id) ? getXrayConfigFile(xrayApiFile(file.id), signal)
+        : getRouterConfigFile(file.id as RouterConfigFile, signal);
     void loaded.then((active) => {
       if (editor !== requestedEditor || !editor || editor.state.doc.length) return;
       editor.dispatch({ changes: { from: 0, to: 0, insert: active.content } });
       if (file.id === 'config') activeConfigSnapshot = active.content;
+      else if (isXrayConfigFile(file.id)) xraySnapshots.set(xrayApiFile(file.id), active.content);
       else listSnapshots.set(file.id as RouterConfigFile, active.content);
       const applyButton = document.querySelector<HTMLButtonElement>('#config-apply-active');
       if (applyButton) applyButton.disabled = false;
-      setValidation(`${active.path} · ${editor.state.doc.lines} строк`, null);
+      const saveButton = document.querySelector<HTMLButtonElement>('#config-save-active');
+      if (saveButton) saveButton.disabled = false;
+      validateStructuredDocument(active.content);
     }).catch((error: unknown) => {
       if (!signal.aborted) setValidation(error instanceof Error ? `Не удалось считать ${file.filename}: ${error.message}` : `Не удалось считать ${file.filename}.`, false);
     });

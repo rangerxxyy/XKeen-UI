@@ -539,6 +539,55 @@ body { color:var(--text); -webkit-font-smoothing:antialiased; }
 .confirmation-actions .editor-button-primary:hover { border-color:#6e91ed; background:#345fd0; }
 .editor-utilities-menu [hidden] { display:none; }
 
+/* Let the document reach the Journal instead of trapping page scroll above it. */
+.app-shell { height:auto; min-height:100vh; }
+.workspace-scroll { min-height:0; flex:0 0 auto; overflow:visible; }
+.main-content { min-height:0; flex:none; overflow:visible; }
+.journal-panel { flex:0 0 254px; }
+
+/* Dense connection table: stable columns, single-line identifiers, aligned traffic. */
+.connection-table-wrap { max-height:min(72vh,760px); overflow:auto; }
+.connection-table { width:100%; min-width:940px; table-layout:fixed; border-collapse:collapse; border-spacing:0; }
+.connection-table th:nth-child(1) { width:30%; }
+.connection-table th:nth-child(2) { width:28%; }
+.connection-table th:nth-child(3) { width:6%; }
+.connection-table th:nth-child(4) { width:12%; }
+.connection-table th:nth-child(5) { width:14%; }
+.connection-table th:nth-child(6) { width:8%; }
+.connection-table th:nth-child(7) { width:2%; }
+.connection-table td { height:38px; padding:6px 11px; white-space:nowrap; }
+.connection-table td.connection-route-cell,
+.connection-table td.connection-host,
+.connection-table td.connection-network,
+.connection-table td.connection-source,
+.connection-table td.connection-time { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.connection-table .connection-chain { max-width:calc(100% - 28px); white-space:nowrap; }
+.connection-table td.connection-route-cell:not(.has-app-icon) .connection-chain { max-width:100%; }
+.connection-table .connection-traffic { overflow:hidden; white-space:nowrap; }
+.connection-table .connection-traffic>span { display:inline-block; margin-right:8px; white-space:nowrap; }
+.connection-table .connection-actions { text-align:center; }
+
+/* Stronger editor syntax colors and clearly separated save/apply actions. */
+.config-layout { min-height:560px; height:min(72vh,900px); max-height:none; }
+.config-editor-caption { min-height:42px; }
+.config-layout .editor-statusbar { position:sticky; bottom:0; z-index:3; min-height:54px; background:#101726; border-top:1px solid #35445e; }
+.config-layout .editor-validation { color:#aebed3; font-size:12px; font-weight:650; }
+.config-layout .editor-validation.is-valid { color:#3de19a; }
+.config-layout .editor-validation.is-invalid { color:#ff8292; }
+.config-layout .editor-button { min-height:36px; padding-inline:13px; font-size:12px; font-weight:650; }
+.config-layout #config-save-active { border-color:#486795; color:#c5d9f3; background:#17243a; }
+.config-layout #config-apply-active { border-color:#287e5b; color:#e8fff5; background:#116442; }
+.config-layout #config-apply-active:hover { background:#16794f; }
+.config-layout .code-editor .cm-editor { font-size:14px; }
+.config-layout .code-editor .cm-content { font-weight:500; }
+@media(max-width:700px) {
+  .config-layout { height:min(75vh,780px); min-height:460px; }
+  .config-layout .editor-statusbar { position:static; align-items:flex-start; }
+  .config-layout .editor-actions { flex-wrap:wrap; justify-content:flex-start; }
+  .config-layout .editor-button { font-size:11px; padding-inline:9px; }
+  .connection-table { min-width:940px; }
+}
+
 /* Settings keep their header visible and let only the form content scroll. */
 .modal.settings-dialog { width:min(640px,calc(100vw - 24px)); max-width:none; max-height:90vh; }
 .settings-panel { display:flex; flex-direction:column; width:100%; max-height:90vh; padding:18px; overflow:hidden; }

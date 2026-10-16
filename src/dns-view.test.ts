@@ -16,6 +16,22 @@ describe('DNS workspaces', () => {
     expect(view).toContain('Перед включением проверьте активную конфигурацию DNS Mihomo');
   });
 
+  it('treats an enabled Mihomo DNS config as separate from router DNS handoff', () => {
+    const state = { dnsOverride: false, mihomoDns: true, portListener: 'mihomo', nameServers: ['77.88.8.8'], detail: 'Состояние получено' };
+    const view = renderDns(null, false, null, '', 'A', 'handoff', { status: state, loading: false, error: null, busy: false, confirm: false });
+    expect(view).toContain('Выключено');
+    expect(view).toContain('Передать DNS Mihomo');
+    expect(view).not.toContain('Состояния DNS не совпадают');
+  });
+
+  it('keeps stop-protection active when router override remains but Mihomo DNS is off', () => {
+    const state = { dnsOverride: true, mihomoDns: false, portListener: null, nameServers: ['77.88.8.8'], detail: 'Состояние получено' };
+    const view = renderDns(null, false, null, '', 'A', 'handoff', { status: state, loading: false, error: null, busy: false, confirm: false });
+    expect(view).toContain('Нужно проверить');
+    expect(view).toContain('Вернуть DNS KeeneticOS');
+    expect(view).toContain('Состояния DNS не совпадают');
+  });
+
   it('requires an explicit second step before changing router DNS', () => {
     const view = renderDns(null, false, null, '', 'A', 'handoff');
     expect(view).toContain('Статус неизвестен');

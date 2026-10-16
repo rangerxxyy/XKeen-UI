@@ -285,14 +285,10 @@ pub async fn status(State(state): State<AppState>) -> Response {
 }
 
 pub async fn ensure_dns_safe_to_stop() -> Result<(), String> {
-    let config = tokio::fs::read_to_string(CONFIG_PATH).await.map_err(|e| {
-        format!("Не удалось проверить config.yaml Mihomo перед остановкой XKeen: {e}")
-    })?;
     let running = ndmc("show running-config").await?;
-    let dns_override = parse_restore_state(&running).dns_override;
-    if dns_override || read_mihomo_dns_enabled(&config) {
+    if parse_restore_state(&running).dns_override {
         return Err(
-            "Управление DNS Mihomo включено или состояние DNS не согласовано. Сначала верните DNS KeeneticOS, затем останавливайте XKeen".into(),
+            "DNS Override KeeneticOS направляет запросы через XKeen. Сначала верните DNS KeeneticOS, затем останавливайте XKeen".into(),
         );
     }
     Ok(())

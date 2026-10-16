@@ -426,7 +426,7 @@ async function loadRouterDnsStatus(): Promise<void> {
 async function runDnsManagementToggle(): Promise<void> {
   const currentStatus = dnsManagementStatus;
   if (!currentStatus || dnsManagementBusy) return;
-  const enabled = !(currentStatus.dnsOverride || currentStatus.mihomoDns);
+  const enabled = !currentStatus.dnsOverride;
   dnsManagementBusy = true;
   dnsManagementConfirm = false;
   dnsManagementError = null;

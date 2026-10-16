@@ -11,6 +11,7 @@ import { confirmInApp } from './confirm-dialog';
 import { bindDialogMotion, closeDialogWithMotion } from './dialog-motion';
 import { lifecycleFeedback } from './service-feedback';
 import { readUiPreferences, writeUiPreferences, type UiPreferences } from './preferences';
+import { getJournalViewState } from './journal-view-state';
 
 type Page = 'selectors' | 'connections' | 'configuration' | 'dns';
 
@@ -179,15 +180,16 @@ function renderJournal(): string {
 function drawJournal(): void {
   const body = document.querySelector<HTMLElement>('#journal-body');
   if (!body) return;
-  if (logLoading) {
+  const viewState = getJournalViewState({ loading: logLoading, hasData: logData !== null, error: logError, cleared: logCleared });
+  if (viewState === 'loading') {
     body.innerHTML = '<div class="journal-empty"><span class="loading-orbit" aria-hidden="true"></span><strong>Загружаем журнал</strong></div>';
     return;
   }
-  if (logError) {
-    body.innerHTML = `<div class="journal-empty"><span class="journal-empty-icon">!</span><strong>Журнал недоступен</strong><p>${escapeHtml(logError)}</p></div>`;
+  if (viewState === 'error') {
+    body.innerHTML = `<div class="journal-empty"><span class="journal-empty-icon">!</span><strong>Журнал недоступен</strong><p>${escapeHtml(logError ?? 'Не удалось загрузить журнал')}</p></div>`;
     return;
   }
-  if (logCleared) {
+  if (viewState === 'cleared') {
     body.innerHTML = '<div class="journal-empty"><span class="journal-empty-icon">✓</span><strong>Отображение очищено</strong><p>Исходный файл на устройстве не изменён.</p></div>';
     return;
   }
@@ -242,8 +244,7 @@ async function loadSystemLog(): Promise<void> {
     logData = await getSystemLog(selectedLog, AbortSignal.any([controller.signal, AbortSignal.timeout(12_000)]));
   } catch (error) {
     if (error instanceof DOMException && error.name === 'AbortError') return;
-    logData = null;
-    logError = error instanceof Error ? error.message : 'Не удалось загрузить журнал';
+    if (!logData) logError = error instanceof Error ? error.message : 'Не удалось загрузить журнал';
   } finally {
     if (logController === controller) {
       logLoading = false;

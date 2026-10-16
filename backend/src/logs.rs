@@ -317,7 +317,8 @@ mod tests {
 
     #[test]
     fn refuses_a_symlink_log_target() {
-        let directory = std::env::temp_dir().join(format!("xkeen-ui-symlink-{}", std::process::id()));
+        let directory = std::env::temp_dir()
+            .join(format!("xkeen-ui-symlink-{}", std::process::id()));
         std::fs::create_dir_all(&directory).unwrap();
         let target = directory.join("target.log");
         let link = directory.join("link.log");
@@ -334,11 +335,15 @@ mod tests {
 
     #[test]
     fn caps_a_lifecycle_log_write() {
-        let directory = std::env::temp_dir().join(format!("xkeen-ui-log-cap-{}", std::process::id()));
+        let directory = std::env::temp_dir()
+            .join(format!("xkeen-ui-log-cap-{}", std::process::id()));
         std::fs::create_dir_all(&directory).unwrap();
         let path = directory.join("xkeen-ui.log");
         append_log_file(&path, &["x".repeat(MAX_LIFECYCLE_WRITE_BYTES * 2)]).unwrap();
-        assert_eq!(std::fs::metadata(&path).unwrap().len(), MAX_LIFECYCLE_WRITE_BYTES as u64);
+        assert_eq!(
+            std::fs::metadata(&path).unwrap().len(),
+            MAX_LIFECYCLE_WRITE_BYTES as u64
+        );
         let _ = std::fs::remove_file(path);
         let _ = std::fs::remove_dir(directory);
     }

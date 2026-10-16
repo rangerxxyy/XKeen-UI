@@ -403,7 +403,10 @@ async fn validate_content(content: &str) -> Result<(), String> {
     }
     let core = ["/opt/sbin/mihomo", "/opt/bin/mihomo"]
         .into_iter()
-        .find(|path| fs::metadata(path).is_ok_and(|meta| meta.is_file() && meta.permissions().mode() & 0o111 != 0))
+        .find(|path| {
+            fs::metadata(path)
+                .is_ok_and(|meta| meta.is_file() && meta.permissions().mode() & 0o111 != 0)
+        })
         .ok_or_else(|| "Исполняемый Mihomo не найден в /opt/sbin или /opt/bin".to_owned())?;
     let staged = unique_file(directory, "xkeen-ui-validate", "yaml");
     let mut file = tokio::fs::OpenOptions::new()
@@ -427,7 +430,9 @@ async fn validate_content(content: &str) -> Result<(), String> {
     match (validation, cleanup) {
         (Ok(()), Ok(())) => Ok(()),
         (Err(error), _) => Err(error),
-        (Ok(()), Err(error)) => Err(format!("Проверка прошла, но временный файл не удалён: {error}")),
+        (Ok(()), Err(error)) => Err(format!(
+            "Проверка прошла, но временный файл не удалён: {error}"
+        )),
     }
 }
 

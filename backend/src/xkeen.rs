@@ -92,10 +92,7 @@ pub async fn control(action: &str) -> Result<XkeenStatus, String> {
         .as_deref()
         .map(process_identities)
         .unwrap_or_default();
-    let path = before
-        .init_path
-        .as_deref()
-        .filter(|_| before.installed);
+    let path = before.init_path.as_deref().filter(|_| before.installed);
     let mut command_result = "not-started";
     let result = match control_args(action) {
         Err(error) => Err(error),
@@ -288,10 +285,7 @@ fn process_identities(name: &str) -> Vec<ProcessIdentity> {
 
 fn process_start_ticks(stat: &str) -> Option<u64> {
     let comm_end = stat.rfind(')')?;
-    stat[comm_end + 1..]
-        .split_whitespace()
-        .nth(19)?
-        .parse()
+    stat[comm_end + 1..].split_whitespace().nth(19)?.parse().ok()
 }
 
 fn executable_file(path: &Path) -> bool {
@@ -354,8 +348,8 @@ fn shell_assignment(text: &str, key: &str) -> Option<String> {
 mod tests {
     use super::{
         control_args, execute_init_command, process_start_ticks, process_transition_verified,
-        require_verified_transition,
-        resolve_init_path, safe_init_path, shell_assignment, ProcessIdentity,
+        require_verified_transition, resolve_init_path, safe_init_path, shell_assignment,
+        ProcessIdentity,
     };
     use std::{
         os::unix::fs::PermissionsExt,
@@ -393,37 +387,59 @@ mod tests {
 
     #[test]
     fn restart_requires_a_new_process_identity() {
-        let old = ProcessIdentity { pid: 321, start_ticks: 900 };
+        let old = ProcessIdentity {
+            pid: 321,
+            start_ticks: 900,
+        };
         assert!(!process_transition_verified("restart", &[old], &[old]));
     }
 
     #[test]
     fn restart_accepts_a_replaced_process_and_start_from_stopped_state() {
-        let old = ProcessIdentity { pid: 321, start_ticks: 900 };
-        let new = ProcessIdentity { pid: 321, start_ticks: 901 };
+        let old = ProcessIdentity {
+            pid: 321,
+            start_ticks: 900,
+        };
+        let new = ProcessIdentity {
+            pid: 321,
+            start_ticks: 901,
+        };
         assert!(process_transition_verified("restart", &[old], &[new]));
         assert!(process_transition_verified("restart", &[], &[new]));
     }
 
     #[test]
     fn start_and_stop_require_the_expected_process_presence() {
-        let identity = ProcessIdentity { pid: 321, start_ticks: 900 };
+        let identity = ProcessIdentity {
+            pid: 321,
+            start_ticks: 900,
+        };
         assert!(process_transition_verified("start", &[], &[identity]));
         assert!(!process_transition_verified("start", &[], &[]));
         assert!(process_transition_verified("stop", &[identity], &[]));
-        assert!(!process_transition_verified("stop", &[identity], &[identity]));
+        assert!(!process_transition_verified(
+            "stop",
+            &[identity],
+            &[identity]
+        ));
     }
 
     #[test]
     fn refuses_to_return_success_when_final_restart_transition_is_unverified() {
-        let identity = ProcessIdentity { pid: 321, start_ticks: 900 };
+        let identity = ProcessIdentity {
+            pid: 321,
+            start_ticks: 900,
+        };
         let result = require_verified_transition("restart", Ok(()), &[identity], &[identity]);
         assert!(result.unwrap_err().contains("не подтверждён"));
     }
 
     #[test]
     fn preserves_command_failure_when_transition_is_unverified() {
-        let identity = ProcessIdentity { pid: 321, start_ticks: 900 };
+        let identity = ProcessIdentity {
+            pid: 321,
+            start_ticks: 900,
+        };
         let result = require_verified_transition(
             "restart",
             Err("XKeen завершил команду с кодом 1".to_owned()),

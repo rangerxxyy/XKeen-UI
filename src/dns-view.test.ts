@@ -38,6 +38,12 @@ describe('DNS workspaces', () => {
     expect(view).toContain('id="dns-management-toggle" type="button" disabled');
   });
 
+  it('explains that Keenetic DNS is restored before Mihomo DNS is disabled', () => {
+    const state = { dnsOverride: true, mihomoDns: true, portListener: 'mihomo', nameServers: ['77.88.8.8'], detail: 'Состояние получено' };
+    const view = renderDns(null, false, null, '', 'A', 'handoff', { status: state, loading: false, error: null, busy: false, confirm: true });
+    expect(view).toContain('Сначала KeeneticOS вернёт сохранённые DNS-серверы. Затем выключится DNS в Mihomo.');
+  });
+
   it('updates Mihomo DNS keys without discarding the rest of the config', () => {
     const original = 'log-level: info\ndns:\n  enable: false\n  nameserver:\n    - 1.1.1.1\nproxies: []\n';
     const updated = patchDnsManagement(original, true);

@@ -446,7 +446,7 @@ mod tests {
         };
         let result = require_verified_transition(
             "restart",
-            Err("XKeen завершил команду с кодом 1".to_owned()),
+            Err::<(), _>("XKeen завершил команду с кодом 1".to_owned()),
             &[identity],
             &[identity],
         );

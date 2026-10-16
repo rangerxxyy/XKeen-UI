@@ -24,6 +24,12 @@ while [ "$#" -gt 0 ]; do
 done
 printf '%s\n' "$url" >>"$XKEEN_TEST_URLS"
 case "$url" in
+  https://github.com/*/xkeen-ui-linux-aarch64.tar.gz)
+    [ "${XKEEN_TEST_FAIL_DIRECT:-0}" = 1 ] && exit 22
+    cp "$XKEEN_TEST_ARCHIVE" "$output" ;;
+  https://github.com/*/SHA256SUMS)
+    [ "${XKEEN_TEST_FAIL_DIRECT:-0}" = 1 ] && exit 22
+    cp "$XKEEN_TEST_SUMS" "$output" ;;
   https://gh-proxy.com/https://github.com/*/xkeen-ui-linux-aarch64.tar.gz)
     [ "${XKEEN_TEST_FAIL_FIRST_PROXY:-0}" = 1 ] && exit 22
     cp "$XKEEN_TEST_ARCHIVE" "$output" ;;
@@ -56,15 +62,11 @@ XKEEN_TEST_SUMS="$TEMP/SHA256SUMS" \
 
 FIRST_URL=$(sed -n '1p' "$TEMP/urls.txt")
 case "$FIRST_URL" in
-  https://gh-proxy.com/https://github.com/*) ;;
-  *) printf 'Expected gh-proxy.com first, got: %s\n' "$FIRST_URL" >&2; exit 1 ;;
+  https://github.com/*/releases/latest/download/xkeen-ui-linux-aarch64.tar.gz) ;;
+  *) printf 'Expected direct GitHub first, got: %s\n' "$FIRST_URL" >&2; exit 1 ;;
 esac
 if grep -q 'api.github.com' "$TEMP/urls.txt"; then
   printf 'Latest install should download release assets without querying the GitHub API.\n' >&2
-  exit 1
-fi
-if grep -q '^https://github.com/' "$TEMP/urls.txt"; then
-  printf 'Direct GitHub was tried before the configured proxy.\n' >&2
   exit 1
 fi
 if [ "$(wc -l <"$TEMP/urls.txt" | tr -d '[:space:]')" -ne 2 ]; then
@@ -77,20 +79,26 @@ PATH="$TEMP/bin:$PATH" \
 XKEEN_TEST_URLS="$TEMP/urls.txt" \
 XKEEN_TEST_ARCHIVE="$TEMP/xkeen-ui-linux-aarch64.tar.gz" \
 XKEEN_TEST_SUMS="$TEMP/SHA256SUMS" \
+XKEEN_TEST_FAIL_DIRECT=1 \
 XKEEN_TEST_FAIL_FIRST_PROXY=1 \
   sh "$ROOT/install.sh" update --prefix "$TEMP/prefix" --version v0.2.23
 FIRST_PINNED_URL=$(sed -n '1p' "$TEMP/urls.txt")
 case "$FIRST_PINNED_URL" in
-  https://gh-proxy.com/https://github.com/*/releases/download/v0.2.23/*) ;;
-  *) printf 'Expected pinned v0.2.23 asset path, got: %s\n' "$FIRST_PINNED_URL" >&2; exit 1 ;;
+  https://github.com/*/releases/download/v0.2.23/xkeen-ui-linux-aarch64.tar.gz) ;;
+  *) printf 'Expected pinned direct GitHub asset path, got: %s\n' "$FIRST_PINNED_URL" >&2; exit 1 ;;
 esac
 SECOND_PINNED_URL=$(sed -n '2p' "$TEMP/urls.txt")
 case "$SECOND_PINNED_URL" in
-  https://ghfast.top/https://github.com/*/releases/download/v0.2.23/*) ;;
-  *) printf 'Expected fallback to ghfast.top, got: %s\n' "$SECOND_PINNED_URL" >&2; exit 1 ;;
+  https://gh-proxy.com/https://github.com/*/releases/download/v0.2.23/xkeen-ui-linux-aarch64.tar.gz) ;;
+  *) printf 'Expected first proxy fallback, got: %s\n' "$SECOND_PINNED_URL" >&2; exit 1 ;;
 esac
-if grep -q '^https://github.com/' "$TEMP/urls.txt"; then
-  printf 'A direct GitHub request was attempted after proxy failure.\n' >&2
+THIRD_PINNED_URL=$(sed -n '3p' "$TEMP/urls.txt")
+case "$THIRD_PINNED_URL" in
+  https://ghfast.top/https://github.com/*/releases/download/v0.2.23/xkeen-ui-linux-aarch64.tar.gz) ;;
+  *) printf 'Expected fallback to ghfast.top, got: %s\n' "$THIRD_PINNED_URL" >&2; exit 1 ;;
+esac
+if [ "$(wc -l <"$TEMP/urls.txt" | tr -d '[:space:]')" -ne 6 ]; then
+  printf 'Expected one direct plus two proxy attempts for archive and checksum.\n' >&2
   exit 1
 fi
-printf 'Installer used the configured GitHub proxy without a direct fallback.\n'
+printf 'Installer used GitHub directly, then bounded proxy fallbacks when simulated failures occurred.\n'

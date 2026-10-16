@@ -54,12 +54,18 @@ download_github_file() {
   source_url=$1
   output_file=$2
   max_bytes=$3
+  printf 'Загрузка с GitHub: %s\n' "$source_url"
+  if curl -fL --connect-timeout 10 --max-time 30 --max-filesize "$max_bytes" "$source_url" -o "$output_file.part"; then
+    mv "$output_file.part" "$output_file" || return 1
+    return 0
+  fi
+  rm -f "$output_file.part"
   proxies=${XKEEN_UI_GH_PROXIES:-"https://gh-proxy.com https://ghfast.top"}
   # shellcheck disable=SC2086
   for proxy in $proxies; do
     candidate=$proxy/$source_url
-    printf 'Загрузка через %s\n' "$proxy"
-    if curl -fL --connect-timeout 10 --max-time 60 --max-filesize "$max_bytes" "$candidate" -o "$output_file.part"; then
+    printf 'Повторная загрузка через %s\n' "$proxy"
+    if curl -fL --connect-timeout 10 --max-time 30 --max-filesize "$max_bytes" "$candidate" -o "$output_file.part"; then
       mv "$output_file.part" "$output_file" || return 1
       return 0
     fi
@@ -107,9 +113,9 @@ if [ -n "$VERSION" ]; then
   printf '%s\n' "$VERSION" | awk '!/^v(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)$/ {exit 1}' || fail 'версия должна иметь формат vX.Y.Z'
 fi
 printf 'Загрузка пакета XKeen UI (%s)\n' "$ARCH"
-download_github_file "$BASE/$ARCHIVE" "$WORK/$ARCHIVE" 52428800 || fail 'не удалось загрузить архив через настроенные GitHub-прокси'
+download_github_file "$BASE/$ARCHIVE" "$WORK/$ARCHIVE" 52428800 || fail 'не удалось загрузить архив с GitHub'
 printf 'Проверка контрольной суммы...\n'
-download_github_file "$BASE/SHA256SUMS" "$WORK/SHA256SUMS" 1048576 || fail 'не удалось загрузить SHA256SUMS через настроенные GitHub-прокси'
+download_github_file "$BASE/SHA256SUMS" "$WORK/SHA256SUMS" 1048576 || fail 'не удалось загрузить SHA256SUMS с GitHub'
 EXPECTED=$(awk -v file="$ARCHIVE" '$2 == file || $2 == "*" file {print $1; exit}' "$WORK/SHA256SUMS")
 [ -n "$EXPECTED" ] || fail "в SHA256SUMS нет записи для $ARCHIVE"
 ACTUAL=$(sha256sum "$WORK/$ARCHIVE" | awk '{print $1}')

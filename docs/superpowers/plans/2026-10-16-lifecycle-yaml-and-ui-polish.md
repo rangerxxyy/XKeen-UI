@@ -38,10 +38,10 @@
 - Add an internal bounded error-body reader used by `readJson` for non-2xx responses.
 - Preserve `ApiError.status`; include safe backend `error` string when available.
 
-- [ ] Write Vitest cases for JSON `{error: ...}`, malformed JSON, and empty body with non-2xx status.
-- [ ] Run `pnpm test -- src/api.test.ts`; verify new cases fail because current code drops backend detail.
-- [ ] Implement bounded parsing and fallback message without changing successful response parsing.
-- [ ] Run the focused test and then `pnpm test`.
+- [x] Write Vitest cases for JSON `{error: ...}`, malformed JSON, and empty body with non-2xx status.
+- [x] Run `pnpm test -- src/api.test.ts`; three new cases failed because current code dropped backend detail.
+- [x] Implement bounded parsing and fallback message without changing successful response parsing.
+- [x] Run the focused test (`91/91` tests pass) and typecheck (`pnpm typecheck`, exit 0).
 
 ### Task 2: Verify XKeen lifecycle transitions and persist operation logs
 

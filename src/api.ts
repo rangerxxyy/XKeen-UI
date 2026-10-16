@@ -399,7 +399,7 @@ export async function closeMihomoConnection(id: string, signal?: AbortSignal): P
     headers: { Accept: 'application/json' },
     signal,
   });
-  requireSuccess(response, 'Закрытие соединения');
+  await throwForError(response, 'Закрытие соединения');
 }
 
 export async function closeAllMihomoConnections(signal?: AbortSignal): Promise<void> {
@@ -408,7 +408,7 @@ export async function closeAllMihomoConnections(signal?: AbortSignal): Promise<v
     headers: { Accept: 'application/json' },
     signal,
   });
-  requireSuccess(response, 'Закрытие соединений');
+  await throwForError(response, 'Закрытие соединений');
 }
 
 function readString(value: unknown): string {
@@ -606,7 +606,7 @@ function parseSystemStatus(value: unknown): SystemStatus {
 }
 
 async function readJson(response: Response, operation: string): Promise<unknown> {
-  requireSuccess(response, operation);
+  await throwForError(response, operation);
   const contentType = response.headers.get('content-type') ?? '';
   if (!contentType.toLowerCase().includes('application/json')) {
     throw new Error(`${operation}: backend вернул не JSON; проверьте Rust backend и адрес API`);
@@ -614,6 +614,26 @@ async function readJson(response: Response, operation: string): Promise<unknown>
   return await response.json() as unknown;
 }
 
-function requireSuccess(response: Response, operation: string): void {
-  if (!response.ok) throw new ApiError(`${operation}: HTTP ${response.status}`, response.status);
+async function throwForError(response: Response, operation: string): Promise<void> {
+  if (response.ok) return;
+  const status = `HTTP ${response.status}`;
+  const contentType = response.headers.get('content-type')?.toLowerCase() ?? '';
+  let detail: string | null = null;
+  if (contentType.includes('application/json')) {
+    try {
+      const payload: unknown = await response.clone().json();
+      if (isRecord(payload) && typeof payload.error === 'string') {
+        detail = payload.error
+          .replace(/[\u0000-\u0008\u000b\u000c\u000e-\u001f\u007f]/g, ' ')
+          .trim()
+          .slice(0, 2048) || null;
+      }
+    } catch {
+      // Keep the status and a stable fallback when the server's error body is malformed.
+    }
+  }
+  const message = detail
+    ? `${operation}: ${detail} (${status})`
+    : `${operation}: ${status}; backend не вернул сообщение об ошибке`;
+  throw new ApiError(message, response.status);
 }

@@ -77,7 +77,7 @@ export function renderPingStatusIcon(alive: boolean | null): string {
   const path = alive === false
     ? '<circle cx="8" cy="8" r="6.25"/><path d="m5.7 5.7 4.6 4.6m0-4.6-4.6 4.6"/>'
     : alive === true
-      ? '<path d="M2 5.4a9 9 0 0 1 12 0M4.4 7.9a5.4 5.4 0 0 1 7.2 0M6.8 10.3a2 2 0 0 1 2.4 0M8 13h.01"/>'
+      ? '<path d="M4.5 8.5l2.3 2.3 4.8-5.1"/>'
       : '<circle cx="8" cy="8" r="6.25"/><path d="M8 4.5v3.7m0 2.3h.01"/>';
   return `<i class="ping-status-icon" aria-hidden="true"><svg viewBox="0 0 16 16" focusable="false">${path}</svg></i>`;
 }

@@ -15,7 +15,7 @@ use tracing::{info, warn};
 const CONFIG_PATH: &str = "/opt/etc/mihomo/config.yaml";
 const DNS_STATE_PATH: &str = "/opt/etc/xkeen-ui/dns-restore.json";
 
-#[derive(Clone, Debug, Deserialize, Serialize)]
+#[derive(Clone, Debug, Deserialize, PartialEq, Eq, Serialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 struct DnsRestoreState {
     dns_override: bool,
@@ -287,13 +287,13 @@ pub async fn status(State(state): State<AppState>) -> Response {
 pub async fn ensure_dns_safe_to_stop() -> Result<(), String> {
     let config = tokio::fs::read_to_string(CONFIG_PATH)
         .await
-        .unwrap_or_default();
-    if !read_mihomo_dns_enabled(&config) {
-        return Ok(());
-    }
+        .map_err(|e| format!("Не удалось проверить config.yaml Mihomo перед остановкой XKeen: {e}"))?;
     let running = ndmc("show running-config").await?;
-    if parse_restore_state(&running).dns_override {
-        return Err("DNS Mihomo передан роутеру. Сначала верните DNS KeeneticOS, затем останавливайте XKeen".into());
+    let dns_override = parse_restore_state(&running).dns_override;
+    if dns_override || read_mihomo_dns_enabled(&config) {
+        return Err(
+            "Управление DNS Mihomo включено или состояние DNS не согласовано. Сначала верните DNS KeeneticOS, затем останавливайте XKeen".into(),
+        );
     }
     Ok(())
 }
@@ -434,7 +434,10 @@ async fn restore_router_dns(state: &DnsRestoreState) -> Result<(), String> {
     ndmc("no opkg dns-override").await?;
     ndmc("no ip name-server").await?;
     for address in &state.name_servers {
-        ndmc(&format!("ip name-server {address}")).await?;
+        let parsed = address
+            .parse::<IpAddr>()
+            .map_err(|_| "Резерв DNS содержит некорректный IP-адрес".to_owned())?;
+        ndmc(&format!("ip name-server {parsed}")).await?;
     }
     if state.dns_override {
         ndmc("opkg dns-override").await?;
@@ -463,9 +466,17 @@ async fn read_restore_state() -> Result<Option<DnsRestoreState>, String> {
             let value = tokio::fs::read_to_string(DNS_STATE_PATH)
                 .await
                 .map_err(|e| format!("Не удалось прочитать резерв состояния DNS: {e}"))?;
-            serde_json::from_str(&value)
-                .map(Some)
-                .map_err(|e| format!("Резерв состояния DNS повреждён: {e}"))
+            let state: DnsRestoreState = serde_json::from_str(&value)
+                .map_err(|e| format!("Резерв состояния DNS повреждён: {e}"))?;
+            if state.name_servers.len() > 32
+                || state
+                    .name_servers
+                    .iter()
+                    .any(|address| address.parse::<IpAddr>().is_err())
+            {
+                return Err("Резерв DNS содержит некорректные серверы".into());
+            }
+            Ok(Some(state))
         }
         Ok(_) => Err("Файл резервного состояния DNS имеет неподдерживаемый тип".into()),
         Err(e) if e.kind() == std::io::ErrorKind::NotFound => Ok(None),
@@ -480,7 +491,17 @@ async fn write_restore_state(state: &DnsRestoreState) -> Result<(), String> {
         .await
         .map_err(|e| format!("Не удалось создать каталог резерва DNS: {e}"))?;
     match tokio::fs::symlink_metadata(path).await {
-        Ok(meta) if meta.is_file() && !meta.file_type().is_symlink() => {}
+        Ok(meta) if meta.is_file() && !meta.file_type().is_symlink() => {
+            let existing = read_restore_state()
+                .await?
+                .ok_or_else(|| "Не удалось прочитать существующий резерв DNS".to_owned())?;
+            if existing != *state {
+                return Err(
+                    "Существует резерв DNS с другими настройками. Он не будет перезаписан автоматически".into(),
+                );
+            }
+            return Ok(());
+        }
         Ok(_) => return Err("Файл резерва DNS имеет неподдерживаемый тип".into()),
         Err(e) if e.kind() == std::io::ErrorKind::NotFound => {}
         Err(e) => return Err(format!("Не удалось проверить резерв DNS: {e}")),
@@ -522,7 +543,9 @@ fn truncate(value: &str, max_bytes: usize) -> String {
 
 #[cfg(test)]
 mod tests {
-    use super::{parse_restore_state, read_mihomo_dns_enabled, set_mihomo_dns};
+    use super::{
+        parse_restore_state, read_mihomo_dns_enabled, set_mihomo_dns, DnsRestoreState,
+    };
 
     #[test]
     fn reads_dns_runtime_and_nameservers_without_interpreting_comments() {
@@ -536,6 +559,14 @@ mod tests {
         );
         assert!(state.dns_override);
         assert_eq!(state.name_servers, ["192.168.1.1", "77.88.8.8"]);
+        let untouched = parse_restore_state("ip name-server 77.88.8.8\n");
+        assert_eq!(
+            untouched,
+            DnsRestoreState {
+                dns_override: false,
+                name_servers: vec!["77.88.8.8".into()],
+            }
+        );
     }
 
     #[test]

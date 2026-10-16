@@ -293,6 +293,7 @@ async fn control_xkeen(
         )
             .into_response();
     }
+    let _control_guard = state.core_update_lock.lock().await;
     if request.action == "stop" {
         if let Err(message) = dns_control::ensure_dns_safe_to_stop().await {
             return (

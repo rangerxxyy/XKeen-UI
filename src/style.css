@@ -534,7 +534,8 @@ body { color:var(--text); -webkit-font-smoothing:antialiased; }
 .confirmation-dialog .modal-note { margin:12px 0 18px; color:#b5c3d8; font-size:12px; line-height:1.55; }
 .confirmation-actions { display:flex; justify-content:flex-end; gap:8px; }
 .confirmation-actions .editor-button { min-height:36px; padding:0 14px; }
-.confirmation-actions .editor-button-primary { min-width:104px; }
+.confirmation-actions .editor-button-primary { min-width:104px; border-color:#4d77e0; background:#294fb8; color:#f7f9ff; }
+.confirmation-actions .editor-button-primary:hover { border-color:#6e91ed; background:#345fd0; }
 .editor-utilities-menu [hidden] { display:none; }
 
 /* Settings keep their header visible and let only the form content scroll. */

@@ -104,7 +104,6 @@ fn parse_restore_state(output: &str) -> DnsRestoreState {
 fn read_mihomo_dns_enabled(content: &str) -> bool {
     let mut in_dns = false;
     let mut enabled = false;
-    let mut listening = false;
     for line in content.lines() {
         let trimmed = line.trim();
         if trimmed.is_empty() || trimmed.starts_with('#') {
@@ -120,17 +119,34 @@ fn read_mihomo_dns_enabled(content: &str) -> bool {
         if let Some(value) = trimmed.strip_prefix("enable:") {
             enabled = value.split('#').next().unwrap_or("").trim() == "true";
         }
-        if let Some(value) = trimmed.strip_prefix("listen:") {
-            listening = value
-                .split('#')
-                .next()
-                .unwrap_or("")
-                .trim()
-                .trim_matches(|character| character == '\'' || character == '"')
-                == "0.0.0.0:53";
+    }
+    enabled
+}
+
+fn mihomo_dns_listens_on_router_interface(content: &str) -> bool {
+    let mut in_dns = false;
+    for line in content.lines() {
+        let trimmed = line.trim();
+        if trimmed.is_empty() || trimmed.starts_with('#') {
+            continue;
+        }
+        if !line.chars().next().is_some_and(char::is_whitespace) {
+            in_dns = trimmed == "dns:";
+            continue;
+        }
+        if in_dns {
+            if let Some(value) = trimmed.strip_prefix("listen:") {
+                return value
+                    .split('#')
+                    .next()
+                    .unwrap_or("")
+                    .trim()
+                    .trim_matches(|character| character == '\'' || character == '"')
+                    == "0.0.0.0:53";
+            }
         }
     }
-    enabled && listening
+    false
 }
 
 fn set_mihomo_dns(content: &str, enabled: bool) -> String {
@@ -330,7 +346,9 @@ pub async fn toggle(
         );
     }
     let candidate = set_mihomo_dns(&current, request.enabled);
-    if read_mihomo_dns_enabled(&candidate) != request.enabled {
+    if read_mihomo_dns_enabled(&candidate) != request.enabled
+        || request.enabled && !mihomo_dns_listens_on_router_interface(&candidate)
+    {
         return error(
             StatusCode::UNPROCESSABLE_ENTITY,
             "Черновик config.yaml не соответствует выбранному состоянию DNS",
@@ -539,12 +557,20 @@ fn truncate(value: &str, max_bytes: usize) -> String {
 
 #[cfg(test)]
 mod tests {
-    use super::{parse_restore_state, read_mihomo_dns_enabled, set_mihomo_dns, DnsRestoreState};
+    use super::{
+        mihomo_dns_listens_on_router_interface, parse_restore_state, read_mihomo_dns_enabled,
+        set_mihomo_dns, DnsRestoreState,
+    };
 
     #[test]
     fn reads_dns_runtime_and_nameservers_without_interpreting_comments() {
         let config = "# dns:\nlog-level: info\ndns:\n  enable: true\n  listen: 0.0.0.0:53\n";
         assert!(read_mihomo_dns_enabled(config));
+        assert!(mihomo_dns_listens_on_router_interface(config));
+        assert!(read_mihomo_dns_enabled("dns:\n  enable: true\n  listen: 127.0.0.1:53\n"));
+        assert!(!mihomo_dns_listens_on_router_interface(
+            "dns:\n  enable: true\n  listen: 127.0.0.1:53\n"
+        ));
         assert!(!read_mihomo_dns_enabled(
             "dns:\n  # enable: true\n  listen: 0.0.0.0:53\n"
         ));

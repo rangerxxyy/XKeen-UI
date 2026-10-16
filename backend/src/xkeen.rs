@@ -108,8 +108,19 @@ pub async fn control(action: &str) -> Result<XkeenStatus, String> {
         return Err(format!("XKeen завершил команду с кодом {status}"));
     }
 
-    tokio::time::sleep(Duration::from_millis(200)).await;
-    Ok(read_status())
+    let expected_running = action != "stop";
+    for _ in 0..20 {
+        let current = read_status();
+        if current.running == Some(expected_running) {
+            return Ok(current);
+        }
+        tokio::time::sleep(Duration::from_millis(250)).await;
+    }
+    let current = read_status();
+    Err(format!(
+        "Команда XKeen завершилась успешно, но состояние службы не подтвердилось: {}",
+        current.detail
+    ))
 }
 
 fn control_args(action: &str) -> Result<&'static [&'static str], String> {

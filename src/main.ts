@@ -1,9 +1,9 @@
 import '@fontsource-variable/inter';
 import '@fontsource-variable/jetbrains-mono';
 import './style.css';
-import { closeAllMihomoConnections, closeMihomoConnection, controlXkeen, getActiveMihomoConfig, getCoreSources, getHealth, getMihomoConnections, getMihomoSelectors, getMihomoVersion, getRouterDnsStatus, getStatus, getSystemLog, getXkeenStatus, pingMihomoGroup, pingMihomoProxy, queryMihomoDns, requestAppUpdate, saveCoreSources, selectMihomoProxy, setRouterDnsManagement, type ApiState, type CoreSources, type MihomoConnections, type MihomoDnsResult, type MihomoSelector, type RouterDnsStatus, type SystemLog, type XkeenStatus } from './api';
+import { applyActiveMihomoConfig, closeAllMihomoConnections, closeMihomoConnection, controlXkeen, getActiveMihomoConfig, getCoreSources, getHealth, getMihomoConnections, getMihomoSelectors, getMihomoVersion, getRouterDnsStatus, getStatus, getSystemLog, getXkeenStatus, pingMihomoGroup, pingMihomoProxy, queryMihomoDns, requestAppUpdate, saveCoreSources, selectMihomoProxy, setRouterDnsManagement, type ApiState, type CoreSources, type MihomoConnections, type MihomoDnsResult, type MihomoSelector, type RouterDnsStatus, type SystemLog, type XkeenStatus } from './api';
 import { applyPingResults, orderSelectorsByConfig, renderConnections, renderSelectors } from './mihomo-view';
-import { patchDnsManagement, renderDns } from './dns-view';
+import { patchDnsManagement, patchMihomoDnsSettings, readMihomoDnsSettings, renderDns, type MihomoDnsSettings } from './dns-view';
 import { bindCoreReleaseChecks, openCoreReleaseDialog } from './core-releases';
 import { listAppReleases, type AppRelease } from './app-update';
 import { confirmInApp } from './confirm-dialog';
@@ -36,13 +36,16 @@ let dnsLoading = false;
 let dnsError: string | null = null;
 let dnsQueryName = '';
 let dnsQueryType = 'A';
-let dnsPanel: 'mihomo' | 'handoff' = 'mihomo';
 let dnsController: AbortController | undefined;
 let dnsManagementStatus: RouterDnsStatus | null = null;
 let dnsManagementLoading = false;
 let dnsManagementError: string | null = null;
 let dnsManagementBusy = false;
 let dnsManagementConfirm = false;
+let dnsConfig: { content: string; values: MihomoDnsSettings } | null = null;
+let dnsConfigLoading = false;
+let dnsConfigError: string | null = null;
+let dnsConfigBusy = false;
 let mihomoVersion: string | null = null;
 let xkeenStatus: XkeenStatus | null = null;
 let xkeenControlBusy = false;
@@ -288,10 +291,10 @@ function render(): void {
   if (activePage !== 'configuration') yamlEditorModule?.unmountYamlEditor();
   const pageContent = activePage === 'selectors' ? renderSelectors(selectors, selectorsLoading, selectorsError)
       : activePage === 'connections' ? renderConnections(connections, connectionsLoading, connectionsError)
-        : activePage === 'dns' ? renderDns(dnsResult, dnsLoading, dnsError, dnsQueryName, dnsQueryType, dnsPanel, {
+        : activePage === 'dns' ? renderDns(dnsResult, dnsLoading, dnsError, dnsQueryName, dnsQueryType, {
           status: dnsManagementStatus, loading: dnsManagementLoading, error: dnsManagementError,
           busy: dnsManagementBusy, confirm: dnsManagementConfirm,
-        })
+        }, { values: dnsConfig?.values ?? null, loading: dnsConfigLoading, error: dnsConfigError, busy: dnsConfigBusy })
         : renderComingSoon(activePage);
   app.innerHTML = `<div class="app-shell">${renderHeader()}${renderNavigation()}<div class="workspace-scroll"><main class="main-content">${pageContent}</main>${renderJournal()}</div><div class="toast-region" aria-live="polite"></div></div>`;
   app.querySelector<HTMLElement>('.workspace-scroll')!.scrollTop = scrollTop;
@@ -307,7 +310,10 @@ function render(): void {
         activePage = page;
         render();
         void loadMihomoPage(page);
-        if (page === 'dns') void loadRouterDnsStatus();
+        if (page === 'dns') {
+          void loadRouterDnsStatus();
+          void loadMihomoDnsConfig();
+        }
       }
     });
   });
@@ -327,13 +333,19 @@ function render(): void {
     dnsQueryType = String(data.get('type') ?? 'A');
     void runDnsQuery();
   });
-  document.querySelectorAll<HTMLButtonElement>('[data-dns-panel]').forEach((button) => button.addEventListener('click', () => {
-    const panel = button.dataset.dnsPanel;
-    if (panel === 'mihomo' || panel === 'handoff') {
-      dnsPanel = panel;
-      render();
-    }
-  }));
+  document.querySelector<HTMLFormElement>('#mihomo-dns-settings')?.addEventListener('submit', (event) => {
+    event.preventDefault();
+    const data = new FormData(event.currentTarget as HTMLFormElement);
+    const settings: MihomoDnsSettings = {
+      enhancedMode: data.get('enhancedMode') === 'fake-ip' ? 'fake-ip' : 'redir-host',
+      bootstrap: String(data.get('bootstrap') ?? ''),
+      nameserver: String(data.get('nameserver') ?? ''),
+      nameserverPolicy: String(data.get('nameserverPolicy') ?? ''),
+      proxyServerNameserver: String(data.get('proxyServerNameserver') ?? ''),
+      fallback: String(data.get('fallback') ?? ''),
+    };
+    void saveMihomoDnsConfig(settings);
+  });
   if (activePage === 'configuration') void mountConfigurationEditor();
   bindMihomoInteractions();
 }
@@ -435,6 +447,43 @@ async function loadRouterDnsStatus(): Promise<void> {
   }
 }
 
+async function loadMihomoDnsConfig(): Promise<void> {
+  dnsConfigLoading = true;
+  dnsConfigError = null;
+  render();
+  try {
+    const current = await getActiveMihomoConfig();
+    dnsConfig = { content: current.content, values: readMihomoDnsSettings(current.content) };
+  } catch (error) {
+    dnsConfig = null;
+    dnsConfigError = error instanceof Error ? error.message : 'Не удалось прочитать DNS-конфигурацию Mihomo';
+  } finally {
+    dnsConfigLoading = false;
+    if (activePage === 'dns') render();
+  }
+}
+
+async function saveMihomoDnsConfig(settings: MihomoDnsSettings): Promise<void> {
+  if (!dnsConfig || dnsConfigBusy) return;
+  dnsConfigBusy = true;
+  dnsConfigError = null;
+  render();
+  try {
+    const updated = patchMihomoDnsSettings(dnsConfig.content, settings);
+    await applyActiveMihomoConfig(updated, dnsConfig.content);
+    const current = await getActiveMihomoConfig();
+    dnsConfig = { content: current.content, values: readMihomoDnsSettings(current.content) };
+    await loadRouterDnsStatus();
+    showToast('Настройки DNS Mihomo сохранены и применены', 'success');
+  } catch (error) {
+    dnsConfigError = error instanceof Error ? error.message : 'Не удалось применить настройки DNS Mihomo';
+    showToast(dnsConfigError, 'error');
+  } finally {
+    dnsConfigBusy = false;
+    if (activePage === 'dns') render();
+  }
+}
+
 async function runDnsManagementToggle(): Promise<void> {
   const currentStatus = dnsManagementStatus;
   if (!currentStatus || dnsManagementBusy) return;
@@ -456,6 +505,7 @@ async function runDnsManagementToggle(): Promise<void> {
       dnsManagementStatus = null;
       dnsManagementError = error instanceof Error ? `Настройки применились, но состояние не обновилось: ${error.message}` : 'Настройки применились, но состояние не обновилось';
     }
+    await loadMihomoDnsConfig();
   } catch (error) {
     dnsManagementError = error instanceof Error ? error.message : 'Не удалось изменить управление DNS';
     notice = dnsManagementError;

@@ -97,7 +97,7 @@ impl UpdateProxies {
         if self.proxies.len() > 5 {
             return Err("Можно указать не более пяти GitHub-прокси");
         }
-        let mut normalized = Vec::with_capacity(self.proxies.len());
+        let mut normalized: Vec<String> = Vec::with_capacity(self.proxies.len());
         for value in &self.proxies {
             let value = value.trim().trim_end_matches('/');
             let Some(host) = value.strip_prefix("https://") else {

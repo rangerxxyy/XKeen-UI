@@ -10,8 +10,9 @@ import { isNewerVersion, listAppReleases, type AppRelease } from './app-update';
 import { confirmInApp } from './confirm-dialog';
 import { bindDialogMotion, closeDialogWithMotion } from './dialog-motion';
 import { lifecycleFeedback } from './service-feedback';
-import { readUiPreferences, writeUiPreferences, type UiPreferences } from './preferences';
-import { getJournalViewState } from './journal-view-state';
+import { readUiPreferences, validPingUrl, writeUiPreferences, type UiPreferences } from './preferences';
+import { formatJournalTimestamp, getJournalViewState } from './journal-view-state';
+import { SETTINGS_TABS, type SettingsTabId } from './settings-tabs';
 
 type Page = 'selectors' | 'connections' | 'configuration' | 'dns';
 
@@ -81,6 +82,19 @@ let appUpdateMessage = 'Подготовка обновления…';
 let appUpdateInstalling = false;
 let uiPreferences: UiPreferences = readUiPreferences();
 const proxyPingFailures = new Map<string, number>();
+
+function applyUiTheme(): void {
+  const theme = uiPreferences.theme === 'system'
+    ? (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light')
+    : uiPreferences.theme;
+  document.documentElement.dataset.theme = theme;
+  document.documentElement.style.colorScheme = theme;
+}
+
+applyUiTheme();
+window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => {
+  if (uiPreferences.theme === 'system') applyUiTheme();
+});
 
 const app = document.querySelector<HTMLDivElement>('#app');
 if (!app) throw new Error('Корневой элемент интерфейса #app не найден');
@@ -204,9 +218,15 @@ function drawJournal(): void {
     const number = document.createElement('span');
     number.className = 'journal-line-number';
     number.textContent = String(index + 1).padStart(3, '0');
+    const parsed = formatJournalTimestamp(line, uiPreferences.journalTimeZone);
+    const timestamp = document.createElement('time');
+    timestamp.className = 'journal-timestamp';
+    timestamp.hidden = !parsed;
+    timestamp.textContent = parsed?.timestamp ?? '';
+    if (parsed) timestamp.dateTime = line.match(/^\[?(\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d{1,9})?(?:Z|[+-]\d{2}:\d{2}))/)?.[1] ?? '';
     const message = document.createElement('code');
-    message.textContent = line;
-    row.append(number, message);
+    message.textContent = parsed?.message ?? line;
+    row.append(number, timestamp, message);
     list.append(row);
   }
   body.replaceChildren();
@@ -237,8 +257,6 @@ async function loadSystemLog(): Promise<void> {
   const controller = new AbortController();
   logController = controller;
   logLoading = true;
-  logError = null;
-  logCleared = false;
   drawJournal();
   try {
     logData = await getSystemLog(selectedLog, AbortSignal.any([controller.signal, AbortSignal.timeout(12_000)]));
@@ -260,6 +278,8 @@ function bindJournal(): void {
     logController?.abort();
     logLoading = false;
     logData = null;
+    logError = null;
+    logCleared = false;
     void loadSystemLog();
   });
   document.querySelector<HTMLInputElement>('#journal-filter')?.addEventListener('input', (event) => {
@@ -866,7 +886,7 @@ function isInstalledNewerOrEqual(installed: string, selected: string): boolean {
 function openSettings(): void {
   const modal = document.createElement('dialog');
   modal.className = 'modal settings-dialog';
-  modal.innerHTML = `<div class="modal-panel settings-panel"><div class="modal-heading"><span class="modal-icon">⚙</span><h2>Настройки</h2><button class="icon-button" id="settings-close" type="button" aria-label="Закрыть">×</button></div><div class="modal-tabs" role="tablist" aria-label="Разделы настроек"><button class="settings-tab selected" id="settings-general" type="button" role="tab" aria-selected="true">Общие</button><button class="settings-tab" id="settings-mihomo" type="button" role="tab" aria-selected="false">Mihomo</button><button class="settings-tab" id="settings-sources" type="button" role="tab" aria-selected="false">Обновления</button></div><div id="settings-content" role="tabpanel"></div></div>`;
+  modal.innerHTML = `<div class="modal-panel settings-panel"><div class="modal-heading"><span class="modal-icon">⚙</span><h2>Настройки</h2><button class="icon-button" id="settings-close" type="button" aria-label="Закрыть">×</button></div><div class="modal-tabs" role="tablist" aria-label="Разделы настроек">${SETTINGS_TABS.map(({ id, label }, index) => `<button class="settings-tab${index === 0 ? ' selected' : ''}" id="settings-${id}" type="button" role="tab" aria-controls="settings-content" aria-selected="${index === 0}">${label}</button>`).join('')}</div><div id="settings-content" role="tabpanel"></div></div>`;
   document.body.append(modal);
   bindDialogMotion(modal);
   modal.showModal();
@@ -889,15 +909,16 @@ function openSettings(): void {
       }
     }));
   };
-  const renderSettingsTab = (tab: 'general' | 'mihomo' | 'sources') => {
+  const renderSettingsTab = (tab: SettingsTabId) => {
     modal.querySelectorAll<HTMLButtonElement>('.settings-tab').forEach((button) => {
       const selected = button.id === `settings-${tab}`;
       button.classList.toggle('selected', selected);
       button.setAttribute('aria-selected', String(selected));
     });
     if (!content) return;
+    content.setAttribute('aria-labelledby', `settings-${tab}`);
     if (tab === 'general') {
-      content.innerHTML = `<section class="settings-section"><h3>ПАНЕЛЬ</h3><div class="setting-row"><div><strong>Порт панели</strong><small>Локальный адрес интерфейса</small></div><span class="setting-value">${state.status?.port ?? 1001}</span></div><div class="setting-row"><div><strong>Соединение с API</strong><small>Текущее состояние backend</small></div><span class="state-pill ${state.connected ? 'state-running' : 'state-unavailable'}">${state.connected ? 'На связи' : 'Ожидание'}</span></div></section><section class="settings-section"><h3>СОЕДИНЕНИЯ</h3>${switchRow('showConnectionSource', 'Показывать имя источника', 'Показывает имя процесса, если Mihomo его передал; иначе используется адрес устройства.')}${switchRow('closeConnectionsAfterApply', 'Закрывать соединения после применения', 'Закрывает активные подключения после успешного применения конфигурации Mihomo.')}</section><section class="settings-section"><h3>DNS</h3><label class="setting-row setting-control-row"><span><strong>Автовключение управления DNS</strong><small>При запуске XKeen запросить подтверждение и передать DNS через Mihomo</small></span><select class="setting-control" data-pref="dnsAutostart"><option value="off" ${uiPreferences.dnsAutostart === 'off' ? 'selected' : ''}>Выключено</option><option value="confirm" ${uiPreferences.dnsAutostart === 'confirm' ? 'selected' : ''}>Включать с подтверждением</option></select></label></section>`;
+      content.innerHTML = `<section class="settings-section"><h3>ВНЕШНИЙ ВИД И ЖУРНАЛ</h3><label class="setting-row setting-control-row"><span><strong>Тема</strong><small>Выбор цветовой схемы интерфейса</small></span><select class="setting-control" data-pref="theme"><option value="system" ${uiPreferences.theme === 'system' ? 'selected' : ''}>Авто</option><option value="light" ${uiPreferences.theme === 'light' ? 'selected' : ''}>Светлая</option><option value="dark" ${uiPreferences.theme === 'dark' ? 'selected' : ''}>Тёмная</option></select></label><label class="setting-row setting-control-row"><span><strong>Часовой пояс журнала</strong><small>Применяется к записям с ISO-временем и часовым поясом</small></span><select class="setting-control" data-pref="journalTimeZone"><option value="local" ${uiPreferences.journalTimeZone === 'local' ? 'selected' : ''}>Системный</option><option value="UTC" ${uiPreferences.journalTimeZone === 'UTC' ? 'selected' : ''}>UTC+0</option><option value="Europe/Kaliningrad" ${uiPreferences.journalTimeZone === 'Europe/Kaliningrad' ? 'selected' : ''}>UTC+2</option><option value="Europe/Moscow" ${uiPreferences.journalTimeZone === 'Europe/Moscow' ? 'selected' : ''}>UTC+3</option><option value="Asia/Yekaterinburg" ${uiPreferences.journalTimeZone === 'Asia/Yekaterinburg' ? 'selected' : ''}>UTC+5</option><option value="Asia/Novosibirsk" ${uiPreferences.journalTimeZone === 'Asia/Novosibirsk' ? 'selected' : ''}>UTC+7</option><option value="Asia/Vladivostok" ${uiPreferences.journalTimeZone === 'Asia/Vladivostok' ? 'selected' : ''}>UTC+10</option></select></label></section><section class="settings-section"><h3>ПАНЕЛЬ</h3><div class="setting-row"><div><strong>Порт панели</strong><small>Локальный адрес интерфейса</small></div><span class="setting-value">${state.status?.port ?? 1001}</span></div><div class="setting-row"><div><strong>Соединение с API</strong><small>Текущее состояние backend</small></div><span class="state-pill ${state.connected ? 'state-running' : 'state-unavailable'}">${state.connected ? 'На связи' : 'Ожидание'}</span></div></section><section class="settings-section"><h3>СОЕДИНЕНИЯ</h3>${switchRow('showConnectionSource', 'Показывать имя источника', 'Показывает имя процесса, если Mihomo его передал; иначе используется адрес устройства.')}${switchRow('closeConnectionsAfterApply', 'Закрывать соединения после применения', 'Закрывает активные подключения после успешного применения конфигурации Mihomo.')}</section><section class="settings-section"><h3>DNS</h3><label class="setting-row setting-control-row"><span><strong>Автовключение управления DNS</strong><small>При запуске XKeen запросить подтверждение и передать DNS через Mihomo</small></span><select class="setting-control" data-pref="dnsAutostart"><option value="off" ${uiPreferences.dnsAutostart === 'off' ? 'selected' : ''}>Выключено</option><option value="confirm" ${uiPreferences.dnsAutostart === 'confirm' ? 'selected' : ''}>Включать с подтверждением</option></select></label></section>`;
       bindPreferenceInputs(content);
       return;
     }
@@ -992,9 +1013,9 @@ function openSettings(): void {
     }
 
   };
-  modal.querySelector<HTMLButtonElement>('#settings-general')?.addEventListener('click', () => renderSettingsTab('general'));
-  modal.querySelector<HTMLButtonElement>('#settings-mihomo')?.addEventListener('click', () => renderSettingsTab('mihomo'));
-  modal.querySelector<HTMLButtonElement>('#settings-sources')?.addEventListener('click', () => renderSettingsTab('sources'));
+  SETTINGS_TABS.forEach(({ id }) => {
+    modal.querySelector<HTMLButtonElement>(`#settings-${id}`)?.addEventListener('click', () => renderSettingsTab(id));
+  });
   renderSettingsTab('general');
   modal.addEventListener('close', () => { modal.remove(); render(); }, { once: true });
 }
@@ -1026,7 +1047,7 @@ function bindPreferenceInputs(root: HTMLElement): void {
         (uiPreferences as unknown as Record<string, unknown>)[key] = value;
       } else if (key === 'pingUrl') {
         const value = input.value.trim();
-        if (!/^[a-z0-9.-]+(?::\d{1,5})?(?:\/[a-z0-9._~-]{1,80})*$/i.test(value) || value.includes('..')) {
+        if (!validPingUrl(value)) {
           input.setCustomValidity('Введите домен и необязательный путь, например www.gstatic.com/generate_204');
           input.reportValidity();
           input.value = uiPreferences.pingUrl;
@@ -1036,6 +1057,8 @@ function bindPreferenceInputs(root: HTMLElement): void {
         (uiPreferences as unknown as Record<string, unknown>)[key] = value;
       } else {
         (uiPreferences as unknown as Record<string, unknown>)[key] = input.value;
+        if (key === 'theme') applyUiTheme();
+        if (key === 'journalTimeZone') drawJournal();
       }
       writeUiPreferences(uiPreferences);
     });

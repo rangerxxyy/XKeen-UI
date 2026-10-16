@@ -80,24 +80,24 @@ function setEditorIdentity(routerMode: boolean): void {
 }
 
 const editorTheme = EditorView.theme({
-  '&': { height: '100%', color: '#e1e9f8', backgroundColor: '#080e1b', fontSize: '14px', fontWeight: '500' },
+  '&': { height: '100%', color: 'var(--editor-text, #e1e9f8)', backgroundColor: 'var(--editor-bg, #080e1b)', fontSize: '14px', fontWeight: '500' },
   '.cm-scroller': { overflow: 'auto', fontFamily: '"JetBrains Mono Variable", "JetBrains Mono", ui-monospace, SFMono-Regular, Consolas, monospace', lineHeight: '1.6' },
-  '.cm-content': { padding: '14px 0', caretColor: '#65c9ff' },
-  '.cm-gutters': { color: '#566a88', backgroundColor: '#0a1120', borderRight: '1px solid #1e2b40' },
-  '.cm-activeLine': { backgroundColor: '#111e31' },
-  '.cm-activeLineGutter': { color: '#9ab4d7', backgroundColor: '#111e31' },
-  '&.cm-focused .cm-cursor': { borderLeftColor: '#65c9ff' },
-  '&.cm-focused .cm-selectionBackground, .cm-selectionBackground': { backgroundColor: '#244775 !important' },
+  '.cm-content': { padding: '14px 0', caretColor: 'var(--editor-caret, #65c9ff)' },
+  '.cm-gutters': { color: 'var(--editor-gutter-text, #566a88)', backgroundColor: 'var(--editor-gutter-bg, #0a1120)', borderRight: '1px solid var(--editor-border, #1e2b40)' },
+  '.cm-activeLine': { backgroundColor: 'var(--editor-active-line, #111e31)' },
+  '.cm-activeLineGutter': { color: 'var(--editor-active-gutter, #9ab4d7)', backgroundColor: 'var(--editor-active-line, #111e31)' },
+  '&.cm-focused .cm-cursor': { borderLeftColor: 'var(--editor-caret, #65c9ff)' },
+  '&.cm-focused .cm-selectionBackground, .cm-selectionBackground': { backgroundColor: 'var(--editor-selection, #244775) !important' },
 });
 
 const editorHighlight = HighlightStyle.define([
-  { tag: tags.propertyName, color: '#62a8ff', fontWeight: '600' },
-  { tag: [tags.string, tags.special(tags.string)], color: '#9cda78' },
-  { tag: [tags.number, tags.integer, tags.float], color: '#ff9b55' },
-  { tag: [tags.bool, tags.null, tags.atom], color: '#d58bff' },
-  { tag: tags.comment, color: '#777ca7', fontStyle: 'italic' },
-  { tag: [tags.punctuation, tags.bracket], color: '#a8bad4' },
-  { tag: [tags.keyword, tags.operator], color: '#68c9e8' },
+  { tag: tags.propertyName, color: 'var(--editor-property, #62a8ff)', fontWeight: '600' },
+  { tag: [tags.string, tags.special(tags.string)], color: 'var(--editor-string, #9cda78)' },
+  { tag: [tags.number, tags.integer, tags.float], color: 'var(--editor-number, #ff9b55)' },
+  { tag: [tags.bool, tags.null, tags.atom], color: 'var(--editor-atom, #d58bff)' },
+  { tag: tags.comment, color: 'var(--editor-comment, #777ca7)', fontStyle: 'italic' },
+  { tag: [tags.punctuation, tags.bracket], color: 'var(--editor-punctuation, #a8bad4)' },
+  { tag: [tags.keyword, tags.operator], color: 'var(--editor-keyword, #68c9e8)' },
 ]);
 
 function editorElement(): HTMLElement | null {

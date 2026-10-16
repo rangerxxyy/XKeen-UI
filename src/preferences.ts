@@ -1,6 +1,10 @@
 export type SelectorSort = 'config' | 'name' | 'delay';
+export type UiTheme = 'system' | 'light' | 'dark';
+export type JournalTimeZone = 'local' | 'UTC' | 'Europe/Kaliningrad' | 'Europe/Moscow' | 'Asia/Yekaterinburg' | 'Asia/Novosibirsk' | 'Asia/Vladivostok';
 
 export interface UiPreferences {
+  theme: UiTheme;
+  journalTimeZone: JournalTimeZone;
   showConnectionSource: boolean;
   closeConnectionsAfterApply: boolean;
   dnsAutostart: 'off' | 'confirm';
@@ -15,6 +19,8 @@ export interface UiPreferences {
 }
 
 export const DEFAULT_UI_PREFERENCES: UiPreferences = {
+  theme: 'system',
+  journalTimeZone: 'local',
   showConnectionSource: true,
   closeConnectionsAfterApply: false,
   dnsAutostart: 'off',
@@ -37,6 +43,8 @@ export function readUiPreferences(storage: Pick<Storage, 'getItem'> | null = saf
     if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) return { ...DEFAULT_UI_PREFERENCES };
     const value = parsed as Partial<UiPreferences>;
     return {
+      theme: value.theme === 'light' || value.theme === 'dark' ? value.theme : 'system',
+      journalTimeZone: validJournalTimeZone(value.journalTimeZone) ? value.journalTimeZone : DEFAULT_UI_PREFERENCES.journalTimeZone,
       showConnectionSource: typeof value.showConnectionSource === 'boolean' ? value.showConnectionSource : DEFAULT_UI_PREFERENCES.showConnectionSource,
       closeConnectionsAfterApply: typeof value.closeConnectionsAfterApply === 'boolean' ? value.closeConnectionsAfterApply : DEFAULT_UI_PREFERENCES.closeConnectionsAfterApply,
       dnsAutostart: value.dnsAutostart === 'confirm' ? 'confirm' : 'off',
@@ -52,6 +60,11 @@ export function readUiPreferences(storage: Pick<Storage, 'getItem'> | null = saf
   } catch {
     return { ...DEFAULT_UI_PREFERENCES };
   }
+}
+
+function validJournalTimeZone(value: unknown): value is JournalTimeZone {
+  return value === 'local' || value === 'UTC' || value === 'Europe/Kaliningrad' || value === 'Europe/Moscow'
+    || value === 'Asia/Yekaterinburg' || value === 'Asia/Novosibirsk' || value === 'Asia/Vladivostok';
 }
 
 export function writeUiPreferences(preferences: UiPreferences, storage: Pick<Storage, 'setItem'> | null = safeStorage()): void {

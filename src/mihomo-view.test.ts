@@ -30,6 +30,16 @@ describe('applyPingResults', () => {
 });
 
 describe('renderSelectors', () => {
+  it('renders ISO country prefixes as emoji flags in node names and selected routes', () => {
+    const groups: MihomoSelector[] = [{ name: 'Main', icon: null, current: 'fi ⚡ Finland · TCP', options: [
+      { name: 'fi ⚡ Finland · TCP', type: 'VLESS', icon: null, alive: null, delay: null },
+    ] }];
+    const html = renderSelectors(groups, false, null);
+    expect(html).toContain('🇫🇮 ⚡ Finland · TCP');
+    expect(html).not.toContain('>fi ⚡ Finland · TCP<');
+    expect(html).toContain('data-proxy-name="fi ⚡ Finland · TCP"');
+  });
+
   it('renders an independent ping control on each node card', () => {
     const groups: MihomoSelector[] = [{ name: 'Main', icon: null, current: null, options: [
       { name: 'Finland', type: 'VLESS', icon: null, alive: null, delay: null },

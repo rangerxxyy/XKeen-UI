@@ -7,6 +7,7 @@ import { patchDnsManagement, patchMihomoDnsSettings, readMihomoDnsSettings, rend
 import { bindCoreReleaseChecks, openCoreReleaseDialog } from './core-releases';
 import { listAppReleases, type AppRelease } from './app-update';
 import { confirmInApp } from './confirm-dialog';
+import { lifecycleFeedback } from './service-feedback';
 
 type Page = 'selectors' | 'connections' | 'configuration' | 'dns';
 
@@ -153,7 +154,7 @@ function renderConfiguration(): string {
     <div class="config-editor-main">
       <strong id="editor-filename" class="sr-only">config.yaml</strong><span id="editor-language" class="sr-only">YAML · Mihomo</span><span id="editor-file-hint" class="sr-only">Локальный черновик</span>
       <div class="code-editor-shell"><div class="code-editor" id="yaml-editor" aria-label="Текст конфигурации"></div></div>
-      <div class="editor-statusbar"><span id="yaml-validation" class="editor-validation">Черновик пуст</span><div class="editor-actions"><button class="editor-button" id="config-load-active" type="button" data-router-file title="Считать файл с роутера">↻ Считать</button><button class="editor-button editor-button-primary" id="config-apply-active" type="button" data-router-file disabled title="Сначала считайте актуальный файл роутера">Применить</button><details class="editor-utilities"><summary class="editor-button">⋯ Утилиты</summary><div class="editor-utilities-menu" role="menu" aria-label="Утилиты конфигурации"><button type="button" role="menuitem" id="yaml-template" data-structured-only>▤ Шаблоны конфигураций</button><button type="button" role="menuitem" id="yaml-validate" data-structured-only>✓ Проверить</button><button type="button" role="menuitem" id="yaml-format" data-structured-only>⌘ Форматировать</button><button type="button" role="menuitem" id="yaml-download">↓ Скачать черновик</button></div></details></div></div>
+      <div class="editor-statusbar"><span id="yaml-validation" class="editor-validation">Черновик пуст</span><div class="editor-actions"><button class="editor-button" id="config-load-active" type="button" data-router-file title="Считать файл с роутера">↻ Считать</button><button class="editor-button" id="config-validate-mihomo" type="button" hidden title="Проверить черновик установленным Mihomo без применения">Проверить Mihomo</button><button class="editor-button editor-button-primary" id="config-apply-active" type="button" data-router-file disabled title="Сначала считайте актуальный файл роутера">Применить</button><details class="editor-utilities"><summary class="editor-button">⋯ Утилиты</summary><div class="editor-utilities-menu" role="menu" aria-label="Утилиты конфигурации"><button type="button" role="menuitem" id="yaml-template" data-structured-only>▤ Шаблоны конфигураций</button><button type="button" role="menuitem" id="yaml-validate" data-structured-only>✓ Проверить</button><button type="button" role="menuitem" id="yaml-format" data-structured-only>⌘ Форматировать</button><button type="button" role="menuitem" id="yaml-download">↓ Скачать черновик</button></div></details></div></div>
     </div>
   </section>`;
 }
@@ -352,35 +353,35 @@ function render(): void {
 
 async function runXkeenAction(action: string | undefined): Promise<void> {
   if (action !== 'start' && action !== 'stop' && action !== 'restart') return;
+  if (action !== 'start' && !(await confirmInApp(
+    action === 'restart' ? 'Перезапустить XKeen?' : 'Остановить XKeen?',
+    action === 'restart'
+      ? 'Текущие соединения кратковременно прервутся, затем панель проверит запуск ядра.'
+      : 'Трафик через XKeen остановится. Если DNS передан Mihomo, остановка будет заблокирована.',
+    action === 'restart' ? 'Перезапустить' : 'Остановить',
+  ))) return;
   xkeenControlBusy = true;
   xkeenControlAction = action;
   render();
-  let notice = '';
-  let noticeKind: 'success' | 'error' = 'success';
+  let actionError: string | undefined;
   try {
     xkeenStatus = await controlXkeen(action);
-    if (state.status) {
-      const service = {
-        name: 'Xkeen',
-        state: xkeenStatus.running === true ? 'running' as const : xkeenStatus.running === false ? 'stopped' as const : 'unavailable' as const,
-        version: xkeenStatus.version,
-        detail: xkeenStatus.detail,
-      };
-      const hasService = state.status.services.some((item) => item.name.toLowerCase() === 'xkeen');
-      state.status.services = hasService
-        ? state.status.services.map((item) => item.name.toLowerCase() === 'xkeen' ? service : item)
-        : [...state.status.services, service];
-    }
-    notice = action === 'restart' ? 'XKeen перезапущен' : action === 'stop' ? 'XKeen остановлен' : 'XKeen запущен';
-    noticeKind = 'success';
+    await refresh();
   } catch (error) {
-    notice = error instanceof Error ? error.message : 'Не удалось выполнить команду XKeen';
-    noticeKind = 'error';
+    actionError = error instanceof Error ? error.message : 'Не удалось выполнить команду XKeen';
   } finally {
     xkeenControlBusy = false;
     xkeenControlAction = null;
+    const feedback = lifecycleFeedback(action, actionError);
+    selectedLog = feedback.logFile;
+    logController?.abort();
+    logLoading = false;
+    logData = null;
+    logError = null;
+    logCleared = false;
     render();
-    showToast(notice, noticeKind);
+    void loadSystemLog();
+    showToast(feedback.message, feedback.kind);
   }
 }
 
@@ -550,6 +551,8 @@ async function pingGroupFromUi(button: HTMLButtonElement): Promise<void> {
   const group = button.dataset.pingGroup;
   if (!group || button.disabled) return;
   button.disabled = true;
+  button.classList.add('is-pinging');
+  button.setAttribute('aria-busy', 'true');
   button.textContent = '…';
   try {
     const results = await pingMihomoGroup(group, mihomoController?.signal);
@@ -559,6 +562,8 @@ async function pingGroupFromUi(button: HTMLButtonElement): Promise<void> {
     button.title = error instanceof Error ? error.message : 'Не удалось проверить серверы';
   } finally {
     button.disabled = false;
+    button.classList.remove('is-pinging');
+    button.removeAttribute('aria-busy');
     button.textContent = 'ϟ';
   }
 }
@@ -568,6 +573,8 @@ async function pingProxyFromUi(button: HTMLButtonElement): Promise<void> {
   const name = button.dataset.pingProxy;
   if (!group || !name || button.disabled) return;
   button.disabled = true;
+  button.classList.add('is-pinging');
+  button.setAttribute('aria-busy', 'true');
   const value = button.querySelector('span');
   if (value) value.textContent = '…';
   try {
@@ -578,6 +585,8 @@ async function pingProxyFromUi(button: HTMLButtonElement): Promise<void> {
     button.title = error instanceof Error ? error.message : 'Не удалось проверить узел';
   } finally {
     button.disabled = false;
+    button.classList.remove('is-pinging');
+    button.removeAttribute('aria-busy');
     const latest = selectors.flatMap((selector) => selector.options).find((option) => option.name === name)?.delay;
     if (value?.isConnected) value.textContent = latest === null || latest === undefined ? '—' : `${latest} мс`;
   }

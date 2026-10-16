@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { applyActiveMihomoConfig, getMihomoSelectors, getRouterConfigFile, getSystemLog, pingMihomoGroup, pingMihomoProxy, requestAppUpdate, saveRouterConfigFile } from './api';
+import { applyActiveMihomoConfig, getMihomoSelectors, getRouterConfigFile, getSystemLog, pingMihomoGroup, pingMihomoProxy, requestAppUpdate, saveRouterConfigFile, validateMihomoConfig } from './api';
 
 afterEach(() => vi.unstubAllGlobals());
 
@@ -111,6 +111,72 @@ describe('applyActiveMihomoConfig', () => {
       status: 'saved', path: '/tmp/other.yaml', backup: '/tmp/backup', restarted: false, detail: 'saved',
     }), { headers: { 'Content-Type': 'application/json' } }));
     await expect(applyActiveMihomoConfig('mixed-port: 7890', 'old')).rejects.toThrow('некорректный результат');
+  });
+
+  it('shows the Mihomo validation diagnostic together with HTTP 422', async () => {
+    vi.stubGlobal('fetch', async () => new Response(JSON.stringify({
+      error: 'Mihomo отклонил конфигурацию: invalid rule at line 42',
+    }), { status: 422, headers: { 'Content-Type': 'application/json' } }));
+    const request = applyActiveMihomoConfig('bad: yaml', 'old');
+    await expect(request)
+      .rejects.toThrow('Применение конфигурации Mihomo: Mihomo отклонил конфигурацию: invalid rule at line 42 (HTTP 422)');
+    await expect(request).rejects.toMatchObject({ status: 422 });
+  });
+
+  it('keeps the HTTP status and provides a useful fallback for non-JSON failures', async () => {
+    vi.stubGlobal('fetch', async () => new Response('<html>bad gateway</html>', {
+      status: 502,
+      headers: { 'Content-Type': 'text/html' },
+    }));
+    await expect(applyActiveMihomoConfig('mixed-port: 7890', 'old'))
+      .rejects.toThrow('Применение конфигурации Mihomo: HTTP 502; backend не вернул сообщение об ошибке');
+  });
+
+  it.each([
+    ['malformed JSON', '{bad json', 'application/json'],
+    ['empty body', '', 'application/json'],
+  ])('uses a useful fallback for a %s error body', async (_label, body, contentType) => {
+    vi.stubGlobal('fetch', async () => new Response(body, {
+      status: 422,
+      headers: { 'Content-Type': contentType },
+    }));
+    await expect(applyActiveMihomoConfig('mixed-port: 7890', 'old'))
+      .rejects.toThrow('Применение конфигурации Mihomo: HTTP 422; backend не вернул сообщение об ошибке');
+  });
+
+  it('uses a safe fallback when a JSON failure has no error message', async () => {
+    vi.stubGlobal('fetch', async () => new Response(JSON.stringify({ error: { detail: 'wrong type' } }), {
+      status: 422,
+      headers: { 'Content-Type': 'application/json' },
+    }));
+    await expect(applyActiveMihomoConfig('mixed-port: 7890', 'old'))
+      .rejects.toThrow('Применение конфигурации Mihomo: HTTP 422; backend не вернул сообщение об ошибке');
+  });
+});
+
+describe('validateMihomoConfig', () => {
+  it('validates the draft without requesting a config write', async () => {
+    const fetchMock = vi.fn(async () => new Response(JSON.stringify({
+      valid: true, detail: 'Конфигурация прошла проверку активным Mihomo',
+    }), { headers: { 'Content-Type': 'application/json' } }));
+    vi.stubGlobal('fetch', fetchMock);
+    await expect(validateMihomoConfig('mixed-port: 7890\n')).resolves.toEqual({
+      valid: true, detail: 'Конфигурация прошла проверку активным Mihomo',
+    });
+    expect(fetchMock).toHaveBeenCalledWith('/api/v1/config/validate', {
+      method: 'POST',
+      headers: { Accept: 'application/json', 'Content-Type': 'application/json' },
+      body: JSON.stringify({ content: 'mixed-port: 7890\n' }),
+      signal: undefined,
+    });
+  });
+
+  it('preserves Mihomo diagnostics from a read-only validation failure', async () => {
+    vi.stubGlobal('fetch', async () => new Response(JSON.stringify({
+      error: 'Проверка не пройдена; активный конфиг на роутере не изменялся: invalid field at line 42',
+    }), { status: 422, headers: { 'Content-Type': 'application/json' } }));
+    await expect(validateMihomoConfig('bad: config'))
+      .rejects.toThrow('Проверка конфигурации Mihomo: Проверка не пройдена; активный конфиг на роутере не изменялся: invalid field at line 42 (HTTP 422)');
   });
 });
 

@@ -7,7 +7,7 @@ import { json } from '@codemirror/lang-json';
 import { applyEdits, format as formatJsonc, parse as parseJsonc, printParseErrorCode, type ParseError } from 'jsonc-parser';
 import { parseDocument } from 'yaml';
 import { chooseReferenceTemplate, getDefaultTemplate } from './templates';
-import { applyActiveMihomoConfig, getActiveMihomoConfig, getRouterConfigFile, saveRouterConfigFile, type RouterConfigFile } from './api';
+import { applyActiveMihomoConfig, getActiveMihomoConfig, getRouterConfigFile, saveRouterConfigFile, validateMihomoConfig, type RouterConfigFile } from './api';
 import { confirmInApp } from './confirm-dialog';
 
 const draftKey = 'xkeen-ui:draft:';
@@ -170,6 +170,8 @@ export function mountYamlEditor(routerMode = false, activeCore: 'mihomo' | 'xray
   const { signal } = editorBindings;
   const applyButton = document.querySelector<HTMLButtonElement>('#config-apply-active');
   if (applyButton) applyButton.disabled = currentSnapshot() === null;
+  const mihomoValidateButton = document.querySelector<HTMLButtonElement>('#config-validate-mihomo');
+  if (mihomoValidateButton) mihomoValidateButton.hidden = !routerMode || activeFile !== 'config';
 
   setEditorIdentity();
   const file = currentFile();
@@ -228,6 +230,21 @@ export function mountYamlEditor(routerMode = false, activeCore: 'mihomo' | 'xray
   document.querySelector<HTMLButtonElement>('#yaml-validate')?.addEventListener('click', (event) => {
     (event.currentTarget as HTMLButtonElement).closest('details')?.removeAttribute('open');
     if (editor) validateStructuredDocument(editor.state.doc.toString());
+  }, { signal });
+  mihomoValidateButton?.addEventListener('click', async () => {
+    if (!editor || currentFile().id !== 'config' || !validateYaml(editor.state.doc.toString())) return;
+    const button = mihomoValidateButton;
+    button.disabled = true;
+    button.textContent = 'Проверяем…';
+    try {
+      const result = await validateMihomoConfig(editor.state.doc.toString(), signal);
+      if (editor) setValidation(result.detail, true);
+    } catch (error) {
+      if (!signal.aborted) setValidation(error instanceof Error ? `Проверка не пройдена: ${error.message}` : 'Проверка конфигурации Mihomo завершилась ошибкой.', false);
+    } finally {
+      button.disabled = false;
+      button.textContent = 'Проверить Mihomo';
+    }
   }, { signal });
   document.querySelector<HTMLButtonElement>('#yaml-format')?.addEventListener('click', (event) => {
     (event.currentTarget as HTMLButtonElement).closest('details')?.removeAttribute('open');

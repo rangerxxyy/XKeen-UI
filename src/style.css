@@ -16,7 +16,7 @@
 body { margin: 0; min-width: 320px; min-height: 100vh; background: var(--bg); }
 button { font: inherit; color: inherit; }
 button:focus-visible, a:focus-visible { outline: 2px solid var(--cyan); outline-offset: 3px; }
-.app-shell { width: 100%; max-width: 1600px; height: 100vh; min-height: 600px; margin: 0 auto; padding: 12px 12px 10px; display: flex; flex-direction: column; }
+.app-shell { width: 100%; max-width: var(--app-shell-width, 1436px); height: 100vh; min-height: 600px; margin: 0 auto; padding: 12px 12px 10px; display: flex; flex-direction: column; }
 .topbar { height: 74px; display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; padding: 0 18px; background: #111323; border: 1px solid #292b43; border-radius: 18px; }
 .top-status { display: flex; align-items: center; gap: 11px; min-width: 0; }
 .top-status { padding: 0; border: 0; background: transparent; color: inherit; text-align: left; cursor: pointer; }
@@ -649,7 +649,6 @@ body { color:var(--text); -webkit-font-smoothing:antialiased; }
 }
 
 /* Compact header controls and configuration files in the right end of the main navigation. */
-.app-shell { max-width:1436px; }
 .top-status-cluster { display:flex; align-items:center; gap:12px; min-width:0; }
 .top-status { cursor:default; }
 .top-status:hover strong { color:#d7e0f0; }
@@ -700,3 +699,53 @@ body { color:var(--text); -webkit-font-smoothing:antialiased; }
 .proxy-ping-value:hover,.proxy-ping-value:focus-visible { border-color:#3e5475; background:#14243a; }
 .proxy-ping-value:disabled { cursor:wait; opacity:.7; }
 @media(max-width:600px) { .proxy-option { min-height:72px; padding:7px 8px 6px; } }
+
+/* Clearer type, short action feedback, and reduced-motion support. */
+:root {
+  --app-shell-width: 1436px;
+  --font-ui: "Inter Variable", Inter, ui-sans-serif, system-ui, sans-serif;
+  --type-body: 14px;
+  --type-label: 12px;
+  color: #f1f4fb;
+  font-family: var(--font-ui);
+  font-optical-sizing: auto;
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+}
+body,button,input,select,textarea { font-family: var(--font-ui); }
+body { font-size: var(--type-body); color: #f1f4fb; -webkit-font-smoothing: antialiased; }
+.top-status strong,.nav-item,.version-chip,.button,.editor-button,.settings-tab { color: #f1f4fb; }
+.top-status small,.selector-card-meta,.selector-kicker,.selector-current small,
+.setting-row small,.source-field small,.sources-feedback,.core-release-meta,
+.core-release-note,.editor-validation,.editor-callout p,.dns-runtime-list>div,
+.dns-settings-form>label,.dns-diagnostics>summary { font-size: var(--type-label); line-height: 1.45; }
+.journal-filter input,.journal-tools select,.journal-empty strong,
+.journal-empty p,.journal-truncated,.connection-table th,
+.connection-table td.connection-host,.connection-chain,.connection-time { font-size: var(--type-label); }
+.journal-line code,.journal-line-number { font-size: 11px; line-height: 1.55; }
+.proxy-option-name { font-weight: 620; }
+.proxy-type,.proxy-health,.proxy-protocol-badge,.proxy-transport-badge { font-size: 10px; }
+.proxy-health { min-height: 22px; padding: 1px 4px; border: 1px solid transparent; border-radius: 6px; transition: color .15s,background .15s,border-color .15s; }
+.proxy-health:hover,.proxy-health:focus-visible { border-color: #405776; color: #e8f1ff; background: #14243a; outline: none; }
+.proxy-health.is-pinging i,.ping-group.is-pinging { animation: ping-pulse .9s ease-in-out infinite; }
+.proxy-health.is-pinging i { width: 9px; height: 9px; border: 1.5px solid #5d779e; border-top-color: #a9d0ff; background: transparent; box-shadow: none; animation: service-spin .7s linear infinite; }
+.ping-group.is-pinging { color: #a9d0ff; }
+.header-service-action,.ping-group,.proxy-ping-value { transition: transform .16s ease,border-color .16s ease,color .16s ease,background .16s ease,opacity .16s ease; }
+.header-service-action:active:not(:disabled),.ping-group:active:not(:disabled),.proxy-ping-value:active:not(:disabled) { transform: scale(.94); }
+.header-service-action:disabled,.ping-group:disabled,.proxy-ping-value:disabled { cursor: progress; }
+dialog.modal[open]::backdrop { animation: modal-backdrop-in .18s ease-out both; }
+dialog.modal[open] > .modal-panel,
+dialog.modal[open] > section.modal-panel { animation: modal-panel-in .2s cubic-bezier(.2,.75,.25,1) both; }
+@keyframes modal-backdrop-in { from { opacity: 0; } to { opacity: 1; } }
+@keyframes modal-panel-in { from { opacity: 0; transform: translateY(9px) scale(.985); } to { opacity: 1; transform: translateY(0) scale(1); } }
+@keyframes ping-pulse { 50% { opacity: .55; } }
+.main-content { scroll-behavior: smooth; }
+@media (prefers-reduced-motion: reduce) {
+  *,*::before,*::after { scroll-behavior: auto!important; animation-duration: .01ms!important; animation-iteration-count: 1!important; transition-duration: .01ms!important; }
+}
+@media(max-width:600px) {
+  :root { --type-label: 11px; }
+  .top-status small { font-size: 10px; }
+  .journal-filter input,.journal-tools select,.connection-table th { font-size: 11px; }
+  .proxy-protocol-badge,.proxy-transport-badge { font-size: 9px; }
+}

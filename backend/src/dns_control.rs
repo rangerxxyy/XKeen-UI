@@ -88,7 +88,11 @@ fn parse_restore_state(output: &str) -> DnsRestoreState {
     });
     let name_servers = output
         .lines()
-        .filter_map(|line| line.trim().strip_prefix("ip name-server "))
+        .filter_map(|line| {
+            let line = line.trim();
+            line.strip_prefix("ip name-server ")
+                .or_else(|| line.strip_prefix("ipv6 name-server "))
+        })
         .flat_map(str::split_whitespace)
         .filter_map(|value| {
             let address = value.trim_matches(|character| character == '\'' || character == '"');
@@ -99,6 +103,30 @@ fn parse_restore_state(output: &str) -> DnsRestoreState {
         dns_override,
         name_servers,
     }
+}
+
+fn enable_router_dns_commands(previous: &DnsRestoreState, br0_ip: &str) -> Vec<String> {
+    let ipv6_servers: Vec<_> = previous.name_servers.iter().filter_map(|address| {
+        address
+            .parse::<IpAddr>()
+            .ok()
+            .filter(IpAddr::is_ipv6)
+    }).collect();
+    let mut commands = vec!["no ip name-server".to_owned()];
+    if !ipv6_servers.is_empty() {
+        commands.push("no ipv6 name-server".into());
+        commands.extend(
+            ipv6_servers
+                .into_iter()
+                .map(|address| format!("ipv6 name-server {address}")),
+        );
+    }
+    commands.extend([
+        format!("ip name-server {br0_ip}"),
+        "opkg dns-override".into(),
+        "system configuration save".into(),
+    ]);
+    commands
 }
 
 fn read_mihomo_dns_enabled(content: &str) -> bool {
@@ -403,12 +431,7 @@ pub async fn toggle(
                 ),
             };
         }
-        for command in [
-            "no ip name-server".to_owned(),
-            format!("ip name-server {br0_ip}"),
-            "opkg dns-override".into(),
-            "system configuration save".into(),
-        ] {
+        for command in enable_router_dns_commands(&previous, &br0_ip) {
             if let Err(e) = ndmc(&command).await {
                 return rollback_enable(&previous, &current, &candidate, e).await;
             }
@@ -467,11 +490,22 @@ async fn status_data() -> Option<DnsControlStatus> {
 async fn restore_router_dns(state: &DnsRestoreState) -> Result<(), String> {
     ndmc("no opkg dns-override").await?;
     ndmc("no ip name-server").await?;
+    if state
+        .name_servers
+        .iter()
+        .any(|address| address.parse::<IpAddr>().is_ok_and(|address| address.is_ipv6()))
+    {
+        ndmc("no ipv6 name-server").await?;
+    }
     for address in &state.name_servers {
         let parsed = address
             .parse::<IpAddr>()
             .map_err(|_| "Резерв DNS содержит некорректный IP-адрес".to_owned())?;
-        ndmc(&format!("ip name-server {parsed}")).await?;
+        let command = match parsed {
+            IpAddr::V4(_) => format!("ip name-server {parsed}"),
+            IpAddr::V6(_) => format!("ipv6 name-server {parsed}"),
+        };
+        ndmc(&command).await?;
     }
     if state.dns_override {
         ndmc("opkg dns-override").await?;
@@ -590,8 +624,9 @@ fn truncate(value: &str, max_bytes: usize) -> String {
 #[cfg(test)]
 mod tests {
     use super::{
-        mihomo_dns_listens_on_router_interface, mihomo_dns_preserves_router_handoff,
-        parse_restore_state, read_mihomo_dns_enabled, set_mihomo_dns, DnsRestoreState,
+        enable_router_dns_commands, mihomo_dns_listens_on_router_interface,
+        mihomo_dns_preserves_router_handoff, parse_restore_state, read_mihomo_dns_enabled,
+        set_mihomo_dns, DnsRestoreState,
     };
 
     #[test]
@@ -609,10 +644,13 @@ mod tests {
             "dns:\n  # enable: true\n  listen: 0.0.0.0:53\n"
         ));
         let state = parse_restore_state(
-            "opkg dns-override\nip name-server 192.168.1.1\nip name-server 77.88.8.8\n",
+            "opkg dns-override\nip name-server 192.168.1.1\nip name-server 77.88.8.8\nipv6 name-server 2001:4860:4860::8888\n",
         );
         assert!(state.dns_override);
-        assert_eq!(state.name_servers, ["192.168.1.1", "77.88.8.8"]);
+        assert_eq!(
+            state.name_servers,
+            ["192.168.1.1", "77.88.8.8", "2001:4860:4860::8888"]
+        );
         let untouched = parse_restore_state("ip name-server 77.88.8.8\n");
         assert_eq!(
             untouched,
@@ -646,5 +684,24 @@ mod tests {
         assert!(!mihomo_dns_preserves_router_handoff(
             "dns:\n  enable: true\n  listen: 127.0.0.1:53\n"
         ));
+    }
+
+    #[test]
+    fn enabling_handoff_preserves_ipv6_nameservers() {
+        let previous = DnsRestoreState {
+            dns_override: false,
+            name_servers: vec!["77.88.8.8".into(), "2001:4860:4860::8888".into()],
+        };
+        assert_eq!(
+            enable_router_dns_commands(&previous, "192.168.1.1"),
+            [
+                "no ip name-server",
+                "no ipv6 name-server",
+                "ipv6 name-server 2001:4860:4860::8888",
+                "ip name-server 192.168.1.1",
+                "opkg dns-override",
+                "system configuration save",
+            ]
+        );
     }
 }

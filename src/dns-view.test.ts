@@ -14,6 +14,7 @@ describe('DNS workspaces', () => {
     expect(view).toContain('DNS Override');
     expect(view).toContain('Включить управление DNS');
     expect(view).toContain('Перед включением проверьте активную конфигурацию DNS Mihomo');
+    expect(view).toContain('Список IPv6 DNS сохраняется и может обходить Mihomo.');
   });
 
   it('treats an enabled Mihomo DNS config as separate from router DNS handoff', () => {

@@ -536,9 +536,9 @@ function bindMihomoInteractions(): void {
   document.querySelector<HTMLInputElement>('#connection-filter')?.addEventListener('input', (event) => {
     const query = (event.currentTarget as HTMLInputElement).value.trim().toLocaleLowerCase();
     let visible = 0;
-    document.querySelectorAll<HTMLElement>('.connection-grid .connection-card').forEach((card) => {
-      const matches = card.dataset.search?.includes(query) ?? false;
-      card.hidden = !matches;
+    document.querySelectorAll<HTMLElement>('.connection-table tbody tr').forEach((row) => {
+      const matches = row.dataset.search?.includes(query) ?? false;
+      row.hidden = !matches;
       if (matches) visible += 1;
     });
     const noResults = document.querySelector<HTMLElement>('.connection-no-results.is-filtered');

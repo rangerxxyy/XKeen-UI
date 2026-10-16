@@ -42,7 +42,7 @@ describe('renderSelectors', () => {
 });
 
 describe('renderConnections', () => {
-  it('renders compact connection cards with clear route, host, protocol, source and traffic icons', () => {
+  it('renders dense connection rows with route icons, host, protocol, source and traffic indicators', () => {
     const data: MihomoConnections = {
       uploadTotal: 2048,
       downloadTotal: 4096,
@@ -53,14 +53,32 @@ describe('renderConnections', () => {
       }],
     };
     const html = renderConnections(data, false, null);
-    expect(html).toContain('class="connection-grid"');
-    expect(html).toContain('class="connection-card"');
+    expect(html).toContain('class="connection-table"');
+    expect(html).toContain('<tbody><tr data-search=');
     expect(html).toContain('example.com:443');
     expect(html).toContain('title="Сетевой протокол"');
     expect(html).toContain('192.168.1.20');
     expect(html).toContain('is-upload');
     expect(html).toContain('is-download');
-    expect(html).not.toContain('<table');
+    expect(html).toContain('class="connection-count-pill"');
+    expect(html).toContain('Хост <span>↕</span>');
+    expect(html).toContain('class="connection-route-cell"');
+    expect(html).not.toContain('connection-card');
+  });
+
+  it('shows service icons before grouped routes and leaves DIRECT flows uncluttered', () => {
+    const data: MihomoConnections = {
+      uploadTotal: 0, downloadTotal: 0,
+      connections: [
+        { id: 'cdn', host: 'th.bing.com:443', destination: '', source: 'PC', network: 'tcp', process: '', chains: ['DIRECT'], rule: 'DOMAIN-SUFFIX', rulePayload: 'bing.com', upload: 0, download: 0, start: '' },
+        { id: 'direct', host: 'substrate.office.com:443', destination: '', source: 'PC', network: 'tcp', process: '', chains: ['DIRECT'], rule: 'MATCH', rulePayload: '', upload: 0, download: 0, start: '' },
+      ],
+    };
+    const html = renderConnections(data, false, null);
+    expect(html).toContain('class="connection-app-icon is-web"');
+    expect(html).toContain('CDN › DIRECT');
+    expect(html).toContain('substrate.office.com:443');
+    expect(html).toContain('DIRECT');
   });
 });
 

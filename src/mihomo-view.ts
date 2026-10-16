@@ -88,29 +88,38 @@ export function renderSelectors(groups: MihomoSelector[], loading: boolean, erro
 }
 
 function connectionRow(connection: MihomoConnection): string {
-  const route = connection.chains.length ? connection.chains.join(' › ') : 'DIRECT';
   const host = connection.host || connection.destination || 'Адрес недоступен';
+  const domain = host.toLocaleLowerCase();
+  const category = domain.includes('youtube') ? 'YouTube' : domain.includes('github') ? 'GitHub' : domain.includes('google') ? 'Google' : ['th.bing.com', 'geover.prod', 'cloudfront.net', 'usersnap.com', 'unisvg.com', 'iconify.design'].some((part) => domain.includes(part)) ? 'CDN' : '';
+  const runtimeRoute = connection.chains.length ? connection.chains.join(' › ') : 'DIRECT';
+  const route = category && runtimeRoute.toLocaleLowerCase() !== category.toLocaleLowerCase() ? `${category} › ${runtimeRoute}` : runtimeRoute;
   const search = [host, connection.source, route, connection.rule, connection.rulePayload, connection.process].join(' ').toLocaleLowerCase();
   const network = connection.network.toUpperCase() || '—';
-  const started = connection.start ? new Date(connection.start).toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' }) : '—';
+  const startedAt = Date.parse(connection.start);
+  const elapsedSeconds = Number.isFinite(startedAt) ? Math.max(0, Math.floor((Date.now() - startedAt) / 1000)) : null;
+  const started = elapsedSeconds === null ? '—' : elapsedSeconds < 5 ? 'только что' : elapsedSeconds < 60 ? `${elapsedSeconds} сек назад` : elapsedSeconds < 3600 ? `${Math.floor(elapsedSeconds / 60)} мин назад` : `${Math.floor(elapsedSeconds / 3600)} ч назад`;
   const source = connection.source || 'Неизвестное устройство';
-  const domain = host.toLocaleLowerCase();
-  const appIcon = domain.includes('youtube') ? 'youtube' : domain.includes('github') ? 'github' : domain.includes('google') ? 'google' : domain.includes('microsoft') || domain.includes('bing') || domain.includes('office') ? 'microsoft' : 'web';
-  const appGlyph = appIcon === 'youtube' ? '▶' : appIcon === 'github' ? '●' : appIcon === 'google' ? 'G' : appIcon === 'microsoft' ? '⊞' : '◎';
-  return `<article class="connection-card" data-search="${escapeHtml(search)}">
-    <div class="connection-card-route"><span class="connection-card-icon is-route" aria-hidden="true">${connection.chains.length > 1 ? '⛓' : '⇢'}</span><span class="connection-route" title="${escapeHtml(route)}">${escapeHtml(route)}</span><button class="connection-close" data-close-connection="${escapeHtml(connection.id)}" aria-label="Закрыть соединение ${escapeHtml(host)}" title="Закрыть соединение">×</button></div>
-    <div class="connection-card-host"><span class="connection-service-icon is-${appIcon}" aria-hidden="true">${appGlyph}</span><strong title="${escapeHtml(host)}">${escapeHtml(host)}</strong></div>
-    <div class="connection-card-meta"><span title="Сетевой протокол"><i aria-hidden="true">⌁</i>${escapeHtml(network)}</span><span title="Устройство"><i aria-hidden="true">▣</i>${escapeHtml(source)}</span></div>
-    <div class="connection-card-footer"><span class="connection-card-traffic" title="Отправлено"><i class="is-upload" aria-hidden="true">↑</i>${formatBytes(connection.upload)}</span><span class="connection-card-traffic" title="Получено"><i class="is-download" aria-hidden="true">↓</i>${formatBytes(connection.download)}</span><time title="Время подключения">◷ ${escapeHtml(started)}</time></div>
-  </article>`;
+  const appIcon = category === 'YouTube' ? 'youtube' : category === 'GitHub' ? 'github' : category === 'Google' ? 'google' : category === 'CDN' ? 'web' : '';
+  const appGlyph = appIcon === 'youtube' ? '▶' : appIcon === 'github' ? '●' : appIcon === 'google' ? 'G' : '◎';
+  const routeIcon = appIcon ? `<span class="connection-app-icon is-${appIcon}" aria-hidden="true">${appGlyph}</span>` : '';
+  const chain = `<span class="connection-chain" title="${escapeHtml(route)}">${escapeHtml(route)}</span>`;
+  return `<tr data-search="${escapeHtml(search)}">
+    <td class="connection-route-cell${routeIcon ? ' has-app-icon' : ''}">${routeIcon}${chain}</td>
+    <td class="connection-host" title="${escapeHtml(host)}">${escapeHtml(host)}</td>
+    <td class="connection-network" title="Сетевой протокол">${escapeHtml(network)}</td>
+    <td class="connection-source" title="${escapeHtml(source)}">${escapeHtml(source)}</td>
+    <td class="connection-traffic"><span title="Отправлено"><i class="is-upload" aria-hidden="true">↑</i>${formatBytes(connection.upload)}</span><span title="Получено"><i class="is-download" aria-hidden="true">↓</i>${formatBytes(connection.download)}</span></td>
+    <td class="connection-time"><time title="Время с начала соединения">${escapeHtml(started)}</time></td>
+    <td class="connection-actions"><button class="connection-close" data-close-connection="${escapeHtml(connection.id)}" aria-label="Закрыть соединение ${escapeHtml(host)}" title="Закрыть соединение">×</button></td>
+  </tr>`;
 }
 
 export function renderConnections(data: MihomoConnections | null, loading: boolean, error: string | null): string {
   const state = loadState(loading, error, 'соединения');
   const connections = data?.connections ?? [];
-  return `${state || `<section class="connections-panel"><div class="connections-toolbar"><div class="connection-total"><span class="live-pulse"></span><strong>${connections.length}</strong><span>активных соединений</span></div><label class="connection-search"><span>⌕</span><input id="connection-filter" type="search" placeholder="Хост, маршрут или приложение" aria-label="Фильтр соединений"></label><button class="connection-close-all" id="close-all-connections" ${connections.length ? '' : 'disabled'}>Закрыть все</button></div>
-    <div class="traffic-summary"><div><small>ПЕРЕДАНО</small><strong>↑ ${formatBytes(data?.uploadTotal ?? 0)}</strong></div><div><small>ПОЛУЧЕНО</small><strong>↓ ${formatBytes(data?.downloadTotal ?? 0)}</strong></div><span class="traffic-footnote">Счётчики Mihomo · суммарно с запуска ядра</span></div>
-    <div class="connection-grid-wrap"><div class="connection-grid">${connections.map(connectionRow).join('')}</div>
+  const udpCount = connections.filter((connection) => connection.network.toLowerCase() === 'udp').length;
+  return `${state || `<section class="connections-panel"><div class="connections-toolbar"><div class="connection-counts"><span class="connection-count-pill" title="Активные соединения"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M1 8h3l2-5 3 10 2-6h4"/></svg><strong>${connections.length}</strong></span><span class="connection-count-pill is-secondary" title="UDP-соединения"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M2 4h4l4 8h4M2 12h4l4-8h4"/></svg><strong>${udpCount}</strong></span></div><label class="connection-search"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M2 3h12L9 8v4l-2 1V8L2 3Z"/></svg><input id="connection-filter" type="search" placeholder="Фильтр" aria-label="Фильтр соединений"><kbd>⌘</kbd></label><button class="connection-close-all" id="close-all-connections" ${connections.length ? '' : 'disabled'}><span aria-hidden="true">⤫</span> Закрыть все</button></div>
+    <div class="connection-table-wrap"><table class="connection-table"><thead><tr><th>Цепочка <span>↕</span></th><th>Хост <span>↕</span></th><th>Тип <span>↕</span></th><th>Источник <span>↕</span></th><th>Трафик <span>↕</span></th><th>Время <span class="is-sorted">↓</span></th><th aria-label="Действия"></th></tr></thead><tbody>${connections.map(connectionRow).join('')}</tbody></table>
       ${connections.length === 0 ? '<div class="connection-no-results">Сейчас нет активных соединений.</div>' : ''}<div class="connection-no-results is-filtered" hidden>По этому фильтру соединений нет.</div></div></section>`}
   `;
 }

@@ -778,6 +778,25 @@ async fn mihomo_data(State(state): State<AppState>, endpoint: MihomoEndpoint) ->
     }
 }
 
+async fn mihomo_raw_data(State(state): State<AppState>, endpoint: MihomoEndpoint) -> Response {
+    if !state.router_mode {
+        return (
+            StatusCode::SERVICE_UNAVAILABLE,
+            Json(serde_json::json!({"error":"Mihomo API недоступен в режиме симуляции"})),
+        )
+            .into_response();
+    }
+
+    match state.mihomo.get_raw_json(endpoint).await {
+        Ok(payload) => (
+            [(header::CONTENT_TYPE, "application/json")],
+            axum::body::Body::from(payload),
+        )
+            .into_response(),
+        Err(error) => mihomo_error_response(error),
+    }
+}
+
 #[derive(Deserialize)]
 struct ActiveConfigQuery {
     core: String,
@@ -873,7 +892,7 @@ async fn mihomo_version(State(state): State<AppState>) -> Response {
 }
 
 async fn mihomo_proxies(State(state): State<AppState>) -> Response {
-    mihomo_data(State(state), MihomoEndpoint::Proxies).await
+    mihomo_raw_data(State(state), MihomoEndpoint::Proxies).await
 }
 
 async fn mihomo_connections(State(state): State<AppState>) -> Response {
@@ -916,7 +935,7 @@ async fn mihomo_rules(State(state): State<AppState>) -> Response {
 }
 
 async fn mihomo_proxy_providers(State(state): State<AppState>) -> Response {
-    mihomo_data(State(state), MihomoEndpoint::ProxyProviders).await
+    mihomo_raw_data(State(state), MihomoEndpoint::ProxyProviders).await
 }
 
 async fn mihomo_rule_providers(State(state): State<AppState>) -> Response {

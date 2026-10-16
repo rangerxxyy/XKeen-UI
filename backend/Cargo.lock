@@ -733,7 +733,7 @@ dependencies = [
 
 [[package]]
 name = "xkeen-ui"
-version = "0.2.25"
+version = "0.2.26"
 dependencies = [
  "axum",
  "http-body-util",

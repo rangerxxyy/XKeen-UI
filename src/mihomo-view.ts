@@ -40,6 +40,17 @@ function escapeHtml(value: string): string {
   });
 }
 
+const COUNTRY_CODES = new Set(`AD AE AF AG AI AL AM AO AQ AR AS AT AU AW AX AZ BA BB BD BE BF BG BH BI BJ BL BM BN BO BQ BR BS BT BV BW BY BZ CA CC CD CF CG CH CI CK CL CM CN CO CR CU CV CW CX CY CZ DE DJ DK DM DO DZ EC EE EG EH ER ES ET FI FJ FK FM FO FR GA GB GD GE GF GG GH GI GL GM GN GP GQ GR GS GT GU GW GY HK HM HN HR HT HU ID IE IL IM IN IO IQ IR IS IT JE JM JO JP KE KG KH KI KM KN KP KR KW KZ LA LB LC LI LK LR LS LT LU LV LY MA MC MD ME MF MG MH MK ML MM MN MO MP MQ MR MS MT MU MV MW MX MY MZ NA NC NE NF NG NI NL NO NP NR NU NZ OM PA PE PF PG PH PK PL PM PN PR PS PT PW PY QA RE RO RS RU RW SA SB SC SD SE SG SH SI SJ SK SL SM SN SO SR SS ST SV SX SY SZ TC TD TF TG TH TJ TK TL TM TN TO TR TT TV TW TZ UA UG UM US UY UZ VA VC VE VG VI VN VU WF WS YE YT ZA ZM ZW`.split(' '));
+
+function displayProxyName(value: string): string {
+  return value.replace(/(^|\s)([a-z]{2})(?=\s)/gi, (match, prefix: string, code: string) => {
+    const country = code.toUpperCase();
+    if (!COUNTRY_CODES.has(country)) return match;
+    const flag = [...country].map((letter) => String.fromCodePoint(0x1f1e6 + letter.charCodeAt(0) - 65)).join('');
+    return `${prefix}${flag}`;
+  });
+}
+
 export function formatBytes(bytes: number): string {
   if (bytes < 1024) return `${Math.round(bytes)} Б`;
   const units = ['КБ', 'МБ', 'ГБ', 'ТБ'];
@@ -61,6 +72,7 @@ function loadState(loading: boolean, error: string | null, noun: string): string
 function proxyCard(group: MihomoSelector): string {
   const options = group.options.map((option) => {
     const selected = option.name === group.current;
+    const displayName = displayProxyName(option.name);
     const state = option.alive === null ? 'Проверка недоступна' : option.alive ? 'Узел отвечает' : 'Узел не отвечает';
     const delay = option.delay === null ? '—' : `${option.delay} мс`;
     const badges = [
@@ -69,14 +81,14 @@ function proxyCard(group: MihomoSelector): string {
     ].filter(Boolean).join('');
     const icon = option.icon ? `<img class="proxy-option-icon" src="${escapeHtml(option.icon)}" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.hidden=true">` : '';
     return `<div class="proxy-option ${selected ? 'is-selected' : ''}">
-      <button class="proxy-option-select" type="button" data-proxy-group="${escapeHtml(group.name)}" data-proxy-name="${escapeHtml(option.name)}" ${selected ? 'aria-current="true"' : ''} aria-label="${selected ? 'Текущий узел' : 'Выбрать узел'}: ${escapeHtml(option.name)}">
-        <strong class="proxy-option-name" title="${escapeHtml(option.name)}">${icon}${escapeHtml(option.name)}</strong>
+      <button class="proxy-option-select" type="button" data-proxy-group="${escapeHtml(group.name)}" data-proxy-name="${escapeHtml(option.name)}" ${selected ? 'aria-current="true"' : ''} aria-label="${selected ? 'Текущий узел' : 'Выбрать узел'}: ${escapeHtml(displayName)}">
+        <strong class="proxy-option-name" title="${escapeHtml(displayName)}">${icon}${escapeHtml(displayName)}</strong>
       </button><div class="proxy-option-bottom"><span class="proxy-transport-badges">${badges}</span><button class="proxy-health proxy-ping-value ${option.alive === true ? 'is-alive' : option.alive === false ? 'is-dead' : ''}" type="button" data-ping-proxy="${escapeHtml(option.name)}" data-ping-group="${escapeHtml(group.name)}" title="${state}. Нажмите, чтобы проверить ping" aria-label="Проверить ping узла ${escapeHtml(option.name)}"><i></i><span>${delay}</span></button></div>
     </div>`;
   }).join('');
   const groupIcon = group.icon ? `<img class="selector-group-icon" src="${escapeHtml(group.icon)}" alt="" referrerpolicy="no-referrer" onerror="this.hidden=true">` : '';
   return `<section class="selector-card"><header class="selector-card-heading"><div><h2>${groupIcon}${escapeHtml(group.name)}</h2></div><div class="selector-heading-actions"><button class="ping-group" type="button" data-ping-group="${escapeHtml(group.name)}" aria-label="Пинг всех серверов группы ${escapeHtml(group.name)}" title="Пинг всех серверов группы">ϟ</button></div></header>
-    <div class="selector-card-meta"><span>Selector (${group.options.length})</span><span class="selector-meta-line">›</span><span>${escapeHtml(group.current ?? '—')}</span></div>
+    <div class="selector-card-meta"><span>Selector (${group.options.length})</span><span class="selector-meta-line">›</span><span>${escapeHtml(group.current ? displayProxyName(group.current) : '—')}</span></div>
     <div class="proxy-options">${options || '<div class="mihomo-inline-empty">В этой группе нет узлов.</div>'}</div>
   </section>`;
 }

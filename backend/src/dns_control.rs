@@ -316,9 +316,7 @@ pub async fn ensure_dns_safe_to_stop() -> Result<(), String> {
 
 pub async fn ensure_dns_config_safe(content: &str) -> Result<(), String> {
     let running = ndmc("show running-config").await?;
-    if parse_restore_state(&running).dns_override
-        && !mihomo_dns_preserves_router_handoff(content)
-    {
+    if parse_restore_state(&running).dns_override && !mihomo_dns_preserves_router_handoff(content) {
         return Err(
             "DNS Override KeeneticOS активен. Сначала верните DNS KeeneticOS, затем меняйте параметры DNS Mihomo или применяйте другой конфиг".into(),
         );

@@ -12,7 +12,7 @@ describe('DNS workspaces', () => {
     const state = { dnsOverride: false, mihomoDns: false, portListener: 'dnsmasq', nameServers: ['77.88.8.8'], detail: 'Состояние получено' };
     const view = renderDns(null, false, null, '', 'A', 'handoff', { status: state, loading: false, error: null, busy: false, confirm: false });
     expect(view).toContain('DNS Override');
-    expect(view).toContain('Передать DNS Mihomo');
+    expect(view).toContain('Включить управление DNS');
     expect(view).toContain('Перед включением проверьте активную конфигурацию DNS Mihomo');
   });
 
@@ -20,7 +20,7 @@ describe('DNS workspaces', () => {
     const state = { dnsOverride: false, mihomoDns: true, portListener: 'mihomo', nameServers: ['77.88.8.8'], detail: 'Состояние получено' };
     const view = renderDns(null, false, null, '', 'A', 'handoff', { status: state, loading: false, error: null, busy: false, confirm: false });
     expect(view).toContain('Выключено');
-    expect(view).toContain('Передать DNS Mihomo');
+    expect(view).toContain('Включить управление DNS');
     expect(view).not.toContain('Состояния DNS не совпадают');
   });
 
@@ -42,6 +42,13 @@ describe('DNS workspaces', () => {
     const state = { dnsOverride: true, mihomoDns: true, portListener: 'mihomo', nameServers: ['77.88.8.8'], detail: 'Состояние получено' };
     const view = renderDns(null, false, null, '', 'A', 'handoff', { status: state, loading: false, error: null, busy: false, confirm: true });
     expect(view).toContain('Сначала KeeneticOS вернёт сохранённые DNS-серверы. Затем выключится DNS в Mihomo.');
+  });
+
+  it('shows the DNS handoff prerequisites before enabling', () => {
+    const state = { dnsOverride: false, mihomoDns: false, portListener: 'dnsmasq', nameServers: ['77.88.8.8'], detail: 'Состояние получено' };
+    const view = renderDns(null, false, null, '', 'A', 'handoff', { status: state, loading: false, error: null, busy: false, confirm: true });
+    expect(view).toContain('Перед включением отключите XKeen -dns и включите игнорирование DNS провайдера.');
+    expect(view).toContain('Включить управление DNS');
   });
 
   it('updates Mihomo DNS keys without discarding the rest of the config', () => {

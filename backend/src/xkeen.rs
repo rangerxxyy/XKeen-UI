@@ -230,5 +230,4 @@ mod tests {
         assert!(!super::ALLOWED_CLIENTS.contains(&value.as_str()));
         assert!(super::ALLOWED_CLIENTS.contains(&"mihomo"));
     }
-
 }

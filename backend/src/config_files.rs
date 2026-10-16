@@ -358,7 +358,9 @@ pub(crate) async fn apply_managed_config(
     if content.is_empty() || content.len() > MAX_CONFIG || expected_content.len() > MAX_CONFIG {
         return Err("Текущий конфиг и новый вариант должны быть не больше 4 MiB".into());
     }
-    apply(content, expected_content).await.map(|result| result.backup)
+    apply(content, expected_content)
+        .await
+        .map(|result| result.backup)
 }
 
 pub(crate) async fn validate_managed_config(content: &str) -> Result<(), String> {
@@ -385,7 +387,10 @@ pub(crate) async fn validate_managed_config(content: &str) -> Result<(), String>
     }
     let core = ["/opt/sbin/mihomo", "/opt/bin/mihomo"]
         .into_iter()
-        .find(|path| fs::metadata(path).is_ok_and(|meta| meta.is_file() && meta.permissions().mode() & 0o111 != 0))
+        .find(|path| {
+            fs::metadata(path)
+                .is_ok_and(|meta| meta.is_file() && meta.permissions().mode() & 0o111 != 0)
+        })
         .ok_or_else(|| "Исполняемый Mihomo не найден в /opt/sbin или /opt/bin".to_owned());
     let validation = match core {
         Ok(core) => validate_config(core, &staged).await,

@@ -550,7 +550,7 @@ body { color:var(--text); -webkit-font-smoothing:antialiased; }
 
 /* Compact connection cards keep each flow readable without spanning the full panel. */
 .connection-grid-wrap { max-height:min(68vh,720px); overflow:auto; padding:10px; scrollbar-color:#354863 #0a111d; }
-.connection-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(min(100%,300px),1fr)); align-items:start; gap:8px; }
+.connection-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(min(100%,240px),1fr)); align-items:start; gap:8px; }
 .connection-card { min-width:0; padding:9px 10px 8px; border:1px solid #26354a; border-radius:10px; background:linear-gradient(145deg,#101a29,#0b1220); transition:border-color .15s,background .15s,transform .15s; }
 .connection-card:hover { border-color:#435b7d; background:#121e30; transform:translateY(-1px); }
 .connection-card[hidden] { display:none; }

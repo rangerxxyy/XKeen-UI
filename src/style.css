@@ -1206,3 +1206,14 @@ dialog.template-dialog.is-closing { animation: modal-panel-out .16s ease-in both
 :root[data-theme="light"] .footer-muted { color:#64758a; }
 :root[data-theme="light"] .proxy-health { color:#53647a; }
 :root[data-theme="light"] .connection-no-results { color:#53647a; }
+
+/* Keep operational guidance readable without turning it into oversized banners. */
+.app-shell .alert strong { color:inherit; font-size:13px; font-weight:700; }
+.app-shell .alert p { font-size:12px; line-height:1.5; }
+.app-shell .dns-handoff-intro .alert-warning { padding:12px 14px; }
+.app-shell .dns-handoff-intro .alert-warning p { color:#d2dbe7; font-size:12px; line-height:1.55; }
+.app-shell .dns-feedback p,.app-shell .dns-result p { font-size:12px; line-height:1.5; }
+.app-shell .dns-runtime-list>div strong:not(.state-pill) { font-size:12px; font-weight:650; }
+.app-shell .settings-panel .setting-row small,.app-shell .github-proxy-settings .settings-inline-note { font-size:12px; line-height:1.45; }
+
+:root[data-theme="light"] .dns-handoff-intro .alert-warning p { color:#4c5d72; }

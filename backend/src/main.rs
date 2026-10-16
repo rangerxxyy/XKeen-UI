@@ -44,6 +44,9 @@ struct AppState {
     core_sources: Arc<RwLock<CoreSources>>,
     core_sources_path: Option<PathBuf>,
     core_sources_lock: Arc<tokio::sync::Mutex<()>>,
+    update_proxies: Arc<RwLock<UpdateProxies>>,
+    update_proxies_path: Option<PathBuf>,
+    update_proxies_lock: Arc<tokio::sync::Mutex<()>>,
     core_update_lock: Arc<tokio::sync::Mutex<()>>,
     cpu_sample: Arc<Mutex<Option<CpuTimes>>>,
     app_update_running: Arc<AtomicBool>,
@@ -71,6 +74,59 @@ impl CoreSources {
             normalize_github_repo(&self.xray).ok_or("Некорректный GitHub-репозиторий Xray")?;
         self.mihomo =
             normalize_github_repo(&self.mihomo).ok_or("Некорректный GitHub-репозиторий Mihomo")?;
+        Ok(())
+    }
+}
+
+#[derive(Clone, Deserialize, Serialize)]
+#[serde(deny_unknown_fields)]
+struct UpdateProxies {
+    proxies: Vec<String>,
+}
+
+impl Default for UpdateProxies {
+    fn default() -> Self {
+        Self {
+            proxies: vec!["https://gh-proxy.com".into(), "https://ghfast.top".into()],
+        }
+    }
+}
+
+impl UpdateProxies {
+    fn normalize(&mut self) -> Result<(), &'static str> {
+        if self.proxies.len() > 5 {
+            return Err("Можно указать не более пяти GitHub-прокси");
+        }
+        let mut normalized: Vec<String> = Vec::with_capacity(self.proxies.len());
+        for value in &self.proxies {
+            let value = value.trim().trim_end_matches('/');
+            let Some(host) = value.strip_prefix("https://") else {
+                return Err("Прокси должен использовать HTTPS и указывать только домен");
+            };
+            if host.is_empty()
+                || host.len() > 253
+                || host.contains('/')
+                || host
+                    .chars()
+                    .any(|character| matches!(character, '?' | '#' | '@' | ':'))
+                || !host
+                    .bytes()
+                    .all(|byte| byte.is_ascii_alphanumeric() || matches!(byte, b'.' | b'-'))
+                || host.starts_with('.')
+                || host.ends_with('.')
+                || host.contains("..")
+            {
+                return Err("Некорректный HTTPS-адрес прокси");
+            }
+            let url = format!("https://{host}");
+            if !normalized
+                .iter()
+                .any(|item| item.eq_ignore_ascii_case(&url))
+            {
+                normalized.push(url);
+            }
+        }
+        self.proxies = normalized;
         Ok(())
     }
 }
@@ -144,6 +200,44 @@ async fn save_core_sources(path: &PathBuf, sources: &CoreSources) -> std::io::Re
     tokio::fs::rename(temporary, path).await
 }
 
+async fn load_update_proxies(
+    path: Option<&PathBuf>,
+) -> Result<UpdateProxies, Box<dyn std::error::Error>> {
+    let Some(path) = path else {
+        return Ok(UpdateProxies::default());
+    };
+    match tokio::fs::read(path).await {
+        Ok(bytes) => {
+            let mut proxies: UpdateProxies = serde_json::from_slice(&bytes)?;
+            proxies
+                .normalize()
+                .map_err(|error| std::io::Error::new(std::io::ErrorKind::InvalidData, error))?;
+            Ok(proxies)
+        }
+        Err(error) if error.kind() == std::io::ErrorKind::NotFound => Ok(UpdateProxies::default()),
+        Err(error) => Err(error.into()),
+    }
+}
+
+async fn save_update_proxies(path: &PathBuf, proxies: &UpdateProxies) -> std::io::Result<()> {
+    #[cfg(unix)]
+    use std::os::unix::fs::PermissionsExt;
+
+    let parent = path
+        .parent()
+        .ok_or_else(|| std::io::Error::other("Нет каталога настроек"))?;
+    tokio::fs::create_dir_all(parent).await?;
+    let temporary = path.with_extension("json.tmp");
+    tokio::fs::write(
+        &temporary,
+        serde_json::to_vec_pretty(proxies).map_err(std::io::Error::other)?,
+    )
+    .await?;
+    #[cfg(unix)]
+    tokio::fs::set_permissions(&temporary, std::fs::Permissions::from_mode(0o600)).await?;
+    tokio::fs::rename(temporary, path).await
+}
+
 async fn get_core_sources(State(state): State<AppState>) -> Response {
     match state.core_sources.read() {
         Ok(sources) => Json(sources.clone()).into_response(),
@@ -186,6 +280,47 @@ async fn put_core_sources(
         Err(_) => (
             StatusCode::INTERNAL_SERVER_ERROR,
             Json(serde_json::json!({"error":"Не удалось обновить настройки источников"})),
+        )
+            .into_response(),
+    }
+}
+
+async fn get_update_proxies(State(state): State<AppState>) -> Response {
+    match state.update_proxies.read() {
+        Ok(proxies) => Json(proxies.clone()).into_response(),
+        Err(_) => (
+            StatusCode::INTERNAL_SERVER_ERROR,
+            Json(serde_json::json!({"error":"Не удалось прочитать список прокси"})),
+        )
+            .into_response(),
+    }
+}
+
+async fn put_update_proxies(
+    State(state): State<AppState>,
+    Json(mut proxies): Json<UpdateProxies>,
+) -> Response {
+    if let Err(error) = proxies.normalize() {
+        return (
+            StatusCode::BAD_REQUEST,
+            Json(serde_json::json!({"error":error})),
+        )
+            .into_response();
+    }
+    let _write_guard = state.update_proxies_lock.lock().await;
+    if let Some(path) = state.update_proxies_path.as_ref() {
+        if let Err(error) = save_update_proxies(path, &proxies).await {
+            return (StatusCode::INTERNAL_SERVER_ERROR, Json(serde_json::json!({"error":format!("Не удалось сохранить список прокси: {error}")}))).into_response();
+        }
+    }
+    match state.update_proxies.write() {
+        Ok(mut current) => {
+            *current = proxies.clone();
+            Json(proxies).into_response()
+        }
+        Err(_) => (
+            StatusCode::INTERNAL_SERVER_ERROR,
+            Json(serde_json::json!({"error":"Не удалось обновить список прокси"})),
         )
             .into_response(),
     }
@@ -234,16 +369,70 @@ struct ProxySelection {
 }
 
 #[derive(Deserialize)]
-#[serde(deny_unknown_fields)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
 struct ProxyGroupPing {
     group: String,
+    #[serde(default)]
+    url: Option<String>,
+    #[serde(default)]
+    timeout_ms: Option<u64>,
 }
 
 #[derive(Deserialize)]
-#[serde(deny_unknown_fields)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
 struct ProxyNodePing {
     group: String,
     name: String,
+    #[serde(default)]
+    url: Option<String>,
+    #[serde(default)]
+    timeout_ms: Option<u64>,
+}
+
+fn valid_ping_settings(
+    url: Option<&str>,
+    timeout_ms: Option<u64>,
+) -> Result<(String, u64), &'static str> {
+    let url = url.unwrap_or("https://www.gstatic.com/generate_204");
+    let timeout_ms = timeout_ms.unwrap_or(5000);
+    if !(500..=30_000).contains(&timeout_ms) {
+        return Err("Таймаут ping должен быть от 500 до 30000 мс");
+    }
+    let Some((scheme, authority_and_path)) = url.split_once("://") else {
+        return Err("Для URL ping требуется протокол http или https");
+    };
+    let authority = authority_and_path.split('/').next().unwrap_or_default();
+    if !matches!(scheme, "http" | "https")
+        || url.len() > 512
+        || authority.is_empty()
+        || authority
+            .chars()
+            .any(|character| matches!(character, '@' | '?' | '#'))
+        || url.chars().any(|character| matches!(character, '?' | '#'))
+        || url.chars().any(char::is_whitespace)
+        || authority.starts_with('.')
+        || authority.ends_with('.')
+        || !authority.bytes().all(|byte| {
+            byte.is_ascii_alphanumeric() || matches!(byte, b'.' | b'-' | b':' | b'[' | b']')
+        })
+        || authority.contains("..")
+        || authority.ends_with(':')
+    {
+        return Err("Укажите корректный HTTP(S) URL без учётных данных, параметров и фрагмента");
+    }
+    if authority
+        .rsplit_once(':')
+        .is_some_and(|(_, port)| !port.is_empty() && port.parse::<u16>().is_err())
+    {
+        return Err("Порт в URL ping должен быть числом от 1 до 65535");
+    }
+    if authority
+        .rsplit_once(':')
+        .is_some_and(|(_, port)| port == "0")
+    {
+        return Err("Порт в URL ping должен быть числом от 1 до 65535");
+    }
+    Ok((url.to_owned(), timeout_ms))
 }
 
 #[derive(Deserialize)]
@@ -429,6 +618,17 @@ async fn update_app(
         )
             .into_response();
     }
+    let update_proxies = match state.update_proxies.read() {
+        Ok(proxies) => proxies.proxies.join(" "),
+        Err(_) => {
+            state.app_update_running.store(false, Ordering::Release);
+            return (
+                StatusCode::INTERNAL_SERVER_ERROR,
+                Json(serde_json::json!({"error":"Не удалось прочитать GitHub-прокси"})),
+            )
+                .into_response();
+        }
+    };
     // Keep update diagnostics on disk: this process is detached before the UI
     // service restarts, so stdout/stderr cannot be returned to the requester.
     const UPDATE_SCRIPT: &str = r#"
@@ -442,7 +642,8 @@ tmp=$(mktemp /tmp/xkeen-ui-install.XXXXXX) || { echo 'ERROR: cannot create tempo
 trap 'rm -f "$tmp"' EXIT HUP INT TERM
 fetch_installer() {
   source_url=$1
-  for proxy in direct https://gh-proxy.com https://ghfast.top; do
+  proxies=$(printf '%s\n' "$XKEEN_UI_GH_PROXIES" | awk 'NF')
+  for proxy in direct $proxies; do
     if [ "$proxy" = direct ]; then candidate=$source_url; else candidate=$proxy/$source_url; fi
     echo "Fetching installer via $proxy"
     if curl -fLsS --connect-timeout 15 --max-time 90 "$candidate" -o "$tmp"; then return 0; fi
@@ -466,6 +667,7 @@ exit "$result"
         .arg("-c")
         .arg(UPDATE_SCRIPT)
         .env("XKEEN_UI_TARGET_TAG", &request.tag)
+        .env("XKEEN_UI_GH_PROXIES", update_proxies)
         .stdin(std::process::Stdio::null())
         .stdout(std::process::Stdio::null())
         .stderr(std::process::Stdio::null())
@@ -783,6 +985,16 @@ async fn ping_mihomo_group(
     State(state): State<AppState>,
     Json(request): Json<ProxyGroupPing>,
 ) -> Response {
+    let (url, timeout_ms) = match valid_ping_settings(request.url.as_deref(), request.timeout_ms) {
+        Ok(settings) => settings,
+        Err(error) => {
+            return (
+                StatusCode::BAD_REQUEST,
+                Json(serde_json::json!({"error":error})),
+            )
+                .into_response()
+        }
+    };
     if !state.router_mode {
         return (
             StatusCode::SERVICE_UNAVAILABLE,
@@ -790,7 +1002,11 @@ async fn ping_mihomo_group(
         )
             .into_response();
     }
-    match state.mihomo.ping_group(&request.group).await {
+    match state
+        .mihomo
+        .ping_group_with_options(&request.group, &url, timeout_ms)
+        .await
+    {
         Ok(result) => Json(result).into_response(),
         Err(error) => mihomo_error_response(error),
     }
@@ -800,6 +1016,16 @@ async fn ping_mihomo_proxy(
     State(state): State<AppState>,
     Json(request): Json<ProxyNodePing>,
 ) -> Response {
+    let (url, timeout_ms) = match valid_ping_settings(request.url.as_deref(), request.timeout_ms) {
+        Ok(settings) => settings,
+        Err(error) => {
+            return (
+                StatusCode::BAD_REQUEST,
+                Json(serde_json::json!({"error":error})),
+            )
+                .into_response()
+        }
+    };
     if !state.router_mode {
         return (
             StatusCode::SERVICE_UNAVAILABLE,
@@ -809,7 +1035,7 @@ async fn ping_mihomo_proxy(
     }
     match state
         .mihomo
-        .ping_proxy_in_group(&request.group, &request.name)
+        .ping_proxy_in_group_with_options(&request.group, &request.name, &url, timeout_ms)
         .await
     {
         Ok(result) => Json(result).into_response(),
@@ -1041,6 +1267,12 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             .unwrap_or_else(|| PathBuf::from("/opt/etc/xkeen-ui/core-sources.json"))
     });
     let core_sources = load_core_sources(core_sources_path.as_ref()).await?;
+    let update_proxies_path = router_mode.then(|| {
+        env::var_os("XKEEN_UPDATE_PROXIES_PATH")
+            .map(PathBuf::from)
+            .unwrap_or_else(|| PathBuf::from("/opt/etc/xkeen-ui/update-proxies.json"))
+    });
+    let update_proxies = load_update_proxies(update_proxies_path.as_ref()).await?;
 
     let state = AppState {
         started: Instant::now(),
@@ -1051,6 +1283,9 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         core_sources: Arc::new(RwLock::new(core_sources)),
         core_sources_path,
         core_sources_lock: Arc::new(tokio::sync::Mutex::new(())),
+        update_proxies: Arc::new(RwLock::new(update_proxies)),
+        update_proxies_path,
+        update_proxies_lock: Arc::new(tokio::sync::Mutex::new(())),
         core_update_lock: Arc::new(tokio::sync::Mutex::new(())),
         cpu_sample: Arc::new(Mutex::new(
             std::fs::read_to_string("/proc/stat")
@@ -1076,6 +1311,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             get(config_files::read_user_file),
         )
         .route("/api/v1/settings/core-sources", get(get_core_sources))
+        .route("/api/v1/settings/update-proxies", get(get_update_proxies))
         .route("/api/v1/mihomo/version", get(mihomo_version))
         .route("/api/v1/mihomo/proxies", get(mihomo_proxies))
         .route("/api/v1/mihomo/connections", get(mihomo_connections))
@@ -1088,6 +1324,10 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         .route("/api/v1/mihomo/dns/query", get(mihomo_dns_query));
     let read_api = read_api.route("/api/v1/dns", get(dns_control::status));
     let mutation_api = Router::new()
+        .route(
+            "/api/v1/logs/ui-error",
+            axum::routing::post(logs::append_ui_error),
+        )
         .route("/api/v1/dns", axum::routing::put(dns_control::toggle))
         .route("/api/v1/xkeen/control", axum::routing::post(control_xkeen))
         .route("/api/v1/cores/install", axum::routing::post(install_core))
@@ -1095,6 +1335,10 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         .route(
             "/api/v1/settings/core-sources",
             axum::routing::put(put_core_sources),
+        )
+        .route(
+            "/api/v1/settings/update-proxies",
+            axum::routing::put(put_update_proxies),
         )
         .route(
             "/api/v1/mihomo/connections",

@@ -480,6 +480,123 @@ body { font-size: 14px; }
   .editor-file small,.editor-callout p,.editor-validation { font-size:11px; }
 }
 
+/* Consistent interaction and alignment pass for the current UI surfaces. */
+:root {
+  --surface: #101827;
+  --surface-raised: #121c2c;
+  --surface-hover: #1a2a41;
+  --stroke: #2a374a;
+  --stroke-soft: #202c3d;
+  --text: #eef3fa;
+  --muted: #a5b2c3;
+  --subtle: #7f8da0;
+  --blue: #4f8df7;
+  --cyan: #5796ff;
+  --mint: #00cc8a;
+}
+
+.app-shell { color: var(--text); font-weight: 500; }
+.topbar,.navigation,.journal-panel,.connections-panel,.selector-card,.dns-workspace,.editor-workspace,.modal-panel { border-color:var(--stroke); }
+.brand,.nav-item,.top-status strong,.page-heading h1,.section-title h2,.selector-card-heading h2 { text-rendering:optimizeLegibility; }
+.brand-mark,.nav-icon,.chip-icon,.modal-icon,.service-icon,.placeholder-symbol { display:inline-grid; flex:0 0 auto; place-items:center; line-height:1; }
+.brand-mark { width:27px; height:27px; }
+.nav-icon { width:18px; height:18px; }
+.top-status-cluster { display:flex; align-items:center; gap:12px; min-width:0; }
+.header-service-controls { display:flex; align-items:center; gap:6px; }
+.button,.editor-button,.icon-button,.version-chip,.nav-item,.connection-close,.connection-close-all { transition: color .18s ease,background-color .18s ease,border-color .18s ease,box-shadow .18s ease,transform .18s ease,opacity .18s ease; }
+.button:active:not(:disabled),.editor-button:active:not(:disabled),.icon-button:active:not(:disabled) { transform:translateY(1px); }
+
+/* Keep connection route icons and labels on a single baseline. The generic td>span
+   rule earlier in this stylesheet must not turn the chain label into a block. */
+.connection-table td.connection-route-cell { vertical-align:middle; white-space:nowrap; }
+.connection-table td.connection-route-cell > .connection-chain { display:inline-block; max-width:calc(100% - 28px); overflow:hidden; vertical-align:middle; text-overflow:ellipsis; white-space:nowrap; }
+.connection-table td.connection-route-cell:not(.has-app-icon) > .connection-chain { max-width:100%; }
+.connection-app-icon { width:17px; height:17px; margin-right:6px; vertical-align:middle; line-height:1; transform:translateY(-1px); }
+.connection-app-icon.is-youtube { display:inline-grid; width:17px; height:13px; border-radius:4px; font-size:8px; vertical-align:middle; }
+.connection-table td.connection-host,.connection-table td.connection-source { overflow:hidden; text-overflow:ellipsis; }
+
+/* DNS forms use a steady label/field rhythm with clear card separation. */
+.dns-dashboard { display:grid; gap:14px; align-content:start; }
+.dns-workspace { overflow:hidden; border:1px solid var(--stroke); border-radius:14px; background:#101827; }
+.dns-workspace-heading { min-height:54px; padding:14px 18px; border-bottom:1px solid var(--stroke-soft); }
+.dns-workspace-heading h2 { margin:0; color:#f1f5fb; font-size:16px; font-weight:650; }
+.dns-runtime-list { margin:12px 18px; border-color:#2b394d; background:#0b1320; }
+.dns-runtime-list>div { min-height:42px; padding:8px 12px; color:#d2dbe7; font-size:12px; }
+.dns-runtime-list>div strong:not(.state-pill) { color:#b9c7d8; font-size:11px; font-weight:550; }
+.dns-handoff-toggle,.dns-handoff-confirm { margin-right:18px; margin-left:18px; }
+.dns-handoff-pane .dns-handoff-note { padding:4px 18px 14px; color:#9aabc0; font-size:11px; line-height:1.5; }
+.dns-handoff-intro { margin:12px 18px; }
+.dns-handoff-intro .alert-warning { align-items:flex-start; padding:11px 13px; }
+.dns-handoff-intro .alert-warning p { color:#d2c9b3; font-size:11px; line-height:1.5; }
+.dns-feedback,.dns-result { margin-right:18px; margin-left:18px; }
+.dns-feedback strong { color:#f0f4fa; font-size:13px; }
+.dns-feedback p { color:#b1bdce; font-size:11px; line-height:1.5; }
+.dns-settings-form { gap:13px; padding:10px 18px 18px; }
+.dns-settings-form>label { gap:7px; color:#b6c2d2; font-size:12px; }
+.dns-settings-form>label>span { color:#e2e9f2; font-size:12px; font-weight:650; }
+.dns-settings-form select,.dns-settings-form textarea { border-color:#2b3a4f; background:#080f1c; color:#eef3fa; font:500 13px/1.5 var(--font-ui); }
+.dns-settings-form textarea { min-height:82px; font-family:"JetBrains Mono Variable","JetBrains Mono",ui-monospace,monospace; }
+.dns-settings-form select:focus,.dns-settings-form textarea:focus { border-color:#5796ff; box-shadow:0 0 0 3px #5796ff22; }
+.dns-settings-form>.button { min-height:38px; }
+.dns-diagnostics { margin:0 18px 16px; }
+
+/* Settings use readable two-column rows and a consistent blue control palette. */
+.settings-panel { width:min(650px,calc(100vw - 24px)); }
+.settings-panel .modal-tabs { gap:22px; overflow-x:auto; scrollbar-width:none; }
+.settings-panel .modal-tabs::-webkit-scrollbar { display:none; }
+.settings-panel .settings-tab { white-space:nowrap; }
+.settings-section { padding:8px 4px 13px; }
+.settings-section + .settings-section { border-top:1px solid var(--stroke-soft); }
+.settings-section>h3 { margin:9px 0 5px; color:#8c9aab; font-size:11px; font-weight:650; letter-spacing:.07em; }
+.settings-panel .setting-row { min-height:59px; gap:18px; padding:12px 2px; }
+.settings-panel .setting-row>span:first-child { min-width:0; }
+.settings-panel .setting-row strong { color:#edf2f8; font-size:13px; font-weight:650; }
+.settings-panel .setting-row small { max-width:430px; color:#a1adbd; font-size:11px; line-height:1.45; }
+.setting-switch-row { cursor:pointer; }
+.setting-switch { width:38px; height:22px; flex:0 0 auto; margin:0 2px 0 12px; accent-color:#3157d5; cursor:pointer; }
+.setting-control { min-width:110px; min-height:37px; padding:0 10px; border:1px solid #2b394d; border-radius:8px; background:#080f1c; color:#edf2f8; font:600 12px/1.35 var(--font-ui); }
+.setting-control:focus-visible { outline:2px solid #5796ff; outline-offset:2px; }
+.setting-number-wrap { display:flex; align-items:center; gap:8px; flex:0 0 auto; }
+.setting-number { width:86px; text-align:center; }
+.setting-unit { color:#a1adbd; }
+.setting-inline-controls { display:flex; min-width:min(320px,55%); gap:7px; }
+.setting-scheme { min-width:90px; }
+.setting-url { min-width:0; flex:1; }
+.settings-panel .source-field { padding:13px 0; border-bottom-color:var(--stroke-soft); }
+.settings-panel .source-field input,.settings-panel .source-field select { background:#080f1c; border-color:#2b394d; }
+.settings-panel .core-release-checks section { padding:11px 0; border-color:var(--stroke-soft); }
+.settings-panel .source-save-row { padding:12px 0; }
+.github-proxy-settings .settings-inline-note { margin:5px 0 12px; color:#a1adbd; font-size:11px; line-height:1.45; }
+.github-proxy-row,.github-proxy-add-row { display:flex; align-items:center; gap:8px; margin:8px 0; }
+.github-proxy-row input,.github-proxy-add-row input { min-width:0; min-height:38px; flex:1; padding:0 10px; border:1px solid #2b394d; border-radius:8px; background:#080f1c; color:#edf2f8; font:500 12px var(--font-ui); }
+.github-proxy-delete { color:#ff8d9a; border-color:#583341; background:#251823; }
+.github-proxy-settings .source-save-row { margin-top:8px; border-top:1px solid var(--stroke-soft); }
+
+/* Stable empty/status areas reduce jumps when data arrives or tabs change. */
+.mihomo-empty { min-height:180px; }
+.selector-list { min-height:200px; }
+.toast-region { position:fixed; z-index:100; right:20px; bottom:18px; display:grid; width:min(380px,calc(100vw - 32px)); gap:8px; pointer-events:none; }
+.toast { padding:11px 14px; border:1px solid #34455e; border-radius:10px; color:#edf3fa; background:#121d2d; box-shadow:0 12px 34px #0005; font-size:13px; animation:toast-enter .18s ease-out both; }
+.toast-success { border-color:#1b7458; }
+.toast-error { border-color:#884353; }
+.toast-info { border-color:#3d66a4; }
+@keyframes toast-enter { from { opacity:0; transform:translateY(5px); } to { opacity:1; transform:translateY(0); } }
+
+@media(max-width:700px) {
+  .settings-panel { width:calc(100vw - 18px); max-height:92vh; padding:14px; }
+  .settings-panel .modal-tabs { gap:17px; }
+  .setting-row { align-items:flex-start; }
+  .setting-control-row { flex-direction:column; align-items:stretch!important; gap:9px!important; }
+  .setting-inline-controls { min-width:0; width:100%; }
+  .setting-control { width:100%; }
+  .setting-scheme { max-width:105px; }
+  .dns-workspace-heading { padding:13px 14px; }
+  .dns-runtime-list,.dns-handoff-intro { margin-right:14px; margin-left:14px; }
+  .dns-settings-form { padding-right:14px; padding-left:14px; }
+  .dns-settings-form>label { grid-column:1/-1; }
+  .dns-handoff-toggle,.dns-handoff-confirm { margin-right:14px; margin-left:14px; }
+}
+
 /* One readable type system across navigation, controls and release dialogs. */
 :root { --text:#f0f2f8; --muted:#aeb9ce; --subtle:#8998b0; }
 body,button,input,select,textarea { font-family:"Inter Variable",Inter,ui-sans-serif,system-ui,sans-serif; }
@@ -824,4 +941,394 @@ dialog.template-dialog.is-closing { animation: modal-panel-out .16s ease-in both
   .top-status small { font-size: 10px; }
   .journal-filter input,.journal-tools select,.connection-table th { font-size: 11px; }
   .proxy-protocol-badge,.proxy-transport-badge { font-size: 9px; }
+}
+
+/* Final component tokens (kept last so earlier legacy rules cannot override them). */
+:root { --surface:#101827; --surface-raised:#121c2c; --surface-hover:#1a2a41; --stroke:#2a374a; --stroke-soft:#202c3d; --text:#eef3fa; --muted:#a5b2c3; --subtle:#7f8da0; --blue:#4f8df7; --cyan:#5796ff; --mint:#00cc8a; }
+.connection-table td.connection-route-cell > .connection-chain { display:inline-block; max-width:calc(100% - 28px); overflow:hidden; vertical-align:middle; text-overflow:ellipsis; white-space:nowrap; }
+.connection-table td.connection-route-cell:not(.has-app-icon) > .connection-chain { max-width:100%; }
+.connection-app-icon { vertical-align:middle; transform:translateY(-1px); }
+.connection-app-icon.is-youtube { display:inline-grid; width:17px; height:13px; border-radius:4px; font-size:8px; vertical-align:middle; }
+.dns-workspace { border-color:#2a374a; border-radius:14px; background:#101827; }
+.dns-workspace-heading { min-height:54px; padding:14px 18px; border-bottom-color:#202c3d; }
+.dns-workspace-heading h2 { margin:0; color:#f1f5fb; font-size:16px; font-weight:650; }
+.dns-runtime-list { margin:12px 18px; border-color:#2b394d; background:#0b1320; }
+.dns-runtime-list>div { min-height:42px; padding:8px 12px; color:#d2dbe7; font-size:12px; }
+.dns-runtime-list>div strong:not(.state-pill) { color:#b9c7d8; font-size:11px; font-weight:550; }
+.dns-handoff-toggle,.dns-handoff-confirm { margin-right:18px; margin-left:18px; }
+.dns-handoff-pane .dns-handoff-note { padding:4px 18px 14px; color:#9aabc0; font-size:11px; line-height:1.5; }
+.dns-handoff-intro { margin:12px 18px; }
+.dns-handoff-intro .alert-warning { align-items:flex-start; padding:11px 13px; }
+.dns-handoff-intro .alert-warning p { color:#d2c9b3; font-size:11px; line-height:1.5; }
+.dns-feedback,.dns-result { margin-right:18px; margin-left:18px; }
+.dns-feedback strong { color:#f0f4fa; font-size:13px; }
+.dns-feedback p { color:#b1bdce; font-size:11px; line-height:1.5; }
+.dns-settings-form { gap:13px; padding:10px 18px 18px; }
+.dns-settings-form>label { gap:7px; color:#b6c2d2; font-size:12px; }
+.dns-settings-form>label>span { color:#e2e9f2; font-size:12px; font-weight:650; }
+.dns-settings-form select,.dns-settings-form textarea { border-color:#2b3a4f; background:#080f1c; color:#eef3fa; font:500 13px/1.5 var(--font-ui); }
+.dns-settings-form textarea { min-height:82px; font-family:"JetBrains Mono Variable","JetBrains Mono",ui-monospace,monospace; }
+.dns-settings-form select:focus,.dns-settings-form textarea:focus { border-color:#5796ff; box-shadow:0 0 0 3px #5796ff22; }
+.button-primary,.editor-button-primary { color:#f5f8ff; background:#2446b8; border-color:#3d66dd; }
+.button-primary:hover,.editor-button-primary:hover { background:#2d55d0; border-color:#5b83f0; }
+.setting-switch { position:relative; appearance:none; width:38px; height:22px; border:1px solid #35445a; border-radius:999px; background:#202b3b; transition:background .18s,border-color .18s; }
+.setting-switch::before { position:absolute; top:2px; left:2px; width:16px; height:16px; border-radius:50%; background:#eef3fa; content:""; transition:transform .18s ease; }
+.setting-switch:checked { border-color:#3157d5; background:#3157d5; }
+.setting-switch:checked::before { transform:translateX(16px); }
+.settings-section { padding:8px 4px 13px; }
+.settings-section + .settings-section { border-top:1px solid var(--stroke-soft); }
+.settings-section>h3 { margin:9px 0 5px; color:#8c9aab; font-size:11px; font-weight:650; letter-spacing:.07em; }
+.settings-panel .setting-row { min-height:59px; gap:18px; padding:12px 2px; }
+.settings-panel .setting-row strong { color:#edf2f8; font-size:13px; font-weight:650; }
+.settings-panel .setting-row small { max-width:430px; color:#a1adbd; font-size:11px; line-height:1.45; }
+.setting-control { min-height:37px; border-color:#2b394d; border-radius:8px; background:#080f1c; color:#edf2f8; font:600 12px/1.35 var(--font-ui); }
+.github-proxy-settings .settings-inline-note { margin:5px 0 12px; color:#a1adbd; font-size:11px; line-height:1.45; }
+.github-proxy-row,.github-proxy-add-row { display:flex; align-items:center; gap:8px; margin:8px 0; }
+.github-proxy-row input,.github-proxy-add-row input { min-width:0; min-height:38px; flex:1; padding:0 10px; border:1px solid #2b394d; border-radius:8px; background:#080f1c; color:#edf2f8; font:500 12px var(--font-ui); }
+.github-proxy-delete { color:#ff8d9a; border-color:#583341; background:#251823; }
+.toast-region { position:fixed; z-index:100; right:20px; bottom:18px; display:grid; width:min(380px,calc(100vw - 32px)); gap:8px; pointer-events:none; }
+.toast { padding:11px 14px; border:1px solid #34455e; border-radius:10px; color:#edf3fa; background:#121d2d; box-shadow:0 12px 34px #0005; font-size:13px; animation:toast-enter .18s ease-out both; }
+.toast-success { border-color:#1b7458; }.toast-error { border-color:#884353; }.toast-info { border-color:#3d66a4; }
+@media(max-width:700px) {
+  .dns-workspace-heading { padding:13px 14px; }
+  .dns-runtime-list,.dns-handoff-intro { margin-right:14px; margin-left:14px; }
+  .dns-settings-form { padding-right:14px; padding-left:14px; }
+  .dns-settings-form>label { grid-column:1/-1; }
+  .dns-handoff-toggle,.dns-handoff-confirm { margin-right:14px; margin-left:14px; }
+  .setting-control-row { flex-direction:column; align-items:stretch!important; gap:9px!important; }
+  .setting-inline-controls { width:100%; min-width:0; }
+}
+
+/* Keep release controls available without widening the page on phones. */
+@media(max-width:600px) {
+  .topbar { grid-template-columns:minmax(0,1fr) auto; }
+  .top-status-cluster { grid-column:1; grid-row:2; min-width:0; }
+  .top-status { min-width:0; }
+  .top-actions { grid-column:2; grid-row:1/3; width:auto; gap:5px; }
+  .version-chip { width:31px; min-width:31px; height:31px; justify-content:center; gap:0; overflow:hidden; padding:0!important; font-size:0!important; }
+  .version-chip .chip-icon { display:inline-grid; font-size:14px; }
+  .version-chip b,.version-chip .chip-chevron { display:none; }
+  .top-actions .icon-button { width:31px; height:31px; }
+  .navigation .nav-item { height:35px; padding:0 7px; font-size:11px; }
+  .navigation { scrollbar-width:none; }
+  .navigation::-webkit-scrollbar { display:none; }
+  .config-file-nav { scrollbar-width:none; }
+  .config-file-nav::-webkit-scrollbar { display:none; }
+  .journal-heading { align-items:stretch; flex-direction:column; gap:9px; }
+  .journal-tools { width:100%; display:grid; grid-template-columns:minmax(0,1fr) 34px 34px; gap:6px; }
+  .journal-filter { grid-column:1/-1; width:100%; min-width:0; }
+  .journal-tools select { min-width:0; width:100%; grid-column:1; }
+  .journal-icon-button { width:34px; }
+}
+
+/* Readability pass: raise small labels and strengthen hierarchy without changing layout hooks. */
+:root { --muted:#b0bdce; --subtle:#95a4b8; }
+.app-shell { font-size:15px; }
+.app-shell .eyebrow,.app-shell .metric-note,.app-shell .metric-card p,
+.app-shell .section-title p,.app-shell .section-counter,.app-shell .journal-truncated,
+.app-shell .editor-validation,.app-shell .editor-encoding,.app-shell .coming-tag,
+.app-shell .alert-tag,.app-shell .selector-card-meta,.app-shell .selector-kicker,
+.app-shell .selector-current small,.app-shell .setting-row small,.app-shell .source-field small,
+.app-shell .sources-feedback,.app-shell .core-release-meta,.app-shell .core-release-note,
+.app-shell .dns-runtime-list>div,.app-shell .dns-settings-form>label,
+.app-shell .dns-diagnostics>summary { font-size:12px; line-height:1.5; }
+.app-shell .settings-tab { font-size:12px; font-weight:650; }
+.app-shell .settings-panel .setting-row strong { font-size:14px; font-weight:700; }
+.app-shell .settings-section>h3 { color:#aab8ca; font-size:12px; font-weight:700; }
+.app-shell .connection-table th { color:#e7edf6; font-weight:700; }
+.app-shell .connection-table td { color:#dce5f1; }
+.app-shell .connection-table td.connection-host,
+.app-shell .connection-chain,.app-shell .connection-time { font-size:13px; }
+.app-shell .proxy-type,.app-shell .proxy-health { font-size:11px; font-weight:600; }
+.app-shell .journal-empty strong { color:#c2cede; font-size:12px; font-weight:650; }
+.app-shell .journal-empty p { color:#a3b0c2; font-size:12px; }
+.app-shell .service-name strong,.app-shell .quick-card strong { font-size:12px; font-weight:650; }
+.app-shell .service-name small,.app-shell .quick-card small { color:#a6b4c7; font-size:11px; line-height:1.45; }
+@media(max-width:600px) {
+  .app-shell .settings-tab { font-size:11px; }
+  .app-shell .connection-table th,.app-shell .connection-table td { font-size:12px; }
+}
+.app-shell .settings-panel .modal-tabs .settings-tab { font-size:12px; font-weight:650; }
+.app-shell .button { font-size:12px; font-weight:650; }
+.app-shell .editor-button { font-size:11px; font-weight:650; }
+.app-shell .proxy-option>strong { font-size:13px; font-weight:650; }
+.app-shell .proxy-type,.app-shell .proxy-health,.app-shell .proxy-select { font-size:11px; }
+.app-shell .mihomo-empty strong { font-size:14px; font-weight:700; }
+.app-shell .mihomo-empty p,.app-shell .mihomo-inline-empty,
+.app-shell .mihomo-privacy-note p { color:#aab8ca; font-size:12px; line-height:1.5; }
+.app-shell .traffic-summary small,.app-shell .traffic-footnote { color:#a3b2c5; font-size:11px; }
+.app-shell .traffic-summary strong,.app-shell .traffic-up { font-size:13px; font-weight:650; }
+@media(max-width:600px) {
+  .app-shell .button { font-size:11px; }
+  .app-shell .proxy-option>strong { font-size:12px; }
+}
+
+/* Theme-aware timestamp column and light appearance. */
+:root {
+  --editor-bg:#080e1b; --editor-text:#e1e9f8; --editor-gutter-bg:#0a1120; --editor-gutter-text:#566a88;
+  --editor-border:#1e2b40; --editor-active-line:#111e31; --editor-active-gutter:#9ab4d7;
+  --editor-caret:#65c9ff; --editor-selection:#244775; --editor-property:#62a8ff; --editor-string:#9cda78;
+  --editor-number:#ff9b55; --editor-atom:#d58bff; --editor-comment:#777ca7; --editor-punctuation:#a8bad4; --editor-keyword:#68c9e8;
+}
+.journal-line { grid-template-columns:34px max-content minmax(0,1fr); }
+.journal-timestamp { color:#aab8ca; font:500 11px/1.5 var(--font-ui); white-space:nowrap; }
+:root[data-theme="light"] {
+  color-scheme:light;
+  --bg:#f2f5fa; --surface:#ffffff; --surface-raised:#f7f9fc; --surface-hover:#eaf0f7;
+  --stroke:#d4dce7; --stroke-soft:#e4e9f0; --text:#1c2a3a; --muted:#526276; --subtle:#66778b;
+  --blue:#285bc1; --cyan:#1769ac; --mint:#087d59; --violet:#6948a8; --amber:#8a5d0c; --red:#b33d4c;
+  --editor-bg:#ffffff; --editor-text:#1c2a3a; --editor-gutter-bg:#f1f4f8; --editor-gutter-text:#65758a;
+  --editor-border:#d8e0ea; --editor-active-line:#eaf2fc; --editor-active-gutter:#315b8f;
+  --editor-caret:#1769ac; --editor-selection:#b9d6f8; --editor-property:#205ba8; --editor-string:#286d25;
+  --editor-number:#9b4b0a; --editor-atom:#7645a1; --editor-comment:#66778b; --editor-punctuation:#596b80; --editor-keyword:#126a84;
+  color:#1c2a3a; background:#f2f5fa;
+}
+:root[data-theme="light"] body { color:#1c2a3a; background:#f2f5fa; }
+:root[data-theme="light"] .app-shell { color:#1c2a3a; }
+:root[data-theme="light"] .topbar,
+:root[data-theme="light"] .navigation,
+:root[data-theme="light"] .journal-panel,
+:root[data-theme="light"] .connections-panel,
+:root[data-theme="light"] .dns-workspace,
+:root[data-theme="light"] .editor-workspace,
+:root[data-theme="light"] .selector-card,
+:root[data-theme="light"] .service-card,
+:root[data-theme="light"] .metric-card,
+:root[data-theme="light"] .quick-card,
+:root[data-theme="light"] .modal-panel,
+:root[data-theme="light"] .confirmation-dialog .modal-panel { color:#1c2a3a; background:#fff; border-color:#d4dce7; box-shadow:0 12px 34px #24344a14; }
+:root[data-theme="light"] .topbar { background:#fff; }
+:root[data-theme="light"] .navigation { background:#f8fafd; }
+:root[data-theme="light"] .brand { color:#17263a; }
+:root[data-theme="light"] .brand b { color:#285bc1; }
+:root[data-theme="light"] .top-status strong,
+:root[data-theme="light"] .page-heading h1,
+:root[data-theme="light"] .section-title h2,
+:root[data-theme="light"] .journal-heading h2,
+:root[data-theme="light"] .settings-panel h2,
+:root[data-theme="light"] .settings-panel .setting-row strong { color:#182638; }
+:root[data-theme="light"] .top-status small,
+:root[data-theme="light"] .page-heading p,
+:root[data-theme="light"] .setting-row small,
+:root[data-theme="light"] .modal-note { color:#526276; }
+:root[data-theme="light"] .nav-item { color:#53647a; }
+:root[data-theme="light"] .nav-item:hover,
+:root[data-theme="light"] .nav-item.active { color:#1f4e96; background:#e8f0fc; box-shadow:inset 0 0 0 1px #c7d9f2; }
+:root[data-theme="light"] .version-chip,
+:root[data-theme="light"] .icon-button,
+:root[data-theme="light"] .button-quiet,
+:root[data-theme="light"] .setting-control,
+:root[data-theme="light"] .journal-filter,
+:root[data-theme="light"] .journal-tools select,
+:root[data-theme="light"] .journal-icon-button,
+:root[data-theme="light"] .connection-search,
+:root[data-theme="light"] .dns-settings-form select,
+:root[data-theme="light"] .dns-settings-form textarea,
+:root[data-theme="light"] .github-proxy-row input,
+:root[data-theme="light"] .github-proxy-add-row input { color:#1c2a3a; background:#fff; border-color:#cbd5e2; }
+:root[data-theme="light"] .version-chip b { color:#17263a; }
+:root[data-theme="light"] .button-primary,
+:root[data-theme="light"] .editor-button-primary { color:#fff; background:#2854b8; border-color:#2854b8; }
+:root[data-theme="light"] .selector-toolbar,
+:root[data-theme="light"] .connections-toolbar,
+:root[data-theme="light"] .editor-toolbar,
+:root[data-theme="light"] .editor-statusbar { color:#24354a; background:#f5f8fc; border-color:#d9e1eb; }
+:root[data-theme="light"] .proxy-option { color:#1c2a3a; background:#f8fafd; border-color:#d4dce7; }
+:root[data-theme="light"] .proxy-option.is-selected { background:#e9f2ff; border-color:#5d89cb; }
+:root[data-theme="light"] .proxy-option>strong,
+:root[data-theme="light"] .connection-table td,
+:root[data-theme="light"] .connection-table td.connection-host { color:#1d2b3e; }
+:root[data-theme="light"] .connection-table th { color:#34475f; background:#eef3f9; border-color:#d5deea; }
+:root[data-theme="light"] .connection-table td { border-color:#e2e8f0; }
+:root[data-theme="light"] .connection-table tbody tr:hover { background:#f0f5fb; }
+:root[data-theme="light"] .dns-workspace-heading,
+:root[data-theme="light"] .dns-runtime-list,
+:root[data-theme="light"] .dns-feedback,
+:root[data-theme="light"] .dns-result,
+:root[data-theme="light"] .dns-diagnostics { color:#24354a; background:#f8fafd; border-color:#d7e0eb; }
+:root[data-theme="light"] .dns-workspace-heading h2,
+:root[data-theme="light"] .dns-feedback strong,
+:root[data-theme="light"] .dns-result h2 { color:#182638; }
+:root[data-theme="light"] .dns-feedback p,
+:root[data-theme="light"] .dns-handoff-pane .dns-handoff-note { color:#53647a; }
+:root[data-theme="light"] .settings-panel .modal-tabs { border-color:#d8e0ea; }
+:root[data-theme="light"] .settings-panel .modal-tabs .settings-tab { color:#53647a; }
+:root[data-theme="light"] .settings-panel .modal-tabs .settings-tab.selected { color:#1f4e96; border-color:#3976c8; }
+:root[data-theme="light"] .settings-panel .setting-row { border-color:#e1e7ef; }
+:root[data-theme="light"] .settings-section>h3 { color:#586b82; }
+:root[data-theme="light"] .journal-body,
+:root[data-theme="light"] .journal-lines { color:#26364b; background:#f8fafd; border-color:#d8e0ea; }
+:root[data-theme="light"] .journal-line { border-color:#e3e8ef; }
+:root[data-theme="light"] .journal-line-number,
+:root[data-theme="light"] .journal-timestamp { color:#5e7087; }
+:root[data-theme="light"] .journal-line code { color:#28384d; }
+:root[data-theme="light"] .journal-empty strong { color:#32465f; }
+:root[data-theme="light"] .journal-empty p { color:#63758a; }
+:root[data-theme="light"] .config-editor-main,
+:root[data-theme="light"] .code-editor-shell,
+:root[data-theme="light"] .code-editor .cm-editor { color:var(--editor-text); background:var(--editor-bg); }
+:root[data-theme="light"] .code-editor .cm-gutters { color:var(--editor-gutter-text); background:var(--editor-gutter-bg); }
+:root[data-theme="light"] .code-editor .cm-activeLine,
+:root[data-theme="light"] .code-editor .cm-activeLineGutter { background:var(--editor-active-line); }
+:root[data-theme="light"] .code-editor .cm-line span[style*="--editor-property"] { color:var(--editor-property); }
+:root[data-theme="light"] .feature-placeholder,
+:root[data-theme="light"] .mihomo-empty,
+:root[data-theme="light"] .mihomo-inline-empty,
+:root[data-theme="light"] .empty-card,
+:root[data-theme="light"] .journal-empty { color:#26364b; background:#fff; border-color:#d4dce7; }
+:root[data-theme="light"] .feature-placeholder .placeholder-copy h2,
+:root[data-theme="light"] .mihomo-empty strong,
+:root[data-theme="light"] .journal-empty strong { color:#182638; }
+:root[data-theme="light"] .feature-placeholder .placeholder-copy p,
+:root[data-theme="light"] .feature-placeholder .placeholder-note,
+:root[data-theme="light"] .mihomo-empty p,
+:root[data-theme="light"] .journal-empty p { color:#53647a; }
+:root[data-theme="light"] .alert-info { color:#26466c; background:#edf4ff; border-color:#c9daf0; }
+:root[data-theme="light"] .alert-error { color:#7c2938; background:#fff1f2; border-color:#efc5cb; }
+:root[data-theme="light"] .alert-warning { color:#71520e; background:#fff8e8; border-color:#ecd9a6; }
+:root[data-theme="light"] .alert p { color:#526276; }
+:root[data-theme="light"] .state-pill.state-running { color:#116b4e; background:#e4f6ef; border-color:#b8e5d4; }
+:root[data-theme="light"] .state-pill.state-stopped { color:#80530b; background:#fff4dc; border-color:#ead49c; }
+:root[data-theme="light"] .state-pill.state-unavailable,
+:root[data-theme="light"] .state-pill.state-unknown { color:#526276; background:#eef2f7; border-color:#d7dfe9; }
+:root[data-theme="light"] .setting-value { color:#1d2b3e; background:#f1f5fa; border-color:#d3dce8; }
+:root[data-theme="light"] .journal-panel .journal-body { color:#26364b; background:#fff; }
+:root[data-theme="light"] .journal-panel .journal-empty-icon { color:#526276; background:#edf2f8; }
+:root[data-theme="light"] .selector-card-meta,
+:root[data-theme="light"] .selector-kicker,
+:root[data-theme="light"] .metric-note,
+:root[data-theme="light"] .section-counter { color:#5c6f85; }
+:root[data-theme="light"] .metric-card p,
+:root[data-theme="light"] .service-name small,
+:root[data-theme="light"] .service-foot,
+:root[data-theme="light"] .quick-card small { color:#53647a; }
+:root[data-theme="light"] .footer { color:#526276; border-color:#d9e1eb; }
+:root[data-theme="light"] .footer-muted { color:#64758a; }
+:root[data-theme="light"] .proxy-health { color:#53647a; }
+:root[data-theme="light"] .connection-no-results { color:#53647a; }
+
+/* Keep operational guidance readable without turning it into oversized banners. */
+.app-shell .alert strong { color:inherit; font-size:13px; font-weight:700; }
+.app-shell .alert p { font-size:12px; line-height:1.5; }
+.app-shell .dns-handoff-intro .alert-warning { padding:12px 14px; }
+.app-shell .dns-handoff-intro .alert-warning p { color:#d2dbe7; font-size:12px; line-height:1.55; }
+.app-shell .dns-feedback p,.app-shell .dns-result p { font-size:12px; line-height:1.5; }
+.app-shell .dns-runtime-list>div strong:not(.state-pill) { font-size:12px; font-weight:650; }
+.app-shell .settings-panel .setting-row small,.app-shell .github-proxy-settings .settings-inline-note { font-size:12px; line-height:1.45; }
+
+:root[data-theme="light"] .dns-handoff-intro .alert-warning p { color:#4c5d72; }
+
+:root:not([data-theme="light"]) .settings-panel .modal-tabs .settings-tab { color:#edf2fb; font-weight:700; }
+:root:not([data-theme="light"]) .settings-panel .modal-tabs .settings-tab.selected { color:#fff; }
+
+/* Final readability pass: keep supporting copy comfortably readable and DNS controls in one clear column. */
+body { -webkit-font-smoothing:auto; }
+.app-shell .setting-row small,.app-shell .source-field small,
+.app-shell .github-proxy-settings .settings-inline-note,.app-shell .sources-feedback,
+.app-shell .core-release-meta,.app-shell .core-release-note,
+.app-shell .metric-note,.app-shell .metric-card p,.app-shell .section-title p,
+.app-shell .selector-card-meta,.app-shell .selector-kicker,.app-shell .selector-current small,
+.app-shell .service-name small,.app-shell .quick-card small,
+.app-shell .dns-runtime-list>div,.app-shell .dns-settings-form>label,
+.app-shell .dns-diagnostics>summary,.app-shell .dns-handoff-note,
+.app-shell .dns-no-answer,.app-shell .dns-record small,
+.app-shell .dns-feedback p,.app-shell .dns-result p,
+.app-shell .modal-note,.app-shell .confirmation-dialog .modal-note {
+  font-size:12px;
+  line-height:1.5;
+}
+.app-shell .settings-panel .setting-row small,
+.app-shell .source-field small,
+.app-shell .github-proxy-settings .settings-inline-note { color:#b0bdce; }
+.dns-settings-form { grid-template-columns:minmax(0,1fr); gap:12px; }
+.dns-settings-form>label,.dns-settings-form>.button { grid-column:1; }
+.dns-settings-form>label>span { color:#e7edf6; font-size:13px; font-weight:650; }
+.dns-settings-form select,.dns-settings-form textarea { min-height:40px; border-radius:9px; }
+.dns-settings-form textarea { min-height:74px; line-height:1.55; }
+.dns-settings-form>.button { justify-self:stretch; min-height:40px; }
+.dns-runtime-list { margin:8px 18px 14px; border-radius:10px; }
+.dns-runtime-list>div { min-height:42px; padding:9px 12px; }
+.dns-runtime-list>div strong:not(.state-pill) { color:#c5d0df; font-size:12px; font-weight:600; }
+.dns-runtime-list .state-pill { font-size:11px; }
+.dns-handoff-intro .alert-warning { border-color:#334763; background:#111d2e; }
+.dns-handoff-intro .alert-warning .alert-icon { color:#9bc4ff; background:#1b2e48; }
+.dns-handoff-intro .alert-warning strong { color:#e7edf6; font-size:13px; }
+.dns-handoff-intro .alert-warning p { color:#b7c4d5; font-size:12px; line-height:1.5; }
+.dns-diagnostics { margin-top:2px; border-color:#2a374a; }
+.dns-diagnostics>summary { padding:12px 0 2px; color:#c0cad8; font-weight:600; }
+.modal.app-release-dialog { width:min(760px,calc(100vw - 24px)); max-height:90vh; }
+.app-releases-panel { padding:18px; }
+.app-releases-panel .modal-note { color:#aebbd0; font-size:13px; }
+.app-releases-panel .core-release-dialog-source { font-size:12px; }
+.app-release-list { gap:7px; }
+.app-release-card { gap:6px; padding:12px 13px; border-color:#35445b; background:#111a2a; }
+.app-release-card:hover { border-color:#6f91c2; background:#142039; }
+.app-release-card.is-selected { border-color:#6da9ff; background:linear-gradient(135deg,#1b3a68,#142a4c); }
+.app-release-card-heading { font-size:14px; }
+.app-release-date { color:#aab8cc; font-size:12px; }
+.app-release-notes { color:#b8c5d8; font-size:12px; line-height:1.55; }
+.app-release-notes strong { color:#edf3fb; }
+.app-release-actions { margin-top:12px; padding-top:12px; border-color:#303c53; }
+.app-release-actions .editor-button-primary { min-height:40px; font-size:13px; font-weight:700; }
+@media(max-width:700px) {
+  .dns-settings-form { grid-template-columns:minmax(0,1fr); padding-right:14px; padding-left:14px; }
+  .dns-runtime-list { margin-right:14px; margin-left:14px; }
+}
+@media(max-width:600px) {
+  .app-shell .setting-row small,.app-shell .source-field small,
+  .app-shell .github-proxy-settings .settings-inline-note,
+  .app-shell .dns-settings-form>label,.app-shell .dns-diagnostics>summary,
+  .app-shell .dns-handoff-note,.app-shell .modal-note { font-size:12px; }
+  .app-release-card-heading { font-size:13px; }
+}
+.proxy-health { min-height:25px; gap:6px; padding:2px 7px; border:1px solid #35445a; border-radius:7px; color:#aebbd0; background:#111a28; font-size:11px; font-weight:650; line-height:1; }
+.proxy-health .ping-status-icon { display:inline-grid; width:15px; height:15px; flex:0 0 15px; place-items:center; border:0; border-radius:0; background:transparent; color:currentColor; }
+.proxy-health .ping-status-icon svg { display:block; width:15px; height:15px; fill:none; stroke:currentColor; stroke-width:1.8; stroke-linecap:round; stroke-linejoin:round; }
+.proxy-health.is-alive { border-color:#23654f; color:#69d8a9; background:#10261f; }
+.proxy-health.is-alive .ping-status-icon { background:transparent; box-shadow:none; }
+.proxy-health.is-dead { border-color:#713746; color:#ff7f8c; background:#2a1820; }
+.proxy-health.is-dead .ping-status-icon { background:transparent; box-shadow:none; }
+.proxy-health.is-pinging { border-color:#46618a; color:#b9d4ff; background:#142039; }
+.proxy-health.is-pinging .ping-status-icon { background:transparent; box-shadow:none; }
+.proxy-health.is-pinging .ping-status-icon svg { display:none; }
+.proxy-health.is-pinging .ping-status-icon::after { width:11px; height:11px; border:1.5px solid #60799f; border-top-color:#b9d4ff; border-radius:50%; content:""; animation:service-spin .7s linear infinite; }
+.proxy-health:focus-visible { outline:2px solid #ff8794; outline-offset:2px; }
+.config-layout #config-save-active:not(:disabled) { border-color:#4d77b7; color:#eff6ff; background:#203d65; }
+.config-layout #config-apply-active:not(:disabled) { border-color:#20815a; color:#edfff6; background:#116442; }
+.config-layout #config-save-active:disabled,.config-layout #config-apply-active:disabled { border-color:#303b4c; color:#7f8da1; background:#151d29; opacity:.62; cursor:not-allowed; box-shadow:none; }
+
+/* Readability baseline: supporting copy should remain easy to scan across every section. */
+.app-shell .setting-row small,.app-shell .source-field small,
+.app-shell .github-proxy-settings .settings-inline-note,.app-shell .sources-feedback,
+.app-shell .core-release-meta,.app-shell .core-release-note,
+.app-shell .metric-note,.app-shell .metric-card p,.app-shell .section-title p,
+.app-shell .selector-card-meta,.app-shell .selector-kicker,.app-shell .selector-current small,
+.app-shell .service-name small,.app-shell .quick-card small,
+.app-shell .dns-handoff-note,.app-shell .dns-no-answer,.app-shell .dns-record small,
+.app-shell .dns-feedback p,.app-shell .dns-result p,.app-shell .modal-note {
+  font-size:12px;
+  line-height:1.55;
+}
+.app-shell .setting-row small,.app-shell .source-field small,
+.app-shell .github-proxy-settings .settings-inline-note,.app-shell .core-release-meta,
+.app-shell .core-release-note,.app-shell .selector-card-meta,.app-shell .selector-kicker,
+.app-shell .selector-current small,.app-shell .service-name small,
+.app-shell .quick-card small,.app-shell .dns-handoff-note,.app-shell .dns-record small,
+.app-shell .modal-note { color:#b5c2d4; }
+.app-shell .settings-section>h3 { font-size:12px; font-weight:650; }
+.app-shell .setting-row strong,.app-shell .source-field label { font-size:14px; font-weight:650; }
+.app-shell .journal-lines { max-height:min(34vh,280px); }
+.app-shell .journal-line code { color:#eef3fb; font:500 12px/1.65 "JetBrains Mono Variable",monospace; }
+.app-shell .journal-line[data-level="error"] code,
+.app-shell .journal-line[data-level="warning"] code { color:#eef3fb; }
+.app-shell .journal-line[data-level="error"] .journal-line-number { color:#ff7f8c; }
+.app-shell .journal-line[data-level="warning"] .journal-line-number { color:#f1c56d; }
+.app-shell .journal-line-number { font-size:11px; }
+.app-shell .journal-filter input,.app-shell .journal-tools select { font-size:13px; }
+@media(max-width:600px) {
+  .app-shell .setting-row small,.app-shell .source-field small,
+  .app-shell .github-proxy-settings .settings-inline-note,
+  .app-shell .selector-card-meta,.app-shell .service-name small,
+  .app-shell .quick-card small,.app-shell .dns-handoff-note,.app-shell .modal-note { font-size:12px; }
+  .app-shell .journal-line code { font-size:11px; }
 }

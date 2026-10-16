@@ -8,8 +8,9 @@ import { json } from '@codemirror/lang-json';
 import { applyEdits, format as formatJsonc, parse as parseJsonc, printParseErrorCode, type ParseError } from 'jsonc-parser';
 import { parseDocument } from 'yaml';
 import { chooseReferenceTemplate, getDefaultTemplate } from './templates';
-import { applyActiveMihomoConfig, applyXrayConfigFile, getActiveMihomoConfig, getRouterConfigFile, getXrayConfigFile, saveActiveMihomoConfig, saveRouterConfigFile, saveXrayConfigFile, type RouterConfigFile, type XrayConfigFile } from './api';
+import { applyActiveMihomoConfig, applyXrayConfigFile, getActiveMihomoConfig, getRouterConfigFile, getXrayConfigFile, logUiError, saveActiveMihomoConfig, saveRouterConfigFile, saveXrayConfigFile, type RouterConfigFile, type XrayConfigFile } from './api';
 import { confirmInApp } from './confirm-dialog';
+import { canPersistConfig } from './config-actions';
 
 const draftKey = 'xkeen-ui:draft:';
 const activeFileKey = 'xkeen-ui:draft-active-file';
@@ -29,6 +30,9 @@ if (activeFile === 'xray_jsonc') activeFile = 'xray_routing';
 let activeConfigSnapshot: string | null = null;
 const listSnapshots = new Map<RouterConfigFile, string>();
 const xraySnapshots = new Map<XrayConfigFile, string>();
+let configActionBusy = false;
+let currentDocumentValid = false;
+let lastLoggedValidationError: string | null = null;
 
 function isRouterConfigFile(file: string): file is RouterConfigFile {
   return file === 'ip_exclude' || file === 'port_exclude' || file === 'port_proxying' || file === 'xkeen';
@@ -50,6 +54,14 @@ function currentSnapshot(): string | null {
 
 function currentFile() {
   return draftFiles.find((file) => file.id === activeFile) ?? draftFiles[0];
+}
+
+function syncConfigActions(content: string, valid = currentDocumentValid): void {
+  const enabled = canPersistConfig(content, currentSnapshot(), valid, configActionBusy);
+  const applyButton = document.querySelector<HTMLButtonElement>('#config-apply-active');
+  if (applyButton) applyButton.disabled = !enabled;
+  const saveButton = document.querySelector<HTMLButtonElement>('#config-save-active');
+  if (saveButton) saveButton.disabled = !enabled;
 }
 
 function setEditorIdentity(routerMode: boolean): void {
@@ -80,24 +92,24 @@ function setEditorIdentity(routerMode: boolean): void {
 }
 
 const editorTheme = EditorView.theme({
-  '&': { height: '100%', color: '#e1e9f8', backgroundColor: '#080e1b', fontSize: '14px', fontWeight: '500' },
+  '&': { height: '100%', color: 'var(--editor-text, #e1e9f8)', backgroundColor: 'var(--editor-bg, #080e1b)', fontSize: '14px', fontWeight: '500' },
   '.cm-scroller': { overflow: 'auto', fontFamily: '"JetBrains Mono Variable", "JetBrains Mono", ui-monospace, SFMono-Regular, Consolas, monospace', lineHeight: '1.6' },
-  '.cm-content': { padding: '14px 0', caretColor: '#65c9ff' },
-  '.cm-gutters': { color: '#566a88', backgroundColor: '#0a1120', borderRight: '1px solid #1e2b40' },
-  '.cm-activeLine': { backgroundColor: '#111e31' },
-  '.cm-activeLineGutter': { color: '#9ab4d7', backgroundColor: '#111e31' },
-  '&.cm-focused .cm-cursor': { borderLeftColor: '#65c9ff' },
-  '&.cm-focused .cm-selectionBackground, .cm-selectionBackground': { backgroundColor: '#244775 !important' },
+  '.cm-content': { padding: '14px 0', caretColor: 'var(--editor-caret, #65c9ff)' },
+  '.cm-gutters': { color: 'var(--editor-gutter-text, #566a88)', backgroundColor: 'var(--editor-gutter-bg, #0a1120)', borderRight: '1px solid var(--editor-border, #1e2b40)' },
+  '.cm-activeLine': { backgroundColor: 'var(--editor-active-line, #111e31)' },
+  '.cm-activeLineGutter': { color: 'var(--editor-active-gutter, #9ab4d7)', backgroundColor: 'var(--editor-active-line, #111e31)' },
+  '&.cm-focused .cm-cursor': { borderLeftColor: 'var(--editor-caret, #65c9ff)' },
+  '&.cm-focused .cm-selectionBackground, .cm-selectionBackground': { backgroundColor: 'var(--editor-selection, #244775) !important' },
 });
 
 const editorHighlight = HighlightStyle.define([
-  { tag: tags.propertyName, color: '#62a8ff', fontWeight: '600' },
-  { tag: [tags.string, tags.special(tags.string)], color: '#9cda78' },
-  { tag: [tags.number, tags.integer, tags.float], color: '#ff9b55' },
-  { tag: [tags.bool, tags.null, tags.atom], color: '#d58bff' },
-  { tag: tags.comment, color: '#777ca7', fontStyle: 'italic' },
-  { tag: [tags.punctuation, tags.bracket], color: '#a8bad4' },
-  { tag: [tags.keyword, tags.operator], color: '#68c9e8' },
+  { tag: tags.propertyName, color: 'var(--editor-property, #62a8ff)', fontWeight: '600' },
+  { tag: [tags.string, tags.special(tags.string)], color: 'var(--editor-string, #9cda78)' },
+  { tag: [tags.number, tags.integer, tags.float], color: 'var(--editor-number, #ff9b55)' },
+  { tag: [tags.bool, tags.null, tags.atom], color: 'var(--editor-atom, #d58bff)' },
+  { tag: tags.comment, color: 'var(--editor-comment, #777ca7)', fontStyle: 'italic' },
+  { tag: [tags.punctuation, tags.bracket], color: 'var(--editor-punctuation, #a8bad4)' },
+  { tag: [tags.keyword, tags.operator], color: 'var(--editor-keyword, #68c9e8)' },
 ]);
 
 function editorElement(): HTMLElement | null {
@@ -109,6 +121,14 @@ function setValidation(message: string, valid: boolean | null): void {
   if (!status) return;
   status.className = `editor-validation${valid === null ? '' : valid ? ' is-valid' : ' is-invalid'}`;
   status.textContent = message;
+  if (valid === false) {
+    const source = message.startsWith('Ошибка YAML') ? 'yaml' : 'config';
+    const key = `${source}\u0000${message}`;
+    if (key !== lastLoggedValidationError) {
+      lastLoggedValidationError = key;
+      void logUiError(source, message).catch(() => undefined);
+    }
+  } else if (valid === true) lastLoggedValidationError = null;
 }
 
 function validateYaml(text: string): boolean {
@@ -212,7 +232,8 @@ export function mountYamlEditor(routerMode = false, activeCore: 'mihomo' | 'xray
     if (!update.docChanged) return;
     const text = update.state.doc.toString();
     sessionStorage.setItem(`${draftKey}${file.id}`, text);
-    validateStructuredDocument(text);
+    currentDocumentValid = file.format === 'text' ? true : validateStructuredDocument(text);
+    syncConfigActions(text);
   });
   editor = new EditorView({
     parent,
@@ -230,9 +251,12 @@ export function mountYamlEditor(routerMode = false, activeCore: 'mihomo' | 'xray
       ],
     }),
   });
-  if (initial.trim()) validateStructuredDocument(initial);
-  else setValidation(file.format === 'yaml' ? 'Начните редактирование YAML-конфигурации' : 'Локальный файл пуст.', null);
-  if (storedDraft === null && initial.trim()) validateStructuredDocument(initial);
+  if (initial.trim()) currentDocumentValid = file.format === 'text' ? true : validateStructuredDocument(initial);
+  else {
+    currentDocumentValid = file.format === 'text';
+    setValidation(file.format === 'yaml' ? 'Начните редактирование YAML-конфигурации' : 'Локальный файл пуст.', null);
+  }
+  syncConfigActions(initial);
 
   document.querySelectorAll<HTMLButtonElement>('[data-config-file]').forEach((button) => {
     button.addEventListener('click', () => {
@@ -302,6 +326,9 @@ export function mountYamlEditor(routerMode = false, activeCore: 'mihomo' | 'xray
       return;
     }
     if (!validateStructuredDocument(content)) return;
+    currentDocumentValid = true;
+    configActionBusy = true;
+    syncConfigActions(content);
     button.disabled = true;
     const saveButton = document.querySelector<HTMLButtonElement>('#config-save-active');
     if (saveButton) saveButton.disabled = true;
@@ -326,8 +353,8 @@ export function mountYamlEditor(routerMode = false, activeCore: 'mihomo' | 'xray
       }
       setValidation(error instanceof Error ? `Применение не выполнено: ${error.message}` : 'Применение конфигурации завершилось ошибкой.', false);
     } finally {
-      button.disabled = currentSnapshot() === null;
-      if (saveButton) saveButton.disabled = currentSnapshot() === null;
+      configActionBusy = false;
+      syncConfigActions(editor?.state.doc.toString() ?? '', currentDocumentValid);
       button.textContent = 'Применить и перезапустить';
     }
   }, { signal });
@@ -342,8 +369,11 @@ export function mountYamlEditor(routerMode = false, activeCore: 'mihomo' | 'xray
     const rawContent = editor.state.doc.toString();
     const isStructured = !isRouterConfigFile(fileId) || fileId === 'xkeen';
     if (isStructured && !validateStructuredDocument(rawContent)) return;
+    currentDocumentValid = true;
     const apiFile = isXrayConfigFile(fileId) ? xrayApiFile(fileId) : null;
     const content = fileId === 'xray_routing' ? JSON.stringify(parseJsonc(rawContent, []), null, 2) : rawContent;
+    configActionBusy = true;
+    syncConfigActions(rawContent);
     button.disabled = true;
     const applyButton = document.querySelector<HTMLButtonElement>('#config-apply-active');
     if (applyButton) applyButton.disabled = true;
@@ -364,8 +394,8 @@ export function mountYamlEditor(routerMode = false, activeCore: 'mihomo' | 'xray
     } catch (error) {
       setValidation(error instanceof Error ? `Сохранение не выполнено: ${error.message}` : 'Сохранение завершилось ошибкой.', false);
     } finally {
-      button.disabled = currentSnapshot() === null;
-      if (applyButton) applyButton.disabled = currentSnapshot() === null;
+      configActionBusy = false;
+      syncConfigActions(editor?.state.doc.toString() ?? '', currentDocumentValid);
       button.textContent = 'Сохранить';
     }
   }, { signal });
@@ -382,11 +412,8 @@ export function mountYamlEditor(routerMode = false, activeCore: 'mihomo' | 'xray
       if (file.id === 'config') activeConfigSnapshot = active.content;
       else if (isXrayConfigFile(file.id)) xraySnapshots.set(xrayApiFile(file.id), active.content);
       else listSnapshots.set(file.id as RouterConfigFile, active.content);
-      const applyButton = document.querySelector<HTMLButtonElement>('#config-apply-active');
-      if (applyButton) applyButton.disabled = false;
-      const saveButton = document.querySelector<HTMLButtonElement>('#config-save-active');
-      if (saveButton) saveButton.disabled = false;
-      validateStructuredDocument(active.content);
+      currentDocumentValid = file.format === 'text' ? true : validateStructuredDocument(active.content);
+      syncConfigActions(active.content);
     }).catch((error: unknown) => {
       if (!signal.aborted) setValidation(error instanceof Error ? `Не удалось считать ${file.filename}: ${error.message}` : `Не удалось считать ${file.filename}.`, false);
     });

@@ -9,6 +9,7 @@ use std::{
     io::{SeekFrom, Write},
     os::unix::fs::{FileTypeExt, OpenOptionsExt},
     path::Path,
+    time::{SystemTime, UNIX_EPOCH},
 };
 use tokio::io::{AsyncReadExt, AsyncSeekExt};
 
@@ -23,6 +24,13 @@ const XKEEN_UI_LOG_PATH: &str = "/opt/var/log/xkeen-ui.log";
 #[derive(Deserialize)]
 pub(super) struct LogQuery {
     file: String,
+}
+
+#[derive(Deserialize)]
+#[serde(deny_unknown_fields)]
+pub(super) struct UiErrorRequest {
+    source: String,
+    message: String,
 }
 
 #[derive(Serialize)]
@@ -41,36 +49,24 @@ struct LogSource {
 
 const LOG_SOURCES: &[LogSource] = &[
     LogSource {
-        id: "xray-error",
-        label: "Xray · error.log",
-        path: "/opt/var/log/xray/error.log",
-    },
-    LogSource {
         id: "xray-access",
-        label: "Xray · access.log",
+        label: "Access Log",
         path: "/opt/var/log/xray/access.log",
     },
     LogSource {
-        id: "web-error",
-        label: "Web · error.log",
-        path: "/opt/var/log/lighttpd/error.log",
-    },
-    LogSource {
-        id: "nfqws2",
-        label: "nfqws2.log",
-        path: "/opt/var/log/nfqws2.log",
-    },
-    LogSource {
         id: "xkeen-ui",
-        label: "XKeen UI · xkeen-ui.log",
+        label: "Error Log",
         path: XKEEN_UI_LOG_PATH,
     },
-    LogSource {
-        id: "app-update",
-        label: "XKeen UI · update.log",
-        path: "/opt/var/log/xkeen-ui-update.log",
-    },
 ];
+
+// Kept as an internal updater diagnostic endpoint; it is intentionally absent
+// from the user-facing journal selector, which exposes only Access and Error Log.
+const UPDATE_LOG_SOURCE: LogSource = LogSource {
+    id: "app-update",
+    label: "Update diagnostics",
+    path: "/opt/var/log/xkeen-ui-update.log",
+};
 
 pub(super) async fn read_logs(
     State(state): State<AppState>,
@@ -83,7 +79,11 @@ pub(super) async fn read_logs(
         )
             .into_response();
     }
-    let Some(source) = LOG_SOURCES.iter().find(|source| source.id == query.file) else {
+    let source = LOG_SOURCES
+        .iter()
+        .find(|source| source.id == query.file)
+        .or_else(|| (query.file == UPDATE_LOG_SOURCE.id).then_some(&UPDATE_LOG_SOURCE));
+    let Some(source) = source else {
         return (
             StatusCode::BAD_REQUEST,
             Json(serde_json::json!({"error":"Неизвестный файл журнала"})),
@@ -106,6 +106,54 @@ pub(super) async fn read_logs(
                 .into_response()
         }
     }
+}
+
+pub(super) async fn append_ui_error(
+    State(state): State<AppState>,
+    axum::Json(request): axum::Json<UiErrorRequest>,
+) -> Response {
+    if !state.router_mode {
+        return (
+            StatusCode::SERVICE_UNAVAILABLE,
+            Json(serde_json::json!({"error":"Запись в системный журнал доступна только в режиме роутера"})),
+        )
+            .into_response();
+    }
+    let timestamp = SystemTime::now()
+        .duration_since(UNIX_EPOCH)
+        .unwrap_or_default()
+        .as_secs();
+    let Some(entry) = ui_error_entry(timestamp, &request.source, &request.message) else {
+        return (
+            StatusCode::BAD_REQUEST,
+            Json(serde_json::json!({"error":"Некорректное событие журнала"})),
+        )
+            .into_response();
+    };
+    match append_xkeen_lifecycle(&[entry]) {
+        Ok(()) => StatusCode::NO_CONTENT.into_response(),
+        Err(error) => {
+            tracing::warn!(%error, "Could not append UI error to Error Log");
+            (
+                StatusCode::INTERNAL_SERVER_ERROR,
+                Json(serde_json::json!({"error":"Не удалось записать событие в Error Log"})),
+            )
+                .into_response()
+        }
+    }
+}
+
+fn ui_error_entry(timestamp: u64, source: &str, message: &str) -> Option<String> {
+    if !matches!(source, "yaml" | "config" | "ui" | "update") {
+        return None;
+    }
+    let message = sanitize_line(message).trim().to_owned();
+    if message.is_empty() || message.len() > 2048 {
+        return None;
+    }
+    Some(format!(
+        "unix={timestamp} level=ERROR component=xkeen-ui source={source} message={message}"
+    ))
 }
 
 async fn read_tail(source: &LogSource) -> std::io::Result<LogResult> {
@@ -295,12 +343,26 @@ mod tests {
 
     #[test]
     fn log_source_ids_are_unique_and_absolute() {
+        assert_eq!(LOG_SOURCES.len(), 2);
+        assert_eq!(LOG_SOURCES[0].label, "Access Log");
+        assert_eq!(LOG_SOURCES[1].label, "Error Log");
         for (index, source) in LOG_SOURCES.iter().enumerate() {
             assert!(source.path.starts_with("/opt/var/log/"));
             assert!(LOG_SOURCES[index + 1..]
                 .iter()
                 .all(|other| other.id != source.id));
         }
+    }
+
+    #[test]
+    fn ui_error_entries_are_whitelisted_bounded_and_sanitized() {
+        assert_eq!(
+            ui_error_entry(42, "yaml", "Ошибка YAML token=private\nsecond line"),
+            Some("unix=42 level=ERROR component=xkeen-ui source=yaml message=Ошибка YAML token=[REDACTED] line".to_owned())
+        );
+        assert!(ui_error_entry(42, "unknown", "message").is_none());
+        assert!(ui_error_entry(42, "yaml", "  ").is_none());
+        assert!(ui_error_entry(42, "yaml", &"x".repeat(2049)).is_none());
     }
 
     #[test]

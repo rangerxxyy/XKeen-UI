@@ -425,15 +425,7 @@ pub async fn save_active(
     }
     match save_config_only(&request.content, &request.expected_content).await {
         Ok(result) => Json(result).into_response(),
-        Err(message) => {
-            let status = if message.starts_with("Конфиг на роутере изменился")
-            {
-                StatusCode::CONFLICT
-            } else {
-                StatusCode::UNPROCESSABLE_ENTITY
-            };
-            error(status, &message)
-        }
+        Err(message) => error(config_write_error_status(&message), &message),
     }
 }
 
@@ -540,15 +532,7 @@ pub async fn apply_active(
     }
     match apply(&request.content, &request.expected_content).await {
         Ok(result) => Json(result).into_response(),
-        Err(message) => {
-            let status = if message.starts_with("Конфиг на роутере изменился")
-            {
-                StatusCode::CONFLICT
-            } else {
-                StatusCode::UNPROCESSABLE_ENTITY
-            };
-            error(status, &message)
-        }
+        Err(message) => error(config_write_error_status(&message), &message),
     }
 }
 
@@ -863,9 +847,22 @@ fn error(status: StatusCode, message: &str) -> Response {
     (status, Json(serde_json::json!({"error": message}))).into_response()
 }
 
+fn config_write_error_status(message: &str) -> StatusCode {
+    if message.starts_with("Конфиг на роутере изменился") {
+        StatusCode::CONFLICT
+    } else if message.starts_with("Mihomo отклонил конфигурацию") {
+        StatusCode::UNPROCESSABLE_ENTITY
+    } else {
+        StatusCode::INTERNAL_SERVER_ERROR
+    }
+}
+
 #[cfg(test)]
 mod tests {
-    use super::{unique_file, user_file_path, validation_detail, ApplyRequest};
+    use super::{
+        config_write_error_status, unique_file, user_file_path, validation_detail, ApplyRequest,
+    };
+    use axum::http::StatusCode;
     use std::path::Path;
 
     #[test]
@@ -940,6 +937,22 @@ mod tests {
         assert_eq!(
             result,
             "код завершения exit status: 2; Mihomo не вернул диагностический текст"
+        );
+    }
+
+    #[test]
+    fn maps_only_mihomo_validation_rejections_to_unprocessable_entity() {
+        assert_eq!(
+            config_write_error_status("Mihomo отклонил конфигурацию: invalid field"),
+            StatusCode::UNPROCESSABLE_ENTITY
+        );
+        assert_eq!(
+            config_write_error_status("Конфиг на роутере изменился после чтения"),
+            StatusCode::CONFLICT
+        );
+        assert_eq!(
+            config_write_error_status("Не удалось создать резервную копию: disk full"),
+            StatusCode::INTERNAL_SERVER_ERROR
         );
     }
 }

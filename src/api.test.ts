@@ -1,23 +1,23 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { applyActiveMihomoConfig, applyXrayConfigFile, getMihomoSelectors, getRouterConfigFile, getSystemLog, getXrayConfigFile, pingMihomoGroup, pingMihomoProxy, requestAppUpdate, saveActiveMihomoConfig, saveRouterConfigFile, saveXrayConfigFile, validateMihomoConfig } from './api';
+import { applyActiveMihomoConfig, applyXrayConfigFile, getMihomoSelectors, getRouterConfigFile, getSystemLog, getXrayConfigFile, logUiError, pingMihomoGroup, pingMihomoProxy, requestAppUpdate, saveActiveMihomoConfig, saveRouterConfigFile, saveXrayConfigFile, validateMihomoConfig } from './api';
 
 afterEach(() => vi.unstubAllGlobals());
 
 describe('getSystemLog', () => {
   it('requests one fixed log id and validates a bounded response shape', async () => {
     const fetchMock = vi.fn(async () => new Response(JSON.stringify({
-      file: 'Xray · error.log',
+      file: 'Error Log',
       lines: ['2026-10-14 ERROR failed to start'],
       truncated: true,
     }), { headers: { 'Content-Type': 'application/json' } }));
     vi.stubGlobal('fetch', fetchMock);
 
-    await expect(getSystemLog('xray-error')).resolves.toEqual({
-      file: 'Xray · error.log',
+    await expect(getSystemLog('xkeen-ui')).resolves.toEqual({
+      file: 'Error Log',
       lines: ['2026-10-14 ERROR failed to start'],
       truncated: true,
     });
-    expect(fetchMock).toHaveBeenCalledWith('/api/v1/logs?file=xray-error', {
+    expect(fetchMock).toHaveBeenCalledWith('/api/v1/logs?file=xkeen-ui', {
       headers: { Accept: 'application/json' },
       signal: undefined,
     });
@@ -25,10 +25,25 @@ describe('getSystemLog', () => {
 
   it('rejects a response containing non-text log records', async () => {
     vi.stubGlobal('fetch', async () => new Response(JSON.stringify({
-      file: 'Xray · error.log', lines: ['safe', { html: '<script>' }], truncated: false,
+      file: 'Error Log', lines: ['safe', { html: '<script>' }], truncated: false,
     }), { headers: { 'Content-Type': 'application/json' } }));
 
-    await expect(getSystemLog('xray-error')).rejects.toThrow('некорректный формат журнала');
+    await expect(getSystemLog('xkeen-ui')).rejects.toThrow('некорректный формат журнала');
+  });
+});
+
+describe('logUiError', () => {
+  it('sends only a bounded UI error event to the same-origin error log endpoint', async () => {
+    const fetchMock = vi.fn(async () => new Response(null, { status: 204 }));
+    vi.stubGlobal('fetch', fetchMock);
+
+    await expect(logUiError('yaml', 'Ошибка YAML · строка 2')).resolves.toBeUndefined();
+    expect(fetchMock).toHaveBeenCalledWith('/api/v1/logs/ui-error', {
+      method: 'POST',
+      headers: { Accept: 'application/json', 'Content-Type': 'application/json' },
+      body: JSON.stringify({ source: 'yaml', message: 'Ошибка YAML · строка 2' }),
+      signal: undefined,
+    });
   });
 });
 

@@ -326,6 +326,13 @@ async fn install_core(
             .into_response();
     }
     let _update_guard = state.core_update_lock.lock().await;
+    if let Err(message) = dns_control::ensure_dns_safe_to_stop().await {
+        return (
+            StatusCode::CONFLICT,
+            Json(serde_json::json!({ "error": message })),
+        )
+            .into_response();
+    }
     match core_update::install(&state, request).await {
         Ok(result) => Json(result).into_response(),
         Err(error) => (

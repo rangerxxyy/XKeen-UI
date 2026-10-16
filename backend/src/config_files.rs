@@ -217,6 +217,9 @@ pub async fn apply_active(
         );
     }
     let _guard = state.core_update_lock.lock().await;
+    if let Err(message) = crate::dns_control::ensure_dns_config_safe(&request.content).await {
+        return error(StatusCode::CONFLICT, &message);
+    }
     match apply(&request.content, &request.expected_content).await {
         Ok(result) => Json(result).into_response(),
         Err(message) => {

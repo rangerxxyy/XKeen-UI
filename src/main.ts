@@ -2,14 +2,15 @@ import '@fontsource-variable/inter';
 import '@fontsource-variable/jetbrains-mono';
 import './country-flags.css';
 import './style.css';
-import { applyActiveMihomoConfig, closeAllMihomoConnections, closeMihomoConnection, controlXkeen, getActiveMihomoConfig, getCoreSources, getHealth, getMihomoConnections, getMihomoSelectors, getMihomoVersion, getRouterDnsStatus, getStatus, getSystemLog, getXkeenStatus, pingMihomoGroup, pingMihomoProxy, queryMihomoDns, requestAppUpdate, saveCoreSources, selectMihomoProxy, setRouterDnsManagement, type ApiState, type CoreSources, type MihomoConnections, type MihomoDnsResult, type MihomoSelector, type RouterDnsStatus, type SystemLog, type XkeenStatus } from './api';
+import { applyActiveMihomoConfig, closeAllMihomoConnections, closeMihomoConnection, controlXkeen, getActiveMihomoConfig, getCoreSources, getHealth, getMihomoConnections, getMihomoSelectors, getMihomoVersion, getRouterDnsStatus, getStatus, getSystemLog, getUpdateProxies, getXkeenStatus, pingMihomoGroup, pingMihomoProxy, queryMihomoDns, requestAppUpdate, saveCoreSources, saveUpdateProxies, selectMihomoProxy, setRouterDnsManagement, type ApiState, type CoreSources, type MihomoConnections, type MihomoDnsResult, type MihomoSelector, type RouterDnsStatus, type SystemLog, type XkeenStatus } from './api';
 import { applyPingResults, orderSelectorsByConfig, renderConnections, renderSelectors } from './mihomo-view';
 import { patchDnsManagement, patchMihomoDnsSettings, readMihomoDnsSettings, renderDns, type MihomoDnsSettings } from './dns-view';
-import { bindCoreReleaseChecks, openCoreReleaseDialog } from './core-releases';
-import { listAppReleases, type AppRelease } from './app-update';
+import { bindCoreReleaseChecks, fetchCoreReleases, isStableCompatibleRelease, openCoreReleaseDialog } from './core-releases';
+import { isNewerVersion, listAppReleases, type AppRelease } from './app-update';
 import { confirmInApp } from './confirm-dialog';
 import { bindDialogMotion, closeDialogWithMotion } from './dialog-motion';
 import { lifecycleFeedback } from './service-feedback';
+import { readUiPreferences, writeUiPreferences, type UiPreferences } from './preferences';
 
 type Page = 'selectors' | 'connections' | 'configuration' | 'dns';
 
@@ -27,6 +28,8 @@ let yamlEditorLoad: Promise<YamlEditorModule> | null = null;
 let activePage: Page = 'selectors';
 let animatePageEntry = false;
 let refreshTimer: number | undefined;
+let autoUpdateTimer: number | undefined;
+const updateNotices = new Set<string>();
 let requestController: AbortController | undefined;
 let mihomoController: AbortController | undefined;
 let selectors: MihomoSelector[] = [];
@@ -75,6 +78,8 @@ let appRelease: AppRelease | null = null;
 let appReleases: AppRelease[] = [];
 let appUpdateMessage = 'Подготовка обновления…';
 let appUpdateInstalling = false;
+let uiPreferences: UiPreferences = readUiPreferences();
+const proxyPingFailures = new Map<string, number>();
 
 const app = document.querySelector<HTMLDivElement>('#app');
 if (!app) throw new Error('Корневой элемент интерфейса #app не найден');
@@ -111,13 +116,13 @@ function renderHeader(): string {
   const canControl = status?.mode === 'router' && Boolean(xkeenStatus?.installed);
   const controls = canControl
     ? `${xkeenStatus?.running === false
-      ? `<button class="header-service-action" data-xkeen-action="start" type="button" title="Запустить XKeen" aria-label="Запустить XKeen" ${xkeenControlBusy ? 'disabled' : ''}>▶</button>`
+      ? `<button class="header-service-action" data-xkeen-action="start" type="button" title="Запустить XKeen" aria-label="Запустить XKeen" ${xkeenControlBusy ? 'disabled' : ''}>${xkeenControlBusy && xkeenControlAction === 'start' ? '<span class="service-control-spinner" aria-hidden="true"></span>' : '▶'}</button>`
       : `<button class="header-service-action" data-xkeen-action="restart" type="button" title="Перезапустить XKeen" aria-label="Перезапустить XKeen" ${xkeenControlBusy ? 'disabled' : ''}>${xkeenControlBusy && xkeenControlAction === 'restart' ? '<span class="service-control-spinner" aria-hidden="true"></span>' : '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 7v5h-5M4.9 9a7.5 7.5 0 0 1 12.4-2L20 12M4 17v-5h5m10.1 3a7.5 7.5 0 0 1-12.4 2L4 12"/></svg>'}</button><button class="header-service-action header-service-stop" data-xkeen-action="stop" type="button" title="Остановить XKeen" aria-label="Остановить XKeen" ${xkeenControlBusy || xkeenStatus?.running !== true ? 'disabled' : ''}>${xkeenControlBusy && xkeenControlAction === 'stop' ? '<span class="service-control-spinner" aria-hidden="true"></span>' : '■'}</button>`}`
     : '';
   return `<header class="topbar">
     <div class="top-status-cluster"><div class="top-status" aria-label="Состояние панели"><span id="status-led" class="connection-led ${state.connected ? 'is-online' : 'is-offline'}"></span><span><strong id="service-label">${escapeHtml(serviceText)}</strong><small id="service-summary">${state.connected ? `${memory} · ${cpu}` : 'Ожидание соединения с backend'}</small></span></div><div class="header-service-controls" aria-label="Управление XKeen" aria-busy="${xkeenControlBusy}">${controls}</div></div>
     <a class="brand" href="#selectors" aria-label="XKeen UI, селекторы"><span class="brand-mark">X</span><span>XKeen <b>UI</b></span></a>
-    <div class="top-actions"><button class="version-chip core-chip core-version-button" id="core-version" type="button" title="Выбрать релиз Mihomo"><span class="chip-icon">◈</span> Mihomo <b id="core-version-label">${coreLabel}</b><span class="chip-chevron" aria-hidden="true">⌄</span></button><button class="version-chip app-version-button" id="app-version" type="button" title="Выбрать релиз XKeen UI"><span class="chip-icon">⬡</span> XKeen UI <b id="app-version-label">v${status?.appVersion ?? APP_VERSION}</b><span class="chip-chevron" aria-hidden="true">⌄</span></button><button class="icon-button" id="settings" title="Настройки" aria-label="Настройки">⚙</button></div>
+    <div class="top-actions"><button class="version-chip core-chip core-version-button" id="core-version" type="button" title="Выбрать релиз Mihomo" aria-label="Выбрать релиз Mihomo"><span class="chip-icon">◈</span> Mihomo <b id="core-version-label">${coreLabel}</b><span class="chip-chevron" aria-hidden="true">⌄</span></button><button class="version-chip app-version-button" id="app-version" type="button" title="Выбрать релиз XKeen UI" aria-label="Выбрать релиз XKeen UI"><span class="chip-icon">⬡</span> XKeen UI <b id="app-version-label">v${status?.appVersion ?? APP_VERSION}</b><span class="chip-chevron" aria-hidden="true">⌄</span></button><button class="icon-button" id="settings" title="Настройки" aria-label="Настройки">⚙</button></div>
   </header>`;
 }
 
@@ -294,8 +299,8 @@ function render(): void {
   if (!app) return;
   const scrollTop = app.querySelector<HTMLElement>('.workspace-scroll')?.scrollTop ?? 0;
   if (activePage !== 'configuration') yamlEditorModule?.unmountYamlEditor();
-  const pageContent = activePage === 'selectors' ? renderSelectors(selectors, selectorsLoading, selectorsError)
-      : activePage === 'connections' ? renderConnections(connections, connectionsLoading, connectionsError)
+  const pageContent = activePage === 'selectors' ? renderSelectors(visibleSelectors(), selectorsLoading, selectorsError)
+    : activePage === 'connections' ? renderConnections(connections, connectionsLoading, connectionsError, uiPreferences.showConnectionSource)
         : activePage === 'dns' ? renderDns(dnsResult, dnsLoading, dnsError, dnsQueryName, dnsQueryType, {
           status: dnsManagementStatus, loading: dnsManagementLoading, error: dnsManagementError,
           busy: dnsManagementBusy, confirm: dnsManagementConfirm,
@@ -372,9 +377,11 @@ async function runXkeenAction(action: string | undefined): Promise<void> {
   let actionError: string | undefined;
   try {
     xkeenStatus = await controlXkeen(action);
+    if (action === 'start') await maybeEnableDnsAfterStart();
     await refresh();
   } catch (error) {
     actionError = error instanceof Error ? error.message : 'Не удалось выполнить команду XKeen';
+    await refresh();
   } finally {
     xkeenControlBusy = false;
     xkeenControlAction = null;
@@ -391,13 +398,34 @@ async function runXkeenAction(action: string | undefined): Promise<void> {
   }
 }
 
+async function maybeEnableDnsAfterStart(): Promise<void> {
+  if (uiPreferences.dnsAutostart !== 'confirm' || state.status?.mode !== 'router') return;
+  try {
+    dnsManagementStatus = await getRouterDnsStatus();
+    if (dnsManagementStatus.dnsOverride) return;
+    const confirmed = await confirmInApp(
+      'Передать DNS через Mihomo?',
+      'KeeneticOS временно направит IPv4 DNS на Mihomo. Статические IPv6 DNS и DoH/DoT не меняются. Остановить XKeen при активной передаче DNS нельзя, пока вы не вернёте DNS KeeneticOS.',
+      'Включить управление DNS',
+    );
+    if (!confirmed) return;
+    const activeConfig = await getActiveMihomoConfig();
+    patchDnsManagement(activeConfig.content, true);
+    await setRouterDnsManagement({ enabled: true, expectedContent: activeConfig.content });
+    dnsManagementStatus = await getRouterDnsStatus();
+    showToast('Управление DNS Mihomo включено', 'success');
+  } catch (error) {
+    showToast(error instanceof Error ? `Автовключение DNS не выполнено: ${error.message}` : 'Автовключение DNS не выполнено', 'error');
+  }
+}
+
 function bindXkeenControls(root: ParentNode): void {
   root.querySelectorAll<HTMLButtonElement>('[data-xkeen-action]').forEach((button) => {
     button.addEventListener('click', () => void runXkeenAction(button.dataset.xkeenAction));
   });
 }
 
-function showToast(message: string, kind: 'success' | 'error'): void {
+function showToast(message: string, kind: 'success' | 'error' | 'info'): void {
   const region = document.querySelector<HTMLElement>('.toast-region');
   if (!region) return;
   const toast = document.createElement('div');
@@ -574,9 +602,11 @@ async function pingGroupFromUi(button: HTMLButtonElement): Promise<void> {
   button.setAttribute('aria-busy', 'true');
   button.textContent = '…';
   try {
-    const results = await pingMihomoGroup(group, mihomoController?.signal);
+    const results = await pingMihomoGroup(group, currentPingOptions(), mihomoController?.signal);
+    updatePingFailures(group, results);
     selectors = applyPingResults(selectors, results);
     updatePingControls();
+    if (uiPreferences.hideUnavailableProxies && activePage === 'selectors') render();
   } catch (error) {
     button.title = error instanceof Error ? error.message : 'Не удалось проверить серверы';
   } finally {
@@ -597,9 +627,13 @@ async function pingProxyFromUi(button: HTMLButtonElement): Promise<void> {
   const value = button.querySelector('span');
   if (value) value.textContent = '…';
   try {
-    const result = await pingMihomoProxy(group, name, mihomoController?.signal);
-    if (result) selectors = applyPingResults(selectors, [result]);
+    const result = await pingMihomoProxy(group, name, currentPingOptions(), mihomoController?.signal);
+    if (result) {
+      updatePingFailures(group, [result]);
+      selectors = applyPingResults(selectors, [result]);
+    }
     updatePingControls();
+    if (result && uiPreferences.hideUnavailableProxies && activePage === 'selectors') render();
   } catch (error) {
     button.title = error instanceof Error ? error.message : 'Не удалось проверить узел';
   } finally {
@@ -609,6 +643,29 @@ async function pingProxyFromUi(button: HTMLButtonElement): Promise<void> {
     const latest = selectors.flatMap((selector) => selector.options).find((option) => option.name === name)?.delay;
     if (value?.isConnected) value.textContent = latest === null || latest === undefined ? '—' : `${latest} мс`;
   }
+}
+
+function currentPingOptions(): { url: string; timeoutMs: number } {
+  return { url: `${uiPreferences.pingScheme}://${uiPreferences.pingUrl}`, timeoutMs: uiPreferences.pingTimeoutMs };
+}
+
+function updatePingFailures(group: string, results: Array<{ name: string; delay: number | null }>): void {
+  for (const result of results) {
+    const key = `${group}\u0000${result.name}`;
+    proxyPingFailures.set(key, result.delay === null ? (proxyPingFailures.get(key) ?? 0) + 1 : 0);
+  }
+}
+
+function visibleSelectors(): MihomoSelector[] {
+  return selectors.map((group) => {
+    let options = group.options;
+    if (uiPreferences.hideUnavailableProxies) {
+      options = options.filter((option) => (proxyPingFailures.get(`${group.name}\u0000${option.name}`) ?? 0) < uiPreferences.unavailableThreshold);
+    }
+    if (uiPreferences.selectorSort === 'name') options = [...options].sort((a, b) => a.name.localeCompare(b.name, 'ru'));
+    if (uiPreferences.selectorSort === 'delay') options = [...options].sort((a, b) => (a.delay ?? Number.MAX_SAFE_INTEGER) - (b.delay ?? Number.MAX_SAFE_INTEGER) || a.name.localeCompare(b.name, 'ru'));
+    return { ...group, options };
+  });
 }
 
 async function closeConnectionFromUi(button: HTMLButtonElement): Promise<void> {
@@ -637,6 +694,17 @@ async function closeAllConnectionsFromUi(): Promise<void> {
     connectionsError = error instanceof Error ? error.message : 'Не удалось закрыть соединения';
     connectionsLoading = false;
     render();
+  }
+}
+
+async function autoCloseConnectionsAfterApply(): Promise<void> {
+  if (!uiPreferences.closeConnectionsAfterApply) return;
+  try {
+    await closeAllMihomoConnections();
+    if (activePage === 'connections') await loadMihomoPage('connections');
+    showToast('Соединения закрыты после применения конфигурации', 'success');
+  } catch (error) {
+    showToast(error instanceof Error ? `Не удалось закрыть соединения: ${error.message}` : 'Не удалось закрыть соединения после применения', 'error');
   }
 }
 
@@ -797,13 +865,30 @@ function isInstalledNewerOrEqual(installed: string, selected: string): boolean {
 function openSettings(): void {
   const modal = document.createElement('dialog');
   modal.className = 'modal settings-dialog';
-  modal.innerHTML = `<div class="modal-panel settings-panel"><div class="modal-heading"><span class="modal-icon">⚙</span><h2>Настройки</h2><button class="icon-button" id="settings-close" type="button" aria-label="Закрыть">×</button></div><div class="modal-tabs" role="tablist" aria-label="Разделы настроек"><button class="settings-tab selected" id="settings-general" type="button" role="tab" aria-selected="true">Общие</button><button class="settings-tab" id="settings-sources" type="button" role="tab" aria-selected="false">Источники ядер</button></div><div id="settings-content" role="tabpanel"></div></div>`;
+  modal.innerHTML = `<div class="modal-panel settings-panel"><div class="modal-heading"><span class="modal-icon">⚙</span><h2>Настройки</h2><button class="icon-button" id="settings-close" type="button" aria-label="Закрыть">×</button></div><div class="modal-tabs" role="tablist" aria-label="Разделы настроек"><button class="settings-tab selected" id="settings-general" type="button" role="tab" aria-selected="true">Общие</button><button class="settings-tab" id="settings-mihomo" type="button" role="tab" aria-selected="false">Mihomo</button><button class="settings-tab" id="settings-sources" type="button" role="tab" aria-selected="false">Обновления</button></div><div id="settings-content" role="tabpanel"></div></div>`;
   document.body.append(modal);
   bindDialogMotion(modal);
   modal.showModal();
   modal.querySelector<HTMLButtonElement>('#settings-close')?.addEventListener('click', () => closeDialogWithMotion(modal));
   const content = modal.querySelector<HTMLElement>('#settings-content');
-  const renderSettingsTab = (tab: 'general' | 'sources') => {
+  let githubProxies: string[] = [];
+  const renderProxyRows = () => {
+    const list = modal.querySelector<HTMLElement>('#github-proxy-list');
+    if (!list) return;
+    list.innerHTML = githubProxies.length ? githubProxies.map((proxy, index) => `<div class="github-proxy-row"><input type="url" data-proxy-index="${index}" value="${escapeHtml(proxy)}" aria-label="GitHub-прокси ${index + 1}"><button class="editor-button github-proxy-delete" type="button" data-proxy-delete="${index}">Удалить</button></div>`).join('') : '<p class="settings-inline-note">Список пуст. Обновление будет загружаться напрямую.</p>';
+    list.querySelectorAll<HTMLInputElement>('[data-proxy-index]').forEach((input) => input.addEventListener('input', () => {
+      const index = Number(input.dataset.proxyIndex);
+      if (Number.isInteger(index) && index >= 0 && index < githubProxies.length) githubProxies[index] = input.value;
+    }));
+    list.querySelectorAll<HTMLButtonElement>('[data-proxy-delete]').forEach((button) => button.addEventListener('click', () => {
+      const index = Number(button.dataset.proxyDelete);
+      if (Number.isInteger(index) && index >= 0 && index < githubProxies.length) {
+        githubProxies.splice(index, 1);
+        renderProxyRows();
+      }
+    }));
+  };
+  const renderSettingsTab = (tab: 'general' | 'mihomo' | 'sources') => {
     modal.querySelectorAll<HTMLButtonElement>('.settings-tab').forEach((button) => {
       const selected = button.id === `settings-${tab}`;
       button.classList.toggle('selected', selected);
@@ -811,17 +896,23 @@ function openSettings(): void {
     });
     if (!content) return;
     if (tab === 'general') {
-      content.innerHTML = `<div class="setting-row"><div><strong>Порт панели</strong></div><span class="setting-value">${state.status?.port ?? 1001}</span></div><div class="setting-row"><div><strong>Соединение с API</strong></div><span class="state-pill ${state.connected ? 'state-running' : 'state-unavailable'}">${state.connected ? 'На связи' : 'Ожидание'}</span></div>`;
+      content.innerHTML = `<section class="settings-section"><h3>ПАНЕЛЬ</h3><div class="setting-row"><div><strong>Порт панели</strong><small>Локальный адрес интерфейса</small></div><span class="setting-value">${state.status?.port ?? 1001}</span></div><div class="setting-row"><div><strong>Соединение с API</strong><small>Текущее состояние backend</small></div><span class="state-pill ${state.connected ? 'state-running' : 'state-unavailable'}">${state.connected ? 'На связи' : 'Ожидание'}</span></div></section><section class="settings-section"><h3>СОЕДИНЕНИЯ</h3>${switchRow('showConnectionSource', 'Показывать имя источника', 'Показывает имя процесса, если Mihomo его передал; иначе используется адрес устройства.')}${switchRow('closeConnectionsAfterApply', 'Закрывать соединения после применения', 'Закрывает активные подключения после успешного применения конфигурации Mihomo.')}</section><section class="settings-section"><h3>DNS</h3><label class="setting-row setting-control-row"><span><strong>Автовключение управления DNS</strong><small>При запуске XKeen запросить подтверждение и передать DNS через Mihomo</small></span><select class="setting-control" data-pref="dnsAutostart"><option value="off" ${uiPreferences.dnsAutostart === 'off' ? 'selected' : ''}>Выключено</option><option value="confirm" ${uiPreferences.dnsAutostart === 'confirm' ? 'selected' : ''}>Включать с подтверждением</option></select></label></section>`;
+      bindPreferenceInputs(content);
+      return;
+    }
+    if (tab === 'mihomo') {
+      content.innerHTML = `<section class="settings-section"><h3>СЕЛЕКТОРЫ</h3>${switchRow('hideUnavailableProxies', 'Скрывать недоступные подключения', 'Скрывает узлы после нескольких неудачных проверок ping.')}${numberRow('unavailableThreshold', 'Порог таймаутов', 'Число неудачных проверок подряд для скрытия узла (1–10).', 1, 10)}<label class="setting-row setting-control-row"><span><strong>Сортировка</strong><small>Порядок узлов; не меняет выбранную группу</small></span><select class="setting-control" data-pref="selectorSort"><option value="config" ${uiPreferences.selectorSort === 'config' ? 'selected' : ''}>По умолчанию</option><option value="name" ${uiPreferences.selectorSort === 'name' ? 'selected' : ''}>По имени</option><option value="delay" ${uiPreferences.selectorSort === 'delay' ? 'selected' : ''}>По задержке</option></select></label></section><section class="settings-section"><h3>ПРОВЕРКА PING</h3><label class="setting-row setting-control-row"><span><strong>URL ping</strong><small>Без протокола; Mihomo проверит адрес через выбранный узел</small></span><div class="setting-inline-controls"><select class="setting-control setting-scheme" data-pref="pingScheme" aria-label="Протокол ping"><option value="https" ${uiPreferences.pingScheme === 'https' ? 'selected' : ''}>https</option><option value="http" ${uiPreferences.pingScheme === 'http' ? 'selected' : ''}>http</option></select><input class="setting-control setting-url" data-pref="pingUrl" type="text" value="${escapeHtml(uiPreferences.pingUrl)}" autocomplete="url" spellcheck="false" aria-label="Адрес ping"></div></label>${numberRow('pingTimeoutMs', 'Таймаут', 'В миллисекундах, применяется для ручной проверки подключений.', 500, 30000, 'мс')}</section>`;
+      bindPreferenceInputs(content);
       return;
     }
     if (tab === 'sources') {
-      content.innerHTML = `<p class="modal-note">GitHub-репозитории для релизов Xray и Mihomo.</p>
+      content.innerHTML = `<section class="settings-section"><h3>АВТОПРОВЕРКА</h3>${switchRow('autoCheckPanel', 'Автопроверка панели', 'Проверяет наличие новой версии раз в 4 часа, пока эта вкладка открыта.')}${switchRow('autoCheckCore', 'Автопроверка ядер', 'Проверяет релизы установленных ядер раз в 4 часа, пока эта вкладка открыта.')}<div class="setting-row"><div><strong>Резервная копия ядра</strong><small>Создаётся при обновлении и нужна для безопасного отката</small></div><span class="state-pill state-running">Включена</span></div></section><section class="settings-section"><h3>ИСТОЧНИКИ ОБНОВЛЕНИЙ</h3>
         <label class="source-field"><span><strong>Источник Xray</strong><small>Формат: github.com/владелец/репозиторий</small></span><input id="source-xray" type="url" autocomplete="url" placeholder="https://github.com/XTLS/Xray-core"></label>
         <label class="source-field"><span><strong>Источник релизов Mihomo</strong><small>Можно указать репозиторий установленного форка или другой GitHub-репозиторий</small></span><select id="source-mihomo-preset"><option value="official">Оригинальный Mihomo · MetaCubeX</option><option value="prizrak">Prizrak-Core</option><option value="custom">Другой форк</option></select></label>
         <label class="source-field"><span><strong>Репозиторий</strong><small>Проверка релизов использует это значение; сохранение не заменяет установленное ядро</small></span><input id="source-mihomo" type="url" autocomplete="url" placeholder="https://github.com/MetaCubeX/mihomo"></label>
         <div class="core-release-checks"><section><div><strong>Xray</strong><small>Проверить последние ARM64-релизы</small></div><button type="button" class="editor-button" data-core-release="xray">Проверить релизы</button></section><div id="releases-xray" aria-live="polite"></div>
         <section><div><strong>Mihomo</strong><small>Проверить последние ARM64-релизы</small></div><button type="button" class="editor-button" data-core-release="mihomo">Проверить релизы</button></section><div id="releases-mihomo" aria-live="polite"></div></div>
-        <div class="source-save-row"><span class="sources-feedback" id="sources-feedback" aria-live="polite">Загружаем сохранённые значения…</span><button class="editor-button editor-button-primary" type="button" id="save-core-sources">Сохранить источники</button></div>`;
+        <div class="source-save-row"><span class="sources-feedback" id="sources-feedback" aria-live="polite">Загружаем сохранённые значения…</span><button class="editor-button editor-button-primary" type="button" id="save-core-sources">Сохранить источники</button></div></section><section class="settings-section github-proxy-settings"><h3>GITHUB PROXY</h3><p class="settings-inline-note">Прокси используются по порядку сверху вниз при недоступности GitHub. Оставьте список пустым, чтобы загружать обновление напрямую.</p><div id="github-proxy-list"><p class="settings-inline-note">Загружаем сохранённый список…</p></div><div class="github-proxy-add-row"><input id="github-proxy-new" type="url" placeholder="https://proxy.example" autocomplete="url"><button class="editor-button" type="button" id="github-proxy-add">Добавить</button></div><div class="source-save-row"><span class="sources-feedback" id="github-proxy-feedback" aria-live="polite">Список хранится на роутере.</span><button class="editor-button editor-button-primary" type="button" id="github-proxy-save">Сохранить прокси</button></div></section>`;
       bindCoreReleaseChecks();
       const xrayInput = content.querySelector<HTMLInputElement>('#source-xray');
       const mihomoInput = content.querySelector<HTMLInputElement>('#source-mihomo');
@@ -835,6 +926,13 @@ function openSettings(): void {
         if (feedback) feedback.textContent = 'Сохранённые настройки загружены.';
       }).catch((error: unknown) => {
         if (feedback) feedback.textContent = error instanceof Error ? error.message : 'Не удалось загрузить настройки.';
+      });
+      const proxyFeedback = content.querySelector<HTMLElement>('#github-proxy-feedback');
+      void getUpdateProxies().then((settings) => {
+        githubProxies = [...settings.proxies];
+        renderProxyRows();
+      }).catch((error: unknown) => {
+        if (proxyFeedback) proxyFeedback.textContent = error instanceof Error ? error.message : 'Не удалось загрузить прокси.';
       });
       mihomoPreset?.addEventListener('change', () => {
         if (mihomoPreset.value === 'official' && mihomoInput) mihomoInput.value = 'https://github.com/MetaCubeX/mihomo';
@@ -859,14 +957,88 @@ function openSettings(): void {
           button.disabled = false;
         }
       });
+      content.querySelector<HTMLButtonElement>('#github-proxy-add')?.addEventListener('click', () => {
+        const input = content.querySelector<HTMLInputElement>('#github-proxy-new');
+        const value = input?.value.trim();
+        if (!input || !value) return;
+        if (githubProxies.length >= 5) {
+          input.setCustomValidity('Можно добавить не более пяти прокси.');
+          input.reportValidity();
+          return;
+        }
+        input.setCustomValidity('');
+        githubProxies.push(value);
+        input.value = '';
+        renderProxyRows();
+      });
+      content.querySelector<HTMLButtonElement>('#github-proxy-save')?.addEventListener('click', async (event) => {
+        const button = event.currentTarget as HTMLButtonElement;
+        if (!proxyFeedback) return;
+        button.disabled = true;
+        proxyFeedback.textContent = 'Сохраняем список на роутере…';
+        try {
+          const saved = await saveUpdateProxies({ proxies: githubProxies });
+          githubProxies = [...saved.proxies];
+          renderProxyRows();
+          proxyFeedback.textContent = 'Список GitHub-прокси сохранён на роутере.';
+        } catch (error) {
+          proxyFeedback.textContent = error instanceof Error ? error.message : 'Не удалось сохранить прокси.';
+        } finally {
+          button.disabled = false;
+        }
+      });
       return;
     }
 
   };
   modal.querySelector<HTMLButtonElement>('#settings-general')?.addEventListener('click', () => renderSettingsTab('general'));
+  modal.querySelector<HTMLButtonElement>('#settings-mihomo')?.addEventListener('click', () => renderSettingsTab('mihomo'));
   modal.querySelector<HTMLButtonElement>('#settings-sources')?.addEventListener('click', () => renderSettingsTab('sources'));
   renderSettingsTab('general');
-  modal.addEventListener('close', () => modal.remove(), { once: true });
+  modal.addEventListener('close', () => { modal.remove(); render(); }, { once: true });
+}
+
+function switchRow(key: keyof UiPreferences, title: string, description: string): string {
+  const checked = Boolean(uiPreferences[key]);
+  return `<label class="setting-row setting-switch-row"><span><strong>${title}</strong><small>${description}</small></span><input class="setting-switch" data-pref="${key}" type="checkbox" ${checked ? 'checked' : ''} aria-label="${title}"></label>`;
+}
+
+function numberRow(key: 'unavailableThreshold' | 'pingTimeoutMs', title: string, description: string, min: number, max: number, unit = ''): string {
+  return `<label class="setting-row setting-control-row"><span><strong>${title}</strong><small>${description}</small></span><span class="setting-number-wrap"><input class="setting-control setting-number" data-pref="${key}" type="number" min="${min}" max="${max}" step="${key === 'pingTimeoutMs' ? 500 : 1}" value="${uiPreferences[key]}" aria-label="${title}">${unit ? `<small class="setting-unit">${unit}</small>` : ''}</span></label>`;
+}
+
+function bindPreferenceInputs(root: HTMLElement): void {
+  root.querySelectorAll<HTMLInputElement | HTMLSelectElement>('[data-pref]').forEach((input) => {
+    input.addEventListener('change', () => {
+      const key = input.dataset.pref as keyof UiPreferences | undefined;
+      if (!key) return;
+      if (input instanceof HTMLInputElement && input.type === 'checkbox') {
+        (uiPreferences as unknown as Record<string, unknown>)[key] = input.checked;
+      } else if (input instanceof HTMLInputElement && input.type === 'number') {
+        const value = Number(input.value);
+        const minimum = Number(input.min);
+        const maximum = Number(input.max);
+        if (!Number.isInteger(value) || value < minimum || value > maximum) {
+          input.value = String(uiPreferences[key]);
+          return;
+        }
+        (uiPreferences as unknown as Record<string, unknown>)[key] = value;
+      } else if (key === 'pingUrl') {
+        const value = input.value.trim();
+        if (!/^[a-z0-9.-]+(?::\d{1,5})?(?:\/[a-z0-9._~-]{1,80})*$/i.test(value) || value.includes('..')) {
+          input.setCustomValidity('Введите домен и необязательный путь, например www.gstatic.com/generate_204');
+          input.reportValidity();
+          input.value = uiPreferences.pingUrl;
+          return;
+        }
+        input.setCustomValidity('');
+        (uiPreferences as unknown as Record<string, unknown>)[key] = value;
+      } else {
+        (uiPreferences as unknown as Record<string, unknown>)[key] = input.value;
+      }
+      writeUiPreferences(uiPreferences);
+    });
+  });
 }
 
 async function installAppUpdate(): Promise<void> {
@@ -940,6 +1112,59 @@ async function installAppUpdate(): Promise<void> {
   }
 }
 
+async function checkUpdatesInBackground(): Promise<void> {
+  if (document.hidden) return;
+  if (uiPreferences.autoCheckPanel) {
+    try {
+      const latest = (await listAppReleases())[0];
+      const installed = state.status?.appVersion ?? APP_VERSION;
+      if (latest && isNewerVersion(latest.tag_name, installed) && !updateNotices.has(`app:${latest.tag_name}`)) {
+        updateNotices.add(`app:${latest.tag_name}`);
+        showToast(`Доступно обновление XKeen UI ${latest.tag_name}`, 'info');
+      }
+    } catch {
+      // Background checks stay quiet when a release service is temporarily unavailable.
+    }
+  }
+  if (uiPreferences.autoCheckCore && state.status?.mode === 'router') {
+    try {
+      const sources = await getCoreSources();
+      const [mihomoReleases, xrayReleases] = await Promise.all([
+        fetchCoreReleases(sources.mihomo),
+        fetchCoreReleases(sources.xray),
+      ]);
+      const mihomoLatest = mihomoReleases.find((release) => isStableCompatibleRelease('mihomo', release));
+      const xrayLatest = xrayReleases.find((release) => isStableCompatibleRelease('xray', release));
+      const installedMihomo = mihomoVersion ?? state.status.services.find((service) => service.name.toLowerCase() === 'mihomo')?.version;
+      const installedXray = state.status.services.find((service) => service.name.toLowerCase() === 'xray')?.version;
+      for (const [core, latest, installed] of [['Mihomo', mihomoLatest, installedMihomo], ['Xray', xrayLatest, installedXray]] as const) {
+        if (latest && installed && isCoreVersionNewer(latest.tag_name, installed) && !updateNotices.has(`${core}:${latest.tag_name}`)) {
+          updateNotices.add(`${core}:${latest.tag_name}`);
+          showToast(`Доступно обновление ${core} ${latest.tag_name}`, 'info');
+        }
+      }
+    } catch {
+      // Do not surface transient GitHub/network errors as panel errors.
+    }
+  }
+}
+
+function isCoreVersionNewer(latest: string, installed: string): boolean {
+  const read = (value: string): number[] | null => {
+    const match = value.match(/(?:^|[^\d])v?(\d+)\.(\d+)\.(\d+)(?:-r(\d+))?/i);
+    return match ? [Number(match[1]), Number(match[2]), Number(match[3]), Number(match[4] ?? 0)] : null;
+  };
+  const left = read(latest);
+  const right = read(installed);
+  if (!left || !right) return false;
+  for (let index = 0; index < 4; index += 1) {
+    const a = left[index] ?? 0;
+    const b = right[index] ?? 0;
+    if (a !== b) return a > b;
+  }
+  return false;
+}
+
 async function refresh(): Promise<void> {
   requestController?.abort();
   requestController = new AbortController();
@@ -960,6 +1185,7 @@ async function refresh(): Promise<void> {
 }
 
 render();
+window.addEventListener('xkeen-config-applied', () => void autoCloseConnectionsAfterApply());
 void refresh();
 void loadMihomoPage(activePage);
 window.addEventListener('xkeen-core-updated', () => {
@@ -967,10 +1193,13 @@ window.addEventListener('xkeen-core-updated', () => {
   if (activePage === 'selectors' || activePage === 'connections') void loadMihomoPage(activePage);
 });
 refreshTimer = window.setInterval(() => void refresh(), 15_000);
+autoUpdateTimer = window.setInterval(() => void checkUpdatesInBackground(), 4 * 60 * 60 * 1000);
+window.setTimeout(() => void checkUpdatesInBackground(), 20_000);
 window.addEventListener('beforeunload', () => {
   requestController?.abort();
   mihomoController?.abort();
   if (refreshTimer !== undefined) window.clearInterval(refreshTimer);
+  if (autoUpdateTimer !== undefined) window.clearInterval(autoUpdateTimer);
   logController?.abort();
   if (logRefreshTimer !== undefined) window.clearInterval(logRefreshTimer);
 });

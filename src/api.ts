@@ -32,6 +32,10 @@ export interface CoreSources {
   mihomo: string;
 }
 
+export interface UpdateProxies {
+  proxies: string[];
+}
+
 export interface CoreInstallResult {
   core: 'xray' | 'mihomo';
   tag: string;
@@ -75,11 +79,16 @@ export interface MihomoPingResult {
   delay: number | null;
 }
 
-export async function pingMihomoGroup(group: string, signal?: AbortSignal): Promise<MihomoPingResult[]> {
+export interface MihomoPingOptions {
+  url: string;
+  timeoutMs: number;
+}
+
+export async function pingMihomoGroup(group: string, options?: MihomoPingOptions, signal?: AbortSignal): Promise<MihomoPingResult[]> {
   const response = await fetch('/api/v1/mihomo/proxies/ping', {
     method: 'POST',
     headers: { Accept: 'application/json', 'Content-Type': 'application/json' },
-    body: JSON.stringify({ group }),
+    body: JSON.stringify({ group, ...(options ? { url: options.url, timeoutMs: options.timeoutMs } : {}) }),
     signal,
   });
   const payload = await readJson(response, 'Проверка серверов группы');
@@ -90,11 +99,11 @@ export async function pingMihomoGroup(group: string, signal?: AbortSignal): Prom
   });
 }
 
-export async function pingMihomoProxy(group: string, name: string, signal?: AbortSignal): Promise<MihomoPingResult | null> {
+export async function pingMihomoProxy(group: string, name: string, options?: MihomoPingOptions, signal?: AbortSignal): Promise<MihomoPingResult | null> {
   const response = await fetch('/api/v1/mihomo/proxies/ping-one', {
     method: 'POST',
     headers: { Accept: 'application/json', 'Content-Type': 'application/json' },
-    body: JSON.stringify({ group, name }),
+    body: JSON.stringify({ group, name, ...(options ? { url: options.url, timeoutMs: options.timeoutMs } : {}) }),
     signal,
   });
   const payload = await readJson(response, 'Проверка узла');
@@ -372,6 +381,7 @@ export async function applyActiveMihomoConfig(content: string, expectedContent: 
       typeof payload.restarted !== 'boolean' || typeof payload.detail !== 'string') {
     throw new Error('Backend вернул некорректный результат применения конфигурации');
   }
+  if (typeof window !== 'undefined') window.dispatchEvent(new CustomEvent('xkeen-config-applied'));
   return {
     status: payload.status as ApplyMihomoConfigResult['status'],
     path: payload.path,
@@ -532,6 +542,27 @@ export async function saveCoreSources(sources: CoreSources): Promise<CoreSources
     throw new Error('Backend вернул некорректные источники ядер после сохранения');
   }
   return { xray: payload.xray, mihomo: payload.mihomo };
+}
+
+export async function getUpdateProxies(): Promise<UpdateProxies> {
+  const payload = await getMihomoJson('/api/v1/settings/update-proxies', 'Получение GitHub-прокси');
+  if (!isRecord(payload) || !Array.isArray(payload.proxies) || !payload.proxies.every((item) => typeof item === 'string')) {
+    throw new Error('Backend вернул некорректный список GitHub-прокси');
+  }
+  return { proxies: payload.proxies };
+}
+
+export async function saveUpdateProxies(value: UpdateProxies): Promise<UpdateProxies> {
+  const response = await fetch('/api/v1/settings/update-proxies', {
+    method: 'PUT',
+    headers: { Accept: 'application/json', 'Content-Type': 'application/json' },
+    body: JSON.stringify(value),
+  });
+  const payload = await readJson(response, 'Сохранение GitHub-прокси');
+  if (!isRecord(payload) || !Array.isArray(payload.proxies) || !payload.proxies.every((item) => typeof item === 'string')) {
+    throw new Error('Backend вернул некорректный список GitHub-прокси после сохранения');
+  }
+  return { proxies: payload.proxies };
 }
 
 export async function installCoreRelease(request: {

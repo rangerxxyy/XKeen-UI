@@ -163,6 +163,16 @@ impl MihomoClient {
     }
 
     pub async fn ping_group(&self, group: &str) -> Result<Value, MihomoError> {
+        self.ping_group_with_options(group, "https://www.gstatic.com/generate_204", 5000)
+            .await
+    }
+
+    pub async fn ping_group_with_options(
+        &self,
+        group: &str,
+        ping_url: &str,
+        timeout_ms: u64,
+    ) -> Result<Value, MihomoError> {
         if !valid_name(group) {
             return Err(MihomoError::InvalidSelection);
         }
@@ -223,9 +233,10 @@ impl MihomoClient {
             let mut tasks = JoinSet::new();
             for name in batch.iter().cloned() {
                 let client = self.clone();
+                let ping_url = ping_url.to_owned();
                 tasks.spawn(async move {
                     let delay = client
-                        .ping_proxy(&name)
+                        .ping_proxy(&name, &ping_url, timeout_ms)
                         .await
                         .ok()
                         .and_then(|value| value.get("delay").and_then(Value::as_u64));
@@ -242,6 +253,22 @@ impl MihomoClient {
     }
 
     pub async fn ping_proxy_in_group(&self, group: &str, name: &str) -> Result<Value, MihomoError> {
+        self.ping_proxy_in_group_with_options(
+            group,
+            name,
+            "https://www.gstatic.com/generate_204",
+            5000,
+        )
+        .await
+    }
+
+    pub async fn ping_proxy_in_group_with_options(
+        &self,
+        group: &str,
+        name: &str,
+        ping_url: &str,
+        timeout_ms: u64,
+    ) -> Result<Value, MihomoError> {
         if !valid_name(group) || !valid_name(name) {
             return Err(MihomoError::InvalidSelection);
         }
@@ -296,20 +323,25 @@ impl MihomoClient {
         }
 
         let delay = self
-            .ping_proxy(name)
+            .ping_proxy(name, ping_url, timeout_ms)
             .await
             .ok()
             .and_then(|value| value.get("delay").and_then(Value::as_u64));
         Ok(json!({"results": [{"name": name, "delay": delay}]}))
     }
 
-    async fn ping_proxy(&self, name: &str) -> Result<Value, MihomoError> {
+    async fn ping_proxy(
+        &self,
+        name: &str,
+        ping_url: &str,
+        timeout_ms: u64,
+    ) -> Result<Value, MihomoError> {
         let name = utf8_percent_encode(name, NON_ALPHANUMERIC);
-        let url = utf8_percent_encode("https://www.gstatic.com/generate_204", NON_ALPHANUMERIC);
+        let url = utf8_percent_encode(ping_url, NON_ALPHANUMERIC);
         let response = self
             .send(
                 Method::GET,
-                &format!("proxies/{name}/delay?url={url}&timeout=5000"),
+                &format!("proxies/{name}/delay?url={url}&timeout={timeout_ms}"),
                 None,
             )
             .await?;

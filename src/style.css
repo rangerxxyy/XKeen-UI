@@ -480,6 +480,123 @@ body { font-size: 14px; }
   .editor-file small,.editor-callout p,.editor-validation { font-size:11px; }
 }
 
+/* Consistent interaction and alignment pass for the current UI surfaces. */
+:root {
+  --surface: #101827;
+  --surface-raised: #121c2c;
+  --surface-hover: #1a2a41;
+  --stroke: #2a374a;
+  --stroke-soft: #202c3d;
+  --text: #eef3fa;
+  --muted: #a5b2c3;
+  --subtle: #7f8da0;
+  --blue: #4f8df7;
+  --cyan: #5796ff;
+  --mint: #00cc8a;
+}
+
+.app-shell { color: var(--text); font-weight: 500; }
+.topbar,.navigation,.journal-panel,.connections-panel,.selector-card,.dns-workspace,.editor-workspace,.modal-panel { border-color:var(--stroke); }
+.brand,.nav-item,.top-status strong,.page-heading h1,.section-title h2,.selector-card-heading h2 { text-rendering:optimizeLegibility; }
+.brand-mark,.nav-icon,.chip-icon,.modal-icon,.service-icon,.placeholder-symbol { display:inline-grid; flex:0 0 auto; place-items:center; line-height:1; }
+.brand-mark { width:27px; height:27px; }
+.nav-icon { width:18px; height:18px; }
+.top-status-cluster { display:flex; align-items:center; gap:12px; min-width:0; }
+.header-service-controls { display:flex; align-items:center; gap:6px; }
+.button,.editor-button,.icon-button,.version-chip,.nav-item,.connection-close,.connection-close-all { transition: color .18s ease,background-color .18s ease,border-color .18s ease,box-shadow .18s ease,transform .18s ease,opacity .18s ease; }
+.button:active:not(:disabled),.editor-button:active:not(:disabled),.icon-button:active:not(:disabled) { transform:translateY(1px); }
+
+/* Keep connection route icons and labels on a single baseline. The generic td>span
+   rule earlier in this stylesheet must not turn the chain label into a block. */
+.connection-table td.connection-route-cell { vertical-align:middle; white-space:nowrap; }
+.connection-table td.connection-route-cell > .connection-chain { display:inline-block; max-width:calc(100% - 28px); overflow:hidden; vertical-align:middle; text-overflow:ellipsis; white-space:nowrap; }
+.connection-table td.connection-route-cell:not(.has-app-icon) > .connection-chain { max-width:100%; }
+.connection-app-icon { width:17px; height:17px; margin-right:6px; vertical-align:middle; line-height:1; transform:translateY(-1px); }
+.connection-app-icon.is-youtube { display:inline-grid; width:17px; height:13px; border-radius:4px; font-size:8px; vertical-align:middle; }
+.connection-table td.connection-host,.connection-table td.connection-source { overflow:hidden; text-overflow:ellipsis; }
+
+/* DNS forms use a steady label/field rhythm with clear card separation. */
+.dns-dashboard { display:grid; gap:14px; align-content:start; }
+.dns-workspace { overflow:hidden; border:1px solid var(--stroke); border-radius:14px; background:#101827; }
+.dns-workspace-heading { min-height:54px; padding:14px 18px; border-bottom:1px solid var(--stroke-soft); }
+.dns-workspace-heading h2 { margin:0; color:#f1f5fb; font-size:16px; font-weight:650; }
+.dns-runtime-list { margin:12px 18px; border-color:#2b394d; background:#0b1320; }
+.dns-runtime-list>div { min-height:42px; padding:8px 12px; color:#d2dbe7; font-size:12px; }
+.dns-runtime-list>div strong:not(.state-pill) { color:#b9c7d8; font-size:11px; font-weight:550; }
+.dns-handoff-toggle,.dns-handoff-confirm { margin-right:18px; margin-left:18px; }
+.dns-handoff-pane .dns-handoff-note { padding:4px 18px 14px; color:#9aabc0; font-size:11px; line-height:1.5; }
+.dns-handoff-intro { margin:12px 18px; }
+.dns-handoff-intro .alert-warning { align-items:flex-start; padding:11px 13px; }
+.dns-handoff-intro .alert-warning p { color:#d2c9b3; font-size:11px; line-height:1.5; }
+.dns-feedback,.dns-result { margin-right:18px; margin-left:18px; }
+.dns-feedback strong { color:#f0f4fa; font-size:13px; }
+.dns-feedback p { color:#b1bdce; font-size:11px; line-height:1.5; }
+.dns-settings-form { gap:13px; padding:10px 18px 18px; }
+.dns-settings-form>label { gap:7px; color:#b6c2d2; font-size:12px; }
+.dns-settings-form>label>span { color:#e2e9f2; font-size:12px; font-weight:650; }
+.dns-settings-form select,.dns-settings-form textarea { border-color:#2b3a4f; background:#080f1c; color:#eef3fa; font:500 13px/1.5 var(--font-ui); }
+.dns-settings-form textarea { min-height:82px; font-family:"JetBrains Mono Variable","JetBrains Mono",ui-monospace,monospace; }
+.dns-settings-form select:focus,.dns-settings-form textarea:focus { border-color:#5796ff; box-shadow:0 0 0 3px #5796ff22; }
+.dns-settings-form>.button { min-height:38px; }
+.dns-diagnostics { margin:0 18px 16px; }
+
+/* Settings use readable two-column rows and a consistent blue control palette. */
+.settings-panel { width:min(650px,calc(100vw - 24px)); }
+.settings-panel .modal-tabs { gap:22px; overflow-x:auto; scrollbar-width:none; }
+.settings-panel .modal-tabs::-webkit-scrollbar { display:none; }
+.settings-panel .settings-tab { white-space:nowrap; }
+.settings-section { padding:8px 4px 13px; }
+.settings-section + .settings-section { border-top:1px solid var(--stroke-soft); }
+.settings-section>h3 { margin:9px 0 5px; color:#8c9aab; font-size:11px; font-weight:650; letter-spacing:.07em; }
+.settings-panel .setting-row { min-height:59px; gap:18px; padding:12px 2px; }
+.settings-panel .setting-row>span:first-child { min-width:0; }
+.settings-panel .setting-row strong { color:#edf2f8; font-size:13px; font-weight:650; }
+.settings-panel .setting-row small { max-width:430px; color:#a1adbd; font-size:11px; line-height:1.45; }
+.setting-switch-row { cursor:pointer; }
+.setting-switch { width:38px; height:22px; flex:0 0 auto; margin:0 2px 0 12px; accent-color:#3157d5; cursor:pointer; }
+.setting-control { min-width:110px; min-height:37px; padding:0 10px; border:1px solid #2b394d; border-radius:8px; background:#080f1c; color:#edf2f8; font:600 12px/1.35 var(--font-ui); }
+.setting-control:focus-visible { outline:2px solid #5796ff; outline-offset:2px; }
+.setting-number-wrap { display:flex; align-items:center; gap:8px; flex:0 0 auto; }
+.setting-number { width:86px; text-align:center; }
+.setting-unit { color:#a1adbd; }
+.setting-inline-controls { display:flex; min-width:min(320px,55%); gap:7px; }
+.setting-scheme { min-width:90px; }
+.setting-url { min-width:0; flex:1; }
+.settings-panel .source-field { padding:13px 0; border-bottom-color:var(--stroke-soft); }
+.settings-panel .source-field input,.settings-panel .source-field select { background:#080f1c; border-color:#2b394d; }
+.settings-panel .core-release-checks section { padding:11px 0; border-color:var(--stroke-soft); }
+.settings-panel .source-save-row { padding:12px 0; }
+.github-proxy-settings .settings-inline-note { margin:5px 0 12px; color:#a1adbd; font-size:11px; line-height:1.45; }
+.github-proxy-row,.github-proxy-add-row { display:flex; align-items:center; gap:8px; margin:8px 0; }
+.github-proxy-row input,.github-proxy-add-row input { min-width:0; min-height:38px; flex:1; padding:0 10px; border:1px solid #2b394d; border-radius:8px; background:#080f1c; color:#edf2f8; font:500 12px var(--font-ui); }
+.github-proxy-delete { color:#ff8d9a; border-color:#583341; background:#251823; }
+.github-proxy-settings .source-save-row { margin-top:8px; border-top:1px solid var(--stroke-soft); }
+
+/* Stable empty/status areas reduce jumps when data arrives or tabs change. */
+.mihomo-empty { min-height:180px; }
+.selector-list { min-height:200px; }
+.toast-region { position:fixed; z-index:100; right:20px; bottom:18px; display:grid; width:min(380px,calc(100vw - 32px)); gap:8px; pointer-events:none; }
+.toast { padding:11px 14px; border:1px solid #34455e; border-radius:10px; color:#edf3fa; background:#121d2d; box-shadow:0 12px 34px #0005; font-size:13px; animation:toast-enter .18s ease-out both; }
+.toast-success { border-color:#1b7458; }
+.toast-error { border-color:#884353; }
+.toast-info { border-color:#3d66a4; }
+@keyframes toast-enter { from { opacity:0; transform:translateY(5px); } to { opacity:1; transform:translateY(0); } }
+
+@media(max-width:700px) {
+  .settings-panel { width:calc(100vw - 18px); max-height:92vh; padding:14px; }
+  .settings-panel .modal-tabs { gap:17px; }
+  .setting-row { align-items:flex-start; }
+  .setting-control-row { flex-direction:column; align-items:stretch!important; gap:9px!important; }
+  .setting-inline-controls { min-width:0; width:100%; }
+  .setting-control { width:100%; }
+  .setting-scheme { max-width:105px; }
+  .dns-workspace-heading { padding:13px 14px; }
+  .dns-runtime-list,.dns-handoff-intro { margin-right:14px; margin-left:14px; }
+  .dns-settings-form { padding-right:14px; padding-left:14px; }
+  .dns-settings-form>label { grid-column:1/-1; }
+  .dns-handoff-toggle,.dns-handoff-confirm { margin-right:14px; margin-left:14px; }
+}
+
 /* One readable type system across navigation, controls and release dialogs. */
 :root { --text:#f0f2f8; --muted:#aeb9ce; --subtle:#8998b0; }
 body,button,input,select,textarea { font-family:"Inter Variable",Inter,ui-sans-serif,system-ui,sans-serif; }
@@ -824,4 +941,82 @@ dialog.template-dialog.is-closing { animation: modal-panel-out .16s ease-in both
   .top-status small { font-size: 10px; }
   .journal-filter input,.journal-tools select,.connection-table th { font-size: 11px; }
   .proxy-protocol-badge,.proxy-transport-badge { font-size: 9px; }
+}
+
+/* Final component tokens (kept last so earlier legacy rules cannot override them). */
+:root { --surface:#101827; --surface-raised:#121c2c; --surface-hover:#1a2a41; --stroke:#2a374a; --stroke-soft:#202c3d; --text:#eef3fa; --muted:#a5b2c3; --subtle:#7f8da0; --blue:#4f8df7; --cyan:#5796ff; --mint:#00cc8a; }
+.connection-table td.connection-route-cell > .connection-chain { display:inline-block; max-width:calc(100% - 28px); overflow:hidden; vertical-align:middle; text-overflow:ellipsis; white-space:nowrap; }
+.connection-table td.connection-route-cell:not(.has-app-icon) > .connection-chain { max-width:100%; }
+.connection-app-icon { vertical-align:middle; transform:translateY(-1px); }
+.connection-app-icon.is-youtube { display:inline-grid; width:17px; height:13px; border-radius:4px; font-size:8px; vertical-align:middle; }
+.dns-workspace { border-color:#2a374a; border-radius:14px; background:#101827; }
+.dns-workspace-heading { min-height:54px; padding:14px 18px; border-bottom-color:#202c3d; }
+.dns-workspace-heading h2 { margin:0; color:#f1f5fb; font-size:16px; font-weight:650; }
+.dns-runtime-list { margin:12px 18px; border-color:#2b394d; background:#0b1320; }
+.dns-runtime-list>div { min-height:42px; padding:8px 12px; color:#d2dbe7; font-size:12px; }
+.dns-runtime-list>div strong:not(.state-pill) { color:#b9c7d8; font-size:11px; font-weight:550; }
+.dns-handoff-toggle,.dns-handoff-confirm { margin-right:18px; margin-left:18px; }
+.dns-handoff-pane .dns-handoff-note { padding:4px 18px 14px; color:#9aabc0; font-size:11px; line-height:1.5; }
+.dns-handoff-intro { margin:12px 18px; }
+.dns-handoff-intro .alert-warning { align-items:flex-start; padding:11px 13px; }
+.dns-handoff-intro .alert-warning p { color:#d2c9b3; font-size:11px; line-height:1.5; }
+.dns-feedback,.dns-result { margin-right:18px; margin-left:18px; }
+.dns-feedback strong { color:#f0f4fa; font-size:13px; }
+.dns-feedback p { color:#b1bdce; font-size:11px; line-height:1.5; }
+.dns-settings-form { gap:13px; padding:10px 18px 18px; }
+.dns-settings-form>label { gap:7px; color:#b6c2d2; font-size:12px; }
+.dns-settings-form>label>span { color:#e2e9f2; font-size:12px; font-weight:650; }
+.dns-settings-form select,.dns-settings-form textarea { border-color:#2b3a4f; background:#080f1c; color:#eef3fa; font:500 13px/1.5 var(--font-ui); }
+.dns-settings-form textarea { min-height:82px; font-family:"JetBrains Mono Variable","JetBrains Mono",ui-monospace,monospace; }
+.dns-settings-form select:focus,.dns-settings-form textarea:focus { border-color:#5796ff; box-shadow:0 0 0 3px #5796ff22; }
+.button-primary,.editor-button-primary { color:#f5f8ff; background:#2446b8; border-color:#3d66dd; }
+.button-primary:hover,.editor-button-primary:hover { background:#2d55d0; border-color:#5b83f0; }
+.setting-switch { position:relative; appearance:none; width:38px; height:22px; border:1px solid #35445a; border-radius:999px; background:#202b3b; transition:background .18s,border-color .18s; }
+.setting-switch::before { position:absolute; top:2px; left:2px; width:16px; height:16px; border-radius:50%; background:#eef3fa; content:""; transition:transform .18s ease; }
+.setting-switch:checked { border-color:#3157d5; background:#3157d5; }
+.setting-switch:checked::before { transform:translateX(16px); }
+.settings-section { padding:8px 4px 13px; }
+.settings-section + .settings-section { border-top:1px solid var(--stroke-soft); }
+.settings-section>h3 { margin:9px 0 5px; color:#8c9aab; font-size:11px; font-weight:650; letter-spacing:.07em; }
+.settings-panel .setting-row { min-height:59px; gap:18px; padding:12px 2px; }
+.settings-panel .setting-row strong { color:#edf2f8; font-size:13px; font-weight:650; }
+.settings-panel .setting-row small { max-width:430px; color:#a1adbd; font-size:11px; line-height:1.45; }
+.setting-control { min-height:37px; border-color:#2b394d; border-radius:8px; background:#080f1c; color:#edf2f8; font:600 12px/1.35 var(--font-ui); }
+.github-proxy-settings .settings-inline-note { margin:5px 0 12px; color:#a1adbd; font-size:11px; line-height:1.45; }
+.github-proxy-row,.github-proxy-add-row { display:flex; align-items:center; gap:8px; margin:8px 0; }
+.github-proxy-row input,.github-proxy-add-row input { min-width:0; min-height:38px; flex:1; padding:0 10px; border:1px solid #2b394d; border-radius:8px; background:#080f1c; color:#edf2f8; font:500 12px var(--font-ui); }
+.github-proxy-delete { color:#ff8d9a; border-color:#583341; background:#251823; }
+.toast-region { position:fixed; z-index:100; right:20px; bottom:18px; display:grid; width:min(380px,calc(100vw - 32px)); gap:8px; pointer-events:none; }
+.toast { padding:11px 14px; border:1px solid #34455e; border-radius:10px; color:#edf3fa; background:#121d2d; box-shadow:0 12px 34px #0005; font-size:13px; animation:toast-enter .18s ease-out both; }
+.toast-success { border-color:#1b7458; }.toast-error { border-color:#884353; }.toast-info { border-color:#3d66a4; }
+@media(max-width:700px) {
+  .dns-workspace-heading { padding:13px 14px; }
+  .dns-runtime-list,.dns-handoff-intro { margin-right:14px; margin-left:14px; }
+  .dns-settings-form { padding-right:14px; padding-left:14px; }
+  .dns-settings-form>label { grid-column:1/-1; }
+  .dns-handoff-toggle,.dns-handoff-confirm { margin-right:14px; margin-left:14px; }
+  .setting-control-row { flex-direction:column; align-items:stretch!important; gap:9px!important; }
+  .setting-inline-controls { width:100%; min-width:0; }
+}
+
+/* Keep release controls available without widening the page on phones. */
+@media(max-width:600px) {
+  .topbar { grid-template-columns:minmax(0,1fr) auto; }
+  .top-status-cluster { grid-column:1; grid-row:2; min-width:0; }
+  .top-status { min-width:0; }
+  .top-actions { grid-column:2; grid-row:1/3; width:auto; gap:5px; }
+  .version-chip { width:31px; min-width:31px; height:31px; justify-content:center; gap:0; overflow:hidden; padding:0!important; font-size:0!important; }
+  .version-chip .chip-icon { display:inline-grid; font-size:14px; }
+  .version-chip b,.version-chip .chip-chevron { display:none; }
+  .top-actions .icon-button { width:31px; height:31px; }
+  .navigation .nav-item { height:35px; padding:0 7px; font-size:11px; }
+  .navigation { scrollbar-width:none; }
+  .navigation::-webkit-scrollbar { display:none; }
+  .config-file-nav { scrollbar-width:none; }
+  .config-file-nav::-webkit-scrollbar { display:none; }
+  .journal-heading { align-items:stretch; flex-direction:column; gap:9px; }
+  .journal-tools { width:100%; display:grid; grid-template-columns:minmax(0,1fr) 34px 34px; gap:6px; }
+  .journal-filter { grid-column:1/-1; width:100%; min-width:0; }
+  .journal-tools select { min-width:0; width:100%; grid-column:1; }
+  .journal-icon-button { width:34px; }
 }

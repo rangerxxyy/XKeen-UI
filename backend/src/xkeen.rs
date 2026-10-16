@@ -87,11 +87,26 @@ pub fn read_status() -> XkeenStatus {
 
 pub async fn control(action: &str) -> Result<XkeenStatus, String> {
     let before = read_status();
+    let action_name = match action {
+        "start" | "stop" | "restart" => action,
+        _ => "invalid",
+    };
     let before_processes = before
         .core
         .as_deref()
         .map(process_identities)
         .unwrap_or_default();
+    let requested_at = SystemTime::now()
+        .duration_since(UNIX_EPOCH)
+        .unwrap_or_default()
+        .as_secs();
+    let requested_event = format!(
+        "unix={requested_at} component=xkeen phase=requested action={action_name} running_before={} result=started",
+        display_running(before.running),
+    );
+    if let Err(error) = crate::logs::append_xkeen_lifecycle(&[requested_event]) {
+        tracing::warn!(%error, "Could not append XKeen lifecycle request to Journal log");
+    }
     let path = before.init_path.as_deref().filter(|_| before.installed);
     let mut command_result = "not-started";
     let result = match control_args(action) {
@@ -137,16 +152,12 @@ pub async fn control(action: &str) -> Result<XkeenStatus, String> {
         .unwrap_or_default();
     let result = require_verified_transition(action, result, &before_processes, &after_processes);
     let verified = result.is_ok();
-    let action_name = match action {
-        "start" | "stop" | "restart" => action,
-        _ => "invalid",
-    };
     let timestamp = SystemTime::now()
         .duration_since(UNIX_EPOCH)
         .unwrap_or_default()
         .as_secs();
     let mut event = format!(
-        "unix={timestamp} component=xkeen action={action_name} command={command_result} running_before={} running_after={} process_transition={} result={}",
+        "unix={timestamp} component=xkeen phase=completed action={action_name} command={command_result} running_before={} running_after={} process_transition={} result={}",
         display_running(before.running),
         display_running(after.running),
         if verified { "verified" } else { "unverified" },

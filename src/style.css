@@ -548,6 +548,53 @@ body { color:var(--text); -webkit-font-smoothing:antialiased; }
 .settings-panel .source-field input,.settings-panel .source-field select { min-height:39px; color:#f0f3fb; font-size:13px; }
 .settings-panel .sources-feedback { font-size:11px; line-height:1.4; }
 
+/* Compact connection cards keep each flow readable without spanning the full panel. */
+.connection-grid-wrap { max-height:min(68vh,720px); overflow:auto; padding:10px; scrollbar-color:#354863 #0a111d; }
+.connection-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(min(100%,300px),1fr)); align-items:start; gap:8px; }
+.connection-card { min-width:0; padding:9px 10px 8px; border:1px solid #26354a; border-radius:10px; background:linear-gradient(145deg,#101a29,#0b1220); transition:border-color .15s,background .15s,transform .15s; }
+.connection-card:hover { border-color:#435b7d; background:#121e30; transform:translateY(-1px); }
+.connection-card[hidden] { display:none; }
+.connection-card-route,.connection-card-host,.connection-card-meta,.connection-card-footer { display:flex; min-width:0; align-items:center; }
+.connection-card-route { gap:7px; min-height:23px; }
+.connection-card-route .connection-route { min-width:0; overflow:hidden; color:#a9bde0; font-size:10px; font-weight:600; text-overflow:ellipsis; white-space:nowrap; }
+.connection-card-icon { display:grid; width:20px; height:20px; flex:0 0 20px; place-items:center; border:1px solid #30405a; border-radius:6px; color:#8ab8ec; background:#131f32; font-size:12px; line-height:1; }
+.connection-card-icon.is-route { color:#76cfe5; background:#102634; border-color:#24485a; }
+.connection-service-icon { display:grid; width:19px; height:19px; flex:0 0 19px; place-items:center; border:1px solid #30405a; border-radius:6px; color:#aebbd0; background:#131f32; font-size:10px; font-weight:750; line-height:1; }
+.connection-service-icon.is-youtube { color:#ff7780; border-color:#59323b; background:#291923; }
+.connection-service-icon.is-github { color:#f2f4fa; border-color:#424556; background:#202231; }
+.connection-service-icon.is-google { color:#69a6ff; border-color:#32466b; background:#15233a; }
+.connection-service-icon.is-microsoft { color:#66d0ff; border-color:#2e5364; background:#132733; }
+.connection-card .connection-close { width:22px; height:22px; flex:0 0 22px; margin-left:auto; border-color:transparent; background:transparent; }
+.connection-card-host { gap:7px; margin-top:7px; }
+.connection-card-host strong { min-width:0; overflow:hidden; color:#e5edf9; font-size:12px; font-weight:620; text-overflow:ellipsis; white-space:nowrap; }
+.connection-card-meta { gap:6px; margin-top:7px; }
+.connection-card-meta>span { display:flex; min-width:0; align-items:center; gap:5px; padding:3px 6px; overflow:hidden; border:1px solid #25354b; border-radius:6px; color:#aab8ce; background:#0b1422; font-size:9px; text-overflow:ellipsis; white-space:nowrap; }
+.connection-card-meta i { color:#7faee7; font-style:normal; }
+.connection-card-footer { gap:11px; margin-top:8px; padding-top:7px; border-top:1px solid #202d40; color:#9cacc2; font-size:9px; }
+.connection-card-traffic { display:inline-flex; align-items:center; gap:4px; white-space:nowrap; }
+.connection-card-traffic i { color:#54d7a5; font-style:normal; font-size:12px; font-weight:700; }
+.connection-card-traffic i.is-download { color:#78b6f1; }
+.connection-card-footer time { margin-left:auto; color:#788ba5; white-space:nowrap; }
+.connection-grid-wrap .connection-no-results { min-height:90px; display:grid; place-items:center; }
+.dns-runtime-list { display:grid; gap:0; margin:3px 15px 12px; border:1px solid #26354a; border-radius:9px; background:#0b1320; }
+.dns-runtime-list>div { display:flex; align-items:center; justify-content:space-between; gap:14px; min-height:38px; padding:7px 10px; border-bottom:1px solid #1e2a3c; color:#b7c4d8; font-size:11px; }
+.dns-runtime-list>div:last-child { border-bottom:0; }
+.dns-runtime-list>div strong:not(.state-pill) { max-width:65%; overflow:hidden; color:#92baf0; font-size:10px; font-weight:500; text-align:right; text-overflow:ellipsis; white-space:nowrap; }
+.dns-handoff-toggle { margin:0 15px; min-height:37px; }
+.dns-handoff-confirm { display:flex; align-items:center; justify-content:flex-end; flex-wrap:wrap; gap:8px; margin:0 15px; padding:11px; border:1px solid #564a33; border-radius:9px; background:#211d17; }
+.dns-handoff-confirm p { flex:1 1 100%; color:#d1c3a2; font-size:10px; line-height:1.5; }
+.dns-handoff-confirm .button { min-height:32px; }
+.dns-handoff-confirm .button-primary { margin:0; }
+.dns-handoff-pane .dns-handoff-note { padding:0 15px 10px; }
+.service-control-spinner { width:13px; height:13px; border:2px solid #627798; border-top-color:#e4efff; border-radius:50%; animation:service-spin .75s linear infinite; }
+@keyframes service-spin { to { transform:rotate(360deg); } }
+@media(max-width:600px) {
+  .connection-grid-wrap { max-height:58vh; padding:7px; }
+  .connection-grid { grid-template-columns:1fr; gap:7px; }
+  .connections-toolbar { align-items:center; flex-direction:row; flex-wrap:wrap; }
+  .connection-search { flex:1 1 100%; order:3; width:100%; }
+}
+
 @media(max-width:700px) {
   .config-layout { grid-template-columns:minmax(0,1fr) 132px; grid-template-rows:minmax(0,1fr); height:min(80vh,760px); }
   .config-sidebar { grid-column:2; grid-row:1; display:block; padding:8px 5px; border-left:1px solid #2d3650; border-bottom:0; overflow-x:hidden; overflow-y:auto; }

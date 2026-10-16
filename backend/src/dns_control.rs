@@ -1,0 +1,397 @@
+use crate::{config_files, xkeen, AppState};
+use axum::{
+    extract::State,
+    http::StatusCode,
+    response::{IntoResponse, Json, Response},
+};
+use serde::{Deserialize, Serialize};
+use std::{
+    collections::BTreeSet,
+    fs,
+    net::IpAddr,
+    os::unix::fs::OpenOptionsExt,
+    path::Path,
+    process::Stdio,
+    time::Duration,
+};
+use tokio::{io::AsyncWriteExt, process::Command};
+use tracing::{info, warn};
+
+const CONFIG_PATH: &str = "/opt/etc/mihomo/config.yaml";
+const DNS_STATE_PATH: &str = "/opt/etc/xkeen-ui/dns-restore.json";
+
+#[derive(Clone, Debug, Deserialize, Serialize)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+struct DnsRestoreState {
+    dns_override: bool,
+    name_servers: Vec<String>,
+}
+
+#[derive(Deserialize)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct DnsToggleRequest {
+    enabled: bool,
+    expected_content: String,
+}
+
+#[derive(Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct DnsControlStatus {
+    dns_override: bool,
+    mihomo_dns: bool,
+    port_listener: Option<String>,
+    name_servers: Vec<String>,
+    detail: String,
+}
+
+fn error(status: StatusCode, message: impl Into<String>) -> Response {
+    (status, Json(serde_json::json!({ "error": message.into() }))).into_response()
+}
+
+async fn ndmc(command: &str) -> Result<String, String> {
+    let output = tokio::time::timeout(
+        Duration::from_secs(8),
+        Command::new("ndmc")
+            .args(["-c", command])
+            .env_clear()
+            .env("PATH", "/opt/sbin:/opt/bin:/usr/sbin:/usr/bin:/sbin:/bin")
+            .env("HOME", "/root")
+            .stdin(Stdio::null())
+            .stdout(Stdio::piped())
+            .stderr(Stdio::piped())
+            .kill_on_drop(true)
+            .output(),
+    )
+    .await
+    .map_err(|_| format!("Команда Keenetic не завершилась вовремя: {command}"))?
+    .map_err(|e| format!("Не удалось выполнить команду Keenetic: {e}"))?;
+    if !output.status.success() {
+        let detail = String::from_utf8_lossy(&output.stderr);
+        let detail = detail.trim();
+        return Err(if detail.is_empty() {
+            format!("Команда Keenetic завершилась с кодом {}", output.status)
+        } else {
+            format!("Команда Keenetic: {}", truncate(detail, 360))
+        });
+    }
+    let text = String::from_utf8_lossy(&output.stdout).into_owned();
+    if text.to_ascii_lowercase().contains("command not found")
+        || text.to_ascii_lowercase().contains("invalid command")
+    {
+        return Err(format!("Keenetic отклонил команду: {}", truncate(text.trim(), 360)));
+    }
+    Ok(text)
+}
+
+fn parse_restore_state(output: &str) -> DnsRestoreState {
+    let dns_override = output.lines().any(|line| {
+        let line = line.trim();
+        line == "opkg dns-override" || line.starts_with("opkg dns-override ")
+    });
+    let name_servers = output
+        .lines()
+        .filter_map(|line| line.trim().strip_prefix("ip name-server "))
+        .flat_map(str::split_whitespace)
+        .filter_map(|value| {
+            let address = value.trim_matches(|character| character == '\'' || character == '"');
+            address.parse::<IpAddr>().ok().map(|_| address.to_owned())
+        })
+        .collect();
+    DnsRestoreState { dns_override, name_servers }
+}
+
+fn read_mihomo_dns_enabled(content: &str) -> bool {
+    let mut in_dns = false;
+    let mut enabled = false;
+    let mut listening = false;
+    for line in content.lines() {
+        let trimmed = line.trim();
+        if trimmed.is_empty() || trimmed.starts_with('#') { continue; }
+        if !line.chars().next().is_some_and(char::is_whitespace) {
+            in_dns = trimmed == "dns:";
+            continue;
+        }
+        if !in_dns { continue; }
+        if let Some(value) = trimmed.strip_prefix("enable:") {
+            enabled = value.split('#').next().unwrap_or("").trim() == "true";
+        }
+        if let Some(value) = trimmed.strip_prefix("listen:") {
+            listening = value.split('#').next().unwrap_or("").trim().trim_matches(|character| character == '\'' || character == '"') == "0.0.0.0:53";
+        }
+    }
+    enabled && listening
+}
+
+fn set_mihomo_dns(content: &str, enabled: bool) -> String {
+    let mut lines: Vec<String> = content.lines().map(str::to_owned).collect();
+    let mut dns_start = None;
+    let mut dns_end = lines.len();
+    for (index, line) in lines.iter().enumerate() {
+        if line.trim() == "dns:" && !line.chars().next().is_some_and(char::is_whitespace) {
+            dns_start = Some(index);
+        } else if dns_start.is_some() && !line.trim().is_empty() && !line.chars().next().is_some_and(char::is_whitespace) && !line.trim_start().starts_with('#') {
+            dns_end = index;
+            break;
+        }
+    }
+    if dns_start.is_none() {
+        if !lines.is_empty() && !lines.last().is_some_and(String::is_empty) { lines.push(String::new()); }
+        lines.extend(["dns:".into(), format!("  enable: {enabled}"), "  listen: 0.0.0.0:53".into()]);
+    } else if let Some(start) = dns_start {
+        let mut has_enable = false;
+        let mut has_listen = false;
+        for line in &mut lines[start + 1..dns_end] {
+            let trimmed = line.trim_start();
+            if trimmed.starts_with("enable:") {
+                let indent = &line[..line.len() - trimmed.len()];
+                *line = format!("{indent}enable: {enabled}");
+                has_enable = true;
+            } else if trimmed.starts_with("listen:") {
+                let indent = &line[..line.len() - trimmed.len()];
+                *line = format!("{indent}listen: 0.0.0.0:53");
+                has_listen = true;
+            }
+        }
+        let mut insert = Vec::new();
+        if !has_enable { insert.push(format!("  enable: {enabled}")); }
+        if !has_listen { insert.push("  listen: 0.0.0.0:53".into()); }
+        for (offset, line) in insert.into_iter().enumerate() { lines.insert(start + 1 + offset, line); }
+    }
+    format!("{}\n", lines.join("\n"))
+}
+
+fn get_br0_ip() -> Result<String, String> {
+    let output = std::process::Command::new("ip")
+        .args(["-4", "a", "s", "br0"])
+        .output()
+        .map_err(|e| format!("Не удалось прочитать адрес br0: {e}"))?;
+    if !output.status.success() { return Err("Не удалось прочитать адрес br0".into()); }
+    String::from_utf8_lossy(&output.stdout)
+        .lines()
+        .filter_map(|line| line.trim().strip_prefix("inet "))
+        .filter_map(|line| line.split('/').next())
+        .find_map(|address| address.parse::<std::net::Ipv4Addr>().ok())
+        .map(|address| address.to_string())
+        .ok_or_else(|| "Не удалось определить IPv4-адрес br0".into())
+}
+
+fn port_53_listener() -> Option<String> {
+    let mut sockets = BTreeSet::new();
+    for protocol in ["tcp", "udp", "tcp6", "udp6"] {
+        let table = fs::read_to_string(format!("/proc/net/{protocol}")).unwrap_or_default();
+        for line in table.lines().skip(1) {
+            let fields: Vec<_> = line.split_whitespace().collect();
+            if fields.len() < 10 || !fields[1].ends_with(":0035") { continue; }
+            if protocol.starts_with("tcp") && fields[3] != "0A" { continue; }
+            if !protocol.starts_with("tcp") && !fields[2].ends_with(":0000") { continue; }
+            if let Ok(inode) = fields[9].parse::<u64>() { if inode > 0 { sockets.insert(format!("socket:[{inode}]")); } }
+        }
+    }
+    if sockets.is_empty() { return None; }
+    let mut names = BTreeSet::new();
+    for process in fs::read_dir("/proc").ok()?.flatten() {
+        let Ok(fds) = fs::read_dir(process.path().join("fd")) else { continue; };
+        if fds.flatten().any(|fd| fs::read_link(fd.path()).is_ok_and(|link| sockets.contains(link.to_string_lossy().as_ref()))) {
+            names.insert(fs::read_to_string(process.path().join("comm")).unwrap_or_default().trim().to_owned());
+        }
+    }
+    (!names.is_empty()).then(|| names.into_iter().collect::<Vec<_>>().join(", "))
+}
+
+pub async fn status(State(state): State<AppState>) -> Response {
+    if !state.router_mode { return error(StatusCode::SERVICE_UNAVAILABLE, "Управление DNS доступно только на роутере"); }
+    let config = match tokio::fs::read_to_string(CONFIG_PATH).await {
+        Ok(config) => config,
+        Err(_) => return error(StatusCode::SERVICE_UNAVAILABLE, "Не удалось прочитать config.yaml Mihomo"),
+    };
+    match ndmc("show running-config").await {
+        Ok(output) => {
+            let restore = parse_restore_state(&output);
+            Json(DnsControlStatus {
+                dns_override: restore.dns_override,
+                mihomo_dns: read_mihomo_dns_enabled(&config),
+                port_listener: tokio::task::spawn_blocking(port_53_listener).await.ok().flatten(),
+                name_servers: restore.name_servers,
+                detail: "Состояние прочитано из KeeneticOS и активного конфига Mihomo".into(),
+            }).into_response()
+        }
+        Err(e) => error(StatusCode::BAD_GATEWAY, e),
+    }
+}
+
+pub async fn ensure_dns_safe_to_stop() -> Result<(), String> {
+    let config = tokio::fs::read_to_string(CONFIG_PATH).await.unwrap_or_default();
+    if !read_mihomo_dns_enabled(&config) { return Ok(()); }
+    let running = ndmc("show running-config").await?;
+    if parse_restore_state(&running).dns_override {
+        return Err("DNS Mihomo передан роутеру. Сначала верните DNS KeeneticOS, затем останавливайте XKeen".into());
+    }
+    Ok(())
+}
+
+pub async fn toggle(State(state): State<AppState>, Json(request): Json<DnsToggleRequest>) -> Response {
+    if !state.router_mode { return error(StatusCode::SERVICE_UNAVAILABLE, "Управление DNS доступно только на роутере"); }
+    let _guard = state.core_update_lock.lock().await;
+    let init_status = xkeen::read_status();
+    if request.enabled && (init_status.core.as_deref() != Some("mihomo") || init_status.running != Some(true)) {
+        return error(StatusCode::CONFLICT, "Для передачи DNS требуется запущенное ядро Mihomo");
+    }
+    let current = match tokio::fs::read_to_string(CONFIG_PATH).await {
+        Ok(current) => current,
+        Err(_) => return error(StatusCode::SERVICE_UNAVAILABLE, "Не удалось прочитать config.yaml Mihomo"),
+    };
+    if current != request.expected_content {
+        return error(StatusCode::CONFLICT, "config.yaml изменился. Обновите его перед переключением DNS");
+    }
+    let candidate = set_mihomo_dns(&current, request.enabled);
+    if read_mihomo_dns_enabled(&candidate) != request.enabled {
+        return error(StatusCode::UNPROCESSABLE_ENTITY, "Черновик config.yaml не соответствует выбранному состоянию DNS");
+    }
+    if let Err(e) = config_files::validate_managed_config(&candidate).await {
+        return error(StatusCode::UNPROCESSABLE_ENTITY, format!("Конфигурация DNS не прошла проверку Mihomo: {e}"));
+    }
+
+    let running = match ndmc("show running-config").await {
+        Ok(value) => value,
+        Err(e) => return error(StatusCode::BAD_GATEWAY, e),
+    };
+    let previous = parse_restore_state(&running);
+    if request.enabled && previous.dns_override {
+        return error(StatusCode::CONFLICT, "DNS Override уже включён в KeeneticOS. Сначала отключите его или проверьте текущий режим DNS");
+    }
+    let br0_ip = match get_br0_ip() { Ok(value) => value, Err(e) => return error(StatusCode::SERVICE_UNAVAILABLE, e) };
+
+    if request.enabled {
+        if let Err(e) = write_restore_state(&previous).await { return error(StatusCode::INTERNAL_SERVER_ERROR, e); }
+        info!("Передача DNS KeeneticOS в Mihomo начата");
+        for command in ["no ip name-server".to_owned(), format!("ip name-server {br0_ip}"), "opkg dns-override".into(), "system configuration save".into()] {
+            if let Err(e) = ndmc(&command).await {
+                return rollback_enable(&previous, e).await;
+            }
+        }
+        if let Err(e) = config_files::apply_managed_config(&candidate, &current).await {
+            return rollback_enable(&previous, e).await;
+        }
+    } else {
+        let backup = match read_restore_state().await {
+            Ok(Some(value)) => value,
+            Ok(None) => return error(StatusCode::CONFLICT, "Нет сохранённого состояния DNS для безопасного возврата к KeeneticOS"),
+            Err(e) => return error(StatusCode::INTERNAL_SERVER_ERROR, e),
+        };
+        if let Err(e) = config_files::apply_managed_config(&candidate, &current).await {
+            return error(StatusCode::UNPROCESSABLE_ENTITY, e);
+        }
+        info!("Возврат DNS Mihomo в KeeneticOS начат");
+        if let Err(e) = restore_router_dns(&backup).await {
+            let rollback = config_files::apply_managed_config(&current, &candidate).await;
+            let detail = rollback.err().map(|rollback_error| format!(" Не удалось вернуть прежний конфиг Mihomo: {rollback_error}." )).unwrap_or_else(|| " Конфиг Mihomo восстановлен.".into());
+            return error(StatusCode::BAD_GATEWAY, format!("KeeneticOS не подтвердил возврат DNS; резерв сохранён для повтора. {e}.{detail}"));
+        }
+        if let Err(e) = tokio::fs::remove_file(DNS_STATE_PATH).await { return error(StatusCode::INTERNAL_SERVER_ERROR, format!("DNS возвращён KeeneticOS, но резерв не удалён: {e}")); }
+    }
+
+    Json(serde_json::json!({ "success": true, "status": status_data().await })).into_response()
+}
+
+async fn status_data() -> Option<DnsControlStatus> {
+    let config = tokio::fs::read_to_string(CONFIG_PATH).await.ok()?;
+    let output = ndmc("show running-config").await.ok()?;
+    let restore = parse_restore_state(&output);
+    Some(DnsControlStatus {
+        dns_override: restore.dns_override,
+        mihomo_dns: read_mihomo_dns_enabled(&config),
+        port_listener: tokio::task::spawn_blocking(port_53_listener).await.ok().flatten(),
+        name_servers: restore.name_servers,
+        detail: "Состояние прочитано из KeeneticOS и активного конфига Mihomo".into(),
+    })
+}
+
+async fn restore_router_dns(state: &DnsRestoreState) -> Result<(), String> {
+    ndmc("no opkg dns-override").await?;
+    ndmc("no ip name-server").await?;
+    for address in &state.name_servers { ndmc(&format!("ip name-server {address}")).await?; }
+    if state.dns_override { ndmc("opkg dns-override").await?; }
+    ndmc("system configuration save").await?;
+    Ok(())
+}
+
+async fn rollback_enable(previous: &DnsRestoreState, cause: String) -> Response {
+    match restore_router_dns(previous).await {
+        Ok(()) => {
+            warn!("Передача DNS в Mihomo не завершилась; исходные DNS KeeneticOS восстановлены");
+            if let Err(remove_error) = tokio::fs::remove_file(DNS_STATE_PATH).await {
+                error(StatusCode::INTERNAL_SERVER_ERROR, format!("{cause}; DNS роутера восстановлен, но резерв остался: {remove_error}"))
+            } else {
+                error(StatusCode::UNPROCESSABLE_ENTITY, format!("{cause}; исходные DNS-настройки роутера восстановлены"))
+            }
+        }
+        Err(rollback) => error(StatusCode::BAD_GATEWAY, format!("{cause}; откат KeeneticOS не завершён: {rollback}. Резерв сохранён в {DNS_STATE_PATH}")),
+    }
+}
+
+async fn read_restore_state() -> Result<Option<DnsRestoreState>, String> {
+    match tokio::fs::symlink_metadata(DNS_STATE_PATH).await {
+        Ok(meta) if meta.is_file() && !meta.file_type().is_symlink() && meta.len() <= 16 * 1024 => {
+            let value = tokio::fs::read_to_string(DNS_STATE_PATH).await.map_err(|e| format!("Не удалось прочитать резерв состояния DNS: {e}"))?;
+            serde_json::from_str(&value).map(Some).map_err(|e| format!("Резерв состояния DNS повреждён: {e}"))
+        }
+        Ok(_) => Err("Файл резервного состояния DNS имеет неподдерживаемый тип".into()),
+        Err(e) if e.kind() == std::io::ErrorKind::NotFound => Ok(None),
+        Err(e) => Err(format!("Не удалось проверить резерв состояния DNS: {e}")),
+    }
+}
+
+async fn write_restore_state(state: &DnsRestoreState) -> Result<(), String> {
+    let path = Path::new(DNS_STATE_PATH);
+    let parent = path.parent().ok_or("Некорректный путь резерва DNS")?;
+    tokio::fs::create_dir_all(parent).await.map_err(|e| format!("Не удалось создать каталог резерва DNS: {e}"))?;
+    match tokio::fs::symlink_metadata(path).await {
+        Ok(meta) if meta.is_file() && !meta.file_type().is_symlink() => {},
+        Ok(_) => return Err("Файл резерва DNS имеет неподдерживаемый тип".into()),
+        Err(e) if e.kind() == std::io::ErrorKind::NotFound => {},
+        Err(e) => return Err(format!("Не удалось проверить резерв DNS: {e}")),
+    }
+    let staged = parent.join(format!(".dns-restore-{}.tmp", std::process::id()));
+    let bytes = serde_json::to_vec(state).map_err(|e| format!("Не удалось собрать резерв DNS: {e}"))?;
+    let mut file = tokio::fs::OpenOptions::new().write(true).create_new(true).mode(0o600).open(&staged).await.map_err(|e| format!("Не удалось создать резерв DNS: {e}"))?;
+    if let Err(e) = file.write_all(&bytes).await { let _ = tokio::fs::remove_file(&staged).await; return Err(format!("Не удалось записать резерв DNS: {e}")); }
+    if let Err(e) = file.sync_all().await {
+        let _ = tokio::fs::remove_file(&staged).await;
+        return Err(format!("Не удалось сохранить резерв DNS: {e}"));
+    }
+    drop(file);
+    tokio::fs::rename(&staged, path).await.map_err(|e| format!("Не удалось установить резерв DNS: {e}"))
+}
+
+fn truncate(value: &str, max_bytes: usize) -> String {
+    if value.len() <= max_bytes { return value.to_owned(); }
+    let mut end = max_bytes;
+    while !value.is_char_boundary(end) { end -= 1; }
+    format!("{}…", &value[..end])
+}
+
+#[cfg(test)]
+mod tests {
+    use super::{parse_restore_state, read_mihomo_dns_enabled, set_mihomo_dns};
+
+    #[test]
+    fn reads_dns_runtime_and_nameservers_without_interpreting_comments() {
+        let config = "# dns:\nlog-level: info\ndns:\n  enable: true\n  listen: 0.0.0.0:53\n";
+        assert!(read_mihomo_dns_enabled(config));
+        assert!(!read_mihomo_dns_enabled("dns:\n  # enable: true\n  listen: 0.0.0.0:53\n"));
+        let state = parse_restore_state("opkg dns-override\nip name-server 192.168.1.1\nip name-server 77.88.8.8\n");
+        assert!(state.dns_override);
+        assert_eq!(state.name_servers, ["192.168.1.1", "77.88.8.8"]);
+    }
+
+    #[test]
+    fn changes_only_dns_enable_and_listen_preserving_other_yaml_sections() {
+        let original = "log-level: info\ndns:\n  enable: false\n  nameserver:\n    - 1.1.1.1\nproxies: []\n";
+        let enabled = set_mihomo_dns(original, true);
+        assert!(read_mihomo_dns_enabled(&enabled));
+        assert!(enabled.contains("    - 1.1.1.1"));
+        assert!(enabled.contains("proxies: []"));
+        let disabled = set_mihomo_dns(&enabled, false);
+        assert!(!read_mihomo_dns_enabled(&disabled));
+    }
+}

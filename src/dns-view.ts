@@ -1,4 +1,13 @@
 import type { MihomoDnsResult } from './api';
+import { parseDocument } from 'yaml';
+
+export function patchDnsManagement(content: string, enabled: boolean): string {
+  const document = parseDocument(content);
+  if (document.errors.length) throw new Error(`Конфигурация YAML содержит ошибку: ${document.errors[0]?.message ?? 'неизвестная ошибка'}`);
+  document.setIn(['dns', 'enable'], enabled);
+  document.setIn(['dns', 'listen'], '0.0.0.0:53');
+  return document.toString();
+}
 
 function escapeHtml(value: string): string {
   return value.replace(/[&<>"']/g, (character) => {
@@ -16,7 +25,7 @@ function formatAnswerCount(count: number): string {
   return `${count} ${noun}`;
 }
 
-export function renderDns(result: MihomoDnsResult | null, loading: boolean, error: string | null, queryName: string, queryType: string, panel: 'mihomo' | 'handoff' = 'mihomo'): string {
+export function renderDns(result: MihomoDnsResult | null, loading: boolean, error: string | null, queryName: string, queryType: string, panel: 'mihomo' | 'handoff' = 'mihomo', management?: { status: { dnsOverride: boolean; mihomoDns: boolean; portListener: string | null; nameServers: string[]; detail: string } | null; loading: boolean; error: string | null; busy: boolean; confirm: boolean }): string {
   const answers = result?.answers ?? [];
   const status = error
     ? `<div class="dns-feedback is-error" role="alert"><span>!</span><div><strong>Запрос не выполнен</strong><p>${escapeHtml(error)}</p></div></div>`
@@ -27,7 +36,14 @@ export function renderDns(result: MihomoDnsResult | null, loading: boolean, erro
         : '<div class="dns-feedback"><span>◎</span><div><strong>Запустите диагностический запрос</strong><p>Результат будет получен из DNS-резолвера Mihomo на роутере. Настройки не изменяются.</p></div></div>';
 
   const mihomoPanel = `<section class="dns-workspace dns-mihomo-pane" ${panel === 'handoff' ? 'hidden' : ''}><header class="dns-workspace-heading"><h2>DNS Mihomo</h2></header><form id="dns-query-form" class="dns-query-form"><label><span>Домен или IP</span><input name="name" type="text" autocomplete="off" autocapitalize="none" spellcheck="false" maxlength="253" placeholder="example.com" value="${escapeHtml(queryName)}" required></label><label><span>Тип</span><select name="type">${['A', 'AAAA', 'CNAME', 'TXT', 'MX', 'NS', 'PTR', 'SRV', 'HTTPS', 'SVCB'].map((type) => `<option ${type === queryType ? 'selected' : ''}>${type}</option>`).join('')}</select></label><button class="button button-primary" type="submit" ${loading ? 'disabled' : ''}>${loading ? 'Запрос…' : 'Проверить'}</button></form>${status}</section>`;
-  const handoffPanel = `<section class="dns-workspace dns-handoff-pane" ${panel === 'mihomo' ? 'hidden' : ''}><header class="dns-workspace-heading"><h2>Передача DNS роутера</h2><span class="state-pill state-stopped">Выключено</span></header><div class="dns-handoff-intro"><div class="alert alert-warning"><span class="alert-icon">!</span><div><strong>Пока недоступно</strong><p>Сначала нужна безопасная запись и проверенный откат DNS, DoH/DoT и контентного фильтра.</p></div></div></div><button class="button button-primary dns-handoff-disabled" type="button" disabled aria-describedby="dns-handoff-note"><span class="toggle-switch" aria-hidden="true"></span> Включить</button><p id="dns-handoff-note" class="dns-handoff-note">Управление отключено.</p></section>`;
+  const dnsStatus = management?.status;
+  const stateError = management?.error ? `<div class="dns-feedback is-error" role="alert"><span>!</span><div><strong>Состояние не получено</strong><p>${escapeHtml(management.error)}</p></div></div>` : '';
+  const stateLoading = management?.loading ? '<div class="dns-feedback"><span class="loading-orbit" aria-hidden="true"></span><div><strong>Читаем состояние</strong><p>Запрашиваем настройки KeeneticOS и Mihomo.</p></div></div>' : '';
+  const stateRefresh = !dnsStatus && !management?.loading ? '<button class="button dns-management-refresh" id="dns-management-refresh" type="button">Повторить проверку</button>' : '';
+  const active = Boolean(dnsStatus?.dnsOverride || dnsStatus?.mihomoDns);
+  const dnsHandoffMarkup = dnsStatus ? `<div class="dns-runtime-list"><div><span>DNS Override</span><strong class="state-pill ${dnsStatus.dnsOverride ? 'state-running' : 'state-stopped'}">${dnsStatus.dnsOverride ? 'Включён' : 'Выключен'}</strong></div><div><span>DNS Mihomo</span><strong class="state-pill ${dnsStatus.mihomoDns ? 'state-running' : 'state-stopped'}">${dnsStatus.mihomoDns ? 'Включён' : 'Выключен'}</strong></div><div><span>Порт 53</span><strong class="state-pill">${escapeHtml(dnsStatus.portListener || 'Нет слушателя')}</strong></div>${dnsStatus.nameServers.length ? `<div><span>DNS роутера</span><strong>${dnsStatus.nameServers.map(escapeHtml).join(', ')}</strong></div>` : ''}</div>` : '';
+  const confirmAction = management?.confirm ? `<div class="dns-handoff-confirm" role="group" aria-label="Подтверждение изменения DNS"><p>${active ? 'Сначала отключится DNS в Mihomo, затем KeeneticOS вернёт прежние DNS-серверы.' : 'Mihomo станет DNS-резолвером роутера. При остановке XKeen без возврата DNS устройства потеряют разрешение имён.'}</p><button class="button" id="dns-management-cancel" type="button">Отмена</button><button class="button button-primary" id="dns-management-apply" type="button">${active ? 'Вернуть DNS' : 'Включить DNS Mihomo'}</button></div>` : '';
+  const handoffPanel = `<section class="dns-workspace dns-handoff-pane" ${panel === 'mihomo' ? 'hidden' : ''}><header class="dns-workspace-heading"><h2>Управление DNS</h2><span class="state-pill ${active ? 'state-running' : 'state-stopped'}">${active ? 'Активно' : dnsStatus ? 'Выключено' : 'Статус неизвестен'}</span></header>${stateError}${stateLoading}${stateRefresh}${dnsHandoffMarkup}<div class="dns-handoff-intro"><div class="alert alert-warning"><span class="alert-icon">!</span><div><strong>DNS зависит от работы Mihomo</strong><p>Перед включением проверьте активную конфигурацию DNS Mihomo. Статические DNS-серверы Keenetic будут временно заменены адресом роутера, настройки DoH/DoT не меняются. Пока управление включено, не останавливайте XKeen: сначала верните DNS KeeneticOS.</p></div></div></div>${management?.confirm ? confirmAction : `<button class="button button-primary dns-handoff-toggle" id="dns-management-toggle" type="button" ${!dnsStatus || management?.busy || management?.loading ? 'disabled' : ''}>${management?.busy ? '<span class="loading-orbit" aria-hidden="true"></span> Применяем…' : active ? 'Вернуть DNS KeeneticOS' : 'Передать DNS Mihomo'}</button>`}<p class="dns-handoff-note">${escapeHtml(dnsStatus?.detail || 'Состояние будет прочитано перед переключением.')}</p></section>`;
 
   return `<nav class="dns-subnav" aria-label="Режим DNS"><button type="button" class="dns-subnav-button ${panel === 'mihomo' ? 'is-active' : ''}" data-dns-panel="mihomo" aria-pressed="${panel === 'mihomo'}">Mihomo</button><button type="button" class="dns-subnav-button ${panel === 'handoff' ? 'is-active' : ''}" data-dns-panel="handoff" aria-pressed="${panel === 'handoff'}">Система</button></nav>${mihomoPanel}${handoffPanel}`;
 }

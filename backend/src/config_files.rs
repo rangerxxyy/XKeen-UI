@@ -351,6 +351,50 @@ async fn apply(content: &str, expected_content: &str) -> Result<ApplyResult, Str
     })
 }
 
+pub(crate) async fn apply_managed_config(
+    content: &str,
+    expected_content: &str,
+) -> Result<String, String> {
+    if content.is_empty() || content.len() > MAX_CONFIG || expected_content.len() > MAX_CONFIG {
+        return Err("Текущий конфиг и новый вариант должны быть не больше 4 MiB".into());
+    }
+    apply(content, expected_content).await.map(|result| result.backup)
+}
+
+pub(crate) async fn validate_managed_config(content: &str) -> Result<(), String> {
+    if content.is_empty() || content.len() > MAX_CONFIG {
+        return Err("Конфиг должен быть не больше 4 MiB".into());
+    }
+    let staged = unique_file(Path::new(CONFIG_DIR), "xkeen-ui-dns-check", "yaml");
+    let mut file = tokio::fs::OpenOptions::new()
+        .write(true)
+        .create_new(true)
+        .mode(0o600)
+        .open(&staged)
+        .await
+        .map_err(|e| format!("Не удалось создать файл проверки DNS: {e}"))?;
+    let result = async {
+        file.write_all(content.as_bytes()).await?;
+        file.sync_all().await
+    }
+    .await;
+    drop(file);
+    if let Err(e) = result {
+        let _ = tokio::fs::remove_file(&staged).await;
+        return Err(format!("Не удалось записать файл проверки DNS: {e}"));
+    }
+    let core = ["/opt/sbin/mihomo", "/opt/bin/mihomo"]
+        .into_iter()
+        .find(|path| fs::metadata(path).is_ok_and(|meta| meta.is_file() && meta.permissions().mode() & 0o111 != 0))
+        .ok_or_else(|| "Исполняемый Mihomo не найден в /opt/sbin или /opt/bin".to_owned());
+    let validation = match core {
+        Ok(core) => validate_config(core, &staged).await,
+        Err(error) => Err(error),
+    };
+    let _ = tokio::fs::remove_file(&staged).await;
+    validation
+}
+
 async fn validate_config(core: &str, staged: &Path) -> Result<(), String> {
     let output = tokio::time::timeout(
         Duration::from_secs(20),

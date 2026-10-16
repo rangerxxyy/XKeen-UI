@@ -125,6 +125,38 @@ export interface MihomoConnection {
   start: string;
 }
 
+export interface RouterDnsStatus {
+  dnsOverride: boolean;
+  mihomoDns: boolean;
+  portListener: string | null;
+  nameServers: string[];
+  detail: string;
+}
+
+export async function getRouterDnsStatus(signal?: AbortSignal): Promise<RouterDnsStatus> {
+  const payload = await getMihomoJson('/api/v1/dns', 'Получение состояния DNS роутера', signal);
+  if (!isRecord(payload) || typeof payload.dnsOverride !== 'boolean' || typeof payload.mihomoDns !== 'boolean'
+    || !(payload.portListener === null || typeof payload.portListener === 'string')
+    || !Array.isArray(payload.nameServers) || !payload.nameServers.every((value) => typeof value === 'string')
+    || typeof payload.detail !== 'string') {
+    throw new Error('Backend вернул некорректное состояние DNS роутера');
+  }
+  return payload as unknown as RouterDnsStatus;
+}
+
+export async function setRouterDnsManagement(request: {
+  enabled: boolean;
+  expectedContent: string;
+}, signal?: AbortSignal): Promise<void> {
+  const response = await fetch('/api/v1/dns', {
+    method: 'PUT',
+    headers: { Accept: 'application/json', 'Content-Type': 'application/json' },
+    body: JSON.stringify(request),
+    signal,
+  });
+  await readJson(response, request.enabled ? 'Передача DNS Mihomo' : 'Возврат DNS KeeneticOS');
+}
+
 export interface MihomoDnsRecord {
   name: string;
   type: string;

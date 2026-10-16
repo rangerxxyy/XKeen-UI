@@ -85,12 +85,7 @@ pub async fn control(action: &str) -> Result<XkeenStatus, String> {
         .as_deref()
         .filter(|_| status.installed)
         .ok_or_else(|| "Не найден исполняемый init-файл XKeen".to_owned())?;
-    let args: &[&str] = match action {
-        "start" => &["start", "on"],
-        "stop" => &["stop"],
-        "restart" => &["restart", "on"],
-        _ => return Err("Допустимы только start, stop и restart".to_owned()),
-    };
+    let args = control_args(action)?;
 
     let mut command = Command::new(path);
     command
@@ -99,29 +94,31 @@ pub async fn control(action: &str) -> Result<XkeenStatus, String> {
         .env_clear()
         .env("PATH", "/opt/sbin:/opt/bin:/sbin:/bin:/usr/sbin:/usr/bin")
         .stdin(Stdio::null())
+        // Init scripts can start a daemon that inherits its parent's stdout/stderr.
+        // Keep those descriptors detached from the HTTP request before waiting.
+        .stdout(Stdio::null())
+        .stderr(Stdio::null())
         .env("HOME", "/root")
         .env("TERM", "dumb");
-    let output = tokio::time::timeout(Duration::from_secs(30), command.output())
+    let status = tokio::time::timeout(Duration::from_secs(30), command.status())
         .await
         .map_err(|_| "Команда XKeen не завершилась за 30 секунд".to_owned())?
         .map_err(|error| format!("Не удалось выполнить {}: {error}", path))?;
-    if !output.status.success() {
-        let detail = String::from_utf8_lossy(&output.stderr);
-        let detail = detail.trim();
-        let detail = if detail.is_empty() {
-            String::from_utf8_lossy(&output.stdout).trim().to_owned()
-        } else {
-            detail.to_owned()
-        };
-        return Err(if detail.is_empty() {
-            format!("XKeen завершил команду с кодом {}", output.status)
-        } else {
-            format!("XKeen: {}", truncate(&detail, 512))
-        });
+    if !status.success() {
+        return Err(format!("XKeen завершил команду с кодом {status}"));
     }
 
     tokio::time::sleep(Duration::from_millis(200)).await;
     Ok(read_status())
+}
+
+fn control_args(action: &str) -> Result<&'static [&'static str], String> {
+    match action {
+        "start" => Ok(&["start", "on"]),
+        "stop" => Ok(&["stop"]),
+        "restart" => Ok(&["restart", "on"]),
+        _ => Err("Допустимы только start, stop и restart".to_owned()),
+    }
 }
 
 fn process_is_running(name: &str) -> bool {
@@ -193,20 +190,9 @@ fn shell_assignment(text: &str, key: &str) -> Option<String> {
     })
 }
 
-fn truncate(value: &str, max_bytes: usize) -> String {
-    if value.len() <= max_bytes {
-        return value.to_owned();
-    }
-    let mut end = max_bytes;
-    while !value.is_char_boundary(end) {
-        end -= 1;
-    }
-    format!("{}…", &value[..end])
-}
-
 #[cfg(test)]
 mod tests {
-    use super::{resolve_init_path, safe_init_path, shell_assignment, truncate};
+    use super::{control_args, resolve_init_path, safe_init_path, shell_assignment};
     use std::path::Path;
 
     #[test]
@@ -230,6 +216,14 @@ mod tests {
     }
 
     #[test]
+    fn maps_service_actions_to_supported_init_commands() {
+        assert_eq!(control_args("start").unwrap(), &["start", "on"]);
+        assert_eq!(control_args("stop").unwrap(), &["stop"]);
+        assert_eq!(control_args("restart").unwrap(), &["restart", "on"]);
+        assert!(control_args("invalid").is_err());
+    }
+
+    #[test]
     fn allows_only_supported_core_names() {
         let text = "name_client=../../busybox";
         let value = shell_assignment(text, "name_client").unwrap();
@@ -237,9 +231,4 @@ mod tests {
         assert!(super::ALLOWED_CLIENTS.contains(&"mihomo"));
     }
 
-    #[test]
-    fn truncates_long_output_without_splitting_utf8() {
-        assert_eq!(truncate("коротко", 32), "коротко");
-        assert_eq!(truncate(&"я".repeat(20), 9), "яяяя…");
-    }
 }

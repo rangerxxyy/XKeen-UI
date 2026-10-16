@@ -643,10 +643,12 @@ trap 'rm -f "$tmp"' EXIT HUP INT TERM
 fetch_installer() {
   source_url=$1
   proxies=$(printf '%s\n' "$XKEEN_UI_GH_PROXIES" | awk 'NF')
-  for proxy in direct $proxies; do
-    if [ "$proxy" = direct ]; then candidate=$source_url; else candidate=$proxy/$source_url; fi
+  [ -n "$proxies" ] || proxies='https://gh-proxy.com https://ghfast.top'
+  # shellcheck disable=SC2086
+  for proxy in $proxies; do
+    candidate=$proxy/$source_url
     echo "Fetching installer via $proxy"
-    if curl -fLsS --connect-timeout 15 --max-time 90 "$candidate" -o "$tmp"; then return 0; fi
+    if curl -fLsS --connect-timeout 10 --max-time 30 "$candidate" -o "$tmp"; then return 0; fi
   done
   return 1
 }

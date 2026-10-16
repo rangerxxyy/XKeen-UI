@@ -7,8 +7,22 @@ export function formatJournalTimestamp(line: string, timeZone: string): { timest
   if (!Number.isFinite(date.getTime())) return null;
   try {
     const options: Intl.DateTimeFormatOptions = { dateStyle: 'short', timeStyle: 'medium', hourCycle: 'h23' };
-    if (timeZone !== 'local') options.timeZone = timeZone;
-    return { timestamp: new Intl.DateTimeFormat('ru-RU', options).format(date), message: match[2] ?? '' };
+    let formattedDate = date;
+    const legacyOffsets: Record<string, number> = {
+      UTC: 0,
+      'Europe/Kaliningrad': 2,
+      'Europe/Moscow': 3,
+      'Asia/Yekaterinburg': 5,
+      'Asia/Novosibirsk': 7,
+      'Asia/Vladivostok': 10,
+    };
+    const offset = timeZone.match(/^UTC([+-]\d{1,2})$/);
+    const hours = offset ? Number(offset[1]) : legacyOffsets[timeZone];
+    if (hours !== undefined) {
+      formattedDate = new Date(date.getTime() + hours * 60 * 60 * 1000);
+      options.timeZone = 'UTC';
+    }
+    return { timestamp: new Intl.DateTimeFormat('ru-RU', options).format(formattedDate), message: match[2] ?? '' };
   } catch {
     return null;
   }

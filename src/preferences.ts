@@ -1,6 +1,6 @@
 export type SelectorSort = 'config' | 'name' | 'delay';
 export type UiTheme = 'system' | 'light' | 'dark';
-export type JournalTimeZone = 'local' | 'UTC' | 'Europe/Kaliningrad' | 'Europe/Moscow' | 'Asia/Yekaterinburg' | 'Asia/Novosibirsk' | 'Asia/Vladivostok';
+export type JournalTimeZone = 'local' | `UTC${'+' | '-'}${number}`;
 
 export interface UiPreferences {
   theme: UiTheme;
@@ -44,7 +44,7 @@ export function readUiPreferences(storage: Pick<Storage, 'getItem'> | null = saf
     const value = parsed as Partial<UiPreferences>;
     return {
       theme: value.theme === 'light' || value.theme === 'dark' ? value.theme : 'system',
-      journalTimeZone: validJournalTimeZone(value.journalTimeZone) ? value.journalTimeZone : DEFAULT_UI_PREFERENCES.journalTimeZone,
+      journalTimeZone: normalizeJournalTimeZone(value.journalTimeZone),
       showConnectionSource: typeof value.showConnectionSource === 'boolean' ? value.showConnectionSource : DEFAULT_UI_PREFERENCES.showConnectionSource,
       closeConnectionsAfterApply: typeof value.closeConnectionsAfterApply === 'boolean' ? value.closeConnectionsAfterApply : DEFAULT_UI_PREFERENCES.closeConnectionsAfterApply,
       dnsAutostart: value.dnsAutostart === 'confirm' ? 'confirm' : 'off',
@@ -62,9 +62,25 @@ export function readUiPreferences(storage: Pick<Storage, 'getItem'> | null = saf
   }
 }
 
-function validJournalTimeZone(value: unknown): value is JournalTimeZone {
-  return value === 'local' || value === 'UTC' || value === 'Europe/Kaliningrad' || value === 'Europe/Moscow'
-    || value === 'Asia/Yekaterinburg' || value === 'Asia/Novosibirsk' || value === 'Asia/Vladivostok';
+function normalizeJournalTimeZone(value: unknown): JournalTimeZone {
+  if (value === 'local') return value;
+  if (typeof value === 'string') {
+    const match = value.match(/^UTC([+-])(\d{1,2})$/);
+    if (match) {
+      const offset = Number(match[2]) * (match[1] === '-' ? -1 : 1);
+      if (offset >= -12 && offset <= 14) return `UTC${offset >= 0 ? '+' : ''}${offset}` as JournalTimeZone;
+    }
+    const legacyOffsets: Record<string, JournalTimeZone> = {
+      UTC: 'UTC+0',
+      'Europe/Kaliningrad': 'UTC+2',
+      'Europe/Moscow': 'UTC+3',
+      'Asia/Yekaterinburg': 'UTC+5',
+      'Asia/Novosibirsk': 'UTC+7',
+      'Asia/Vladivostok': 'UTC+10',
+    };
+    if (legacyOffsets[value]) return legacyOffsets[value]!;
+  }
+  return DEFAULT_UI_PREFERENCES.journalTimeZone;
 }
 
 export function writeUiPreferences(preferences: UiPreferences, storage: Pick<Storage, 'setItem'> | null = safeStorage()): void {

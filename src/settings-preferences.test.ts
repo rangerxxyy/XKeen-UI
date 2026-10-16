@@ -66,6 +66,17 @@ describe('appearance and journal timezone preferences', () => {
       getItem: () => JSON.stringify({ theme: 'light', journalTimeZone: 'Europe/Moscow' }),
     });
     expect(preferences.theme).toBe('light');
-    expect(preferences.journalTimeZone).toBe('Europe/Moscow');
+    expect(preferences.journalTimeZone).toBe('UTC+3');
+  });
+
+  it('supports fixed UTC offsets and migrates legacy city keys', () => {
+    const preferences = readUiPreferences({
+      getItem: () => JSON.stringify({ journalTimeZone: 'UTC-12' }),
+    });
+    expect(preferences.journalTimeZone).toBe('UTC-12');
+    const migrated = readUiPreferences({
+      getItem: () => JSON.stringify({ journalTimeZone: 'Europe/Moscow' }),
+    });
+    expect(migrated.journalTimeZone).toBe('UTC+3');
   });
 });

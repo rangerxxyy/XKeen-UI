@@ -27,6 +27,7 @@ use tracing::{info, warn};
 
 mod config_files;
 mod core_update;
+mod dns_control;
 mod installer;
 mod logs;
 mod mihomo;
@@ -285,6 +286,24 @@ async fn control_xkeen(
         )
             .into_response();
     }
+    if !matches!(request.action.as_str(), "start" | "stop" | "restart") {
+        return (
+            StatusCode::BAD_REQUEST,
+            Json(serde_json::json!({ "error": "Допустимы только start, stop и restart" })),
+        )
+            .into_response();
+    }
+    let _control_guard = state.core_update_lock.lock().await;
+    if request.action == "stop" {
+        if let Err(message) = dns_control::ensure_dns_safe_to_stop().await {
+            return (
+                StatusCode::CONFLICT,
+                Json(serde_json::json!({ "error": message })),
+            )
+                .into_response();
+        }
+    }
+    info!(action = %request.action, "Запрошено управление сервисом XKeen");
     match xkeen::control(&request.action).await {
         Ok(status) => Json(status).into_response(),
         Err(error) => (
@@ -307,6 +326,13 @@ async fn install_core(
             .into_response();
     }
     let _update_guard = state.core_update_lock.lock().await;
+    if let Err(message) = dns_control::ensure_dns_safe_to_stop().await {
+        return (
+            StatusCode::CONFLICT,
+            Json(serde_json::json!({ "error": message })),
+        )
+            .into_response();
+    }
     match core_update::install(&state, request).await {
         Ok(result) => Json(result).into_response(),
         Err(error) => (
@@ -1055,7 +1081,9 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         )
         .route("/api/v1/mihomo/providers/rules", get(mihomo_rule_providers))
         .route("/api/v1/mihomo/dns/query", get(mihomo_dns_query));
+    let read_api = read_api.route("/api/v1/dns", get(dns_control::status));
     let mutation_api = Router::new()
+        .route("/api/v1/dns", axum::routing::put(dns_control::toggle))
         .route("/api/v1/xkeen/control", axum::routing::post(control_xkeen))
         .route("/api/v1/cores/install", axum::routing::post(install_core))
         .route("/api/v1/app/update", axum::routing::post(update_app))

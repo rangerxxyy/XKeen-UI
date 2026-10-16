@@ -1,11 +1,12 @@
 import '@fontsource-variable/inter';
 import '@fontsource-variable/jetbrains-mono';
 import './style.css';
-import { closeAllMihomoConnections, closeMihomoConnection, controlXkeen, getActiveMihomoConfig, getCoreSources, getHealth, getMihomoConnections, getMihomoSelectors, getMihomoVersion, getStatus, getSystemLog, getXkeenStatus, pingMihomoGroup, pingMihomoProxy, queryMihomoDns, requestAppUpdate, saveCoreSources, selectMihomoProxy, type ApiState, type CoreSources, type MihomoConnections, type MihomoDnsResult, type MihomoSelector, type SystemLog, type XkeenStatus } from './api';
+import { applyActiveMihomoConfig, closeAllMihomoConnections, closeMihomoConnection, controlXkeen, getActiveMihomoConfig, getCoreSources, getHealth, getMihomoConnections, getMihomoSelectors, getMihomoVersion, getRouterDnsStatus, getStatus, getSystemLog, getXkeenStatus, pingMihomoGroup, pingMihomoProxy, queryMihomoDns, requestAppUpdate, saveCoreSources, selectMihomoProxy, setRouterDnsManagement, type ApiState, type CoreSources, type MihomoConnections, type MihomoDnsResult, type MihomoSelector, type RouterDnsStatus, type SystemLog, type XkeenStatus } from './api';
 import { applyPingResults, orderSelectorsByConfig, renderConnections, renderSelectors } from './mihomo-view';
-import { renderDns } from './dns-view';
+import { patchDnsManagement, patchMihomoDnsSettings, readMihomoDnsSettings, renderDns, type MihomoDnsSettings } from './dns-view';
 import { bindCoreReleaseChecks, openCoreReleaseDialog } from './core-releases';
 import { listAppReleases, type AppRelease } from './app-update';
+import { confirmInApp } from './confirm-dialog';
 
 type Page = 'selectors' | 'connections' | 'configuration' | 'dns';
 
@@ -35,11 +36,20 @@ let dnsLoading = false;
 let dnsError: string | null = null;
 let dnsQueryName = '';
 let dnsQueryType = 'A';
-let dnsPanel: 'mihomo' | 'handoff' = 'mihomo';
 let dnsController: AbortController | undefined;
+let dnsManagementStatus: RouterDnsStatus | null = null;
+let dnsManagementLoading = false;
+let dnsManagementError: string | null = null;
+let dnsManagementBusy = false;
+let dnsManagementConfirm = false;
+let dnsConfig: { content: string; values: MihomoDnsSettings } | null = null;
+let dnsConfigLoading = false;
+let dnsConfigError: string | null = null;
+let dnsConfigBusy = false;
 let mihomoVersion: string | null = null;
 let xkeenStatus: XkeenStatus | null = null;
 let xkeenControlBusy = false;
+let xkeenControlAction: 'start' | 'stop' | 'restart' | null = null;
 const logFiles = [
   { id: 'xray-error', label: 'Xray · error.log' },
   { id: 'xray-access', label: 'Xray · access.log' },
@@ -89,17 +99,19 @@ function renderHeader(): string {
   const service = status?.services.find((item) => item.name.toLowerCase() === 'mihomo');
   const formatVersion = (version: string) => `v${escapeHtml(version.replace(/^v+/i, ''))}`;
   const coreLabel = mihomoVersion ? formatVersion(mihomoVersion) : service ? (service.version ? formatVersion(service.version) : service.state === 'running' ? 'Активен' : service.state === 'stopped' ? 'Остановлен' : 'Недоступен') : state.connected ? 'Не проверен' : 'Ожидание';
-  const serviceText = service ? (service.state === 'running' ? 'Сервис запущен' : service.state === 'stopped' ? 'Сервис остановлен' : 'Статус недоступен') : 'Состояние загружается';
+  const serviceText = xkeenControlBusy
+    ? `${xkeenControlAction === 'stop' ? 'Остановка' : xkeenControlAction === 'start' ? 'Запуск' : 'Перезапуск'} XKeen…`
+    : service ? (service.state === 'running' ? 'Сервис запущен' : service.state === 'stopped' ? 'Сервис остановлен' : 'Статус недоступен') : 'Состояние загружается';
   const memory = status?.memory ? `RAM ${status.memory.usedMb}/${status.memory.totalMb} MB` : 'RAM —';
   const cpu = status?.cpuPercent === null || status?.cpuPercent === undefined ? 'CPU —' : `CPU ${Math.round(status.cpuPercent)}%`;
   const canControl = status?.mode === 'router' && Boolean(xkeenStatus?.installed);
   const controls = canControl
     ? `${xkeenStatus?.running === false
       ? `<button class="header-service-action" data-xkeen-action="start" type="button" title="Запустить XKeen" aria-label="Запустить XKeen" ${xkeenControlBusy ? 'disabled' : ''}>▶</button>`
-      : `<button class="header-service-action" data-xkeen-action="restart" type="button" title="Перезапустить XKeen" aria-label="Перезапустить XKeen" ${xkeenControlBusy ? 'disabled' : ''}><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 7v5h-5M4.9 9a7.5 7.5 0 0 1 12.4-2L20 12M4 17v-5h5m10.1 3a7.5 7.5 0 0 1-12.4 2L4 12"/></svg></button><button class="header-service-action header-service-stop" data-xkeen-action="stop" type="button" title="Остановить XKeen" aria-label="Остановить XKeen" ${xkeenControlBusy || xkeenStatus?.running !== true ? 'disabled' : ''}>■</button>`}`
+      : `<button class="header-service-action" data-xkeen-action="restart" type="button" title="Перезапустить XKeen" aria-label="Перезапустить XKeen" ${xkeenControlBusy ? 'disabled' : ''}>${xkeenControlBusy && xkeenControlAction === 'restart' ? '<span class="service-control-spinner" aria-hidden="true"></span>' : '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 7v5h-5M4.9 9a7.5 7.5 0 0 1 12.4-2L20 12M4 17v-5h5m10.1 3a7.5 7.5 0 0 1-12.4 2L4 12"/></svg>'}</button><button class="header-service-action header-service-stop" data-xkeen-action="stop" type="button" title="Остановить XKeen" aria-label="Остановить XKeen" ${xkeenControlBusy || xkeenStatus?.running !== true ? 'disabled' : ''}>${xkeenControlBusy && xkeenControlAction === 'stop' ? '<span class="service-control-spinner" aria-hidden="true"></span>' : '■'}</button>`}`
     : '';
   return `<header class="topbar">
-    <div class="top-status-cluster"><div class="top-status" aria-label="Состояние панели"><span class="connection-led ${state.connected ? 'is-online' : 'is-offline'}"></span><span><strong>${escapeHtml(serviceText)}</strong><small>${state.connected ? `${memory} · ${cpu}` : 'Ожидание соединения с backend'}</small></span></div><div class="header-service-controls" aria-label="Управление XKeen">${controls}</div></div>
+    <div class="top-status-cluster"><div class="top-status" aria-label="Состояние панели"><span class="connection-led ${state.connected ? 'is-online' : 'is-offline'}"></span><span><strong>${escapeHtml(serviceText)}</strong><small>${state.connected ? `${memory} · ${cpu}` : 'Ожидание соединения с backend'}</small></span></div><div class="header-service-controls" aria-label="Управление XKeen" aria-busy="${xkeenControlBusy}">${controls}</div></div>
     <a class="brand" href="#selectors" aria-label="XKeen UI, селекторы"><span class="brand-mark">X</span><span>XKeen <b>UI</b></span></a>
     <div class="top-actions"><button class="version-chip core-chip core-version-button" id="core-version" type="button" title="Выбрать релиз Mihomo"><span class="chip-icon">◈</span> Mihomo <b>${coreLabel}</b><span class="chip-chevron" aria-hidden="true">⌄</span></button><button class="version-chip app-version-button" id="app-version" type="button" title="Выбрать релиз XKeen UI"><span class="chip-icon">⬡</span> XKeen UI <b>v${status?.appVersion ?? APP_VERSION}</b><span class="chip-chevron" aria-hidden="true">⌄</span></button><button class="icon-button" id="refresh" title="Обновить статус" aria-label="Обновить статус">↻</button><button class="icon-button" id="settings" title="Настройки" aria-label="Настройки">⚙</button></div>
   </header>`;
@@ -279,7 +291,10 @@ function render(): void {
   if (activePage !== 'configuration') yamlEditorModule?.unmountYamlEditor();
   const pageContent = activePage === 'selectors' ? renderSelectors(selectors, selectorsLoading, selectorsError)
       : activePage === 'connections' ? renderConnections(connections, connectionsLoading, connectionsError)
-        : activePage === 'dns' ? renderDns(dnsResult, dnsLoading, dnsError, dnsQueryName, dnsQueryType, dnsPanel)
+        : activePage === 'dns' ? renderDns(dnsResult, dnsLoading, dnsError, dnsQueryName, dnsQueryType, {
+          status: dnsManagementStatus, loading: dnsManagementLoading, error: dnsManagementError,
+          busy: dnsManagementBusy, confirm: dnsManagementConfirm,
+        }, { values: dnsConfig?.values ?? null, loading: dnsConfigLoading, error: dnsConfigError, busy: dnsConfigBusy })
         : renderComingSoon(activePage);
   app.innerHTML = `<div class="app-shell">${renderHeader()}${renderNavigation()}<div class="workspace-scroll"><main class="main-content">${pageContent}</main>${renderJournal()}</div><div class="toast-region" aria-live="polite"></div></div>`;
   app.querySelector<HTMLElement>('.workspace-scroll')!.scrollTop = scrollTop;
@@ -295,6 +310,10 @@ function render(): void {
         activePage = page;
         render();
         void loadMihomoPage(page);
+        if (page === 'dns') {
+          void loadRouterDnsStatus();
+          void loadMihomoDnsConfig();
+        }
       }
     });
   });
@@ -305,6 +324,7 @@ function render(): void {
     'mihomo', async () => (await getCoreSources()).mihomo, mihomoVersion,
   ));
   bindXkeenControls(app);
+  bindDnsManagementControls(app);
   document.querySelector<HTMLFormElement>('#dns-query-form')?.addEventListener('submit', (event) => {
     event.preventDefault();
     const form = event.currentTarget as HTMLFormElement;
@@ -313,13 +333,19 @@ function render(): void {
     dnsQueryType = String(data.get('type') ?? 'A');
     void runDnsQuery();
   });
-  document.querySelectorAll<HTMLButtonElement>('[data-dns-panel]').forEach((button) => button.addEventListener('click', () => {
-    const panel = button.dataset.dnsPanel;
-    if (panel === 'mihomo' || panel === 'handoff') {
-      dnsPanel = panel;
-      render();
-    }
-  }));
+  document.querySelector<HTMLFormElement>('#mihomo-dns-settings')?.addEventListener('submit', (event) => {
+    event.preventDefault();
+    const data = new FormData(event.currentTarget as HTMLFormElement);
+    const settings: MihomoDnsSettings = {
+      enhancedMode: data.get('enhancedMode') === 'fake-ip' ? 'fake-ip' : 'redir-host',
+      bootstrap: String(data.get('bootstrap') ?? ''),
+      nameserver: String(data.get('nameserver') ?? ''),
+      nameserverPolicy: String(data.get('nameserverPolicy') ?? ''),
+      proxyServerNameserver: String(data.get('proxyServerNameserver') ?? ''),
+      fallback: String(data.get('fallback') ?? ''),
+    };
+    void saveMihomoDnsConfig(settings);
+  });
   if (activePage === 'configuration') void mountConfigurationEditor();
   bindMihomoInteractions();
 }
@@ -327,11 +353,24 @@ function render(): void {
 async function runXkeenAction(action: string | undefined): Promise<void> {
   if (action !== 'start' && action !== 'stop' && action !== 'restart') return;
   xkeenControlBusy = true;
+  xkeenControlAction = action;
   render();
   let notice = '';
   let noticeKind: 'success' | 'error' = 'success';
   try {
     xkeenStatus = await controlXkeen(action);
+    if (state.status) {
+      const service = {
+        name: 'Xkeen',
+        state: xkeenStatus.running === true ? 'running' as const : xkeenStatus.running === false ? 'stopped' as const : 'unavailable' as const,
+        version: xkeenStatus.version,
+        detail: xkeenStatus.detail,
+      };
+      const hasService = state.status.services.some((item) => item.name.toLowerCase() === 'xkeen');
+      state.status.services = hasService
+        ? state.status.services.map((item) => item.name.toLowerCase() === 'xkeen' ? service : item)
+        : [...state.status.services, service];
+    }
     notice = action === 'restart' ? 'XKeen перезапущен' : action === 'stop' ? 'XKeen остановлен' : 'XKeen запущен';
     noticeKind = 'success';
   } catch (error) {
@@ -339,6 +378,7 @@ async function runXkeenAction(action: string | undefined): Promise<void> {
     noticeKind = 'error';
   } finally {
     xkeenControlBusy = false;
+    xkeenControlAction = null;
     render();
     showToast(notice, noticeKind);
   }
@@ -380,6 +420,104 @@ async function runDnsQuery(): Promise<void> {
   }
 }
 
+function bindDnsManagementControls(root: ParentNode): void {
+  root.querySelector<HTMLButtonElement>('#dns-management-refresh')?.addEventListener('click', () => void loadRouterDnsStatus());
+  root.querySelector<HTMLButtonElement>('#dns-management-toggle')?.addEventListener('click', () => {
+    dnsManagementConfirm = true;
+    render();
+  });
+  root.querySelector<HTMLButtonElement>('#dns-management-cancel')?.addEventListener('click', () => {
+    dnsManagementConfirm = false;
+    render();
+  });
+  root.querySelector<HTMLButtonElement>('#dns-management-apply')?.addEventListener('click', () => void runDnsManagementToggle());
+}
+
+async function loadRouterDnsStatus(): Promise<void> {
+  dnsManagementLoading = true;
+  dnsManagementError = null;
+  render();
+  try {
+    dnsManagementStatus = await getRouterDnsStatus();
+  } catch (error) {
+    dnsManagementError = error instanceof Error ? error.message : 'Не удалось прочитать состояние DNS';
+  } finally {
+    dnsManagementLoading = false;
+    if (activePage === 'dns') render();
+  }
+}
+
+async function loadMihomoDnsConfig(): Promise<void> {
+  dnsConfigLoading = true;
+  dnsConfigError = null;
+  render();
+  try {
+    const current = await getActiveMihomoConfig();
+    dnsConfig = { content: current.content, values: readMihomoDnsSettings(current.content) };
+  } catch (error) {
+    dnsConfig = null;
+    dnsConfigError = error instanceof Error ? error.message : 'Не удалось прочитать DNS-конфигурацию Mihomo';
+  } finally {
+    dnsConfigLoading = false;
+    if (activePage === 'dns') render();
+  }
+}
+
+async function saveMihomoDnsConfig(settings: MihomoDnsSettings): Promise<void> {
+  if (!dnsConfig || dnsConfigBusy) return;
+  dnsConfig = { ...dnsConfig, values: settings };
+  dnsConfigBusy = true;
+  dnsConfigError = null;
+  render();
+  try {
+    const updated = patchMihomoDnsSettings(dnsConfig.content, settings);
+    await applyActiveMihomoConfig(updated, dnsConfig.content);
+    const current = await getActiveMihomoConfig();
+    dnsConfig = { content: current.content, values: readMihomoDnsSettings(current.content) };
+    await loadRouterDnsStatus();
+    showToast('Настройки DNS Mihomo сохранены и применены', 'success');
+  } catch (error) {
+    dnsConfigError = error instanceof Error ? error.message : 'Не удалось применить настройки DNS Mihomo';
+    showToast(dnsConfigError, 'error');
+  } finally {
+    dnsConfigBusy = false;
+    if (activePage === 'dns') render();
+  }
+}
+
+async function runDnsManagementToggle(): Promise<void> {
+  const currentStatus = dnsManagementStatus;
+  if (!currentStatus || dnsManagementBusy) return;
+  const enabled = !currentStatus.dnsOverride;
+  dnsManagementBusy = true;
+  dnsManagementConfirm = false;
+  dnsManagementError = null;
+  render();
+  let notice = '';
+  let noticeKind: 'success' | 'error' = 'success';
+  try {
+    const activeConfig = await getActiveMihomoConfig();
+    patchDnsManagement(activeConfig.content, enabled);
+    await setRouterDnsManagement({ enabled, expectedContent: activeConfig.content });
+    notice = enabled ? 'DNS Mihomo включён' : 'DNS возвращён KeeneticOS';
+    try {
+      dnsManagementStatus = await getRouterDnsStatus();
+    } catch (error) {
+      dnsManagementStatus = null;
+      dnsManagementError = error instanceof Error ? `Настройки применились, но состояние не обновилось: ${error.message}` : 'Настройки применились, но состояние не обновилось';
+    }
+    await loadMihomoDnsConfig();
+  } catch (error) {
+    dnsManagementError = error instanceof Error ? error.message : 'Не удалось изменить управление DNS';
+    notice = dnsManagementError;
+    noticeKind = 'error';
+  } finally {
+    dnsManagementBusy = false;
+    if (activePage === 'dns') render();
+    showToast(notice, noticeKind);
+  }
+}
+
 function bindMihomoInteractions(): void {
   document.querySelector<HTMLButtonElement>('#mihomo-retry')?.addEventListener('click', () => void loadMihomoPage(activePage));
   document.querySelectorAll<HTMLButtonElement>('.proxy-option-select').forEach((button) => {
@@ -398,9 +536,9 @@ function bindMihomoInteractions(): void {
   document.querySelector<HTMLInputElement>('#connection-filter')?.addEventListener('input', (event) => {
     const query = (event.currentTarget as HTMLInputElement).value.trim().toLocaleLowerCase();
     let visible = 0;
-    document.querySelectorAll<HTMLTableRowElement>('.connection-table tbody tr').forEach((row) => {
-      const matches = row.dataset.search?.includes(query) ?? false;
-      row.hidden = !matches;
+    document.querySelectorAll<HTMLElement>('.connection-grid .connection-card').forEach((card) => {
+      const matches = card.dataset.search?.includes(query) ?? false;
+      card.hidden = !matches;
       if (matches) visible += 1;
     });
     const noResults = document.querySelector<HTMLElement>('.connection-no-results.is-filtered');
@@ -447,7 +585,7 @@ async function pingProxyFromUi(button: HTMLButtonElement): Promise<void> {
 
 async function closeConnectionFromUi(button: HTMLButtonElement): Promise<void> {
   const id = button.dataset.closeConnection;
-  if (!id || !window.confirm('Закрыть выбранное соединение? Текущий сетевой запрос может прерваться.')) return;
+  if (!id || !(await confirmInApp('Закрыть соединение?', 'Текущий сетевой запрос этого устройства может прерваться.', 'Закрыть'))) return;
   button.disabled = true;
   try {
     await closeMihomoConnection(id, mihomoController?.signal);
@@ -461,7 +599,7 @@ async function closeConnectionFromUi(button: HTMLButtonElement): Promise<void> {
 
 async function closeAllConnectionsFromUi(): Promise<void> {
   const count = connections?.connections.length ?? 0;
-  if (!count || !window.confirm(`Закрыть все ${count} активных соединений? Это может прервать текущие запросы устройств.`)) return;
+  if (!count || !(await confirmInApp('Закрыть все соединения?', `Будут закрыты ${count} активных соединений. Текущие запросы устройств могут прерваться.`, 'Закрыть все'))) return;
   const button = document.querySelector<HTMLButtonElement>('#close-all-connections');
   if (button) { button.disabled = true; button.textContent = 'Закрываем…'; }
   try {
@@ -580,8 +718,8 @@ async function openAppReleases(): Promise<void> {
     list.querySelectorAll('.app-release-card').forEach((item) => item.setAttribute('aria-pressed', String(item === card)));
     choose();
   });
-  install.addEventListener('click', () => {
-    if (appRelease && window.confirm(`Установить XKeen UI ${appRelease.tag_name}? Панель перезапустится.`)) {
+  install.addEventListener('click', async () => {
+    if (appRelease && await confirmInApp('Установить XKeen UI?', `Версия ${appRelease.tag_name}. Панель перезапустится после установки.`, 'Установить')) {
       install.disabled = true;
       install.textContent = 'Устанавливаем…';
       void installAppUpdate();

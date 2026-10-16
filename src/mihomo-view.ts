@@ -91,7 +91,18 @@ function connectionRow(connection: MihomoConnection): string {
   const route = connection.chains.length ? connection.chains.join(' › ') : 'DIRECT';
   const host = connection.host || connection.destination || 'Адрес недоступен';
   const search = [host, connection.source, route, connection.rule, connection.rulePayload, connection.process].join(' ').toLocaleLowerCase();
-  return `<tr data-search="${escapeHtml(search)}"><td><span class="connection-host">${escapeHtml(host)}</span><small>${escapeHtml(connection.destination || connection.network || '—')}</small></td><td><span class="connection-route">${escapeHtml(route)}</span><small>${escapeHtml(connection.rule ? `${connection.rule} · ${connection.rulePayload}` : 'Маршрут из runtime')}</small></td><td>${escapeHtml(connection.source || '—')}<small>${escapeHtml(connection.process || connection.network || '—')}</small></td><td><span class="traffic-up">↑ ${formatBytes(connection.upload)}</span><small class="traffic-down">↓ ${formatBytes(connection.download)}</small></td><td>${escapeHtml(connection.start ? new Date(connection.start).toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit', second: '2-digit' }) : '—')}</td><td><button class="connection-close" data-close-connection="${escapeHtml(connection.id)}" aria-label="Закрыть соединение ${escapeHtml(host)}" title="Закрыть соединение">×</button></td></tr>`;
+  const network = connection.network.toUpperCase() || '—';
+  const started = connection.start ? new Date(connection.start).toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' }) : '—';
+  const source = connection.source || 'Неизвестное устройство';
+  const domain = host.toLocaleLowerCase();
+  const appIcon = domain.includes('youtube') ? 'youtube' : domain.includes('github') ? 'github' : domain.includes('google') ? 'google' : domain.includes('microsoft') || domain.includes('bing') || domain.includes('office') ? 'microsoft' : 'web';
+  const appGlyph = appIcon === 'youtube' ? '▶' : appIcon === 'github' ? '●' : appIcon === 'google' ? 'G' : appIcon === 'microsoft' ? '⊞' : '◎';
+  return `<article class="connection-card" data-search="${escapeHtml(search)}">
+    <div class="connection-card-route"><span class="connection-card-icon is-route" aria-hidden="true">${connection.chains.length > 1 ? '⛓' : '⇢'}</span><span class="connection-route" title="${escapeHtml(route)}">${escapeHtml(route)}</span><button class="connection-close" data-close-connection="${escapeHtml(connection.id)}" aria-label="Закрыть соединение ${escapeHtml(host)}" title="Закрыть соединение">×</button></div>
+    <div class="connection-card-host"><span class="connection-service-icon is-${appIcon}" aria-hidden="true">${appGlyph}</span><strong title="${escapeHtml(host)}">${escapeHtml(host)}</strong></div>
+    <div class="connection-card-meta"><span title="Сетевой протокол"><i aria-hidden="true">⌁</i>${escapeHtml(network)}</span><span title="Устройство"><i aria-hidden="true">▣</i>${escapeHtml(source)}</span></div>
+    <div class="connection-card-footer"><span class="connection-card-traffic" title="Отправлено"><i class="is-upload" aria-hidden="true">↑</i>${formatBytes(connection.upload)}</span><span class="connection-card-traffic" title="Получено"><i class="is-download" aria-hidden="true">↓</i>${formatBytes(connection.download)}</span><time title="Время подключения">◷ ${escapeHtml(started)}</time></div>
+  </article>`;
 }
 
 export function renderConnections(data: MihomoConnections | null, loading: boolean, error: string | null): string {
@@ -99,7 +110,7 @@ export function renderConnections(data: MihomoConnections | null, loading: boole
   const connections = data?.connections ?? [];
   return `${state || `<section class="connections-panel"><div class="connections-toolbar"><div class="connection-total"><span class="live-pulse"></span><strong>${connections.length}</strong><span>активных соединений</span></div><label class="connection-search"><span>⌕</span><input id="connection-filter" type="search" placeholder="Хост, маршрут или приложение" aria-label="Фильтр соединений"></label><button class="connection-close-all" id="close-all-connections" ${connections.length ? '' : 'disabled'}>Закрыть все</button></div>
     <div class="traffic-summary"><div><small>ПЕРЕДАНО</small><strong>↑ ${formatBytes(data?.uploadTotal ?? 0)}</strong></div><div><small>ПОЛУЧЕНО</small><strong>↓ ${formatBytes(data?.downloadTotal ?? 0)}</strong></div><span class="traffic-footnote">Счётчики Mihomo · суммарно с запуска ядра</span></div>
-    <div class="connection-table-wrap"><table class="connection-table"><thead><tr><th>ХОСТ</th><th>ЦЕПОЧКА · ПРАВИЛО</th><th>ИСТОЧНИК</th><th>ТРАФИК</th><th>НАЧАЛО</th><th></th></tr></thead><tbody>${connections.map(connectionRow).join('')}</tbody></table>
+    <div class="connection-grid-wrap"><div class="connection-grid">${connections.map(connectionRow).join('')}</div>
       ${connections.length === 0 ? '<div class="connection-no-results">Сейчас нет активных соединений.</div>' : ''}<div class="connection-no-results is-filtered" hidden>По этому фильтру соединений нет.</div></div></section>`}
   `;
 }

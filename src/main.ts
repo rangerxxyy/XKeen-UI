@@ -1,5 +1,6 @@
 import '@fontsource-variable/inter';
 import '@fontsource-variable/jetbrains-mono';
+import './country-flags.css';
 import './style.css';
 import { applyActiveMihomoConfig, closeAllMihomoConnections, closeMihomoConnection, controlXkeen, getActiveMihomoConfig, getCoreSources, getHealth, getMihomoConnections, getMihomoSelectors, getMihomoVersion, getRouterDnsStatus, getStatus, getSystemLog, getXkeenStatus, pingMihomoGroup, pingMihomoProxy, queryMihomoDns, requestAppUpdate, saveCoreSources, selectMihomoProxy, setRouterDnsManagement, type ApiState, type CoreSources, type MihomoConnections, type MihomoDnsResult, type MihomoSelector, type RouterDnsStatus, type SystemLog, type XkeenStatus } from './api';
 import { applyPingResults, orderSelectorsByConfig, renderConnections, renderSelectors } from './mihomo-view';
@@ -7,6 +8,7 @@ import { patchDnsManagement, patchMihomoDnsSettings, readMihomoDnsSettings, rend
 import { bindCoreReleaseChecks, openCoreReleaseDialog } from './core-releases';
 import { listAppReleases, type AppRelease } from './app-update';
 import { confirmInApp } from './confirm-dialog';
+import { bindDialogMotion, closeDialogWithMotion } from './dialog-motion';
 import { lifecycleFeedback } from './service-feedback';
 
 type Page = 'selectors' | 'connections' | 'configuration' | 'dns';
@@ -23,6 +25,7 @@ type YamlEditorModule = typeof import('./yaml-editor');
 let yamlEditorModule: YamlEditorModule | null = null;
 let yamlEditorLoad: Promise<YamlEditorModule> | null = null;
 let activePage: Page = 'selectors';
+let animatePageEntry = false;
 let refreshTimer: number | undefined;
 let requestController: AbortController | undefined;
 let mihomoController: AbortController | undefined;
@@ -112,9 +115,9 @@ function renderHeader(): string {
       : `<button class="header-service-action" data-xkeen-action="restart" type="button" title="Перезапустить XKeen" aria-label="Перезапустить XKeen" ${xkeenControlBusy ? 'disabled' : ''}>${xkeenControlBusy && xkeenControlAction === 'restart' ? '<span class="service-control-spinner" aria-hidden="true"></span>' : '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 7v5h-5M4.9 9a7.5 7.5 0 0 1 12.4-2L20 12M4 17v-5h5m10.1 3a7.5 7.5 0 0 1-12.4 2L4 12"/></svg>'}</button><button class="header-service-action header-service-stop" data-xkeen-action="stop" type="button" title="Остановить XKeen" aria-label="Остановить XKeen" ${xkeenControlBusy || xkeenStatus?.running !== true ? 'disabled' : ''}>${xkeenControlBusy && xkeenControlAction === 'stop' ? '<span class="service-control-spinner" aria-hidden="true"></span>' : '■'}</button>`}`
     : '';
   return `<header class="topbar">
-    <div class="top-status-cluster"><div class="top-status" aria-label="Состояние панели"><span class="connection-led ${state.connected ? 'is-online' : 'is-offline'}"></span><span><strong>${escapeHtml(serviceText)}</strong><small>${state.connected ? `${memory} · ${cpu}` : 'Ожидание соединения с backend'}</small></span></div><div class="header-service-controls" aria-label="Управление XKeen" aria-busy="${xkeenControlBusy}">${controls}</div></div>
+    <div class="top-status-cluster"><div class="top-status" aria-label="Состояние панели"><span id="status-led" class="connection-led ${state.connected ? 'is-online' : 'is-offline'}"></span><span><strong id="service-label">${escapeHtml(serviceText)}</strong><small id="service-summary">${state.connected ? `${memory} · ${cpu}` : 'Ожидание соединения с backend'}</small></span></div><div class="header-service-controls" aria-label="Управление XKeen" aria-busy="${xkeenControlBusy}">${controls}</div></div>
     <a class="brand" href="#selectors" aria-label="XKeen UI, селекторы"><span class="brand-mark">X</span><span>XKeen <b>UI</b></span></a>
-    <div class="top-actions"><button class="version-chip core-chip core-version-button" id="core-version" type="button" title="Выбрать релиз Mihomo"><span class="chip-icon">◈</span> Mihomo <b>${coreLabel}</b><span class="chip-chevron" aria-hidden="true">⌄</span></button><button class="version-chip app-version-button" id="app-version" type="button" title="Выбрать релиз XKeen UI"><span class="chip-icon">⬡</span> XKeen UI <b>v${status?.appVersion ?? APP_VERSION}</b><span class="chip-chevron" aria-hidden="true">⌄</span></button><button class="icon-button" id="refresh" title="Обновить статус" aria-label="Обновить статус">↻</button><button class="icon-button" id="settings" title="Настройки" aria-label="Настройки">⚙</button></div>
+    <div class="top-actions"><button class="version-chip core-chip core-version-button" id="core-version" type="button" title="Выбрать релиз Mihomo"><span class="chip-icon">◈</span> Mihomo <b id="core-version-label">${coreLabel}</b><span class="chip-chevron" aria-hidden="true">⌄</span></button><button class="version-chip app-version-button" id="app-version" type="button" title="Выбрать релиз XKeen UI"><span class="chip-icon">⬡</span> XKeen UI <b id="app-version-label">v${status?.appVersion ?? APP_VERSION}</b><span class="chip-chevron" aria-hidden="true">⌄</span></button><button class="icon-button" id="settings" title="Настройки" aria-label="Настройки">⚙</button></div>
   </header>`;
 }
 
@@ -157,10 +160,6 @@ function renderConfiguration(): string {
       <div class="editor-statusbar"><span id="yaml-validation" class="editor-validation">Черновик пуст</span><div class="editor-actions"><button class="editor-button" id="config-load-active" type="button" data-router-file title="Считать файл с роутера">↻ Считать</button><button class="editor-button" id="config-validate-mihomo" type="button" hidden title="Проверить черновик установленным Mihomo без применения">Проверить Mihomo</button><button class="editor-button editor-button-primary" id="config-apply-active" type="button" data-router-file disabled title="Сначала считайте актуальный файл роутера">Применить</button><details class="editor-utilities"><summary class="editor-button">⋯ Утилиты</summary><div class="editor-utilities-menu" role="menu" aria-label="Утилиты конфигурации"><button type="button" role="menuitem" id="yaml-template" data-structured-only>▤ Шаблоны конфигураций</button><button type="button" role="menuitem" id="yaml-validate" data-structured-only>✓ Проверить</button><button type="button" role="menuitem" id="yaml-format" data-structured-only>⌘ Форматировать</button><button type="button" role="menuitem" id="yaml-download">↓ Скачать черновик</button></div></details></div></div>
     </div>
   </section>`;
-}
-
-function renderFooter(): string {
-  return `<footer class="footer"><span><span class="footer-mark">✳</span> XKeen UI <span class="footer-muted">· первая версия</span></span><span>${state.connected ? 'Backend отвечает' : 'Backend не подключён'} <span class="footer-indicator ${state.connected ? 'is-online' : ''}"></span></span></footer>`;
 }
 
 function renderJournal(): string {
@@ -297,7 +296,8 @@ function render(): void {
           busy: dnsManagementBusy, confirm: dnsManagementConfirm,
         }, { values: dnsConfig?.values ?? null, loading: dnsConfigLoading, error: dnsConfigError, busy: dnsConfigBusy })
         : renderComingSoon(activePage);
-  app.innerHTML = `<div class="app-shell">${renderHeader()}${renderNavigation()}<div class="workspace-scroll"><main class="main-content">${pageContent}</main>${renderJournal()}</div><div class="toast-region" aria-live="polite"></div></div>`;
+  app.innerHTML = `<div class="app-shell">${renderHeader()}${renderNavigation()}<div class="workspace-scroll"><main class="main-content${animatePageEntry ? ' page-enter' : ''}">${pageContent}</main>${renderJournal()}</div><div class="toast-region" aria-live="polite"></div></div>`;
+  animatePageEntry = false;
   app.querySelector<HTMLElement>('.workspace-scroll')!.scrollTop = scrollTop;
   bindJournal();
   document.querySelectorAll<HTMLButtonElement>('[data-page]').forEach((button) => {
@@ -309,6 +309,7 @@ function render(): void {
           dnsLoading = false;
         }
         activePage = page;
+        animatePageEntry = true;
         render();
         void loadMihomoPage(page);
         if (page === 'dns') {
@@ -318,7 +319,7 @@ function render(): void {
       }
     });
   });
-  document.querySelectorAll<HTMLButtonElement>('#refresh,#refresh-secondary,#retry').forEach((button) => button.addEventListener('click', () => void refresh()));
+  document.querySelectorAll<HTMLButtonElement>('#retry').forEach((button) => button.addEventListener('click', () => void refresh()));
   document.querySelector<HTMLButtonElement>('#settings')?.addEventListener('click', openSettings);
   document.querySelector<HTMLButtonElement>('#app-version')?.addEventListener('click', () => void openAppReleases());
   document.querySelector<HTMLButtonElement>('#core-version')?.addEventListener('click', () => void openCoreReleaseDialog(
@@ -547,6 +548,19 @@ function bindMihomoInteractions(): void {
   });
 }
 
+function updatePingControls(): void {
+  const options = new Map(selectors.flatMap((group) => group.options).map((option) => [option.name, option]));
+  document.querySelectorAll<HTMLButtonElement>('.proxy-ping-value').forEach((button) => {
+    const option = options.get(button.dataset.pingProxy ?? '');
+    if (!option) return;
+    button.classList.toggle('is-alive', option.alive === true);
+    button.classList.toggle('is-dead', option.alive === false);
+    button.title = `${option.alive === null ? 'Проверка недоступна' : option.alive ? 'Узел отвечает' : 'Узел не отвечает'}. Нажмите, чтобы проверить ping`;
+    const value = button.querySelector('span');
+    if (value) value.textContent = option.delay === null ? '—' : `${option.delay} мс`;
+  });
+}
+
 async function pingGroupFromUi(button: HTMLButtonElement): Promise<void> {
   const group = button.dataset.pingGroup;
   if (!group || button.disabled) return;
@@ -557,7 +571,7 @@ async function pingGroupFromUi(button: HTMLButtonElement): Promise<void> {
   try {
     const results = await pingMihomoGroup(group, mihomoController?.signal);
     selectors = applyPingResults(selectors, results);
-    render();
+    updatePingControls();
   } catch (error) {
     button.title = error instanceof Error ? error.message : 'Не удалось проверить серверы';
   } finally {
@@ -580,7 +594,7 @@ async function pingProxyFromUi(button: HTMLButtonElement): Promise<void> {
   try {
     const result = await pingMihomoProxy(group, name, mihomoController?.signal);
     if (result) selectors = applyPingResults(selectors, [result]);
-    render();
+    updatePingControls();
   } catch (error) {
     button.title = error instanceof Error ? error.message : 'Не удалось проверить узел';
   } finally {
@@ -623,6 +637,7 @@ async function closeAllConnectionsFromUi(): Promise<void> {
 
 async function loadMihomoPage(page: Page): Promise<void> {
   if (page !== 'selectors' && page !== 'connections') return;
+  const hadData = page === 'selectors' ? selectors.length > 0 : connections !== null;
   mihomoController?.abort();
   mihomoController = new AbortController();
   const { signal } = mihomoController;
@@ -633,9 +648,9 @@ async function loadMihomoPage(page: Page): Promise<void> {
       if (activePage === page) updateChrome();
     }).catch(() => undefined);
   }
-  if (page === 'selectors') { selectorsLoading = true; selectorsError = null; }
-  else { connectionsLoading = true; connectionsError = null; }
-  if (activePage === page) render();
+  if (page === 'selectors') { selectorsLoading = !hadData; selectorsError = null; }
+  else { connectionsLoading = !hadData; connectionsError = null; }
+  if (activePage === page && !hadData) render();
   try {
     if (page === 'selectors') {
       const [groups, config] = await Promise.all([
@@ -649,8 +664,9 @@ async function loadMihomoPage(page: Page): Promise<void> {
   } catch (error) {
     if (error instanceof DOMException && error.name === 'AbortError') return;
     const message = error instanceof Error ? error.message : 'Неизвестная ошибка API Mihomo';
-    if (page === 'selectors') selectorsError = message;
-    else connectionsError = message;
+    if (page === 'selectors') selectorsError = hadData ? null : message;
+    else connectionsError = hadData ? null : message;
+    if (hadData) showToast(`Данные не обновились: ${message}`, 'error');
   } finally {
     if (!signal.aborted) {
       if (page === 'selectors') selectorsLoading = false;
@@ -677,25 +693,35 @@ async function selectProxyFromUi(button: HTMLButtonElement): Promise<void> {
 }
 
 function updateChrome(): void {
-  const currentHeader = document.querySelector('.topbar');
-  const currentFooter = document.querySelector('.footer');
-  if (currentHeader) {
-    const container = document.createElement('div');
-    container.innerHTML = renderHeader();
-    currentHeader.replaceWith(container.firstElementChild!);
+  const header = document.querySelector<HTMLElement>('.topbar');
+  if (header) {
+    const template = document.createElement('template');
+    template.innerHTML = renderHeader();
+    const nextHeader = template.content.firstElementChild as HTMLElement | null;
+    if (nextHeader) {
+      const setText = (selector: string) => {
+        const current = header.querySelector<HTMLElement>(selector);
+        const next = nextHeader.querySelector<HTMLElement>(selector);
+        if (current && next && current.textContent !== next.textContent) current.textContent = next.textContent;
+      };
+      const currentLed = header.querySelector<HTMLElement>('#status-led');
+      const nextLed = nextHeader.querySelector<HTMLElement>('#status-led');
+      if (currentLed && nextLed && currentLed.className !== nextLed.className) currentLed.className = nextLed.className;
+      setText('#service-label');
+      setText('#service-summary');
+      setText('#core-version-label');
+      setText('#app-version-label');
+      const currentControls = header.querySelector<HTMLElement>('.header-service-controls');
+      const nextControls = nextHeader.querySelector<HTMLElement>('.header-service-controls');
+      if (currentControls && nextControls) {
+        currentControls.setAttribute('aria-busy', nextControls.getAttribute('aria-busy') ?? 'false');
+        if (currentControls.innerHTML !== nextControls.innerHTML) {
+          currentControls.innerHTML = nextControls.innerHTML;
+          bindXkeenControls(currentControls);
+        }
+      }
+    }
   }
-  if (currentFooter) {
-    const container = document.createElement('div');
-    container.innerHTML = renderFooter();
-    currentFooter.replaceWith(container.firstElementChild!);
-  }
-  document.querySelector<HTMLButtonElement>('#refresh')?.addEventListener('click', () => void refresh());
-  document.querySelector<HTMLButtonElement>('#app-version')?.addEventListener('click', () => void openAppReleases());
-  document.querySelector<HTMLButtonElement>('#core-version')?.addEventListener('click', () => void openCoreReleaseDialog(
-    'mihomo', async () => (await getCoreSources()).mihomo, mihomoVersion,
-  ));
-  document.querySelector<HTMLButtonElement>('#settings')?.addEventListener('click', openSettings);
-  bindXkeenControls(document);
 }
 
 async function openAppReleases(): Promise<void> {
@@ -703,9 +729,10 @@ async function openAppReleases(): Promise<void> {
   dialog.className = 'modal app-release-dialog';
   dialog.innerHTML = `<div class="modal-panel app-releases-panel"><div class="modal-heading"><span class="modal-icon">⬡</span><h2>Обновление XKeen UI</h2><button class="icon-button" id="app-releases-close" type="button" aria-label="Закрыть">×</button></div><div class="core-release-dialog-source"><span>rangerxxyy/XKeen-UI</span><span class="core-release-github">GitHub</span></div><p class="modal-note" id="app-releases-status" aria-live="polite">Загружаем последние стабильные сборки…</p><div id="app-release-list" class="app-release-list" aria-label="Стабильные релизы XKeen UI"></div><div class="app-release-actions"><a id="app-release-link" class="editor-button" target="_blank" rel="noopener noreferrer" hidden>Открыть релиз ↗</a><button id="app-release-install" class="editor-button editor-button-primary" type="button" disabled>Установить</button></div></div>`;
   document.body.append(dialog);
+  bindDialogMotion(dialog);
   dialog.showModal();
   dialog.addEventListener('close', () => dialog.remove(), { once: true });
-  dialog.querySelector<HTMLButtonElement>('#app-releases-close')?.addEventListener('click', () => dialog.close());
+  dialog.querySelector<HTMLButtonElement>('#app-releases-close')?.addEventListener('click', () => closeDialogWithMotion(dialog));
   const status = dialog.querySelector<HTMLElement>('#app-releases-status')!;
   const list = dialog.querySelector<HTMLElement>('#app-release-list')!;
   const link = dialog.querySelector<HTMLAnchorElement>('#app-release-link')!;
@@ -767,8 +794,9 @@ function openSettings(): void {
   modal.className = 'modal settings-dialog';
   modal.innerHTML = `<div class="modal-panel settings-panel"><div class="modal-heading"><span class="modal-icon">⚙</span><h2>Настройки</h2><button class="icon-button" id="settings-close" type="button" aria-label="Закрыть">×</button></div><div class="modal-tabs" role="tablist" aria-label="Разделы настроек"><button class="settings-tab selected" id="settings-general" type="button" role="tab" aria-selected="true">Общие</button><button class="settings-tab" id="settings-sources" type="button" role="tab" aria-selected="false">Источники ядер</button></div><div id="settings-content" role="tabpanel"></div></div>`;
   document.body.append(modal);
+  bindDialogMotion(modal);
   modal.showModal();
-  modal.querySelector<HTMLButtonElement>('#settings-close')?.addEventListener('click', () => modal.close());
+  modal.querySelector<HTMLButtonElement>('#settings-close')?.addEventListener('click', () => closeDialogWithMotion(modal));
   const content = modal.querySelector<HTMLElement>('#settings-content');
   const renderSettingsTab = (tab: 'general' | 'sources') => {
     modal.querySelectorAll<HTMLButtonElement>('.settings-tab').forEach((button) => {
@@ -923,14 +951,16 @@ async function refresh(): Promise<void> {
     state.status = null;
     state.error = error instanceof Error ? error.message : 'Неизвестная ошибка';
   }
-  if (activePage === 'configuration') updateChrome();
-  else render();
-  if (activePage === 'selectors' || activePage === 'connections') void loadMihomoPage(activePage);
+  updateChrome();
 }
 
 render();
 void refresh();
-window.addEventListener('xkeen-core-updated', () => void refresh());
+void loadMihomoPage(activePage);
+window.addEventListener('xkeen-core-updated', () => {
+  void refresh();
+  if (activePage === 'selectors' || activePage === 'connections') void loadMihomoPage(activePage);
+});
 refreshTimer = window.setInterval(() => void refresh(), 15_000);
 window.addEventListener('beforeunload', () => {
   requestController?.abort();

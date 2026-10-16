@@ -1,4 +1,5 @@
 /* Local variable fonts keep Cyrillic rendering consistent without a CDN. */
+.country-flag { display: inline-block; flex: 0 0 auto; width: 1.1em; height: .82em; border-radius: 2px; vertical-align: -.04em; background-position: center; background-size: cover; background-repeat: no-repeat; box-shadow: 0 0 0 1px rgb(255 255 255 / 16%); }
 :root {
   font-family: "Inter Variable", Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
   color: #e8e7f4;
@@ -736,10 +737,36 @@ body { font-size: var(--type-body); color: #f1f4fb; -webkit-font-smoothing: anti
 dialog.modal[open]::backdrop { animation: modal-backdrop-in .18s ease-out both; }
 dialog.modal[open] > .modal-panel,
 dialog.modal[open] > section.modal-panel { animation: modal-panel-in .2s cubic-bezier(.2,.75,.25,1) both; }
+dialog.template-dialog[open] { animation: modal-panel-in .2s cubic-bezier(.2,.75,.25,1) both; }
+dialog.modal.is-closing::backdrop { animation: modal-backdrop-out .16s ease-in both; }
+dialog.modal.is-closing > .modal-panel,
+dialog.modal.is-closing > section.modal-panel,
+dialog.template-dialog.is-closing { animation: modal-panel-out .16s ease-in both; }
 @keyframes modal-backdrop-in { from { opacity: 0; } to { opacity: 1; } }
 @keyframes modal-panel-in { from { opacity: 0; transform: translateY(9px) scale(.985); } to { opacity: 1; transform: translateY(0) scale(1); } }
+@keyframes modal-backdrop-out { from { opacity: 1; } to { opacity: 0; } }
+@keyframes modal-panel-out { from { opacity: 1; transform: translateY(0) scale(1); } to { opacity: 0; transform: translateY(5px) scale(.985); } }
 @keyframes ping-pulse { 50% { opacity: .55; } }
 .main-content { scroll-behavior: smooth; }
+.main-content.page-enter { animation: page-enter .16s ease-out both; }
+@keyframes page-enter { from { opacity: .35; transform: translateY(4px); } to { opacity: 1; transform: translateY(0); } }
+
+/* Shared type scale: use the bundled variable font and keep metadata legible. */
+.app-shell { font-family: var(--font-ui); font-optical-sizing: auto; font-kerning: normal; font-synthesis: none; font-feature-settings: "cv02", "cv03", "cv04", "cv11"; text-rendering: optimizeLegibility; }
+.app-shell button,.app-shell input,.app-shell select,.app-shell textarea { font-family: var(--font-ui); font-optical-sizing: auto; }
+.app-shell .page-heading h1 { font-family: var(--font-ui); }
+.app-shell .top-status small,.app-shell .version-chip,.app-shell .page-heading p,
+.app-shell .connection-table th,.app-shell .connection-table td,.app-shell .journal-filter input,
+.app-shell .journal-tools select,.app-shell .modal-note { font-size: 12px; line-height: 1.45; }
+.app-shell .eyebrow,.app-shell .metric-note,.app-shell .metric-card p,.app-shell .section-title p,
+.app-shell .section-counter,.app-shell .journal-truncated,.app-shell .editor-validation,
+.app-shell .editor-encoding,.app-shell .coming-tag,.app-shell .alert-tag,
+.app-shell .selector-card-meta,.app-shell .selector-kicker,.app-shell .selector-current small,
+.app-shell .setting-row small,.app-shell .source-field small,.app-shell .sources-feedback,
+.app-shell .core-release-meta,.app-shell .core-release-note,.app-shell .dns-runtime-list>div,
+.app-shell .dns-settings-form>label,.app-shell .dns-diagnostics>summary { font-size: 11px; line-height: 1.45; }
+.app-shell .nav-item,.app-shell .button,.app-shell .editor-button,
+.app-shell .settings-tab,.app-shell .selector-card h2,.app-shell .proxy-option-name { font-weight: 600; }
 @media (prefers-reduced-motion: reduce) {
   *,*::before,*::after { scroll-behavior: auto!important; animation-duration: .01ms!important; animation-iteration-count: 1!important; transition-duration: .01ms!important; }
 }

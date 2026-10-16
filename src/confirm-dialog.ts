@@ -1,3 +1,5 @@
+import { bindDialogMotion, closeDialogWithMotion } from './dialog-motion';
+
 function escapeHtml(value: string): string {
   return value.replace(/[&<>"']/g, (character) => {
     const entities: Record<string, string> = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' };
@@ -15,12 +17,9 @@ export function confirmInApp(title: string, message: string, confirmLabel: strin
       resolve(dialog.returnValue === 'confirm');
       dialog.remove();
     }, { once: true });
-    dialog.querySelector<HTMLButtonElement>('[data-confirm-cancel]')?.addEventListener('click', () => dialog.close('cancel'));
-    dialog.querySelector<HTMLButtonElement>('[data-confirm-accept]')?.addEventListener('click', () => dialog.close('confirm'));
-    dialog.addEventListener('cancel', (event) => {
-      event.preventDefault();
-      dialog.close('cancel');
-    });
+    bindDialogMotion(dialog);
+    dialog.querySelector<HTMLButtonElement>('[data-confirm-cancel]')?.addEventListener('click', () => closeDialogWithMotion(dialog, 'cancel'));
+    dialog.querySelector<HTMLButtonElement>('[data-confirm-accept]')?.addEventListener('click', () => closeDialogWithMotion(dialog, 'confirm'));
     dialog.showModal();
   });
 }

@@ -285,9 +285,9 @@ pub async fn status(State(state): State<AppState>) -> Response {
 }
 
 pub async fn ensure_dns_safe_to_stop() -> Result<(), String> {
-    let config = tokio::fs::read_to_string(CONFIG_PATH)
-        .await
-        .map_err(|e| format!("Не удалось проверить config.yaml Mihomo перед остановкой XKeen: {e}"))?;
+    let config = tokio::fs::read_to_string(CONFIG_PATH).await.map_err(|e| {
+        format!("Не удалось проверить config.yaml Mihomo перед остановкой XKeen: {e}")
+    })?;
     let running = ndmc("show running-config").await?;
     let dns_override = parse_restore_state(&running).dns_override;
     if dns_override || read_mihomo_dns_enabled(&config) {
@@ -543,9 +543,7 @@ fn truncate(value: &str, max_bytes: usize) -> String {
 
 #[cfg(test)]
 mod tests {
-    use super::{
-        parse_restore_state, read_mihomo_dns_enabled, set_mihomo_dns, DnsRestoreState,
-    };
+    use super::{parse_restore_state, read_mihomo_dns_enabled, set_mihomo_dns, DnsRestoreState};
 
     #[test]
     fn reads_dns_runtime_and_nameservers_without_interpreting_comments() {

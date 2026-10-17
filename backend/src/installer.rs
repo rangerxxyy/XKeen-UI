@@ -653,7 +653,7 @@ impl Paths {
             // zxc-rv installs its own XKeen UI service at S99xkeen-ui. Keep
             // this panel isolated so installing it never overwrites their
             // service script or changes the existing port-1000 instance.
-            service: etc.join("init.d/S99xkeen-ui-panel"),
+            service: panel_service_path(&etc),
             config: etc.join("xkeen-ui.env"),
             pid: prefix.join("var/run/xkeen-ui.pid"),
             etc,
@@ -681,6 +681,26 @@ impl Paths {
     }
 }
 
+fn panel_service_path(etc: &Path) -> PathBuf {
+    let original = etc.join("init.d/S99xkeen-ui-panel");
+    let separate = etc.join("init.d/S99xkeen-ui-ranger");
+    if fs::read_to_string(&separate)
+        .is_ok_and(|text| text.starts_with("#!/bin/sh\n# Managed by XKeen UI.\n"))
+    {
+        return separate;
+    }
+    // Retain our existing installations. A legacy panel may use the same
+    // process/service name, so never overwrite or stop its init script.
+    if original.exists()
+        && !fs::read_to_string(&original)
+            .is_ok_and(|text| text.starts_with("#!/bin/sh\n# Managed by XKeen UI.\n"))
+    {
+        separate
+    } else {
+        original
+    }
+}
+
 fn validate_owned_paths(paths: &Paths) -> Result<(), Box<dyn Error>> {
     if paths.app.exists() && fs::symlink_metadata(&paths.app)?.file_type().is_symlink() {
         return Err("application path is a symlink; refusing to replace it".into());
@@ -688,7 +708,11 @@ fn validate_owned_paths(paths: &Paths) -> Result<(), Box<dyn Error>> {
     if paths.service.exists() {
         let contents = fs::read_to_string(&paths.service)?;
         if !contents.starts_with("#!/bin/sh\n# Managed by XKeen UI.\n") {
-            return Err("service path already exists and is not managed by XKeen UI".into());
+            let message = format!(
+                "service path {} already exists and is not managed by XKeen UI; existing service was preserved",
+                paths.service.display()
+            );
+            return Err(message.into());
         }
     }
     if paths.app.exists() && !paths.app.join(".xkeen-ui-managed").is_file() {
@@ -729,6 +753,9 @@ mod tests {
         assert_eq!(std::fs::read_to_string(&foreign).unwrap(), script);
         std::fs::write(&paths.service, "#!/bin/sh\n# Managed by XKeen UI.\n").unwrap();
         assert_eq!(super::Paths::new(&prefix).service, paths.service);
+        std::fs::remove_file(&foreign).unwrap();
+        assert_eq!(super::Paths::new(&prefix).service, paths.service);
+        std::fs::write(&foreign, script).unwrap();
         std::fs::write(&paths.service, "#!/bin/sh\n# Unrelated service\n").unwrap();
         assert!(super::validate_owned_paths(&super::Paths::new(&prefix)).is_err());
         std::fs::remove_dir_all(prefix).unwrap();

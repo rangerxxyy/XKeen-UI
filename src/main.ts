@@ -999,7 +999,7 @@ function openSettings(): void {
         coreControls.forEach((control) => { control.disabled = phase !== 'ready'; });
         coreRetry.hidden = phase !== 'error';
         if (feedback) feedback.textContent = phase === 'loading' ? 'Загружаем сохранённые значения…'
-          : phase === 'ready' ? 'Сохранённые настройки загружены.' : `${error} Сохранение недоступно до загрузки.`;
+          : phase === 'ready' ? 'Сохранённые настройки загружены.' : `Сохранение недоступно до загрузки. ${error}`;
       });
       const proxyFeedback = content.querySelector<HTMLElement>('#github-proxy-feedback');
       const proxyControls = () => content.querySelectorAll<HTMLInputElement | HTMLButtonElement>('#github-proxy-list input,#github-proxy-list button,#github-proxy-new,#github-proxy-add,#github-proxy-save');
@@ -1017,11 +1017,21 @@ function openSettings(): void {
           list.replaceChildren(note);
         }
         if (proxyFeedback) proxyFeedback.textContent = phase === 'loading' ? 'Получаем список с роутера…'
-          : phase === 'ready' ? 'Список загружен с роутера.' : `${error} Изменения отключены до загрузки.`;
+          : phase === 'ready' ? 'Список загружен с роутера.' : `Изменения отключены до загрузки. ${error}`;
       });
       settingsLoaders = [coreLoader, proxyLoader];
-      coreRetry.addEventListener('click', () => { void coreLoader.load(); });
-      proxyRetry.addEventListener('click', () => { void proxyLoader.load(); });
+      coreRetry.addEventListener('click', async () => {
+        await coreLoader.load();
+        if (!coreRetry.isConnected) return;
+        if (coreLoader.ready) xrayInput?.focus();
+        else coreRetry.focus();
+      });
+      proxyRetry.addEventListener('click', async () => {
+        await proxyLoader.load();
+        if (!proxyRetry.isConnected) return;
+        if (proxyLoader.ready) content.querySelector<HTMLInputElement>('#github-proxy-new')?.focus();
+        else proxyRetry.focus();
+      });
       void coreLoader.load();
       void proxyLoader.load();
       mihomoPreset?.addEventListener('change', () => {

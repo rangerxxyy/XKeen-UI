@@ -3,6 +3,7 @@ import '@fontsource-variable/jetbrains-mono';
 import './country-flags.css';
 import './style.css';
 import './typography.css';
+import { createSettingsLoader, type SettingsLoader } from './settings-load';
 import { applyActiveMihomoConfig, closeAllMihomoConnections, closeMihomoConnection, controlXkeen, getActiveMihomoConfig, getCoreSources, getHealth, getMihomoConnections, getMihomoSelectors, getMihomoVersion, getRouterDeviceList, getRouterDnsStatus, getStatus, getSystemLog, getUpdateProxies, getXkeenStatus, logUiError, pingMihomoGroup, pingMihomoProxy, queryMihomoDns, requestAppUpdate, saveCoreSources, saveUpdateProxies, selectMihomoProxy, setRouterDnsManagement, type ApiState, type CoreSources, type MihomoConnections, type MihomoDnsResult, type MihomoSelector, type RouterDnsStatus, type SystemLog, type XkeenStatus } from './api';
 import { applyPingResults, orderSelectorsByConfig, renderConnections, renderPingStatusIcon, renderSelectors } from './mihomo-view';
 import { patchDnsManagement, patchMihomoDnsSettings, readMihomoDnsSettings, renderDns, type MihomoDnsSettings } from './dns-view';
@@ -922,6 +923,7 @@ function openSettings(): void {
   modal.querySelector<HTMLButtonElement>('#settings-close')?.addEventListener('click', () => closeDialogWithMotion(modal));
   const content = modal.querySelector<HTMLElement>('#settings-content');
   let githubProxies: string[] = [];
+  let settingsLoaders: SettingsLoader[] = [];
   const renderProxyRows = () => {
     const list = modal.querySelector<HTMLElement>('#github-proxy-list');
     if (!list) return;
@@ -939,6 +941,8 @@ function openSettings(): void {
     }));
   };
   const renderSettingsTab = (tab: SettingsTabId) => {
+    settingsLoaders.forEach((loader) => loader.dispose());
+    settingsLoaders = [];
     modal.querySelectorAll<HTMLButtonElement>('.settings-tab').forEach((button) => {
       const selected = button.id === `settings-${tab}`;
       button.classList.toggle('selected', selected);
@@ -971,22 +975,55 @@ function openSettings(): void {
       const mihomoInput = content.querySelector<HTMLInputElement>('#source-mihomo');
       const mihomoPreset = content.querySelector<HTMLSelectElement>('#source-mihomo-preset');
       const feedback = content.querySelector<HTMLElement>('#sources-feedback');
-      void getCoreSources().then((sources) => {
+      const coreSave = content.querySelector<HTMLButtonElement>('#save-core-sources');
+      const proxySave = content.querySelector<HTMLButtonElement>('#github-proxy-save');
+      const retryButton = (id: string, before: HTMLElement | null) => {
+        const button = document.createElement('button');
+        button.id = id;
+        button.className = 'editor-button';
+        button.type = 'button';
+        button.textContent = 'Повторить загрузку';
+        button.hidden = true;
+        before?.before(button);
+        return button;
+      };
+      const coreRetry = retryButton('retry-core-sources', coreSave);
+      const proxyRetry = retryButton('retry-github-proxies', proxySave);
+      const coreControls = content.querySelectorAll<HTMLInputElement | HTMLSelectElement | HTMLButtonElement>('#source-xray,#source-mihomo,#source-mihomo-preset,#save-core-sources,[data-core-release]');
+      const coreLoader = createSettingsLoader(getCoreSources, (sources) => {
         if (xrayInput) xrayInput.value = sources.xray;
         if (mihomoInput) mihomoInput.value = sources.mihomo;
         if (mihomoPreset) mihomoPreset.value = sources.mihomo === 'https://github.com/MetaCubeX/mihomo'
           ? 'official' : sources.mihomo === 'https://github.com/legiz-ru/Prizrak-Core' ? 'prizrak' : 'custom';
-        if (feedback) feedback.textContent = 'Сохранённые настройки загружены.';
-      }).catch((error: unknown) => {
-        if (feedback) feedback.textContent = error instanceof Error ? error.message : 'Не удалось загрузить настройки.';
+      }, (phase, error) => {
+        coreControls.forEach((control) => { control.disabled = phase !== 'ready'; });
+        coreRetry.hidden = phase !== 'error';
+        if (feedback) feedback.textContent = phase === 'loading' ? 'Загружаем сохранённые значения…'
+          : phase === 'ready' ? 'Сохранённые настройки загружены.' : `${error} Сохранение недоступно до загрузки.`;
       });
       const proxyFeedback = content.querySelector<HTMLElement>('#github-proxy-feedback');
-      void getUpdateProxies().then((settings) => {
+      const proxyControls = () => content.querySelectorAll<HTMLInputElement | HTMLButtonElement>('#github-proxy-list input,#github-proxy-list button,#github-proxy-new,#github-proxy-add,#github-proxy-save');
+      const proxyLoader = createSettingsLoader(getUpdateProxies, (settings) => {
         githubProxies = [...settings.proxies];
         renderProxyRows();
-      }).catch((error: unknown) => {
-        if (proxyFeedback) proxyFeedback.textContent = error instanceof Error ? error.message : 'Не удалось загрузить прокси.';
+      }, (phase, error) => {
+        proxyControls().forEach((control) => { control.disabled = phase !== 'ready'; });
+        proxyRetry.hidden = phase !== 'error';
+        const list = content.querySelector<HTMLElement>('#github-proxy-list');
+        if (phase !== 'ready' && list) {
+          const note = document.createElement('p');
+          note.className = 'settings-inline-note';
+          note.textContent = phase === 'loading' ? 'Загружаем сохранённый список…' : 'Список прокси не загружен. Повторите попытку.';
+          list.replaceChildren(note);
+        }
+        if (proxyFeedback) proxyFeedback.textContent = phase === 'loading' ? 'Получаем список с роутера…'
+          : phase === 'ready' ? 'Список загружен с роутера.' : `${error} Изменения отключены до загрузки.`;
       });
+      settingsLoaders = [coreLoader, proxyLoader];
+      coreRetry.addEventListener('click', () => { void coreLoader.load(); });
+      proxyRetry.addEventListener('click', () => { void proxyLoader.load(); });
+      void coreLoader.load();
+      void proxyLoader.load();
       mihomoPreset?.addEventListener('change', () => {
         if (mihomoPreset.value === 'official' && mihomoInput) mihomoInput.value = 'https://github.com/MetaCubeX/mihomo';
         if (mihomoPreset.value === 'prizrak' && mihomoInput) mihomoInput.value = 'https://github.com/legiz-ru/Prizrak-Core';
@@ -996,21 +1033,23 @@ function openSettings(): void {
       });
       content.querySelector<HTMLButtonElement>('#save-core-sources')?.addEventListener('click', async (event) => {
         const button = event.currentTarget as HTMLButtonElement;
-        if (!xrayInput || !mihomoInput || !feedback) return;
-        button.disabled = true;
+        if (!coreLoader.ready || !xrayInput || !mihomoInput || !feedback || button.disabled) return;
+        coreControls.forEach((control) => { control.disabled = true; });
         feedback.textContent = 'Сохраняем…';
         try {
           const saved: CoreSources = await saveCoreSources({ xray: xrayInput.value, mihomo: mihomoInput.value });
+          if (!button.isConnected) return;
           xrayInput.value = saved.xray;
           mihomoInput.value = saved.mihomo;
           feedback.textContent = 'Источники ядер сохранены.';
         } catch (error) {
           feedback.textContent = error instanceof Error ? error.message : 'Не удалось сохранить настройки.';
         } finally {
-          button.disabled = false;
+          coreControls.forEach((control) => { control.disabled = !coreLoader.ready; });
         }
       });
       content.querySelector<HTMLButtonElement>('#github-proxy-add')?.addEventListener('click', () => {
+        if (!proxyLoader.ready) return;
         const input = content.querySelector<HTMLInputElement>('#github-proxy-new');
         const value = input?.value.trim();
         if (!input || !value) return;
@@ -1026,18 +1065,19 @@ function openSettings(): void {
       });
       content.querySelector<HTMLButtonElement>('#github-proxy-save')?.addEventListener('click', async (event) => {
         const button = event.currentTarget as HTMLButtonElement;
-        if (!proxyFeedback) return;
-        button.disabled = true;
+        if (!proxyLoader.ready || !proxyFeedback || button.disabled) return;
+        proxyControls().forEach((control) => { control.disabled = true; });
         proxyFeedback.textContent = 'Сохраняем список на роутере…';
         try {
           const saved = await saveUpdateProxies({ proxies: githubProxies });
+          if (!button.isConnected) return;
           githubProxies = [...saved.proxies];
           renderProxyRows();
           proxyFeedback.textContent = 'Список GitHub-прокси сохранён на роутере.';
         } catch (error) {
           proxyFeedback.textContent = error instanceof Error ? error.message : 'Не удалось сохранить прокси.';
         } finally {
-          button.disabled = false;
+          if (button.isConnected) proxyControls().forEach((control) => { control.disabled = !proxyLoader.ready; });
         }
       });
       return;
@@ -1048,7 +1088,7 @@ function openSettings(): void {
     modal.querySelector<HTMLButtonElement>(`#settings-${id}`)?.addEventListener('click', () => renderSettingsTab(id));
   });
   renderSettingsTab('general');
-  modal.addEventListener('close', () => { modal.remove(); render(); }, { once: true });
+  modal.addEventListener('close', () => { settingsLoaders.forEach((loader) => loader.dispose()); modal.remove(); render(); }, { once: true });
 }
 
 function switchRow(key: keyof UiPreferences, title: string, description: string): string {

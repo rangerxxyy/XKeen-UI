@@ -130,6 +130,9 @@ pub(super) async fn append_ui_error(
         )
             .into_response();
     };
+    if is_expected_ui_noise(&request.source, &request.message) {
+        return StatusCode::NO_CONTENT.into_response();
+    }
     match append_xkeen_lifecycle(&[entry]) {
         Ok(()) => StatusCode::NO_CONTENT.into_response(),
         Err(error) => {
@@ -184,6 +187,7 @@ async fn read_tail(source: &LogSource) -> std::io::Result<LogResult> {
         .lines()
         .map(sanitize_line)
         .filter(|line| !line.is_empty())
+        .filter(|line| source.id != "xkeen-ui" || !is_legacy_noise_line(line))
         .collect();
     let truncated = lines.len() > MAX_LOG_LINES || start > 0;
     if lines.len() > MAX_LOG_LINES {
@@ -194,6 +198,21 @@ async fn read_tail(source: &LogSource) -> std::io::Result<LogResult> {
         lines,
         truncated,
     })
+}
+
+fn is_expected_ui_noise(source: &str, message: &str) -> bool {
+    if source != "ui" {
+        return false;
+    }
+    let normalized = message.to_lowercase();
+    (normalized.contains("mihomo proxy ping:")
+        && normalized.contains("узел не входит в доступную группу selector"))
+        || (normalized.contains("clash ws proxy error:")
+            && normalized.contains("connection refused"))
+}
+
+fn is_legacy_noise_line(line: &str) -> bool {
+    is_expected_ui_noise("ui", line)
 }
 
 pub(super) fn append_xkeen_lifecycle(entries: &[String]) -> std::io::Result<()> {
@@ -363,6 +382,29 @@ mod tests {
         assert!(ui_error_entry(42, "unknown", "message").is_none());
         assert!(ui_error_entry(42, "yaml", "  ").is_none());
         assert!(ui_error_entry(42, "yaml", &"x".repeat(2049)).is_none());
+    }
+
+    #[test]
+    fn suppresses_expected_selector_and_clash_websocket_noise_only() {
+        assert!(is_expected_ui_noise(
+            "ui",
+            "Mihomo proxy ping: Проверка узла: Узел не входит в доступную группу Selector (HTTP 400)"
+        ));
+        assert!(is_expected_ui_noise(
+            "ui",
+            "Clash WS proxy error: IO error: Connection refused (os error 111)"
+        ));
+        assert!(!is_expected_ui_noise(
+            "yaml",
+            "Mihomo proxy ping: Узел не входит в доступную группу Selector"
+        ));
+        assert!(!is_expected_ui_noise("ui", "DNS lookup failed"));
+        assert!(is_legacy_noise_line(
+            "unix=42 level=ERROR component=xkeen-ui source=ui message=Clash WS proxy error: Connection refused (os error 111)"
+        ));
+        assert!(!is_legacy_noise_line(
+            "unix=42 level=ERROR component=xkeen-ui source=yaml message=Ошибка YAML"
+        ));
     }
 
     #[test]

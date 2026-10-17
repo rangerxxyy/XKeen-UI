@@ -118,8 +118,8 @@ function connectionRow(connection: MihomoConnection, showSourceName = false, sou
   const host = connection.host || connection.destination || 'Адрес недоступен';
   const domain = host.toLocaleLowerCase();
   const category = domain.includes('youtube') ? 'YouTube' : domain.includes('github') ? 'GitHub' : domain.includes('google') ? 'Google' : ['th.bing.com', 'geover.prod', 'cloudfront.net', 'usersnap.com', 'unisvg.com', 'iconify.design'].some((part) => domain.includes(part)) ? 'CDN' : '';
-  const runtimeRoute = connection.chains.length ? connection.chains.join(' › ') : 'DIRECT';
-  const route = category && runtimeRoute.toLocaleLowerCase() !== category.toLocaleLowerCase() ? `${category} › ${runtimeRoute}` : runtimeRoute;
+  const runtimeRoute = connection.chains.length ? connection.chains.join(' › ') : 'Маршрут неизвестен';
+  const route = category && connection.chains.length && runtimeRoute.toLocaleLowerCase() !== category.toLocaleLowerCase() ? `${category} › ${runtimeRoute}` : runtimeRoute;
   const search = [host, connection.source, route, connection.rule, connection.rulePayload, connection.process].join(' ').toLocaleLowerCase();
   const network = connection.network.toUpperCase() || '—';
   const startedAt = Date.parse(connection.start);
@@ -134,7 +134,7 @@ function connectionRow(connection: MihomoConnection, showSourceName = false, sou
   const chain = `<span class="connection-chain" title="${escapeHtml(route)}">${escapeHtml(route)}</span>`;
   return `<tr data-search="${escapeHtml(search)}">
     <td class="connection-route-cell${routeIcon ? ' has-app-icon' : ''}">${routeIcon}${chain}</td>
-    <td class="connection-host" title="${escapeHtml(host)}">${escapeHtml(host)}</td>
+    <td class="connection-host" title="${escapeHtml(host)}"><button class="connection-inspect" type="button" data-inspect-connection="${escapeHtml(connection.id)}" aria-label="Подробности соединения ${escapeHtml(host)}">${escapeHtml(host)}</button></td>
     <td class="connection-network" title="Сетевой протокол">${escapeHtml(network)}</td>
     <td class="connection-source" title="${escapeHtml(sourceTitle)}">${escapeHtml(source)}</td>
     <td class="connection-traffic"><span title="Отправлено"><i class="is-upload" aria-hidden="true">↑</i>${formatBytes(connection.upload)}</span><span title="Получено"><i class="is-download" aria-hidden="true">↓</i>${formatBytes(connection.download)}</span></td>

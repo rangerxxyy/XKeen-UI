@@ -3,7 +3,9 @@ import '@fontsource-variable/jetbrains-mono';
 import './country-flags.css';
 import './style.css';
 import './typography.css';
+import './connection-details.css';
 import { createSettingsLoader, type SettingsLoader } from './settings-load';
+import { renderConnectionDetails } from './connection-details';
 import { applyActiveMihomoConfig, closeAllMihomoConnections, closeMihomoConnection, controlXkeen, getActiveMihomoConfig, getCoreSources, getHealth, getMihomoConnections, getMihomoSelectors, getMihomoVersion, getRouterDeviceList, getRouterDnsStatus, getStatus, getSystemLog, getUpdateProxies, getXkeenStatus, logUiError, pingMihomoGroup, pingMihomoProxy, queryMihomoDns, requestAppUpdate, saveCoreSources, saveUpdateProxies, selectMihomoProxy, setRouterDnsManagement, type ApiState, type CoreSources, type MihomoConnections, type MihomoDnsResult, type MihomoSelector, type RouterDnsStatus, type SystemLog, type XkeenStatus } from './api';
 import { applyPingResults, orderSelectorsByConfig, renderConnections, renderPingStatusIcon, renderSelectors } from './mihomo-view';
 import { patchDnsManagement, patchMihomoDnsSettings, readMihomoDnsSettings, renderDns, type MihomoDnsSettings } from './dns-view';
@@ -586,7 +588,25 @@ async function runDnsManagementToggle(): Promise<void> {
   }
 }
 
+function openConnectionDetails(id: string): void {
+  const connection = connections?.connections.find((item) => item.id === id);
+  if (!connection) return;
+  const sourceName = uiPreferences.showConnectionSource && connection.sourceIp ? connectionSourceNames[connection.sourceIp] : undefined;
+  const modal = document.createElement('dialog');
+  modal.className = 'modal connection-details-dialog';
+  modal.setAttribute('aria-labelledby', 'connection-details-title');
+  modal.innerHTML = `<section class="modal-panel connection-details-panel"><header class="modal-heading"><h2 id="connection-details-title">Подробности соединения</h2><button class="icon-button" type="button" data-close-details aria-label="Закрыть подробности">×</button></header><div class="connection-details-body">${renderConnectionDetails(connection, sourceName)}</div></section>`;
+  document.body.append(modal);
+  bindDialogMotion(modal);
+  modal.querySelector<HTMLButtonElement>('[data-close-details]')?.addEventListener('click', () => closeDialogWithMotion(modal));
+  modal.addEventListener('close', () => modal.remove(), { once: true });
+  modal.showModal();
+}
+
 function bindMihomoInteractions(): void {
+  document.querySelectorAll<HTMLButtonElement>('[data-inspect-connection]').forEach((button) => {
+    button.addEventListener('click', () => openConnectionDetails(button.dataset.inspectConnection ?? ''));
+  });
   document.querySelector<HTMLButtonElement>('#mihomo-retry')?.addEventListener('click', () => void loadMihomoPage(activePage));
   document.querySelectorAll<HTMLButtonElement>('.proxy-option-select').forEach((button) => {
     button.addEventListener('click', () => void selectProxyFromUi(button));

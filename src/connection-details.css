@@ -1,0 +1,25 @@
+.connection-inspect { display:block; width:100%; min-height:28px; padding:2px 0; overflow:hidden; border:0; border-radius:4px; color:inherit; background:transparent; font:inherit; text-align:left; text-overflow:ellipsis; white-space:nowrap; cursor:pointer; }
+.connection-inspect:hover { color:var(--cyan); text-decoration:underline; text-underline-offset:3px; }
+.connection-inspect:focus-visible { outline:2px solid var(--cyan); outline-offset:-2px; }
+.modal.connection-details-dialog { width:min(660px,calc(100vw - 24px)); max-width:none; max-height:calc(100dvh - 32px); padding:0; overflow:hidden; border:0; border-radius:14px; background:transparent; color:var(--text); }
+.connection-table-wrap .connection-no-results[hidden] { display:none; }
+.connection-details-panel { display:flex; flex-direction:column; width:100%; max-height:calc(100dvh - 32px); padding:20px; overflow:hidden; }
+.connection-details-panel .modal-heading { flex-shrink:0; gap:16px; margin-bottom:16px; }
+.connection-details-panel .modal-heading h2 { font-size:18px; line-height:1.4; font-weight:600; }
+.connection-details-panel .icon-button { flex-shrink:0; }
+.connection-details-body { min-height:0; overflow:auto; scrollbar-gutter:stable; scrollbar-color:var(--stroke) var(--surface); }
+.connection-detail-traffic { display:grid; grid-template-columns:1fr 1fr; gap:12px; margin:16px 0; }
+.connection-detail-traffic>div { padding:12px; border:1px solid var(--stroke); border-radius:10px; background:var(--surface); }
+.connection-detail-traffic span { display:block; color:var(--copy-secondary); font-size:13px; }
+.connection-detail-traffic strong { display:block; margin-top:4px; color:var(--text); font-size:20px; font-weight:600; font-variant-numeric:tabular-nums; }
+.connection-detail-list { margin:0; }
+.connection-detail-list>div { display:grid; grid-template-columns:minmax(130px,1fr) minmax(0,2fr); gap:16px; padding:11px 0; border-bottom:1px solid var(--stroke-soft); }
+.connection-detail-list>div:last-child { border:0; }
+.connection-detail-list dt { color:var(--copy-secondary); font-size:13px; line-height:1.6; }
+.connection-detail-list dd { min-width:0; margin:0; overflow-wrap:anywhere; color:var(--text); font-size:14px; line-height:1.5; user-select:text; }
+.connection-detail-missing { color:var(--copy-secondary); font-size:13px; }
+@media(max-width:560px) {
+  .connection-details-panel { padding:16px; }
+  .connection-details-panel .modal-heading h2 { font-size:16px; }
+  .connection-detail-list>div { grid-template-columns:minmax(0,1fr); gap:3px; padding:10px 0; }
+}

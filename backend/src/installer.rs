@@ -138,7 +138,9 @@ fn install_or_update(options: &InstallOptions) -> Result<(), Box<dyn Error>> {
     fs::create_dir_all(&paths.etc)?;
     let previous_config = read_optional(&paths.config)?;
     let saved = Config::parse(previous_config.as_deref())?;
-    let bind_ip = resolve_bind_ip().or_else(|error| saved.bind_ip.ok_or(error))?;
+    let bind_ip = preferred_install_bind(saved.bind_ip, env::var_os("XKEEN_BIND").is_some())
+        .map(Ok)
+        .unwrap_or_else(resolve_bind_ip)?;
     validate_owned_paths(&paths)?;
     let was_installed = paths.app.exists();
     if was_installed {
@@ -182,6 +184,7 @@ fn install_or_update(options: &InstallOptions) -> Result<(), Box<dyn Error>> {
     let result = (|| -> Result<(), Box<dyn Error>> {
         copy_package(&package_dir, &staging)?;
         set_mode(&staging.join("xkeen-ui"), 0o755)?;
+        prepare_runtime_binary(&staging)?;
         write_atomic(&staging.join(".xkeen-ui-managed"), b"XKeen UI\n", 0o600)?;
         fs::rename(&staging, &paths.app)?;
         write_config(&paths.config, &config)?;
@@ -285,6 +288,14 @@ fn resolve_bind_ip() -> Result<Ipv4Addr, Box<dyn Error>> {
     Err("could not detect the br0 IPv4 address; set XKEEN_BIND explicitly".into())
 }
 
+fn preferred_install_bind(saved: Option<Ipv4Addr>, has_override: bool) -> Option<Ipv4Addr> {
+    if has_override {
+        None
+    } else {
+        saved
+    }
+}
+
 fn choose_port(requested: Option<u16>) -> io::Result<u16> {
     if let Some(port) = requested {
         return if port_is_available(port) {
@@ -362,6 +373,15 @@ fn set_mode(path: &Path, mode: u32) -> io::Result<()> {
     Ok(())
 }
 
+fn prepare_runtime_binary(app: &Path) -> io::Result<()> {
+    let cli = app.join("xkeen-ui");
+    let runtime = app.join("xkeen-ui-ranger");
+    // A separate executable name avoids zxc-rv's `killall xkeen-ui`.
+    // Hard linking keeps a single copy on Entware filesystems that support it.
+    fs::hard_link(&cli, &runtime).or_else(|_| fs::copy(&cli, &runtime).map(|_| ()))?;
+    set_mode(&runtime, 0o755)
+}
+
 fn remove(prefix: &Path) -> Result<(), Box<dyn Error>> {
     validate_prefix(prefix)?;
     let paths = Paths::new(prefix);
@@ -380,8 +400,9 @@ fn remove(prefix: &Path) -> Result<(), Box<dyn Error>> {
 
 fn service_start(prefix: &Path) -> Result<(), Box<dyn Error>> {
     let paths = Paths::new(prefix);
+    let executable = paths.runtime_executable();
     let config = Config::parse(read_optional(&paths.config)?.as_deref())?;
-    if !paths.app.join("xkeen-ui").is_file() {
+    if !executable.is_file() {
         return Err("application executable not found".into());
     }
     if !paths.app.join(".xkeen-ui-managed").is_file() {
@@ -390,7 +411,7 @@ fn service_start(prefix: &Path) -> Result<(), Box<dyn Error>> {
         );
     }
     if let Some(pid) = read_pid(&paths.pid)? {
-        if owns_process(pid, &paths.app.join("xkeen-ui")) {
+        if owns_panel_process(pid, &paths) {
             println!("XKeen UI уже запущен.");
             return Ok(());
         }
@@ -399,7 +420,7 @@ fn service_start(prefix: &Path) -> Result<(), Box<dyn Error>> {
     if let Some(parent) = paths.pid.parent() {
         fs::create_dir_all(parent)?;
     }
-    let mut command = Command::new(paths.app.join("xkeen-ui"));
+    let mut command = Command::new(&executable);
     let bind_ip = match config.bind_ip {
         Some(address) => address,
         None => resolve_bind_ip()?,
@@ -428,7 +449,7 @@ fn service_start(prefix: &Path) -> Result<(), Box<dyn Error>> {
     let pid = child.id();
     write_atomic(&paths.pid, format!("{pid}\n").as_bytes(), 0o600)?;
     thread::sleep(Duration::from_millis(250));
-    if owns_process(pid, &paths.app.join("xkeen-ui")) {
+    if owns_process(pid, &executable) {
         println!("XKeen UI запущен на порту {}.", config.port);
         Ok(())
     } else {
@@ -443,14 +464,14 @@ fn service_stop(prefix: &Path) -> Result<(), Box<dyn Error>> {
         println!("XKeen UI не запущен.");
         return Ok(());
     };
-    if !owns_process(pid, &paths.app.join("xkeen-ui")) {
+    if !owns_panel_process(pid, &paths) {
         fs::remove_file(&paths.pid)?;
         println!("Удалена устаревшая запись PID.");
         return Ok(());
     }
     signal_process(pid)?;
     for _ in 0..50 {
-        if !owns_process(pid, &paths.app.join("xkeen-ui")) {
+        if !owns_panel_process(pid, &paths) {
             fs::remove_file(&paths.pid)?;
             println!("XKeen UI остановлен.");
             return Ok(());
@@ -484,7 +505,7 @@ fn signal_process(pid: u32) -> io::Result<()> {
 fn service_status(prefix: &Path) {
     let paths = Paths::new(prefix);
     match read_pid(&paths.pid) {
-        Ok(Some(pid)) if owns_process(pid, &paths.app.join("xkeen-ui")) => {
+        Ok(Some(pid)) if owns_panel_process(pid, &paths) => {
             println!("XKeen UI запущен (PID {pid}).")
         }
         _ => println!("XKeen UI остановлен."),
@@ -502,6 +523,11 @@ fn owns_process(pid: u32, executable: &Path) -> bool {
         let _ = (pid, executable);
         false
     }
+}
+
+fn owns_panel_process(pid: u32, paths: &Paths) -> bool {
+    owns_process(pid, &paths.app.join("xkeen-ui-ranger"))
+        || owns_process(pid, &paths.app.join("xkeen-ui"))
 }
 
 fn read_pid(path: &Path) -> io::Result<Option<u32>> {
@@ -653,7 +679,7 @@ impl Paths {
             // zxc-rv installs its own XKeen UI service at S99xkeen-ui. Keep
             // this panel isolated so installing it never overwrites their
             // service script or changes the existing port-1000 instance.
-            service: etc.join("init.d/S99xkeen-ui-panel"),
+            service: panel_service_path(&etc),
             config: etc.join("xkeen-ui.env"),
             pid: prefix.join("var/run/xkeen-ui.pid"),
             etc,
@@ -662,6 +688,16 @@ impl Paths {
 
     fn share_parent(&self) -> &Path {
         &self.share
+    }
+
+    fn runtime_executable(&self) -> PathBuf {
+        let runtime = self.app.join("xkeen-ui-ranger");
+        if runtime.is_file() {
+            runtime
+        } else {
+            // Previous versions remain manageable before their first update.
+            self.app.join("xkeen-ui")
+        }
     }
 
     fn backup_path(&self) -> io::Result<PathBuf> {
@@ -681,6 +717,26 @@ impl Paths {
     }
 }
 
+fn panel_service_path(etc: &Path) -> PathBuf {
+    let original = etc.join("init.d/S99xkeen-ui-panel");
+    let separate = etc.join("init.d/S99xkeen-ui-ranger");
+    if fs::read_to_string(&separate)
+        .is_ok_and(|text| text.starts_with("#!/bin/sh\n# Managed by XKeen UI.\n"))
+    {
+        return separate;
+    }
+    // Retain our existing installations. A legacy panel may use the same
+    // process/service name, so never overwrite or stop its init script.
+    if original.exists()
+        && !fs::read_to_string(&original)
+            .is_ok_and(|text| text.starts_with("#!/bin/sh\n# Managed by XKeen UI.\n"))
+    {
+        separate
+    } else {
+        original
+    }
+}
+
 fn validate_owned_paths(paths: &Paths) -> Result<(), Box<dyn Error>> {
     if paths.app.exists() && fs::symlink_metadata(&paths.app)?.file_type().is_symlink() {
         return Err("application path is a symlink; refusing to replace it".into());
@@ -688,7 +744,11 @@ fn validate_owned_paths(paths: &Paths) -> Result<(), Box<dyn Error>> {
     if paths.service.exists() {
         let contents = fs::read_to_string(&paths.service)?;
         if !contents.starts_with("#!/bin/sh\n# Managed by XKeen UI.\n") {
-            return Err("service path already exists and is not managed by XKeen UI".into());
+            let message = format!(
+                "service path {} already exists and is not managed by XKeen UI; existing service was preserved",
+                paths.service.display()
+            );
+            return Err(message.into());
         }
     }
     if paths.app.exists() && !paths.app.join(".xkeen-ui-managed").is_file() {
@@ -714,6 +774,70 @@ mod tests {
     };
     use std::net::TcpListener;
     use std::path::Path;
+
+    #[test]
+    fn update_preserves_loopback_binding_unless_explicitly_overridden() {
+        let loopback = std::net::Ipv4Addr::LOCALHOST;
+        assert_eq!(
+            super::preferred_install_bind(Some(loopback), false),
+            Some(loopback)
+        );
+        assert_eq!(super::preferred_install_bind(Some(loopback), true), None);
+        assert_eq!(super::preferred_install_bind(None, false), None);
+    }
+
+    #[test]
+    fn installed_runtime_has_a_distinct_name_and_legacy_runtime_still_resolves() {
+        let prefix = std::env::temp_dir().join(format!("xkeen-runtime-{}", std::process::id()));
+        let paths = super::Paths::new(&prefix);
+        std::fs::create_dir_all(&paths.app).unwrap();
+        let cli = paths.app.join("xkeen-ui");
+        std::fs::write(&cli, b"test executable").unwrap();
+        assert_eq!(paths.runtime_executable(), cli);
+        super::prepare_runtime_binary(&paths.app).unwrap();
+        assert_eq!(
+            paths.runtime_executable(),
+            paths.app.join("xkeen-ui-ranger")
+        );
+        assert_eq!(
+            std::fs::read(paths.runtime_executable()).unwrap(),
+            std::fs::read(cli).unwrap()
+        );
+        std::fs::remove_dir_all(prefix).unwrap();
+    }
+
+    #[test]
+    fn foreign_panel_service_is_preserved_and_uses_a_separate_service_path() {
+        let prefix = std::env::temp_dir().join(format!("xkeen-paths-{}", std::process::id()));
+        let init = prefix.join("etc/init.d");
+        std::fs::create_dir_all(&init).unwrap();
+        let foreign = init.join("S99xkeen-ui-panel");
+        let script = "#!/bin/sh\nPROCS=xkeen-ui-panel\nARGS=\"-p 1001\"\n";
+        std::fs::write(&foreign, script).unwrap();
+        let paths = super::Paths::new(&prefix);
+        assert_eq!(paths.service, init.join("S99xkeen-ui-ranger"));
+        assert!(super::validate_owned_paths(&paths).is_ok());
+        assert_eq!(std::fs::read_to_string(&foreign).unwrap(), script);
+        std::fs::write(&paths.service, "#!/bin/sh\n# Managed by XKeen UI.\n").unwrap();
+        assert_eq!(super::Paths::new(&prefix).service, paths.service);
+        std::fs::remove_file(&foreign).unwrap();
+        assert_eq!(super::Paths::new(&prefix).service, paths.service);
+        std::fs::write(&foreign, script).unwrap();
+        std::fs::write(&paths.service, "#!/bin/sh\n# Unrelated service\n").unwrap();
+        assert!(super::validate_owned_paths(&super::Paths::new(&prefix)).is_err());
+        std::fs::remove_dir_all(prefix).unwrap();
+    }
+
+    #[test]
+    fn existing_managed_panel_keeps_its_service_path() {
+        let prefix = std::env::temp_dir().join(format!("xkeen-managed-{}", std::process::id()));
+        let init = prefix.join("etc/init.d");
+        std::fs::create_dir_all(&init).unwrap();
+        let service = init.join("S99xkeen-ui-panel");
+        std::fs::write(&service, "#!/bin/sh\n# Managed by XKeen UI.\n").unwrap();
+        assert_eq!(super::Paths::new(&prefix).service, service);
+        std::fs::remove_dir_all(prefix).unwrap();
+    }
 
     #[test]
     fn installer_options_have_safe_router_defaults() {

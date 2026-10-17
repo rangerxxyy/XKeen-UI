@@ -55,11 +55,24 @@ download_github_file() {
   output_file=$2
   max_bytes=$3
   printf 'Загрузка с GitHub: %s\n' "$source_url"
-  if curl -fL --connect-timeout 10 --max-time 30 --max-filesize "$max_bytes" "$source_url" -o "$output_file.part"; then
-    mv "$output_file.part" "$output_file" || return 1
-    return 0
-  fi
-  rm -f "$output_file.part"
+  attempt=1
+  while [ "$attempt" -le 3 ]; do
+    if curl -fL --http1.1 --connect-timeout 10 --max-time 30 --max-filesize "$max_bytes" "$source_url" -o "$output_file.part"; then
+      mv "$output_file.part" "$output_file" || return 1
+      return 0
+    else
+      download_status=$?
+    fi
+    rm -f "$output_file.part"
+    case "$download_status" in
+      5|6|7|18|28|35|52|55|56|92) ;;
+      *) return 1 ;;
+    esac
+    [ "$attempt" -lt 3 ] || break
+    printf 'Соединение прервано (curl %s). Повтор %s из 2 через %s с...\n' "$download_status" "$attempt" "$attempt"
+    sleep "$attempt"
+    attempt=$((attempt + 1))
+  done
   return 1
 }
 

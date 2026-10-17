@@ -1366,10 +1366,10 @@ body { -webkit-font-smoothing:auto; }
 .app-shell .proxy-health > span { font-size:10px; }
 
 /* Settings controls: readable helper text, crisp outlines, and a native dark popup. */
-.app-shell .settings-panel .setting-row small,
-.app-shell .github-proxy-settings .settings-inline-note { font-size:13px; line-height:1.5; color:#b8c5d6; }
-.app-shell .settings-panel .setting-row { border-color:#29374a; }
-.app-shell .settings-panel .setting-control {
+.settings-panel .setting-row small,
+.github-proxy-settings .settings-inline-note { font-size:13px; line-height:1.5; color:#b8c5d6; }
+.settings-panel .setting-row { border-color:#29374a; }
+.settings-panel .setting-control {
   min-height:40px;
   border:1px solid #34445b;
   border-radius:9px;
@@ -1380,16 +1380,16 @@ body { -webkit-font-smoothing:auto; }
   color-scheme:dark;
   transition:border-color .18s ease,background-color .18s ease,box-shadow .18s ease;
 }
-.app-shell .settings-panel .setting-control:hover { border-color:#536b8c; background-color:#101c2d; }
-.app-shell .settings-panel .setting-control:focus-visible { border-color:#6098f4; outline:2px solid #6098f455; outline-offset:2px; box-shadow:0 0 0 3px #6098f422; }
-.app-shell .settings-panel .setting-control option { color:#edf3fb; background:#101a29; }
-.app-shell .settings-panel .setting-row strong { font-weight:700; }
-.app-shell .settings-panel .setting-switch:focus-visible { outline:2px solid #6da2ff; outline-offset:3px; }
-.app-shell .proxy-health.is-dead { border-color:#a74354; color:#ff929e; background:#301a23; box-shadow:0 0 0 1px #a7435422 inset; }
-.app-shell .proxy-health.is-dead .ping-status-icon svg { stroke-width:1.9; }
-.app-shell .settings-panel,
-.app-shell .settings-section { border-color:#2b394e; }
-:root[data-theme="light"] .app-shell .settings-panel .setting-row small,
-:root[data-theme="light"] .app-shell .github-proxy-settings .settings-inline-note { color:#52647a; }
-:root[data-theme="light"] .app-shell .settings-panel .setting-control { color:#1d2b3e; background-color:#f5f8fc; border-color:#c7d2e0; color-scheme:light; }
-:root[data-theme="light"] .app-shell .settings-panel .setting-control option { color:#1d2b3e; background:#fff; }
+.settings-panel .setting-control:hover { border-color:#536b8c; background-color:#101c2d; }
+.settings-panel .setting-control:focus-visible { border-color:#6098f4; outline:2px solid #6098f455; outline-offset:2px; box-shadow:0 0 0 3px #6098f422; }
+.settings-panel .setting-control option { color:#edf3fb; background:#101a29; }
+.settings-panel .setting-row strong { font-weight:700; }
+.settings-panel .setting-switch:focus-visible { outline:2px solid #6da2ff; outline-offset:3px; }
+.proxy-health.is-dead { border-color:#a74354; color:#ff929e; background:#301a23; box-shadow:0 0 0 1px #a7435422 inset; }
+.proxy-health.is-dead .ping-status-icon svg { stroke-width:1.9; }
+.settings-panel,
+.settings-section { border-color:#2b394e; }
+:root[data-theme="light"] .settings-panel .setting-row small,
+:root[data-theme="light"] .github-proxy-settings .settings-inline-note { color:#52647a; }
+:root[data-theme="light"] .settings-panel .setting-control { color:#1d2b3e; background-color:#f5f8fc; border-color:#c7d2e0; color-scheme:light; }
+:root[data-theme="light"] .settings-panel .setting-control option { color:#1d2b3e; background:#fff; }

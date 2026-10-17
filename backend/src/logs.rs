@@ -279,6 +279,10 @@ fn is_legacy_noise_line(line: &str) -> bool {
     let normalized = line.to_lowercase();
     normalized.contains("component=xkeen phase=requested")
         || normalized.contains("component=xkeen phase=completed")
+        || (normalized.contains("component=xkeen action=")
+            && ((normalized.contains("command=exit-0") && normalized.contains("result=success"))
+                || (normalized.contains("command=not-run")
+                    && normalized.contains("process_transition=blocked"))))
         || normalized.contains("source=update")
         || normalized.contains("[fatal] received sigterm")
         || (normalized.contains("mihomo proxy ping:")
@@ -363,6 +367,7 @@ fn append_log_file(path: &Path, entries: &[String]) -> std::io::Result<()> {
 }
 
 pub(super) fn sanitize_line(line: &str) -> String {
+    let line = strip_ansi_sequences(line);
     let mut clean: String = line
         .chars()
         .filter(|character| !character.is_control() || *character == '\t')
@@ -421,6 +426,26 @@ pub(super) fn sanitize_line(line: &str) -> String {
     clean
 }
 
+fn strip_ansi_sequences(line: &str) -> String {
+    let mut clean = String::with_capacity(line.len());
+    let mut characters = line.chars().peekable();
+    while let Some(character) = characters.next() {
+        if character != '\u{001b}' {
+            clean.push(character);
+            continue;
+        }
+        if characters.peek() == Some(&'[') {
+            characters.next();
+            for sequence_character in characters.by_ref() {
+                if ('@'..='~').contains(&sequence_character) {
+                    break;
+                }
+            }
+        }
+    }
+    clean
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -432,6 +457,14 @@ mod tests {
                 "url password=hunter2 token=abc Authorization: Bearer private\tok\u{0007}"
             ),
             "url password=[REDACTED] token=[REDACTED] Authorization:[REDACTED]\tok"
+        );
+    }
+
+    #[test]
+    fn strips_ansi_color_codes_from_runtime_log_lines() {
+        assert_eq!(
+            sanitize_line("Прокси-клиент \u{001b}[91mостановлен\u{001b}[0m"),
+            "Прокси-клиент остановлен"
         );
     }
 
@@ -487,6 +520,15 @@ mod tests {
         ));
         assert!(is_legacy_noise_line(
             "unix=42 component=xkeen phase=completed action=restart result=success"
+        ));
+        assert!(is_legacy_noise_line(
+            "16.10.2026, 17:59:44 component=xkeen action=restart command=exit-0 running_before=true running_after=true process_transition=verified result=success"
+        ));
+        assert!(is_legacy_noise_line(
+            "16.10.2026, 18:48:21 component=xkeen action=restart command=exit-0 running_before=true running_after=true process_transition=verified result=success"
+        ));
+        assert!(is_legacy_noise_line(
+            "16.10.2026, 18:48:53 component=xkeen action=stop command=not-run process_transition=blocked result=blocked error=DNS Override"
         ));
         assert!(is_legacy_noise_line(
             "unix=42 level=ERROR component=xkeen-ui source=update message=installer exited with code 1"

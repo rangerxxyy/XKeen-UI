@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { formatJournalTimestamp, getJournalViewState } from './journal-view-state';
+import { formatJournalTimestamp, getJournalViewState, stripLogSourceLabel } from './journal-view-state';
 
 describe('getJournalViewState', () => {
   it('keeps existing journal rows visible while refreshing in the background', () => {
@@ -25,6 +25,13 @@ describe('formatJournalTimestamp', () => {
       .toEqual({ timestamp: '16.10.2026, 20:30:00', message: 'Started' });
   });
 
+  it('formats Xray runtime records like the router journal reference', () => {
+    expect(formatJournalTimestamp(
+      'time="2026-10-17T11:37:51.016495416Z" level=info msg="Start initial configuration in progress"',
+      'Europe/Moscow',
+    )).toEqual({ timestamp: '2026/10/17 14:37:51.016495', message: 'INFO Start initial configuration in progress' });
+  });
+
   it('formats the Unix timestamps written by the router lifecycle and UI error logger', () => {
     const timestamp = Math.floor(Date.parse('2026-10-16T17:30:00Z') / 1000);
     expect(formatJournalTimestamp(`unix=${timestamp} level=ERROR component=xkeen-ui source=yaml message=Invalid YAML`, 'Europe/Moscow'))
@@ -33,5 +40,13 @@ describe('formatJournalTimestamp', () => {
 
   it('leaves lines without an explicit ISO timestamp unchanged', () => {
     expect(formatJournalTimestamp('INFO service started', 'UTC')).toBeNull();
+  });
+});
+
+describe('stripLogSourceLabel', () => {
+  it('keeps source tags out of the user-visible log line', () => {
+    expect(stripLogSourceLabel('Прокси-клиент остановлен  [Xray]')).toBe('Прокси-клиент остановлен');
+    expect(stripLogSourceLabel('Ошибка YAML  [XKeen UI]')).toBe('Ошибка YAML');
+    expect(stripLogSourceLabel('rule-set:category-ru@domain')).toBe('rule-set:category-ru@domain');
   });
 });

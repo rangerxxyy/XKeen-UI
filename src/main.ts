@@ -11,7 +11,7 @@ import { confirmInApp } from './confirm-dialog';
 import { bindDialogMotion, closeDialogWithMotion } from './dialog-motion';
 import { lifecycleFeedback } from './service-feedback';
 import { readUiPreferences, validPingUrl, writeUiPreferences, type UiPreferences } from './preferences';
-import { formatJournalTimestamp, getJournalViewState, stripLogSourceLabel } from './journal-view-state';
+import { formatJournalMessage, formatJournalTimestamp, getJournalViewState, stripLogSourceLabel } from './journal-view-state';
 import { SETTINGS_TABS, type SettingsTabId } from './settings-tabs';
 import { bindSelectorSortControl, renderSelectorSortControl } from './selector-sort-control';
 import { bindPingUrlControl, renderPingUrlControl } from './ping-url-control';
@@ -231,7 +231,14 @@ function drawJournal(): void {
     timestamp.textContent = parsed?.timestamp ?? '';
     if (parsed) timestamp.dateTime = displayLine.match(/^(?:time=")?\[?(\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d{1,9})?(?:Z|[+-]\d{2}:\d{2}))/)?.[1] ?? '';
     const message = document.createElement('code');
-    message.textContent = parsed?.message ?? displayLine;
+    for (const segment of formatJournalMessage(parsed?.message ?? displayLine)) {
+      if (segment.tone) {
+        const span = document.createElement('span');
+        span.className = `journal-message-${segment.tone}`;
+        span.textContent = segment.text;
+        message.append(span);
+      } else message.append(document.createTextNode(segment.text));
+    }
     row.append(number, timestamp, message);
     list.append(row);
   }

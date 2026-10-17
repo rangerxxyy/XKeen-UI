@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { formatJournalTimestamp, getJournalViewState, stripLogSourceLabel } from './journal-view-state';
+import { formatJournalMessage, formatJournalTimestamp, getJournalViewState, stripLogSourceLabel } from './journal-view-state';
 
 describe('getJournalViewState', () => {
   it('keeps existing journal rows visible while refreshing in the background', () => {
@@ -48,5 +48,19 @@ describe('stripLogSourceLabel', () => {
     expect(stripLogSourceLabel('Прокси-клиент остановлен  [Xray]')).toBe('Прокси-клиент остановлен');
     expect(stripLogSourceLabel('Ошибка YAML  [XKeen UI]')).toBe('Ошибка YAML');
     expect(stripLogSourceLabel('rule-set:category-ru@domain')).toBe('rule-set:category-ru@domain');
+  });
+});
+
+describe('formatJournalMessage', () => {
+  it('colors start and stop status text and highlights severity labels', () => {
+    expect(formatJournalMessage('Прокси-клиент остановлен')).toEqual([
+      { text: 'Прокси-клиент ' }, { text: 'остановлен', tone: 'stopped' }, { text: '' },
+    ]);
+    expect(formatJournalMessage('Прокси-клиент запущен в режиме Hybrid')).toEqual([
+      { text: 'Прокси-клиент ' }, { text: 'запущен', tone: 'started' },
+      { text: ' в режиме ' }, { text: 'Hybrid', tone: 'mode' },
+    ]);
+    expect(formatJournalMessage('INFO Geodata Loader mode: standard')[0]).toEqual({ text: 'INFO', tone: 'info' });
+    expect(formatJournalMessage('[ERROR] invalid configuration')[0]).toEqual({ text: 'ERROR', tone: 'error' });
   });
 });

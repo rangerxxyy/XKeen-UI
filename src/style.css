@@ -1333,6 +1333,11 @@ body { -webkit-font-smoothing:auto; }
 .app-shell .journal-line[data-level="error"] .journal-line-number { color:#ff7f8c; }
 .app-shell .journal-line[data-level="warning"] .journal-line-number { color:#f1c56d; }
 .app-shell .journal-line-number { font-size:11px; }
+.journal-message-stopped,.journal-message-error { color:#ff7f8c; font-weight:700; }
+.journal-message-started { color:#52d7a5; font-weight:700; }
+.journal-message-mode { color:#82c7ff; font-weight:650; }
+.journal-message-info { display:inline-block; margin-right:7px; padding:1px 7px; border:1px solid #2c3d59; border-radius:999px; color:#b9d7ff; background:#16243a; font:700 10px/1.45 var(--font-ui); }
+.journal-message-warning { color:#f1c56d; font-weight:700; }
 .app-shell .journal-filter input,.app-shell .journal-tools select { font-size:13px; }
 @media(max-width:600px) {
   .app-shell .setting-row small,.app-shell .source-field small,

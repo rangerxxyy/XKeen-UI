@@ -1,7 +1,34 @@
 export type JournalViewState = 'loading' | 'error' | 'cleared' | 'data' | 'empty';
+export type JournalMessageSegment = { text: string; tone?: 'stopped' | 'started' | 'mode' | 'info' | 'warning' | 'error' };
 
 export function stripLogSourceLabel(line: string): string {
   return line.replace(/\s+\[(?:XKeen|Xray|XKeen UI)\]\s*$/, '');
+}
+
+export function formatJournalMessage(message: string): JournalMessageSegment[] {
+  const stopped = message.match(/^(\s*Прокси-клиент\s+)(остановлен)(.*)$/i);
+  if (stopped) return [
+    { text: stopped[1] ?? '' },
+    { text: stopped[2] ?? '', tone: 'stopped' },
+    { text: stopped[3] ?? '' },
+  ];
+  const started = message.match(/^(\s*Прокси-клиент\s+)(запущен)(\s+в режиме\s+)(.+)$/i);
+  if (started) return [
+    { text: started[1] ?? '' },
+    { text: started[2] ?? '', tone: 'started' },
+    { text: started[3] ?? '' },
+    { text: started[4] ?? '', tone: 'mode' },
+  ];
+  const severity = message.match(/^\[?(INFO|WARN|WARNING|ERROR|FATAL)\]?\s+(.*)$/i);
+  if (severity) {
+    const level = (severity[1] ?? '').toUpperCase();
+    const tone = level === 'INFO' ? 'info' : level === 'WARN' || level === 'WARNING' ? 'warning' : 'error';
+    return [
+      { text: level, tone },
+      { text: ` ${severity[2] ?? ''}` },
+    ];
+  }
+  return [{ text: message }];
 }
 
 export function formatJournalTimestamp(line: string, timeZone: string): { timestamp: string; message: string } | null {

@@ -11,7 +11,7 @@ import { confirmInApp } from './confirm-dialog';
 import { bindDialogMotion, closeDialogWithMotion } from './dialog-motion';
 import { lifecycleFeedback } from './service-feedback';
 import { readUiPreferences, validPingUrl, writeUiPreferences, type UiPreferences } from './preferences';
-import { formatJournalTimestamp, getJournalViewState } from './journal-view-state';
+import { formatJournalTimestamp, getJournalViewState, stripLogSourceLabel } from './journal-view-state';
 import { SETTINGS_TABS, type SettingsTabId } from './settings-tabs';
 import { bindSelectorSortControl, renderSelectorSortControl } from './selector-sort-control';
 import { bindPingUrlControl, renderPingUrlControl } from './ping-url-control';
@@ -217,20 +217,21 @@ function drawJournal(): void {
   const list = document.createElement('div');
   list.className = 'journal-lines';
   for (const [index, line] of lines.entries()) {
+    const displayLine = stripLogSourceLabel(line);
     const row = document.createElement('div');
     row.className = 'journal-line';
-    row.dataset.level = /\b(error|fatal|panic)\b/i.test(line) ? 'error' : /\b(warn|warning)\b/i.test(line) ? 'warning' : 'info';
+    row.dataset.level = /\b(error|fatal|panic)\b/i.test(displayLine) ? 'error' : /\b(warn|warning)\b/i.test(displayLine) ? 'warning' : 'info';
     const number = document.createElement('span');
     number.className = 'journal-line-number';
     number.textContent = String(index + 1).padStart(3, '0');
-    const parsed = formatJournalTimestamp(line, uiPreferences.journalTimeZone);
+    const parsed = formatJournalTimestamp(displayLine, uiPreferences.journalTimeZone);
     const timestamp = document.createElement('time');
     timestamp.className = 'journal-timestamp';
     timestamp.hidden = !parsed;
     timestamp.textContent = parsed?.timestamp ?? '';
-    if (parsed) timestamp.dateTime = line.match(/^\[?(\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d{1,9})?(?:Z|[+-]\d{2}:\d{2}))/)?.[1] ?? '';
+    if (parsed) timestamp.dateTime = displayLine.match(/^(?:time=")?\[?(\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d{1,9})?(?:Z|[+-]\d{2}:\d{2}))/)?.[1] ?? '';
     const message = document.createElement('code');
-    message.textContent = parsed?.message ?? line;
+    message.textContent = parsed?.message ?? displayLine;
     row.append(number, timestamp, message);
     list.append(row);
   }

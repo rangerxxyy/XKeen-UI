@@ -154,23 +154,6 @@ pub async fn control(action: &str) -> Result<XkeenStatus, String> {
     result.map(|_| after)
 }
 
-pub(super) fn log_blocked_action(action: &str, reason: &str) {
-    let action = match action {
-        "start" | "stop" | "restart" => action,
-        _ => "invalid",
-    };
-    let timestamp = SystemTime::now()
-        .duration_since(UNIX_EPOCH)
-        .unwrap_or_default()
-        .as_secs();
-    let entry = format!(
-        "unix={timestamp} component=xkeen action={action} command=not-run process_transition=blocked result=blocked error={reason}"
-    );
-    if let Err(error) = crate::logs::append_xkeen_lifecycle(&[entry]) {
-        tracing::warn!(%error, "Could not append blocked XKeen action to Journal log");
-    }
-}
-
 fn require_verified_transition<T>(
     action: &str,
     result: Result<T, String>,

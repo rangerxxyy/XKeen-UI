@@ -138,7 +138,9 @@ fn install_or_update(options: &InstallOptions) -> Result<(), Box<dyn Error>> {
     fs::create_dir_all(&paths.etc)?;
     let previous_config = read_optional(&paths.config)?;
     let saved = Config::parse(previous_config.as_deref())?;
-    let bind_ip = resolve_bind_ip().or_else(|error| saved.bind_ip.ok_or(error))?;
+    let bind_ip = preferred_install_bind(saved.bind_ip, env::var_os("XKEEN_BIND").is_some())
+        .map(Ok)
+        .unwrap_or_else(resolve_bind_ip)?;
     validate_owned_paths(&paths)?;
     let was_installed = paths.app.exists();
     if was_installed {
@@ -284,6 +286,14 @@ fn resolve_bind_ip() -> Result<Ipv4Addr, Box<dyn Error>> {
         }
     }
     Err("could not detect the br0 IPv4 address; set XKEEN_BIND explicitly".into())
+}
+
+fn preferred_install_bind(saved: Option<Ipv4Addr>, has_override: bool) -> Option<Ipv4Addr> {
+    if has_override {
+        None
+    } else {
+        saved
+    }
 }
 
 fn choose_port(requested: Option<u16>) -> io::Result<u16> {
@@ -764,6 +774,17 @@ mod tests {
     };
     use std::net::TcpListener;
     use std::path::Path;
+
+    #[test]
+    fn update_preserves_loopback_binding_unless_explicitly_overridden() {
+        let loopback = std::net::Ipv4Addr::LOCALHOST;
+        assert_eq!(
+            super::preferred_install_bind(Some(loopback), false),
+            Some(loopback)
+        );
+        assert_eq!(super::preferred_install_bind(Some(loopback), true), None);
+        assert_eq!(super::preferred_install_bind(None, false), None);
+    }
 
     #[test]
     fn installed_runtime_has_a_distinct_name_and_legacy_runtime_still_resolves() {

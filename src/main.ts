@@ -126,7 +126,11 @@ function renderHeader(): string {
   const coreLabel = mihomoVersion ? formatVersion(mihomoVersion) : service ? (service.version ? formatVersion(service.version) : service.state === 'running' ? 'Активен' : service.state === 'stopped' ? 'Остановлен' : 'Недоступен') : state.connected ? 'Не проверен' : 'Ожидание';
   const serviceText = xkeenControlBusy
     ? `${xkeenControlAction === 'stop' ? 'Остановка' : xkeenControlAction === 'start' ? 'Запуск' : 'Перезапуск'} XKeen…`
-    : service ? (service.state === 'running' ? 'Сервис запущен' : service.state === 'stopped' ? 'Сервис остановлен' : 'Статус недоступен') : 'Состояние загружается';
+    : status?.mode === 'router'
+      ? xkeenStatus?.installed
+        ? xkeenStatus.running === true ? 'XKeen запущен' : xkeenStatus.running === false ? 'XKeen остановлен' : 'Статус XKeen недоступен'
+        : 'XKeen не найден'
+      : service ? (service.state === 'running' ? 'Сервис запущен' : service.state === 'stopped' ? 'Сервис остановлен' : 'Статус недоступен') : 'Состояние загружается';
   const memory = status?.memory ? `RAM ${status.memory.usedMb}/${status.memory.totalMb} MB` : 'RAM —';
   const cpu = status?.cpuPercent === null || status?.cpuPercent === undefined ? 'CPU —' : `CPU ${Math.round(status.cpuPercent)}%`;
   const canControl = status?.mode === 'router' && Boolean(xkeenStatus?.installed);
@@ -136,7 +140,7 @@ function renderHeader(): string {
       : `<button class="header-service-action" data-xkeen-action="restart" type="button" title="Перезапустить XKeen" aria-label="Перезапустить XKeen" ${xkeenControlBusy ? 'disabled' : ''}>${xkeenControlBusy && xkeenControlAction === 'restart' ? '<span class="service-control-spinner" aria-hidden="true"></span>' : '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 7v5h-5M4.9 9a7.5 7.5 0 0 1 12.4-2L20 12M4 17v-5h5m10.1 3a7.5 7.5 0 0 1-12.4 2L4 12"/></svg>'}</button><button class="header-service-action header-service-stop" data-xkeen-action="stop" type="button" title="Остановить XKeen" aria-label="Остановить XKeen" ${xkeenControlBusy || xkeenStatus?.running !== true ? 'disabled' : ''}>${xkeenControlBusy && xkeenControlAction === 'stop' ? '<span class="service-control-spinner" aria-hidden="true"></span>' : '■'}</button>`}`
     : '';
   return `<header class="topbar">
-    <div class="top-status-cluster"><div class="top-status" aria-label="Состояние панели"><span id="status-led" class="connection-led ${state.connected ? 'is-online' : 'is-offline'}"></span><span><strong id="service-label">${escapeHtml(serviceText)}</strong><small id="service-summary">${state.connected ? `${memory} · ${cpu}` : 'Ожидание соединения с backend'}</small></span></div><div class="header-service-controls" aria-label="Управление XKeen" aria-busy="${xkeenControlBusy}">${controls}</div></div>
+    <div class="top-status-cluster ${xkeenControlBusy ? 'is-xkeen-busy' : ''}"><div class="top-status" aria-label="Состояние XKeen" aria-live="polite"><span id="status-led" class="connection-led ${state.connected ? 'is-online' : 'is-offline'}"></span><span><strong id="service-label">${escapeHtml(serviceText)}</strong><small id="service-summary">${state.connected ? `${memory} · ${cpu}` : 'Ожидание соединения с backend'}</small></span></div><div class="header-service-controls" aria-label="Управление XKeen" aria-busy="${xkeenControlBusy}">${controls}</div></div>
     <a class="brand" href="#selectors" aria-label="XKeen UI, селекторы"><span class="brand-mark">X</span><span>XKeen <b>UI</b></span></a>
     <div class="top-actions"><button class="version-chip core-chip core-version-button" id="core-version" type="button" title="Выбрать релиз Mihomo" aria-label="Выбрать релиз Mihomo"><span class="chip-icon">◈</span> Mihomo <b id="core-version-label">${coreLabel}</b><span class="chip-chevron" aria-hidden="true">⌄</span></button><button class="version-chip app-version-button" id="app-version" type="button" title="Выбрать релиз XKeen UI" aria-label="Выбрать релиз XKeen UI"><span class="chip-icon">⬡</span> XKeen UI <b id="app-version-label">v${status?.appVersion ?? APP_VERSION}</b><span class="chip-chevron" aria-hidden="true">⌄</span></button><button class="icon-button" id="settings" title="Настройки" aria-label="Настройки">⚙</button></div>
   </header>`;
@@ -638,8 +642,8 @@ async function pingGroupFromUi(button: HTMLButtonElement): Promise<void> {
     updatePingControls();
     if (uiPreferences.hideUnavailableProxies && activePage === 'selectors') render();
   } catch (error) {
+    if (error instanceof DOMException && error.name === 'AbortError') return;
     button.title = error instanceof Error ? error.message : 'Не удалось проверить серверы';
-    void logUiError('ui', `Mihomo group ping: ${button.title}`).catch(() => undefined);
   } finally {
     button.disabled = false;
     button.classList.remove('is-pinging');
@@ -666,8 +670,8 @@ async function pingProxyFromUi(button: HTMLButtonElement): Promise<void> {
     updatePingControls();
     if (result && uiPreferences.hideUnavailableProxies && activePage === 'selectors') render();
   } catch (error) {
+    if (error instanceof DOMException && error.name === 'AbortError') return;
     button.title = error instanceof Error ? error.message : 'Не удалось проверить узел';
-    void logUiError('ui', `Mihomo proxy ping: ${button.title}`).catch(() => undefined);
   } finally {
     button.disabled = false;
     button.classList.remove('is-pinging');
@@ -1151,7 +1155,6 @@ async function installAppUpdate(): Promise<void> {
     throw new Error(`Обновление не подтвердилось за 8 минут.${diagnostic || ' Проверьте системный журнал обновления.'}`);
   } catch (error) {
     appUpdateMessage = error instanceof Error ? error.message : 'Обновление панели завершилось ошибкой.';
-    void logUiError('update', appUpdateMessage).catch(() => undefined);
   } finally {
     appUpdateInstalling = false;
     const message = document.querySelector<HTMLElement>('#app-releases-status');

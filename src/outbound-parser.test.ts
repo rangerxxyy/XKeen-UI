@@ -13,4 +13,10 @@ describe('proxy link generator', () => {
   it('rejects unsupported share-link protocols', () => {
     expect(() => generateConfigForCore('ftp://example.com:21', 'mihomo')).toThrow();
   });
+
+  it('recognizes HTTPS subscription URLs regardless of scheme casing', () => {
+    const result = generateConfigForCore('HTTPS://sub.example.net/list', 'mihomo');
+    expect(result.type).toBe('proxy-provider');
+    expect(result.content.toLowerCase()).toContain('url: https://sub.example.net/list');
+  });
 });

@@ -6,13 +6,14 @@ import { tags } from '@lezer/highlight';
 import { yaml } from '@codemirror/lang-yaml';
 import { json } from '@codemirror/lang-json';
 import { applyEdits, format as formatJsonc, parse as parseJsonc, printParseErrorCode, type ParseError } from 'jsonc-parser';
-import { parseDocument } from 'yaml';
+import { isMap, parseDocument } from 'yaml';
 import { chooseReferenceTemplate, getDefaultTemplate } from './templates';
 import { applyActiveMihomoConfig, applyXrayConfigFile, getActiveMihomoConfig, getRouterConfigFile, getXrayConfigFile, logUiError, saveActiveMihomoConfig, saveRouterConfigFile, saveXrayConfigFile, type RouterConfigFile, type XrayConfigFile } from './api';
 import { confirmInApp } from './confirm-dialog';
 import { canPersistConfig } from './config-actions';
 import { generateConfigForCore } from './outbound-parser';
 import { appendMihomoProxy } from './proxy-import';
+import { createMihomoProviderYaml, insertMihomoProvider, nextMihomoProviderName, type MihomoProviderPosition, type MihomoProviderSettings } from './mihomo-provider';
 
 const draftKey = 'xkeen-ui:draft:';
 const activeFileKey = 'xkeen-ui:draft-active-file';
@@ -100,34 +101,187 @@ function bindAddProxyDialog(signal: AbortSignal): void {
     (event.currentTarget as HTMLButtonElement).closest('details')?.removeAttribute('open');
     const dialog = document.createElement('dialog');
     dialog.className = 'modal proxy-import-dialog';
-    dialog.innerHTML = '<form class="modal-panel" method="dialog" id="proxy-import-form"><div class="modal-heading"><span class="modal-icon" aria-hidden="true">↗</span><h2>Добавить прокси</h2><button class="icon-button" type="button" data-close-proxy-import aria-label="Закрыть">×</button></div><p class="modal-note">Вставьте ссылку на узел. Прокси добавится в локальный черновик конфигурации Mihomo.</p><label class="proxy-import-field"><span>Ссылка на подключение</span><input name="uri" type="text" autocomplete="off" autocapitalize="none" spellcheck="false" placeholder="vless://…" required></label><p class="proxy-import-error" role="alert" hidden></p><div class="confirmation-actions"><button class="editor-button" type="button" data-close-proxy-import>Отмена</button><button class="editor-button editor-button-primary" type="submit">Добавить прокси</button></div></form>';
+    dialog.innerHTML = `<form class="modal-panel" method="dialog" id="proxy-import-form">
+      <div class="modal-heading"><span class="modal-icon" aria-hidden="true">↗</span><h2>Добавить подключение</h2><button class="icon-button" type="button" data-close-proxy-import aria-label="Закрыть">×</button></div>
+      <p class="modal-note">Вставьте ссылку на отдельный узел или URL подписки Mihomo. Изменения попадут только в локальный черновик.</p>
+      <section class="proxy-provider-editor" hidden>
+        <div class="proxy-import-tabs" role="tablist" aria-label="Предпросмотр провайдера">
+          <button type="button" class="is-active" role="tab" aria-selected="true" data-provider-tab="settings">Настройки</button>
+          <button type="button" role="tab" aria-selected="false" data-provider-tab="yaml">YAML</button>
+          <button type="button" class="proxy-provider-copy" data-copy-provider-yaml aria-label="Скопировать YAML" title="Скопировать YAML">▢</button>
+        </div>
+        <div class="proxy-provider-settings" data-provider-panel="settings">
+          <fieldset class="proxy-provider-group"><legend>Основное</legend><div class="proxy-provider-grid">
+            <label class="proxy-provider-field"><span>Название провайдера</span><input name="providerName" value="subscription_1" autocomplete="off"></label>
+            <label class="proxy-provider-field"><span>Интервал автообновления</span><span class="proxy-provider-unit"><input name="interval" type="number" min="60" step="1" value="43200"><small>сек</small></span></label>
+            <label class="proxy-provider-field proxy-provider-wide"><span>URL подписки</span><input name="subscriptionUrl" type="url" autocomplete="url" required></label>
+            <p class="proxy-provider-hint proxy-provider-wide">Mihomo будет обновлять этот источник по заданному интервалу.</p>
+          </div></fieldset>
+          <fieldset class="proxy-provider-group"><legend><label class="proxy-provider-toggle"><input name="healthCheckEnabled" type="checkbox" checked><span>Проверка работоспособности</span></label></legend><div class="proxy-provider-grid" data-provider-section="health">
+            <label class="proxy-provider-field proxy-provider-wide"><span>URL проверки</span><input name="healthCheckUrl" type="url" value="https://www.gstatic.com/generate_204"></label>
+            <label class="proxy-provider-field"><span>Интервал проверок</span><span class="proxy-provider-unit"><input name="healthCheckInterval" type="number" min="1" value="300"><small>сек</small></span></label>
+            <label class="proxy-provider-field"><span>Ожидаемый HTTP-код ответа</span><input name="expectedStatus" type="number" min="100" max="599" value="204"></label>
+          </div></fieldset>
+          <fieldset class="proxy-provider-group"><legend><label class="proxy-provider-toggle"><input name="headersEnabled" type="checkbox" checked><span>Заголовки</span></label></legend><div class="proxy-provider-grid" data-provider-section="headers">
+            <label class="proxy-provider-field"><span>User-Agent</span><input name="userAgent" value="ClashMeta/1.19.30; mihomo/1.19.30"></label>
+            <label class="proxy-provider-field"><span>x-hwid</span><input name="hwid" autocomplete="off"></label>
+          </div></fieldset>
+          <fieldset class="proxy-provider-group"><legend><label class="proxy-provider-toggle"><input name="filtersEnabled" type="checkbox"><span>Фильтр подключений</span></label></legend><div class="proxy-provider-grid" data-provider-section="filters" hidden>
+            <label class="proxy-provider-field proxy-provider-wide"><span>По названию (включить)</span><input name="filter" placeholder="my-good-proxy"></label>
+            <label class="proxy-provider-field proxy-provider-wide"><span>По названию (исключить)</span><input name="excludeFilter" placeholder="my-bad-proxy"></label>
+            <label class="proxy-provider-field proxy-provider-wide"><span>По типу (исключить)</span><input name="excludeType" placeholder="trojan|vmess"></label>
+          </div></fieldset>
+          <label class="proxy-provider-udp"><input name="udp" type="checkbox" checked><span>Включить UDP</span></label>
+        </div>
+        <pre class="proxy-provider-yaml" data-provider-panel="yaml" hidden></pre>
+        <div class="proxy-provider-actions">
+          <button type="button" class="editor-button" data-provider-insert="start">＋ В начало</button>
+          <button type="button" class="editor-button" data-provider-insert="end">＋ В конец</button>
+          <button type="button" class="editor-button" data-provider-open-replace>⧉ Заменить</button>
+          <div class="proxy-provider-replace" hidden><select name="replaceTarget" aria-label="Провайдер для замены"><option value="">Выберите провайдера</option></select><button type="button" class="editor-button" data-provider-insert="replace">Подтвердить</button></div>
+        </div>
+      </section>
+      <label class="proxy-import-field"><span>Ссылка на подключение</span><input name="uri" type="text" autocomplete="off" autocapitalize="none" spellcheck="false" placeholder="vless://… или https://…" required></label>
+      <p class="proxy-import-error" role="alert" hidden></p>
+      <div class="proxy-import-footer"><button class="editor-button" type="button" data-close-proxy-import>Отмена</button><button class="editor-button editor-button-primary" type="button" data-generate-provider>Сгенерировать</button></div>
+    </form>`;
     document.body.append(dialog);
     const form = dialog.querySelector<HTMLFormElement>('#proxy-import-form');
     const input = form?.querySelector<HTMLInputElement>('[name="uri"]');
     const error = form?.querySelector<HTMLElement>('.proxy-import-error');
+    const providerEditor = form?.querySelector<HTMLElement>('.proxy-provider-editor');
+    const yamlPreview = form?.querySelector<HTMLElement>('.proxy-provider-yaml');
+    const providerSettings = form?.querySelector<HTMLElement>('.proxy-provider-settings');
+    const generateButton = form?.querySelector<HTMLButtonElement>('[data-generate-provider]');
     const close = () => { if (dialog.open) dialog.close(); else dialog.remove(); };
     signal.addEventListener('abort', close, { once: true });
     dialog.querySelectorAll<HTMLButtonElement>('[data-close-proxy-import]').forEach((button) => button.addEventListener('click', close, { signal }));
     dialog.addEventListener('close', () => dialog.remove(), { once: true, signal });
-    form?.addEventListener('submit', (submitEvent) => {
-      submitEvent.preventDefault();
+
+    const setting = <T extends Element>(name: string) => form?.elements.namedItem(name) as T | null;
+    const settingsValue = (): MihomoProviderSettings => ({
+      name: setting<HTMLInputElement>('providerName')?.value ?? '',
+      url: setting<HTMLInputElement>('subscriptionUrl')?.value ?? '',
+      interval: Number(setting<HTMLInputElement>('interval')?.value),
+      healthCheckEnabled: setting<HTMLInputElement>('healthCheckEnabled')?.checked ?? false,
+      healthCheckUrl: setting<HTMLInputElement>('healthCheckUrl')?.value ?? '',
+      healthCheckInterval: Number(setting<HTMLInputElement>('healthCheckInterval')?.value),
+      expectedStatus: Number(setting<HTMLInputElement>('expectedStatus')?.value),
+      headersEnabled: setting<HTMLInputElement>('headersEnabled')?.checked ?? false,
+      userAgent: setting<HTMLInputElement>('userAgent')?.value ?? '',
+      hwid: setting<HTMLInputElement>('hwid')?.value ?? '',
+      udp: setting<HTMLInputElement>('udp')?.checked ?? false,
+      filtersEnabled: setting<HTMLInputElement>('filtersEnabled')?.checked ?? false,
+      filter: setting<HTMLInputElement>('filter')?.value ?? '',
+      excludeFilter: setting<HTMLInputElement>('excludeFilter')?.value ?? '',
+      excludeType: setting<HTMLInputElement>('excludeType')?.value ?? '',
+    });
+    const refreshPreview = () => {
+      if (!yamlPreview) return;
+      try {
+        yamlPreview.textContent = createMihomoProviderYaml(settingsValue());
+        if (error) error.hidden = true;
+      } catch (cause) {
+        yamlPreview.textContent = '';
+        if (error) { error.hidden = false; error.textContent = cause instanceof Error ? cause.message : 'Проверьте параметры провайдера.'; }
+      }
+    };
+    form?.querySelector<HTMLButtonElement>('[data-copy-provider-yaml]')?.addEventListener('click', async () => {
+      try {
+        await navigator.clipboard.writeText(createMihomoProviderYaml(settingsValue()));
+        const copy = form.querySelector<HTMLButtonElement>('[data-copy-provider-yaml]');
+        if (copy) { copy.textContent = '✓'; copy.setAttribute('aria-label', 'YAML скопирован'); }
+      } catch {
+        if (error) { error.hidden = false; error.textContent = 'Браузер не разрешил копирование YAML.'; }
+      }
+    }, { signal });
+    form?.querySelectorAll<HTMLInputElement>('.proxy-provider-settings input').forEach((control) => control.addEventListener('input', refreshPreview, { signal }));
+    form?.querySelectorAll<HTMLInputElement>('[data-provider-section] input[type="checkbox"]').forEach((toggle) => toggle.addEventListener('change', () => {
+      const section = toggle.closest('fieldset')?.querySelector<HTMLElement>('[data-provider-section]');
+      if (section) section.hidden = !toggle.checked;
+      refreshPreview();
+    }, { signal }));
+    form?.querySelectorAll<HTMLButtonElement>('[data-provider-tab]').forEach((tab) => tab.addEventListener('click', () => {
+      const active = tab.dataset.providerTab;
+      form.querySelectorAll<HTMLButtonElement>('[data-provider-tab]').forEach((item) => {
+        const selected = item === tab;
+        item.classList.toggle('is-active', selected);
+        item.setAttribute('aria-selected', String(selected));
+      });
+      if (providerSettings) providerSettings.hidden = active !== 'settings';
+      if (yamlPreview) yamlPreview.hidden = active !== 'yaml';
+    }, { signal }));
+    generateButton?.addEventListener('click', () => {
       const uri = input?.value.trim() ?? '';
       if (!editor || !uri) return;
       try {
         const current = editor.state.doc.toString();
         const generated = generateConfigForCore(uri, 'mihomo', current);
-        if (generated.type !== 'proxy') throw new Error('Для добавления прокси вставьте ссылку на отдельный узел, а не URL подписки.');
+        if (generated.type === 'proxy-provider') {
+          const name = nextMihomoProviderName(current);
+          const nameInput = setting<HTMLInputElement>('providerName');
+          if (nameInput) nameInput.value = name;
+          const urlInput = setting<HTMLInputElement>('subscriptionUrl');
+          if (urlInput) urlInput.value = uri;
+          const hwidInput = setting<HTMLInputElement>('hwid');
+          if (hwidInput && !hwidInput.value) hwidInput.value = Array.from(crypto.getRandomValues(new Uint8Array(6)), (byte) => byte.toString(16).padStart(2, '0').toUpperCase()).join('');
+          if (providerEditor) providerEditor.hidden = false;
+          const providers = parseDocument(current, { uniqueKeys: true, version: '1.2' }).get('proxy-providers', true);
+          const target = setting<HTMLSelectElement>('replaceTarget');
+          if (target) {
+            target.innerHTML = '<option value="">Выберите провайдера</option>';
+            if (isMap(providers)) providers.items.forEach((pair) => {
+              const option = document.createElement('option');
+              const key = (pair as { key?: { toJSON?: () => unknown } }).key;
+              option.value = String(key?.toJSON?.() ?? key ?? '');
+              option.textContent = option.value;
+              target.append(option);
+            });
+          }
+          const replaceButton = form?.querySelector<HTMLButtonElement>('[data-provider-open-replace]');
+          if (replaceButton) {
+            replaceButton.disabled = !isMap(providers) || providers.items.length === 0;
+            replaceButton.title = replaceButton.disabled ? 'В конфигурации пока нет провайдеров для замены' : 'Заменить существующий провайдер';
+          }
+          refreshPreview();
+          providerEditor?.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+          return;
+        }
+        if (generated.type !== 'proxy') throw new Error('Для этого типа ссылки нет генератора Mihomo.');
         const updated = appendMihomoProxy(current, generated.content);
         editor.dispatch({ changes: { from: 0, to: editor.state.doc.length, insert: updated } });
         editor.focus();
         setValidation('Прокси добавлен в локальный черновик. Проверьте конфигурацию перед применением.', true);
         close();
       } catch (cause) {
-        if (error) {
-          error.hidden = false;
-          error.textContent = cause instanceof Error ? cause.message : 'Не удалось добавить прокси из этой ссылки.';
-        }
+        if (error) { error.hidden = false; error.textContent = cause instanceof Error ? cause.message : 'Не удалось обработать эту ссылку.'; }
       }
+    }, { signal });
+    form?.querySelectorAll<HTMLButtonElement>('[data-provider-insert]').forEach((button) => button.addEventListener('click', async () => {
+      if (!editor) return;
+      const position = button.dataset.providerInsert as MihomoProviderPosition;
+      const replaceTarget = setting<HTMLSelectElement>('replaceTarget')?.value;
+      if (position === 'replace' && !replaceTarget) {
+        if (error) { error.hidden = false; error.textContent = 'Выберите провайдера для замены.'; }
+        return;
+      }
+      if (position === 'replace' && !(await confirmInApp('Заменить провайдера?', `Параметры провайдера «${replaceTarget}» в локальном черновике будут заменены.`, 'Заменить'))) return;
+      try {
+        const current = editor.state.doc.toString();
+        const content = createMihomoProviderYaml(settingsValue());
+        const updated = insertMihomoProvider(current, content, position, replaceTarget);
+        editor.dispatch({ changes: { from: 0, to: editor.state.doc.length, insert: updated } });
+        editor.focus();
+        setValidation(`Провайдер подписки ${position === 'replace' ? 'заменён' : 'добавлен'} в локальный черновик. Проверьте конфигурацию перед применением.`, true);
+        close();
+      } catch (cause) {
+        if (error) { error.hidden = false; error.textContent = cause instanceof Error ? cause.message : 'Не удалось обновить черновик.'; }
+      }
+    }, { signal }));
+    form?.querySelector<HTMLButtonElement>('[data-provider-open-replace]')?.addEventListener('click', () => {
+      const panel = form.querySelector<HTMLElement>('.proxy-provider-replace');
+      if (panel) panel.hidden = false;
+      setting<HTMLSelectElement>('replaceTarget')?.focus();
     }, { signal });
     dialog.addEventListener('click', (clickEvent) => { if (clickEvent.target === dialog) close(); }, { signal });
     dialog.showModal();

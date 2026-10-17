@@ -411,7 +411,14 @@ function generateConfigForCore(uri, core = 'xray', existingConfig = '') {
     return `${base}_${index}`
   }
 
-  if (uri.startsWith('http') && core === 'mihomo') {
+  if (/^https?:\/\//i.test(uri) && core === 'mihomo') {
+    let subscriptionUrl
+    try {
+      subscriptionUrl = new URL(uri)
+    } catch {
+      throw new Error('Укажите корректный URL подписки с http:// или https://')
+    }
+    if (!subscriptionUrl.hostname) throw new Error('В URL подписки отсутствует адрес сервера')
     const name = generateName('subscription')
     return {
       type: 'proxy-provider',
@@ -419,7 +426,7 @@ function generateConfigForCore(uri, core = 'xray', existingConfig = '') {
         {
           [name]: {
             type: 'http',
-            url: uri,
+            url: subscriptionUrl.toString(),
             interval: 43200,
             'health-check': {
               enable: true,
@@ -439,7 +446,7 @@ function generateConfigForCore(uri, core = 'xray', existingConfig = '') {
     }
   }
 
-  if (core !== 'mihomo' && uri.startsWith('http')) throw new Error('Подписки в Xray не поддерживаются')
+  if (core !== 'mihomo' && /^https?:\/\//i.test(uri)) throw new Error('Подписки в Xray не поддерживаются')
   if (core !== 'mihomo' && (uri.startsWith('hysteria2') || uri.startsWith('hy2'))) {
     const config = parseHysteria2Xray(uri)
     if (config.tag === 'PROXY' || existingConfig.includes(config.tag)) config.tag = generateName('hysteria')

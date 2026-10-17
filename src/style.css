@@ -1468,22 +1468,63 @@ body { -webkit-font-smoothing:auto; }
 .utility-icon { width:18px; flex:0 0 18px; display:inline-grid; place-items:center; color:#a9c2e8; font-size:15px; }
 .editor-utilities-menu button[hidden] { display:none; }
 @keyframes utilities-menu-in { from { opacity:0; transform:translateY(7px) scale(.98); } to { opacity:1; transform:translateY(0) scale(1); } }
-.proxy-import-dialog { width:min(480px,calc(100vw - 28px)); max-width:none; padding:0; overflow:visible; border:0; background:transparent; color:inherit; }
+.proxy-import-dialog { width:min(760px,calc(100vw - 28px)); max-width:none; max-height:calc(100dvh - 28px); padding:0; overflow:visible; border:0; background:transparent; color:inherit; font-family:var(--font-ui); }
 .proxy-import-dialog::backdrop { background:#030711b8; backdrop-filter:blur(3px); }
-.proxy-import-dialog .modal-panel { display:grid; gap:12px; padding:20px; border:1px solid #34445d; border-radius:13px; background:#101827; color:#eaf0f8; box-shadow:0 20px 54px #0009; }
+.proxy-import-dialog .modal-panel { display:grid; grid-template-rows:auto auto minmax(0,1fr) auto auto; gap:12px; max-height:calc(100dvh - 28px); padding:20px; overflow:hidden; border:1px solid #34445d; border-radius:13px; background:#101827; color:#eaf0f8; box-shadow:0 20px 54px #0009; font-family:var(--font-ui); }
 .proxy-import-dialog .modal-heading { display:flex; align-items:center; gap:10px; }
-.proxy-import-dialog .modal-heading h2 { flex:1; margin:0; font-size:18px; font-weight:650; }
+.proxy-import-dialog .modal-heading h2 { flex:1; margin:0; color:#f4f7fc; font-size:19px; font-weight:700; letter-spacing:-.02em; }
 .proxy-import-dialog .modal-icon { color:#7eb6ff; font-size:19px; }
-.proxy-import-dialog .modal-note { margin:0; color:#b9c6d8; font-size:13px; line-height:1.5; }
-.proxy-import-field { display:grid; gap:7px; color:#e3eaf4; font-size:13px; font-weight:600; }
-.proxy-import-field input { width:100%; min-height:40px; padding:0 11px; border:1px solid #34445d; border-radius:8px; background:#090f1a; color:#f0f4fa; font:500 13px var(--font-ui); }
-.proxy-import-field input:focus-visible { outline:none; border-color:#6288c5; box-shadow:0 0 0 2px #4978c333; }
-.proxy-import-error { margin:0; color:#ff9a9f; font-size:12px; line-height:1.45; }
+.proxy-import-dialog .modal-note { margin:0; color:#b9c6d8; font-size:13px; font-weight:450; line-height:1.5; }
+.proxy-import-field { display:grid; gap:7px; color:#e8eef7; font-size:13px; font-weight:650; line-height:1.35; }
+.proxy-import-field input,.proxy-provider-field input { width:100%; min-width:0; min-height:38px; padding:0 11px; border:1px solid #34445d; border-radius:8px; background:#090f1a; color:#f0f4fa; font:500 13px/1.3 var(--font-ui); transition:border-color .14s ease,box-shadow .14s ease,background-color .14s ease; }
+.proxy-import-field input:focus-visible,.proxy-provider-field input:focus-visible,.proxy-provider-unit:focus-within { outline:none; border-color:#6b9ceb; box-shadow:0 0 0 2px #4978c344; }
+.proxy-import-error { margin:0; color:#ff9a9f; font-size:12.5px; font-weight:550; line-height:1.45; }
 .proxy-import-dialog .confirmation-actions { display:flex; justify-content:flex-end; gap:8px; }
+.proxy-import-footer { display:flex; justify-content:flex-end; gap:9px; }
+.proxy-import-dialog .editor-button { min-height:38px; padding:0 13px; font:600 13px/1.2 var(--font-ui); }
+.proxy-provider-editor { display:grid; grid-template-rows:auto minmax(0,1fr) auto; min-height:0; overflow:hidden; border:1px solid #2b3b54; border-radius:11px; background:#0d1523; }
+.proxy-provider-editor[hidden],.proxy-provider-settings[hidden],.proxy-provider-yaml[hidden] { display:none!important; }
+.proxy-import-tabs { display:flex; align-items:center; gap:6px; padding:5px 10px 0; border-bottom:1px solid #26364d; background:#121c2c; }
+.proxy-import-tabs button { position:relative; min-height:39px; padding:0 12px; border:0; color:#aab8cb; background:transparent; font:600 13px/1 var(--font-ui); cursor:pointer; transition:color .15s ease; }
+.proxy-import-tabs button:hover,.proxy-import-tabs button:focus-visible { color:#f3f7ff; outline:none; }
+.proxy-import-tabs button.is-active { color:#f4f7fc; }
+.proxy-import-tabs button.is-active::after { position:absolute; right:8px; bottom:-1px; left:8px; height:2px; border-radius:2px; background:#83b8ff; content:""; }
+.proxy-import-tabs .proxy-provider-copy { width:34px; min-height:32px; margin:2px 0 4px auto; padding:0; border:1px solid #2d3d56; border-radius:7px; color:#dce8f7; font-size:17px; }
+.proxy-import-tabs .proxy-provider-copy:hover { border-color:#648ecb; background:#1b2b41; }
+.proxy-provider-settings { min-height:0; overflow:auto; display:grid; align-content:start; gap:12px; padding:13px; scrollbar-color:#425574 #0d1523; }
+.proxy-provider-group { min-width:0; margin:0; padding:0 12px 12px; border:1px solid #2b3b54; border-radius:10px; }
+.proxy-provider-group legend { padding:0 5px; color:#edf3fc; font-size:13px; font-weight:700; line-height:1.35; }
+.proxy-provider-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:10px 12px; padding-top:5px; }
+.proxy-provider-field { display:grid; min-width:0; gap:6px; color:#e4ebf6; font-size:12.5px; font-weight:600; line-height:1.35; }
+.proxy-provider-field input { min-height:36px; }
+.proxy-provider-wide { grid-column:1/-1; }
+.proxy-provider-hint { margin:0; color:#aebcd0; font-size:12.5px; font-weight:450; line-height:1.45; }
+.proxy-provider-unit { display:flex; align-items:center; min-width:0; min-height:36px; border:1px solid #34445d; border-radius:8px; background:#090f1a; }
+.proxy-provider-unit input { min-height:34px; border:0; background:transparent; box-shadow:none!important; }
+.proxy-provider-unit small { flex:none; padding:0 10px; color:#aebbd0; font-size:12px; font-weight:550; }
+.proxy-provider-toggle,.proxy-provider-udp { display:inline-flex; align-items:center; gap:8px; color:#edf3fc; font-size:13px; font-weight:650; line-height:1.35; cursor:pointer; }
+.proxy-provider-toggle input,.proxy-provider-udp input { width:15px; height:15px; margin:0; accent-color:#5279ee; }
+.proxy-provider-udp { justify-self:start; padding:2px 4px; }
+.proxy-provider-yaml { min-height:0; margin:0; overflow:auto; padding:15px; color:#e6edf8; background:#080f1c; font:500 12.5px/1.65 "JetBrains Mono Variable","JetBrains Mono",ui-monospace,Consolas,monospace; white-space:pre; tab-size:2; }
+.proxy-provider-actions { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:8px; padding:9px; border-top:1px solid #26364d; background:#111b2a; }
+.proxy-provider-actions > button { min-width:0; }
+.proxy-provider-replace { grid-column:1/-1; display:flex; gap:8px; }
+.proxy-provider-replace[hidden] { display:none!important; }
+.proxy-provider-replace select { width:100%; min-width:0; height:38px; padding:0 9px; border:1px solid #34445d; border-radius:8px; background:#090f1a; color:#e8eef7; font:550 12.5px var(--font-ui); }
+.proxy-provider-replace select:focus-visible { outline:none; border-color:#6b9ceb; box-shadow:0 0 0 2px #4978c344; }
+:root[data-theme="light"] .proxy-import-dialog .proxy-provider-editor { border-color:#cbd5e1; background:#fff; }
+:root[data-theme="light"] .proxy-import-tabs,:root[data-theme="light"] .proxy-provider-actions { border-color:#dce3ed; background:#f3f6fa; }
+:root[data-theme="light"] .proxy-import-tabs .proxy-provider-copy { color:#30445d; border-color:#cbd5e1; }
+:root[data-theme="light"] .proxy-provider-group { border-color:#cbd5e1; }
+:root[data-theme="light"] .proxy-import-tabs button.is-active,:root[data-theme="light"] .proxy-provider-group legend,:root[data-theme="light"] .proxy-provider-field,:root[data-theme="light"] .proxy-provider-toggle,:root[data-theme="light"] .proxy-provider-udp { color:#26364b; }
+:root[data-theme="light"] .proxy-provider-hint,:root[data-theme="light"] .proxy-provider-unit small { color:#52647a; }
+:root[data-theme="light"] .proxy-provider-yaml { color:#26364b; background:#f8fafc; }
+:root[data-theme="light"] .proxy-provider-unit,:root[data-theme="light"] .proxy-provider-replace select { border-color:#cbd5e1; color:#26364b; background:#f8fafc; }
 :root[data-theme="light"] .proxy-import-dialog .modal-panel { border-color:#cbd5e1; background:#fff; color:#26364b; box-shadow:0 20px 54px #24364a24; }
 :root[data-theme="light"] .proxy-import-dialog .modal-note { color:#52647a; }
 :root[data-theme="light"] .proxy-import-field { color:#26364b; }
 :root[data-theme="light"] .proxy-import-field input { color:#26364b; background:#f8fafc; border-color:#cbd5e1; }
+@media(max-width:560px) { .proxy-import-dialog .modal-panel { padding:15px; } .proxy-provider-grid { grid-template-columns:minmax(0,1fr); } .proxy-provider-wide { grid-column:auto; } .proxy-provider-actions { flex-wrap:wrap; } .proxy-provider-actions > button { flex:1 1 30%; } .proxy-provider-replace { flex:1 1 100%; } }
 
 /* Keep native dropdown controls visually consistent across settings, journal and DNS. */
 .app-shell select:not(.selector-sort-native) { color-scheme:dark; border:1px solid #2c3a50; border-radius:8px; background-color:#0a1120; color:#e8eef7; font-family:var(--font-ui); transition:border-color .15s ease,background-color .15s ease,box-shadow .15s ease; }

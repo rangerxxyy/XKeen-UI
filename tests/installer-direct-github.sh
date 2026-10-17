@@ -23,6 +23,11 @@ while [ "$#" -gt 0 ]; do
   esac
 done
 printf '%s\n' "$url" >>"$XKEEN_TEST_URLS"
+if [ "${XKEEN_TEST_TLS_ONCE:-0}" = 1 ] && [ ! -f "$XKEEN_TEST_URLS.failed" ]; then
+  : >"$XKEEN_TEST_URLS.failed"
+  printf 'partial archive' >"$output"
+  exit 35
+fi
 case "$url" in
   https://github.com/*/xkeen-ui-linux-aarch64.tar.gz)
     [ "${XKEEN_TEST_FAIL_DIRECT:-0}" = 1 ] && exit 22
@@ -98,4 +103,15 @@ if [ "$(wc -l <"$TEMP/urls.txt" | tr -d '[:space:]')" -ne 1 ] || grep -E 'gh-pro
   printf 'Installer must stop after the bounded direct GitHub request fails.\n' >&2
   exit 1
 fi
-printf 'Installer uses official GitHub asset URLs only.\n'
+: >"$TEMP/urls.txt"
+PATH="$TEMP/bin:$PATH" \
+XKEEN_TEST_URLS="$TEMP/urls.txt" \
+XKEEN_TEST_ARCHIVE="$TEMP/xkeen-ui-linux-aarch64.tar.gz" \
+XKEEN_TEST_SUMS="$TEMP/SHA256SUMS" \
+XKEEN_TEST_TLS_ONCE=1 \
+  sh "$ROOT/install.sh" install --prefix "$TEMP/prefix"
+[ "$(wc -l <"$TEMP/urls.txt" | tr -d '[:space:]')" -eq 3 ] || {
+  printf 'A transient TLS failure should retry the same official asset, then verify its checksum.\n' >&2
+  exit 1
+}
+printf 'Installer uses official GitHub asset URLs and recovers from a transient TLS failure.\n'

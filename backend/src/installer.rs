@@ -716,6 +716,36 @@ mod tests {
     use std::path::Path;
 
     #[test]
+    fn foreign_panel_service_is_preserved_and_uses_a_separate_service_path() {
+        let prefix = std::env::temp_dir().join(format!("xkeen-paths-{}", std::process::id()));
+        let init = prefix.join("etc/init.d");
+        std::fs::create_dir_all(&init).unwrap();
+        let foreign = init.join("S99xkeen-ui-panel");
+        let script = "#!/bin/sh\nPROCS=xkeen-ui-panel\nARGS=\"-p 1001\"\n";
+        std::fs::write(&foreign, script).unwrap();
+        let paths = super::Paths::new(&prefix);
+        assert_eq!(paths.service, init.join("S99xkeen-ui-ranger"));
+        assert!(super::validate_owned_paths(&paths).is_ok());
+        assert_eq!(std::fs::read_to_string(&foreign).unwrap(), script);
+        std::fs::write(&paths.service, "#!/bin/sh\n# Managed by XKeen UI.\n").unwrap();
+        assert_eq!(super::Paths::new(&prefix).service, paths.service);
+        std::fs::write(&paths.service, "#!/bin/sh\n# Unrelated service\n").unwrap();
+        assert!(super::validate_owned_paths(&super::Paths::new(&prefix)).is_err());
+        std::fs::remove_dir_all(prefix).unwrap();
+    }
+
+    #[test]
+    fn existing_managed_panel_keeps_its_service_path() {
+        let prefix = std::env::temp_dir().join(format!("xkeen-managed-{}", std::process::id()));
+        let init = prefix.join("etc/init.d");
+        std::fs::create_dir_all(&init).unwrap();
+        let service = init.join("S99xkeen-ui-panel");
+        std::fs::write(&service, "#!/bin/sh\n# Managed by XKeen UI.\n").unwrap();
+        assert_eq!(super::Paths::new(&prefix).service, service);
+        std::fs::remove_dir_all(prefix).unwrap();
+    }
+
+    #[test]
     fn installer_options_have_safe_router_defaults() {
         assert_eq!(
             parse_install_options(&[]).unwrap(),

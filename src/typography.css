@@ -59,7 +59,11 @@ button, input, select, textarea { font-family: inherit; }
 .modal.settings-dialog, .modal.settings-dialog .settings-panel {
   max-height: calc(100dvh - 32px);
 }
-.modal.settings-dialog #settings-content { scrollbar-gutter: stable; }
+.modal.settings-dialog #settings-content {
+  scrollbar-gutter: stable;
+  scrollbar-color: var(--stroke) var(--surface);
+}
+:root[data-theme="light"] .selector-sort-chevron { border-color: #52647a; }
 @media (max-width: 600px) {
   /* Helper copy retains its size when controls stack on a phone. */
   .modal.settings-dialog .settings-panel { padding: 16px; }

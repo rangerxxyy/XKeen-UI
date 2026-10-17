@@ -30,6 +30,16 @@ describe('applyPingResults', () => {
 });
 
 describe('renderSelectors', () => {
+  it('does not render Mihomo’s internal GLOBAL selector', () => {
+    const groups: MihomoSelector[] = [
+      { name: 'Main', icon: null, current: null, options: [] },
+      { name: 'GLOBAL', icon: null, current: 'Main', options: [] },
+    ];
+    const html = renderSelectors(groups, false, null);
+    expect(html).toContain('>Main</h2>');
+    expect(html).not.toContain('GLOBAL');
+  });
+
   it('uses a check for an available node instead of a Wi-Fi glyph', () => {
     const html = renderPingStatusIcon(true);
     expect(html).toContain('M4.5 8.5l2.3 2.3 4.8-5.1');

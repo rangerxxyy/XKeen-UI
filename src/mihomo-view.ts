@@ -108,8 +108,9 @@ function proxyCard(group: MihomoSelector): string {
 }
 
 export function renderSelectors(groups: MihomoSelector[], loading: boolean, error: string | null): string {
+  const visibleGroups = groups.filter((group) => group.name !== 'GLOBAL');
   const state = loadState(loading, error, 'группы');
-  return `${state || (groups.length === 0 ? '<section class="mihomo-empty"><span class="mihomo-error-mark">◇</span><strong>Группы Selector не найдены</strong><p>API Mihomo ответил, но не вернул выбираемых групп.</p></section>' : `<div class="selector-list">${groups.map(proxyCard).join('')}</div>`)}
+  return `${state || (visibleGroups.length === 0 ? '<section class="mihomo-empty"><span class="mihomo-error-mark">◇</span><strong>Группы Selector не найдены</strong><p>API Mihomo ответил, но не вернул выбираемых групп.</p></section>' : `<div class="selector-list">${visibleGroups.map(proxyCard).join('')}</div>`)}
   `;
 }
 

@@ -774,7 +774,10 @@ mod tests {
         std::fs::write(&cli, b"test executable").unwrap();
         assert_eq!(paths.runtime_executable(), cli);
         super::prepare_runtime_binary(&paths.app).unwrap();
-        assert_eq!(paths.runtime_executable(), paths.app.join("xkeen-ui-ranger"));
+        assert_eq!(
+            paths.runtime_executable(),
+            paths.app.join("xkeen-ui-ranger")
+        );
         assert_eq!(
             std::fs::read(paths.runtime_executable()).unwrap(),
             std::fs::read(cli).unwrap()

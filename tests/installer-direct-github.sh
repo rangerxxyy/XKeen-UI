@@ -3,6 +3,8 @@ set -eu
 
 ROOT=$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)
 TEMP=$(mktemp -d)
+XKEEN_TEST_CALLED="$TEMP/called.txt"
+export XKEEN_TEST_CALLED
 trap 'rm -rf "$TEMP"' EXIT HUP INT TERM
 mkdir -p "$TEMP/bin" "$TEMP/package/web"
 
@@ -30,16 +32,17 @@ if [ "${XKEEN_TEST_TLS_ONCE:-0}" = 1 ] && [ ! -f "$XKEEN_TEST_URLS.failed" ]; th
 fi
 case "$url" in
   https://github.com/*/xkeen-ui-linux-aarch64.tar.gz)
-    [ "${XKEEN_TEST_FAIL_DIRECT:-0}" = 1 ] && exit 22
+    [ "${XKEEN_TEST_FAIL_DIRECT:-0}" = 1 ] && exit "${XKEEN_TEST_FAIL_CODE:-22}"
     cp "$XKEEN_TEST_ARCHIVE" "$output" ;;
   https://github.com/*/SHA256SUMS)
-    [ "${XKEEN_TEST_FAIL_DIRECT:-0}" = 1 ] && exit 22
+    [ "${XKEEN_TEST_FAIL_DIRECT:-0}" = 1 ] && exit "${XKEEN_TEST_FAIL_CODE:-22}"
     cp "$XKEEN_TEST_SUMS" "$output" ;;
   *) exit 22 ;;
 esac
 EOF
 cat >"$TEMP/package/xkeen-ui" <<'EOF'
 #!/bin/sh
+printf '%s\n' "$*" >>"$XKEEN_TEST_CALLED"
 exit 0
 EOF
 printf '<!doctype html>\n' >"$TEMP/package/web/index.html"
@@ -114,4 +117,23 @@ XKEEN_TEST_TLS_ONCE=1 \
   printf 'A transient TLS failure should retry the same official asset, then verify its checksum.\n' >&2
   exit 1
 }
-printf 'Installer uses official GitHub asset URLs and recovers from a transient TLS failure.\n'
+: >"$TEMP/urls.txt"
+if PATH="$TEMP/bin:$PATH" XKEEN_TEST_URLS="$TEMP/urls.txt" XKEEN_TEST_ARCHIVE="$TEMP/xkeen-ui-linux-aarch64.tar.gz" XKEEN_TEST_SUMS="$TEMP/SHA256SUMS" XKEEN_TEST_FAIL_DIRECT=1 XKEEN_TEST_FAIL_CODE=35 sh "$ROOT/install.sh" install --prefix "$TEMP/prefix"; then
+  printf 'Installer unexpectedly succeeded after persistent TLS failures.\n' >&2
+  exit 1
+fi
+[ "$(wc -l <"$TEMP/urls.txt" | tr -d '[:space:]')" -eq 3 ] || {
+  printf 'Persistent TLS failures must stop after exactly three attempts.\n' >&2
+  exit 1
+}
+: >"$XKEEN_TEST_CALLED"
+printf '%064d  xkeen-ui-linux-aarch64.tar.gz\n' 0 >"$TEMP/invalid-sums"
+if PATH="$TEMP/bin:$PATH" XKEEN_TEST_URLS="$TEMP/urls.txt" XKEEN_TEST_ARCHIVE="$TEMP/xkeen-ui-linux-aarch64.tar.gz" XKEEN_TEST_SUMS="$TEMP/invalid-sums" sh "$ROOT/install.sh" install --prefix "$TEMP/prefix"; then
+  printf 'Installer unexpectedly accepted a checksum mismatch.\n' >&2
+  exit 1
+fi
+[ ! -s "$XKEEN_TEST_CALLED" ] || {
+  printf 'An unverified package must never execute.\n' >&2
+  exit 1
+}
+printf 'Installer keeps official URLs, bounded TLS retries and mandatory checksum validation.\n'

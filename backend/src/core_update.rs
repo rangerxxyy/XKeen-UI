@@ -23,6 +23,12 @@ pub struct CoreInstallRequest {
     pub tag: String,
     pub asset: String,
     pub sha256: String,
+    #[serde(default = "default_keep_backup")]
+    pub keep_backup: bool,
+}
+
+fn default_keep_backup() -> bool {
+    true
 }
 
 #[derive(Serialize)]
@@ -196,7 +202,7 @@ async fn stage_and_install(
         validate_active_config(core, &staged).await?;
     }
 
-    let backup = backup_existing(&target, core).await?;
+    let backup = backup_existing(&target, core, request.keep_backup, temp).await?;
     if active && backup.is_none() {
         return Err("Активный файл ядра не найден; безопасный откат невозможен".into());
     }
@@ -227,7 +233,11 @@ async fn stage_and_install(
     Ok(CoreInstallResult {
         core: core.to_owned(),
         tag: request.tag.clone(),
-        backup: backup.map(|path| path.to_string_lossy().into_owned()),
+        backup: if request.keep_backup {
+            backup.map(|path| path.to_string_lossy().into_owned())
+        } else {
+            None
+        },
         restarted: active,
         detail: if active {
             "Ядро установлено, конфигурация проверена, сервис перезапущен".into()
@@ -372,7 +382,12 @@ async fn validate_active_config(core: &str, binary: &Path) -> Result<(), String>
     Ok(())
 }
 
-async fn backup_existing(target: &Path, core: &str) -> Result<Option<PathBuf>, String> {
+async fn backup_existing(
+    target: &Path,
+    core: &str,
+    keep_backup: bool,
+    temp: &Path,
+) -> Result<Option<PathBuf>, String> {
     let metadata = match tokio::fs::symlink_metadata(target).await {
         Ok(metadata) => metadata,
         Err(error) if error.kind() == io::ErrorKind::NotFound => return Ok(None),
@@ -381,29 +396,33 @@ async fn backup_existing(target: &Path, core: &str) -> Result<Option<PathBuf>, S
     if !metadata.is_file() || metadata.file_type().is_symlink() {
         return Err("Текущий файл ядра не является обычным файлом; замена запрещена".into());
     }
-    let dir = Path::new("/opt/sbin/core-backup");
-    match tokio::fs::symlink_metadata(dir).await {
-        Ok(metadata) if !metadata.is_dir() || metadata.file_type().is_symlink() => {
-            return Err(
-                "Каталог резервных копий является ссылкой или не является каталогом".into(),
-            );
-        }
-        Ok(_) => {}
-        Err(error) if error.kind() == io::ErrorKind::NotFound => {}
-        Err(error) => {
-            return Err(format!(
-                "Не удалось проверить каталог резервных копий: {error}"
-            ));
-        }
-    }
-    tokio::fs::create_dir_all(dir)
-        .await
-        .map_err(|error| format!("Не удалось создать каталог резервных копий: {error}"))?;
     let stamp = SystemTime::now()
         .duration_since(UNIX_EPOCH)
         .unwrap_or_default()
         .as_nanos();
-    let backup = dir.join(format!("{core}-{stamp}"));
+    let backup = if keep_backup {
+        let dir = Path::new("/opt/sbin/core-backup");
+        match tokio::fs::symlink_metadata(dir).await {
+            Ok(metadata) if !metadata.is_dir() || metadata.file_type().is_symlink() => {
+                return Err(
+                    "Каталог резервных копий является ссылкой или не является каталогом".into(),
+                );
+            }
+            Ok(_) => {}
+            Err(error) if error.kind() == io::ErrorKind::NotFound => {}
+            Err(error) => {
+                return Err(format!(
+                    "Не удалось проверить каталог резервных копий: {error}"
+                ));
+            }
+        }
+        tokio::fs::create_dir_all(dir)
+            .await
+            .map_err(|error| format!("Не удалось создать каталог резервных копий: {error}"))?;
+        dir.join(format!("{core}-{stamp}"))
+    } else {
+        temp.join(format!("{core}-rollback"))
+    };
     tokio::fs::copy(target, &backup)
         .await
         .map_err(|error| format!("Не удалось создать резервную копию ядра: {error}"))?;
@@ -475,7 +494,15 @@ fn process_is_running(name: &str) -> bool {
 
 #[cfg(test)]
 mod tests {
-    use super::{valid_asset, valid_segment};
+    use super::{valid_asset, valid_segment, CoreInstallRequest};
+
+    #[test]
+    fn core_install_request_accepts_an_explicit_backup_preference() {
+        let request: CoreInstallRequest = serde_json::from_str(
+            r#"{"core":"mihomo","tag":"v1.19.32","asset":"mihomo-linux-arm64.gz","sha256":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","keepBackup":false}"#,
+        ).expect("core install request should deserialize");
+        assert!(!request.keep_backup);
+    }
 
     #[test]
     fn only_accepts_linux_arm64_core_archives() {

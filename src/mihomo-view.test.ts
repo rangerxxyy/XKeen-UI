@@ -93,6 +93,8 @@ describe('renderSelectors', () => {
     expect(html).toContain('proxy-health proxy-ping-value is-dead');
     expect(html).toContain('class="ping-status-icon"');
     expect(html).toContain('Узел не отвечает. Нажмите, чтобы проверить ping');
+    expect(renderPingStatusIcon(false)).toContain('M5 2.5h6l2 2v7l-5 2-5-2v-7z');
+    expect(renderPingStatusIcon(false)).toContain('M8 5v4m-1.5-2h3');
   });
 
   it('keeps protocol and transport labels together for VLESS XUDP and Hysteria2 UDP nodes', () => {
@@ -129,6 +131,19 @@ describe('renderConnections', () => {
     expect(html).toContain('Хост <span>↕</span>');
     expect(html).toContain('class="connection-route-cell"');
     expect(html).not.toContain('connection-card');
+  });
+
+  it('shows a Keenetic device name instead of the source IP when name display is enabled', () => {
+    const data: MihomoConnections = {
+      uploadTotal: 0, downloadTotal: 0,
+      connections: [{
+        id: 'named', host: 'example.com:443', destination: '', source: '192.168.1.20:53321', sourceIp: '192.168.1.20',
+        network: 'tcp', process: 'browser.exe', chains: ['DIRECT'], rule: 'MATCH', rulePayload: '', upload: 0, download: 0, start: '',
+      }],
+    };
+    const html = renderConnections(data, false, null, true, { '192.168.1.20': 'Office laptop' });
+    expect(html).toContain('title="Office laptop (192.168.1.20:53321)">Office laptop</td>');
+    expect(html).not.toContain('>browser.exe</td>');
   });
 
   it('shows service icons before grouped routes and leaves DIRECT flows uncluttered', () => {

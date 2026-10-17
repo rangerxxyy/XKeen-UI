@@ -1,7 +1,18 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { applyActiveMihomoConfig, applyXrayConfigFile, getMihomoSelectors, getRouterConfigFile, getSystemLog, getXrayConfigFile, logUiError, pingMihomoGroup, pingMihomoProxy, requestAppUpdate, saveActiveMihomoConfig, saveRouterConfigFile, saveXrayConfigFile, validateMihomoConfig } from './api';
+import { applyActiveMihomoConfig, applyXrayConfigFile, getMihomoSelectors, getRouterConfigFile, getRouterDeviceList, getSystemLog, getXrayConfigFile, installCoreRelease, logUiError, pingMihomoGroup, pingMihomoProxy, requestAppUpdate, saveActiveMihomoConfig, saveRouterConfigFile, saveXrayConfigFile, validateMihomoConfig } from './api';
 
 afterEach(() => vi.unstubAllGlobals());
+
+describe('getRouterDeviceList', () => {
+  it('loads KeeneticOS device names through the same-origin backend endpoint', async () => {
+    const fetchMock = vi.fn(async () => new Response(JSON.stringify({ host: [{ name: 'Laptop', ip: '192.168.1.20' }] }), {
+      headers: { 'Content-Type': 'application/json' },
+    }));
+    vi.stubGlobal('fetch', fetchMock);
+    await expect(getRouterDeviceList()).resolves.toEqual({ host: [{ name: 'Laptop', ip: '192.168.1.20' }] });
+    expect(fetchMock).toHaveBeenCalledWith('/api/v1/router/devices', { headers: { Accept: 'application/json' }, signal: undefined });
+  });
+});
 
 describe('getSystemLog', () => {
   it('requests one fixed log id and validates a bounded response shape', async () => {
@@ -61,6 +72,21 @@ describe('requestAppUpdate', () => {
       headers: { Accept: 'application/json', 'Content-Type': 'application/json' },
       body: JSON.stringify({ tag: 'v0.3.0' }),
     });
+  });
+});
+
+describe('installCoreRelease', () => {
+  it('sends the persistent-backup preference to the local installer endpoint', async () => {
+    const fetchMock = vi.fn(async () => new Response(JSON.stringify({
+      core: 'mihomo', tag: 'v1.19.32', backup: null, restarted: true, detail: 'Ядро установлено',
+    }), { headers: { 'Content-Type': 'application/json' } }));
+    vi.stubGlobal('fetch', fetchMock);
+
+    await expect(installCoreRelease({ core: 'mihomo', tag: 'v1.19.32', asset: 'mihomo-linux-arm64.gz', sha256: 'a'.repeat(64), keepBackup: false }))
+      .resolves.toMatchObject({ core: 'mihomo', backup: null });
+    expect(fetchMock).toHaveBeenCalledWith('/api/v1/cores/install', expect.objectContaining({
+      body: JSON.stringify({ core: 'mihomo', tag: 'v1.19.32', asset: 'mihomo-linux-arm64.gz', sha256: 'a'.repeat(64), keepBackup: false }),
+    }));
   });
 });
 

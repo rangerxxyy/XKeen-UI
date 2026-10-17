@@ -2,7 +2,7 @@ import '@fontsource-variable/inter';
 import '@fontsource-variable/jetbrains-mono';
 import './country-flags.css';
 import './style.css';
-import { applyActiveMihomoConfig, closeAllMihomoConnections, closeMihomoConnection, controlXkeen, getActiveMihomoConfig, getCoreSources, getHealth, getMihomoConnections, getMihomoSelectors, getMihomoVersion, getRouterDnsStatus, getStatus, getSystemLog, getUpdateProxies, getXkeenStatus, logUiError, pingMihomoGroup, pingMihomoProxy, queryMihomoDns, requestAppUpdate, saveCoreSources, saveUpdateProxies, selectMihomoProxy, setRouterDnsManagement, type ApiState, type CoreSources, type MihomoConnections, type MihomoDnsResult, type MihomoSelector, type RouterDnsStatus, type SystemLog, type XkeenStatus } from './api';
+import { applyActiveMihomoConfig, closeAllMihomoConnections, closeMihomoConnection, controlXkeen, getActiveMihomoConfig, getCoreSources, getHealth, getMihomoConnections, getMihomoSelectors, getMihomoVersion, getRouterDeviceList, getRouterDnsStatus, getStatus, getSystemLog, getUpdateProxies, getXkeenStatus, logUiError, pingMihomoGroup, pingMihomoProxy, queryMihomoDns, requestAppUpdate, saveCoreSources, saveUpdateProxies, selectMihomoProxy, setRouterDnsManagement, type ApiState, type CoreSources, type MihomoConnections, type MihomoDnsResult, type MihomoSelector, type RouterDnsStatus, type SystemLog, type XkeenStatus } from './api';
 import { applyPingResults, orderSelectorsByConfig, renderConnections, renderPingStatusIcon, renderSelectors } from './mihomo-view';
 import { patchDnsManagement, patchMihomoDnsSettings, readMihomoDnsSettings, renderDns, type MihomoDnsSettings } from './dns-view';
 import { bindCoreReleaseChecks, fetchCoreReleases, isStableCompatibleRelease, openCoreReleaseDialog } from './core-releases';
@@ -13,6 +13,9 @@ import { lifecycleFeedback } from './service-feedback';
 import { readUiPreferences, validPingUrl, writeUiPreferences, type UiPreferences } from './preferences';
 import { formatJournalTimestamp, getJournalViewState } from './journal-view-state';
 import { SETTINGS_TABS, type SettingsTabId } from './settings-tabs';
+import { bindSelectorSortControl, renderSelectorSortControl } from './selector-sort-control';
+import { bindPingUrlControl, renderPingUrlControl } from './ping-url-control';
+import { SourceNameResolver } from './source-names';
 
 type Page = 'selectors' | 'connections' | 'configuration' | 'dns';
 
@@ -38,6 +41,8 @@ let selectors: MihomoSelector[] = [];
 let selectorsLoading = true;
 let selectorsError: string | null = null;
 let connections: MihomoConnections | null = null;
+let connectionSourceNames: Record<string, string> = {};
+const sourceNameResolver = new SourceNameResolver(() => getRouterDeviceList());
 let connectionsLoading = true;
 let connectionsError: string | null = null;
 let dnsResult: MihomoDnsResult | null = null;
@@ -178,7 +183,7 @@ function renderConfiguration(): string {
     <div class="config-editor-main">
       <strong id="editor-filename" class="sr-only">config.yaml</strong><span id="editor-language" class="sr-only">YAML · Mihomo</span><span id="editor-file-hint" class="sr-only">Локальный черновик</span>
       <div class="code-editor-shell"><div class="code-editor" id="yaml-editor" aria-label="Текст конфигурации"></div></div>
-      <div class="editor-statusbar"><span id="yaml-validation" class="editor-validation" aria-live="polite">Проверка конфигурации…</span><div class="editor-actions"><button class="editor-button" id="config-save-active" type="button" data-router-file disabled title="Сохранить файл на роутере без применения">Сохранить</button><button class="editor-button editor-button-primary" id="config-apply-active" type="button" data-router-file disabled title="Проверить, сохранить и перезапустить активное ядро">Применить и перезапустить</button><details class="editor-utilities"><summary class="editor-button">⋯ Утилиты</summary><div class="editor-utilities-menu" role="menu" aria-label="Утилиты конфигурации"><button type="button" role="menuitem" id="yaml-template" data-structured-only>▤ Шаблоны конфигураций</button><button type="button" role="menuitem" id="yaml-validate" data-structured-only>✓ Проверить</button><button type="button" role="menuitem" id="yaml-format" data-structured-only>⌘ Форматировать</button><button type="button" role="menuitem" id="yaml-download">↓ Скачать черновик</button></div></details></div></div>
+      <div class="editor-statusbar"><span id="yaml-validation" class="editor-validation" aria-live="polite">Проверка конфигурации…</span><div class="editor-actions"><button class="editor-button" id="config-save-active" type="button" data-router-file disabled title="Сохранить файл на роутере без применения">Сохранить</button><button class="editor-button editor-button-primary" id="config-apply-active" type="button" data-router-file disabled title="Проверить, сохранить и перезапустить активное ядро">Применить</button><details class="editor-utilities"><summary class="editor-button"><span class="utilities-trigger-icon" aria-hidden="true">•••</span><span>Утилиты</span><span class="utilities-chevron" aria-hidden="true"></span></summary><div class="editor-utilities-menu" role="menu" aria-label="Утилиты конфигурации"><button type="button" role="menuitem" id="yaml-add-proxy" data-mihomo-only><span class="utility-icon" aria-hidden="true">↗</span><span>Добавить прокси</span></button><button type="button" role="menuitem" id="yaml-template" data-structured-only><span class="utility-icon" aria-hidden="true">▤</span><span>Шаблон конфигурации</span></button><button type="button" role="menuitem" id="yaml-validate" data-structured-only><span class="utility-icon" aria-hidden="true">✓</span><span>Проверить конфигурацию</span></button><button type="button" role="menuitem" id="yaml-format" data-structured-only><span class="utility-icon" aria-hidden="true">⌘</span><span>Форматировать</span></button><button type="button" role="menuitem" id="yaml-download"><span class="utility-icon" aria-hidden="true">↓</span><span>Скачать черновик</span></button></div></details></div></div>
     </div>
   </section>`;
 }
@@ -200,7 +205,7 @@ function drawJournal(): void {
     return;
   }
   if (viewState === 'cleared') {
-    body.innerHTML = '<div class="journal-empty"><span class="journal-empty-icon">✓</span><strong>Отображение очищено</strong><p>Исходный файл на устройстве не изменён.</p></div>';
+    body.innerHTML = '<div class="journal-empty"><span class="journal-empty-icon">✓</span><strong>Отображение очищено</strong></div>';
     return;
   }
   const filter = logFilter.trim().toLocaleLowerCase();
@@ -317,7 +322,7 @@ function render(): void {
   const scrollTop = app.querySelector<HTMLElement>('.workspace-scroll')?.scrollTop ?? 0;
   if (activePage !== 'configuration') yamlEditorModule?.unmountYamlEditor();
   const pageContent = activePage === 'selectors' ? renderSelectors(visibleSelectors(), selectorsLoading, selectorsError)
-    : activePage === 'connections' ? renderConnections(connections, connectionsLoading, connectionsError, uiPreferences.showConnectionSource)
+    : activePage === 'connections' ? renderConnections(connections, connectionsLoading, connectionsError, uiPreferences.showConnectionSource, connectionSourceNames)
         : activePage === 'dns' ? renderDns(dnsResult, dnsLoading, dnsError, dnsQueryName, dnsQueryType, {
           status: dnsManagementStatus, loading: dnsManagementLoading, error: dnsManagementError,
           busy: dnsManagementBusy, confirm: dnsManagementConfirm,
@@ -350,7 +355,7 @@ function render(): void {
   document.querySelector<HTMLButtonElement>('#settings')?.addEventListener('click', openSettings);
   document.querySelector<HTMLButtonElement>('#app-version')?.addEventListener('click', () => void openAppReleases());
   document.querySelector<HTMLButtonElement>('#core-version')?.addEventListener('click', () => void openCoreReleaseDialog(
-    'mihomo', async () => (await getCoreSources()).mihomo, mihomoVersion,
+    'mihomo', async () => (await getCoreSources()).mihomo, mihomoVersion, () => uiPreferences.keepCoreBackup,
   ));
   bindXkeenControls(app);
   bindDnsManagementControls(app);
@@ -760,7 +765,10 @@ async function loadMihomoPage(page: Page): Promise<void> {
       if (signal.aborted) return;
       selectors = config ? orderSelectorsByConfig(groups, config.content) : groups;
     }
-    else connections = await getMihomoConnections(signal);
+    else {
+      connections = await getMihomoConnections(signal);
+      if (uiPreferences.showConnectionSource) refreshConnectionSourceNames(connections, signal);
+    }
   } catch (error) {
     if (error instanceof DOMException && error.name === 'AbortError') return;
     const message = error instanceof Error ? error.message : 'Неизвестная ошибка API Mihomo';
@@ -774,6 +782,15 @@ async function loadMihomoPage(page: Page): Promise<void> {
       if (activePage === page) render();
     }
   }
+}
+
+function refreshConnectionSourceNames(data: MihomoConnections, signal: AbortSignal): void {
+  const ips = data.connections.map((connection) => connection.sourceIp || '');
+  void sourceNameResolver.resolve(ips).then((names) => {
+    if (signal.aborted) return;
+    connectionSourceNames = names;
+    if (activePage === 'connections') render();
+  });
 }
 
 async function selectProxyFromUi(button: HTMLButtonElement): Promise<void> {
@@ -924,17 +941,19 @@ function openSettings(): void {
     if (!content) return;
     content.setAttribute('aria-labelledby', `settings-${tab}`);
     if (tab === 'general') {
-      content.innerHTML = `<section class="settings-section"><h3>ВНЕШНИЙ ВИД И ЖУРНАЛ</h3><label class="setting-row setting-control-row"><span><strong>Тема</strong><small>Выбор цветовой схемы интерфейса</small></span><select class="setting-control" data-pref="theme"><option value="system" ${uiPreferences.theme === 'system' ? 'selected' : ''}>Авто</option><option value="light" ${uiPreferences.theme === 'light' ? 'selected' : ''}>Светлая</option><option value="dark" ${uiPreferences.theme === 'dark' ? 'selected' : ''}>Тёмная</option></select></label><label class="setting-row setting-control-row"><span><strong>Часовой пояс журнала</strong><small>Применяется к записям с ISO-временем и часовым поясом</small></span><select class="setting-control" data-pref="journalTimeZone"><option value="local" ${uiPreferences.journalTimeZone === 'local' ? 'selected' : ''}>Системный</option>${Array.from({ length: 27 }, (_, index) => index - 12).map((offset) => { const value = `UTC${offset >= 0 ? '+' : ''}${offset}`; return `<option value="${value}" ${uiPreferences.journalTimeZone === value ? 'selected' : ''}>${value}</option>`; }).join('')}</select></label></section><section class="settings-section"><h3>СОЕДИНЕНИЯ</h3>${switchRow('showConnectionSource', 'Показывать имя источника', 'Показывает имя процесса, если Mihomo его передал; иначе используется адрес устройства.')}${switchRow('closeConnectionsAfterApply', 'Закрывать соединения после применения', 'Закрывает активные подключения после успешного применения конфигурации Mihomo.')}</section><section class="settings-section"><h3>DNS</h3><label class="setting-row setting-control-row"><span><strong>Автовключение управления DNS</strong><small>При запуске XKeen запросить подтверждение и передать DNS через Mihomo</small></span><select class="setting-control" data-pref="dnsAutostart"><option value="off" ${uiPreferences.dnsAutostart === 'off' ? 'selected' : ''}>Выключено</option><option value="confirm" ${uiPreferences.dnsAutostart === 'confirm' ? 'selected' : ''}>Включать с подтверждением</option></select></label></section>`;
+      content.innerHTML = `<section class="settings-section"><h3>ВНЕШНИЙ ВИД И ЖУРНАЛ</h3><label class="setting-row setting-control-row"><span><strong>Тема</strong><small>Выбор цветовой схемы интерфейса</small></span><select class="setting-control" data-pref="theme"><option value="system" ${uiPreferences.theme === 'system' ? 'selected' : ''}>Авто</option><option value="light" ${uiPreferences.theme === 'light' ? 'selected' : ''}>Светлая</option><option value="dark" ${uiPreferences.theme === 'dark' ? 'selected' : ''}>Тёмная</option></select></label><label class="setting-row setting-control-row"><span><strong>Часовой пояс журнала</strong><small>Применяется к записям с ISO-временем и часовым поясом</small></span><select class="setting-control" data-pref="journalTimeZone"><option value="local" ${uiPreferences.journalTimeZone === 'local' ? 'selected' : ''}>Системный</option>${Array.from({ length: 27 }, (_, index) => index - 12).map((offset) => { const value = `UTC${offset >= 0 ? '+' : ''}${offset}`; return `<option value="${value}" ${uiPreferences.journalTimeZone === value ? 'selected' : ''}>${value}</option>`; }).join('')}</select></label></section><section class="settings-section"><h3>СОЕДИНЕНИЯ</h3>${switchRow('closeConnectionsAfterApply', 'Закрывать соединения после применения', 'Закрывает активные подключения после успешного применения конфигурации Mihomo.')}</section><section class="settings-section"><h3>DNS</h3><label class="setting-row setting-control-row"><span><strong>Автовключение управления DNS</strong><small>При запуске XKeen запросить подтверждение и передать DNS через Mihomo</small></span><select class="setting-control" data-pref="dnsAutostart"><option value="off" ${uiPreferences.dnsAutostart === 'off' ? 'selected' : ''}>Выключено</option><option value="confirm" ${uiPreferences.dnsAutostart === 'confirm' ? 'selected' : ''}>Включать с подтверждением</option></select></label></section>`;
       bindPreferenceInputs(content);
       return;
     }
     if (tab === 'mihomo') {
-      content.innerHTML = `<section class="settings-section"><h3>СЕЛЕКТОРЫ</h3>${switchRow('hideUnavailableProxies', 'Скрывать недоступные подключения', 'Скрывает узлы после нескольких неудачных проверок ping.')}${numberRow('unavailableThreshold', 'Порог таймаутов', 'Число неудачных проверок подряд для скрытия узла (1–10).', 1, 10)}<label class="setting-row setting-control-row"><span><strong>Сортировка</strong><small>Порядок узлов; не меняет выбранную группу</small></span><select class="setting-control" data-pref="selectorSort"><option value="config" ${uiPreferences.selectorSort === 'config' ? 'selected' : ''}>По умолчанию</option><option value="name" ${uiPreferences.selectorSort === 'name' ? 'selected' : ''}>По имени</option><option value="delay" ${uiPreferences.selectorSort === 'delay' ? 'selected' : ''}>По задержке</option></select></label></section><section class="settings-section"><h3>ПРОВЕРКА PING</h3><label class="setting-row setting-control-row"><span><strong>URL ping</strong><small>Без протокола; Mihomo проверит адрес через выбранный узел</small></span><div class="setting-inline-controls"><select class="setting-control setting-scheme" data-pref="pingScheme" aria-label="Протокол ping"><option value="https" ${uiPreferences.pingScheme === 'https' ? 'selected' : ''}>https</option><option value="http" ${uiPreferences.pingScheme === 'http' ? 'selected' : ''}>http</option></select><input class="setting-control setting-url" data-pref="pingUrl" type="text" value="${escapeHtml(uiPreferences.pingUrl)}" autocomplete="url" spellcheck="false" aria-label="Адрес ping"></div></label>${numberRow('pingTimeoutMs', 'Таймаут', 'В миллисекундах, применяется для ручной проверки подключений.', 500, 30000, 'мс')}</section>`;
+      content.innerHTML = `<section class="settings-section"><h3>СЕЛЕКТОРЫ</h3>${switchRow('hideUnavailableProxies', 'Скрывать недоступные подключения', 'Скрывает узлы после нескольких неудачных проверок ping.')}${numberRow('unavailableThreshold', 'Порог таймаутов', 'Число неудачных проверок подряд для скрытия узла (1–10).', 1, 10)}<div class="setting-row setting-control-row"><span><strong>Сортировка</strong><small>Порядок отображения подключений в списке. Не влияет на fallback логику</small></span>${renderSelectorSortControl(uiPreferences.selectorSort)}</div></section><section class="settings-section"><h3>ПРОВЕРКА PING</h3><div class="setting-row setting-control-row"><span><strong>URL ping</strong><small>Без протокола; Mihomo проверит адрес через выбранный узел</small></span><div class="setting-inline-controls"><select class="setting-control setting-scheme" data-pref="pingScheme" aria-label="Протокол ping"><option value="https" ${uiPreferences.pingScheme === 'https' ? 'selected' : ''}>https</option><option value="http" ${uiPreferences.pingScheme === 'http' ? 'selected' : ''}>http</option></select>${renderPingUrlControl(uiPreferences.pingUrl)}</div></div>${numberRow('pingTimeoutMs', 'Таймаут', 'В миллисекундах, применяется для ручной проверки подключений.', 500, 30000, 'мс')}</section><section class="settings-section"><h3>СОЕДИНЕНИЯ</h3>${switchRow('showConnectionSource', 'Показывать имя источника', 'Показывает имя устройства из KeeneticOS вместо IP-адреса. Требуется доступ к списку устройств RCI; если имя не найдено, остаётся IP.')}</section>`;
       bindPreferenceInputs(content);
+      bindSelectorSortControl(content);
+      bindPingUrlControl(content);
       return;
     }
     if (tab === 'sources') {
-      content.innerHTML = `<section class="settings-section"><h3>АВТОПРОВЕРКА</h3>${switchRow('autoCheckPanel', 'Автопроверка панели', 'Проверяет наличие новой версии раз в 4 часа, пока эта вкладка открыта.')}${switchRow('autoCheckCore', 'Автопроверка ядер', 'Проверяет релизы установленных ядер раз в 4 часа, пока эта вкладка открыта.')}<div class="setting-row"><div><strong>Резервная копия ядра</strong><small>Создаётся при обновлении и нужна для безопасного отката</small></div><span class="state-pill state-running">Включена</span></div></section><section class="settings-section"><h3>ИСТОЧНИКИ ОБНОВЛЕНИЙ</h3>
+      content.innerHTML = `<section class="settings-section"><h3>АВТОПРОВЕРКА</h3>${switchRow('autoCheckPanel', 'Автопроверка панели', 'Проверяет наличие новой версии раз в 4 часа, пока эта вкладка открыта.')}${switchRow('autoCheckCore', 'Автопроверка ядер', 'Проверяет релизы установленных ядер раз в 4 часа, пока эта вкладка открыта.')}${switchRow('keepCoreBackup', 'Резервная копия ядра', 'Хранить прежний бинарник для последующего отката. На время обновления временная копия для защиты всё равно создаётся.')}</section><section class="settings-section"><h3>ИСТОЧНИКИ ОБНОВЛЕНИЙ</h3>
         <label class="source-field"><span><strong>Источник Xray</strong><small>Формат: github.com/владелец/репозиторий</small></span><input id="source-xray" type="url" autocomplete="url" placeholder="https://github.com/XTLS/Xray-core"></label>
         <label class="source-field"><span><strong>Источник релизов Mihomo</strong><small>Можно указать репозиторий установленного форка или другой GitHub-репозиторий</small></span><select id="source-mihomo-preset"><option value="official">Оригинальный Mihomo · MetaCubeX</option><option value="prizrak">Prizrak-Core</option><option value="custom">Другой форк</option></select></label>
         <label class="source-field"><span><strong>Репозиторий</strong><small>Проверка релизов использует это значение; сохранение не заменяет установленное ядро</small></span><input id="source-mihomo" type="url" autocomplete="url" placeholder="https://github.com/MetaCubeX/mihomo"></label>
@@ -1067,6 +1086,9 @@ function bindPreferenceInputs(root: HTMLElement): void {
         if (key === 'journalTimeZone') drawJournal();
       }
       writeUiPreferences(uiPreferences);
+      if (key === 'showConnectionSource' && uiPreferences.showConnectionSource && activePage === 'connections' && connections) {
+        refreshConnectionSourceNames(connections, mihomoController?.signal ?? new AbortController().signal);
+      }
     });
   });
 }

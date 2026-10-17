@@ -75,7 +75,7 @@ function loadState(loading: boolean, error: string | null, noun: string): string
 
 export function renderPingStatusIcon(alive: boolean | null): string {
   const path = alive === false
-    ? '<circle cx="8" cy="8" r="6.25"/><path d="m5.7 5.7 4.6 4.6m0-4.6-4.6 4.6"/>'
+    ? '<path d="M5 2.5h6l2 2v7l-5 2-5-2v-7z"/><path d="M8 5v4m-1.5-2h3"/>'
     : alive === true
       ? '<path d="M4.5 8.5l2.3 2.3 4.8-5.1"/>'
       : '<circle cx="8" cy="8" r="6.25"/><path d="M8 4.5v3.7m0 2.3h.01"/>';
@@ -114,7 +114,7 @@ export function renderSelectors(groups: MihomoSelector[], loading: boolean, erro
   `;
 }
 
-function connectionRow(connection: MihomoConnection): string {
+function connectionRow(connection: MihomoConnection, showSourceName = false, sourceNames: Record<string, string> = {}): string {
   const host = connection.host || connection.destination || 'Адрес недоступен';
   const domain = host.toLocaleLowerCase();
   const category = domain.includes('youtube') ? 'YouTube' : domain.includes('github') ? 'GitHub' : domain.includes('google') ? 'Google' : ['th.bing.com', 'geover.prod', 'cloudfront.net', 'usersnap.com', 'unisvg.com', 'iconify.design'].some((part) => domain.includes(part)) ? 'CDN' : '';
@@ -125,7 +125,9 @@ function connectionRow(connection: MihomoConnection): string {
   const startedAt = Date.parse(connection.start);
   const elapsedSeconds = Number.isFinite(startedAt) ? Math.max(0, Math.floor((Date.now() - startedAt) / 1000)) : null;
   const started = elapsedSeconds === null ? '—' : elapsedSeconds < 5 ? 'только что' : elapsedSeconds < 60 ? `${elapsedSeconds} сек назад` : elapsedSeconds < 3600 ? `${Math.floor(elapsedSeconds / 60)} мин назад` : `${Math.floor(elapsedSeconds / 3600)} ч назад`;
-  const source = connection.source || 'Неизвестное устройство';
+  const sourceName = showSourceName && connection.sourceIp ? sourceNames[connection.sourceIp] : undefined;
+  const source = sourceName || connection.source || 'Неизвестное устройство';
+  const sourceTitle = sourceName ? `${sourceName} (${connection.source})` : source;
   const appIcon = category === 'YouTube' ? 'youtube' : category === 'GitHub' ? 'github' : category === 'Google' ? 'google' : category === 'CDN' ? 'web' : '';
   const appGlyph = appIcon === 'youtube' ? '▶' : appIcon === 'github' ? '●' : appIcon === 'google' ? 'G' : '◎';
   const routeIcon = appIcon ? `<span class="connection-app-icon is-${appIcon}" aria-hidden="true">${appGlyph}</span>` : '';
@@ -134,19 +136,19 @@ function connectionRow(connection: MihomoConnection): string {
     <td class="connection-route-cell${routeIcon ? ' has-app-icon' : ''}">${routeIcon}${chain}</td>
     <td class="connection-host" title="${escapeHtml(host)}">${escapeHtml(host)}</td>
     <td class="connection-network" title="Сетевой протокол">${escapeHtml(network)}</td>
-    <td class="connection-source" title="${escapeHtml(source)}">${escapeHtml(source)}</td>
+    <td class="connection-source" title="${escapeHtml(sourceTitle)}">${escapeHtml(source)}</td>
     <td class="connection-traffic"><span title="Отправлено"><i class="is-upload" aria-hidden="true">↑</i>${formatBytes(connection.upload)}</span><span title="Получено"><i class="is-download" aria-hidden="true">↓</i>${formatBytes(connection.download)}</span></td>
     <td class="connection-time"><time title="Время с начала соединения">${escapeHtml(started)}</time></td>
     <td class="connection-actions"><button class="connection-close" data-close-connection="${escapeHtml(connection.id)}" aria-label="Закрыть соединение ${escapeHtml(host)}" title="Закрыть соединение">×</button></td>
   </tr>`;
 }
 
-export function renderConnections(data: MihomoConnections | null, loading: boolean, error: string | null, showSourceName = false): string {
+export function renderConnections(data: MihomoConnections | null, loading: boolean, error: string | null, showSourceName = false, sourceNames: Record<string, string> = {}): string {
   const state = loadState(loading, error, 'соединения');
   const connections = data?.connections ?? [];
   const udpCount = connections.filter((connection) => connection.network.toLowerCase() === 'udp').length;
   return `${state || `<section class="connections-panel"><div class="connections-toolbar"><div class="connection-counts"><span class="connection-count-pill" title="Активные соединения"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M1 8h3l2-5 3 10 2-6h4"/></svg><strong>${connections.length}</strong></span><span class="connection-count-pill is-secondary" title="UDP-соединения"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M2 4h4l4 8h4M2 12h4l4-8h4"/></svg><strong>${udpCount}</strong></span></div><label class="connection-search"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M2 3h12L9 8v4l-2 1V8L2 3Z"/></svg><input id="connection-filter" type="search" placeholder="Фильтр" aria-label="Фильтр соединений"><kbd>⌘</kbd></label><button class="connection-close-all" id="close-all-connections" ${connections.length ? '' : 'disabled'}><span aria-hidden="true">⤫</span> Закрыть все</button></div>
-    <div class="connection-table-wrap"><table class="connection-table"><thead><tr><th>Цепочка <span>↕</span></th><th>Хост <span>↕</span></th><th>Тип <span>↕</span></th><th>Источник <span>↕</span></th><th>Трафик <span>↕</span></th><th>Время <span class="is-sorted">↓</span></th><th aria-label="Действия"></th></tr></thead><tbody>${connections.map((connection) => connectionRow(showSourceName && connection.process ? { ...connection, source: connection.process } : connection)).join('')}</tbody></table>
+    <div class="connection-table-wrap"><table class="connection-table"><thead><tr><th>Цепочка <span>↕</span></th><th>Хост <span>↕</span></th><th>Тип <span>↕</span></th><th>Источник <span>↕</span></th><th>Трафик <span>↕</span></th><th>Время <span class="is-sorted">↓</span></th><th aria-label="Действия"></th></tr></thead><tbody>${connections.map((connection) => connectionRow(connection, showSourceName, sourceNames)).join('')}</tbody></table>
       ${connections.length === 0 ? '<div class="connection-no-results">Сейчас нет активных соединений.</div>' : ''}<div class="connection-no-results is-filtered" hidden>По этому фильтру соединений нет.</div></div></section>`}
   `;
 }

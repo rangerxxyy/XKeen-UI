@@ -16,6 +16,7 @@ export interface UiPreferences {
   pingTimeoutMs: number;
   autoCheckPanel: boolean;
   autoCheckCore: boolean;
+  keepCoreBackup: boolean;
 }
 
 export const DEFAULT_UI_PREFERENCES: UiPreferences = {
@@ -32,6 +33,7 @@ export const DEFAULT_UI_PREFERENCES: UiPreferences = {
   pingTimeoutMs: 5000,
   autoCheckPanel: true,
   autoCheckCore: true,
+  keepCoreBackup: true,
 };
 
 const STORAGE_KEY = 'xkeen-ui:preferences:v1';
@@ -56,6 +58,7 @@ export function readUiPreferences(storage: Pick<Storage, 'getItem'> | null = saf
       pingTimeoutMs: validInteger(value.pingTimeoutMs, 500, 30000, DEFAULT_UI_PREFERENCES.pingTimeoutMs),
       autoCheckPanel: typeof value.autoCheckPanel === 'boolean' ? value.autoCheckPanel : DEFAULT_UI_PREFERENCES.autoCheckPanel,
       autoCheckCore: typeof value.autoCheckCore === 'boolean' ? value.autoCheckCore : DEFAULT_UI_PREFERENCES.autoCheckCore,
+      keepCoreBackup: typeof value.keepCoreBackup === 'boolean' ? value.keepCoreBackup : DEFAULT_UI_PREFERENCES.keepCoreBackup,
     };
   } catch {
     return { ...DEFAULT_UI_PREFERENCES };

@@ -31,6 +31,7 @@ mod dns_control;
 mod installer;
 mod logs;
 mod mihomo;
+mod router_devices;
 mod xkeen;
 use mihomo::{Endpoint as MihomoEndpoint, MihomoClient, MihomoError};
 
@@ -1318,6 +1319,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         .route("/api/v1/mihomo/version", get(mihomo_version))
         .route("/api/v1/mihomo/proxies", get(mihomo_proxies))
         .route("/api/v1/mihomo/connections", get(mihomo_connections))
+        .route("/api/v1/router/devices", get(router_devices::devices))
         .route("/api/v1/mihomo/rules", get(mihomo_rules))
         .route(
             "/api/v1/mihomo/providers/proxies",

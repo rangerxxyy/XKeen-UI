@@ -80,3 +80,10 @@ describe('appearance and journal timezone preferences', () => {
     expect(migrated.journalTimeZone).toBe('UTC+3');
   });
 });
+
+describe('core update backup preference', () => {
+  it('defaults to keeping a persistent backup and reads an explicit opt-out', () => {
+    expect(readUiPreferences({ getItem: () => null }).keepCoreBackup).toBe(true);
+    expect(readUiPreferences({ getItem: () => JSON.stringify({ keepCoreBackup: false }) }).keepCoreBackup).toBe(false);
+  });
+});

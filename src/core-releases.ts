@@ -101,7 +101,7 @@ function element<K extends keyof HTMLElementTagNameMap>(tag: K, className?: stri
   return node;
 }
 
-function renderReleaseList(target: HTMLElement, core: CoreName, releases: GitHubRelease[]): void {
+function renderReleaseList(target: HTMLElement, core: CoreName, releases: GitHubRelease[], keepBackup: () => boolean = () => true): void {
   const list = element('div', 'core-release-list');
   const visible = releases.filter((release) => isStableCompatibleRelease(core, release));
   if (visible.length) {
@@ -149,7 +149,7 @@ function renderReleaseList(target: HTMLElement, core: CoreName, releases: GitHub
       if (digest && asset.size > 0 && asset.size <= 32 * 1024 * 1024) {
         const install = element('button', 'editor-button editor-button-primary', 'Установить / обновить');
         install.type = 'button';
-        install.addEventListener('click', () => void installRelease(core, release.tag_name, asset.name, digest, install, list));
+        install.addEventListener('click', () => void installRelease(core, release.tag_name, asset.name, digest, install, list, keepBackup));
         card.append(install);
       } else {
         card.append(element('p', 'core-release-note', 'GitHub не предоставил проверяемый SHA-256 или архив превышает 32 MiB; установка недоступна.'));
@@ -165,7 +165,7 @@ function renderReleaseList(target: HTMLElement, core: CoreName, releases: GitHub
     }
     list.append(card);
   }
-  const note = element('p', 'core-release-note', 'Перед заменой активного ядра панель проверяет его конфигурацию и сохраняет предыдущий бинарник. Если перезапуск не подтвердится, выполняется откат.');
+  const note = element('p', 'core-release-note', 'Перед заменой активного ядра панель проверяет конфигурацию. Для защиты от сбоя создаётся временная копия; при включённой настройке прежний бинарник также сохраняется для ручного отката.');
   target.replaceChildren(list, ...(visible.length ? [note] : []));
 }
 
@@ -173,6 +173,7 @@ export async function openCoreReleaseDialog(
   core: CoreName,
   repository: () => Promise<string>,
   currentVersion?: string | null,
+  keepBackup: () => boolean = () => true,
 ): Promise<void> {
   const dialog = document.createElement('dialog');
   dialog.className = 'modal core-release-dialog';
@@ -193,16 +194,17 @@ export async function openCoreReleaseDialog(
     const releases = await fetchCoreReleases(configuredRepository);
     const visible = releases.filter((release) => isStableCompatibleRelease(core, release));
     status.textContent = `${visible.length} стабильных ARM64-релизов${currentVersion ? ` · установлена ${currentVersion}` : ''}`;
-    renderReleaseList(target, core, releases);
+    renderReleaseList(target, core, releases, keepBackup);
   } catch (error) {
     status.textContent = error instanceof Error ? error.message : 'Не удалось загрузить релизы.';
   }
 }
 
-async function installRelease(core: CoreName, tag: string, asset: string, sha256: string, button: HTMLButtonElement, list: HTMLElement): Promise<void> {
+async function installRelease(core: CoreName, tag: string, asset: string, sha256: string, button: HTMLButtonElement, list: HTMLElement, keepBackup: () => boolean): Promise<void> {
+  const keep = keepBackup();
   const confirmed = await confirmInApp(
     `Установить ${core} ${tag}?`,
-    'Архив проверится по SHA-256. Активная конфигурация будет проверена, сохранится резервная копия, а сервис кратко перезапустится. При ошибке панель попробует вернуть прежний бинарник.',
+    `Архив проверится по SHA-256. Активная конфигурация будет проверена, а сервис кратко перезапустится. ${keep ? 'Прежний бинарник сохранится для отката.' : 'Постоянная копия отключена; временная копия останется только на время обновления для автоматического отката при сбое.'}`,
     'Установить',
   );
   if (!confirmed) return;
@@ -211,7 +213,7 @@ async function installRelease(core: CoreName, tag: string, asset: string, sha256
   let feedback = element('p', 'core-release-feedback', `Загружаем и проверяем ${asset}.`);
   list.append(feedback);
   try {
-    const result = await installCoreRelease({ core, tag, asset, sha256 });
+    const result = await installCoreRelease({ core, tag, asset, sha256, keepBackup: keep });
     feedback.className = 'core-release-feedback';
     feedback.textContent = `${result.detail}${result.backup ? ` · резервная копия: ${result.backup}` : ''}`;
     window.dispatchEvent(new CustomEvent('xkeen-core-updated'));

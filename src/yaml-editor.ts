@@ -11,6 +11,8 @@ import { chooseReferenceTemplate, getDefaultTemplate } from './templates';
 import { applyActiveMihomoConfig, applyXrayConfigFile, getActiveMihomoConfig, getRouterConfigFile, getXrayConfigFile, logUiError, saveActiveMihomoConfig, saveRouterConfigFile, saveXrayConfigFile, type RouterConfigFile, type XrayConfigFile } from './api';
 import { confirmInApp } from './confirm-dialog';
 import { canPersistConfig } from './config-actions';
+import { generateConfigForCore } from './outbound-parser';
+import { appendMihomoProxy } from './proxy-import';
 
 const draftKey = 'xkeen-ui:draft:';
 const activeFileKey = 'xkeen-ui:draft-active-file';
@@ -64,7 +66,7 @@ function syncConfigActions(content: string, valid = currentDocumentValid): void 
   if (saveButton) saveButton.disabled = !enabled;
 }
 
-function setEditorIdentity(routerMode: boolean): void {
+function setEditorIdentity(routerMode: boolean, activeCore: 'mihomo' | 'xray' | null): void {
   const file = currentFile();
   const filename = document.querySelector<HTMLElement>('#editor-filename');
   const language = document.querySelector<HTMLElement>('#editor-language');
@@ -89,6 +91,48 @@ function setEditorIdentity(routerMode: boolean): void {
   });
   const templateButton = document.querySelector<HTMLElement>('#yaml-template');
   if (templateButton) templateButton.hidden = file.id === 'xkeen' || file.format === 'text';
+  const addProxyButton = document.querySelector<HTMLElement>('#yaml-add-proxy');
+  if (addProxyButton) addProxyButton.hidden = file.id !== 'config' || activeCore !== 'mihomo';
+}
+
+function bindAddProxyDialog(signal: AbortSignal): void {
+  document.querySelector<HTMLButtonElement>('#yaml-add-proxy')?.addEventListener('click', (event) => {
+    (event.currentTarget as HTMLButtonElement).closest('details')?.removeAttribute('open');
+    const dialog = document.createElement('dialog');
+    dialog.className = 'modal proxy-import-dialog';
+    dialog.innerHTML = '<form class="modal-panel" method="dialog" id="proxy-import-form"><div class="modal-heading"><span class="modal-icon" aria-hidden="true">↗</span><h2>Добавить прокси</h2><button class="icon-button" type="button" data-close-proxy-import aria-label="Закрыть">×</button></div><p class="modal-note">Вставьте ссылку на узел. Прокси добавится в локальный черновик конфигурации Mihomo.</p><label class="proxy-import-field"><span>Ссылка на подключение</span><input name="uri" type="text" autocomplete="off" autocapitalize="none" spellcheck="false" placeholder="vless://…" required></label><p class="proxy-import-error" role="alert" hidden></p><div class="confirmation-actions"><button class="editor-button" type="button" data-close-proxy-import>Отмена</button><button class="editor-button editor-button-primary" type="submit">Добавить прокси</button></div></form>';
+    document.body.append(dialog);
+    const form = dialog.querySelector<HTMLFormElement>('#proxy-import-form');
+    const input = form?.querySelector<HTMLInputElement>('[name="uri"]');
+    const error = form?.querySelector<HTMLElement>('.proxy-import-error');
+    const close = () => { if (dialog.open) dialog.close(); else dialog.remove(); };
+    signal.addEventListener('abort', close, { once: true });
+    dialog.querySelectorAll<HTMLButtonElement>('[data-close-proxy-import]').forEach((button) => button.addEventListener('click', close, { signal }));
+    dialog.addEventListener('close', () => dialog.remove(), { once: true, signal });
+    form?.addEventListener('submit', (submitEvent) => {
+      submitEvent.preventDefault();
+      const uri = input?.value.trim() ?? '';
+      if (!editor || !uri) return;
+      try {
+        const current = editor.state.doc.toString();
+        const generated = generateConfigForCore(uri, 'mihomo', current);
+        if (generated.type !== 'proxy') throw new Error('Для добавления прокси вставьте ссылку на отдельный узел, а не URL подписки.');
+        const updated = appendMihomoProxy(current, generated.content);
+        editor.dispatch({ changes: { from: 0, to: editor.state.doc.length, insert: updated } });
+        editor.focus();
+        setValidation('Прокси добавлен в локальный черновик. Проверьте конфигурацию перед применением.', true);
+        close();
+      } catch (cause) {
+        if (error) {
+          error.hidden = false;
+          error.textContent = cause instanceof Error ? cause.message : 'Не удалось добавить прокси из этой ссылки.';
+        }
+      }
+    }, { signal });
+    dialog.addEventListener('click', (clickEvent) => { if (clickEvent.target === dialog) close(); }, { signal });
+    dialog.showModal();
+    input?.focus();
+  }, { signal });
 }
 
 const editorTheme = EditorView.theme({
@@ -217,7 +261,8 @@ export function mountYamlEditor(routerMode = false, activeCore: 'mihomo' | 'xray
   const saveButton = document.querySelector<HTMLButtonElement>('#config-save-active');
   if (saveButton) saveButton.disabled = currentSnapshot() === null;
 
-  setEditorIdentity(routerMode);
+  setEditorIdentity(routerMode, activeCore);
+  bindAddProxyDialog(signal);
   const file = currentFile();
   const storedDraft = sessionStorage.getItem(`${draftKey}${file.id}`);
   const startWithRouterFile = routerMode && (file.id === 'config' || isRouterConfigFile(file.id) || isXrayConfigFile(file.id));

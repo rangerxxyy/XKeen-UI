@@ -133,6 +133,19 @@ describe('renderConnections', () => {
     expect(html).not.toContain('connection-card');
   });
 
+  it('shows a Keenetic device name instead of the source IP when name display is enabled', () => {
+    const data: MihomoConnections = {
+      uploadTotal: 0, downloadTotal: 0,
+      connections: [{
+        id: 'named', host: 'example.com:443', destination: '', source: '192.168.1.20:53321', sourceIp: '192.168.1.20',
+        network: 'tcp', process: 'browser.exe', chains: ['DIRECT'], rule: 'MATCH', rulePayload: '', upload: 0, download: 0, start: '',
+      }],
+    };
+    const html = renderConnections(data, false, null, true, { '192.168.1.20': 'Office laptop' });
+    expect(html).toContain('title="Office laptop (192.168.1.20:53321)">Office laptop</td>');
+    expect(html).not.toContain('>browser.exe</td>');
+  });
+
   it('shows service icons before grouped routes and leaves DIRECT flows uncluttered', () => {
     const data: MihomoConnections = {
       uploadTotal: 0, downloadTotal: 0,

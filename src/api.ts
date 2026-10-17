@@ -124,6 +124,7 @@ export interface MihomoConnection {
   host: string;
   destination: string;
   source: string;
+  sourceIp?: string;
   network: string;
   process: string;
   chains: string[];
@@ -132,6 +133,18 @@ export interface MihomoConnection {
   upload: number;
   download: number;
   start: string;
+}
+
+export async function getRouterDeviceList(signal?: AbortSignal): Promise<unknown> {
+  const response = await fetch('/api/v1/router/devices', {
+    headers: { Accept: 'application/json' },
+    signal,
+  });
+  const payload = await readJson(response, 'Получение списка устройств KeeneticOS');
+  if (!isRecord(payload) || !Array.isArray(payload.host)) {
+    throw new Error('Backend вернул некорректный список устройств KeeneticOS');
+  }
+  return payload;
 }
 
 export interface RouterDnsStatus {
@@ -428,6 +441,7 @@ export async function getMihomoConnections(signal?: AbortSignal): Promise<Mihomo
       host: readString(metadata.host),
       destination: joinAddress(metadata.destinationIP, metadata.destinationPort),
       source: joinAddress(metadata.sourceIP, metadata.sourcePort),
+      sourceIp: readString(metadata.sourceIP),
       network: readString(metadata.network),
       process: readString(metadata.process),
       chains,
@@ -570,6 +584,7 @@ export async function installCoreRelease(request: {
   tag: string;
   asset: string;
   sha256: string;
+  keepBackup: boolean;
 }): Promise<CoreInstallResult> {
   const response = await fetch('/api/v1/cores/install', {
     method: 'POST',

@@ -523,7 +523,9 @@ function readCounter(value: unknown): number {
 function joinAddress(host: unknown, port: unknown): string {
   const address = readString(host);
   const number = typeof port === 'number' || typeof port === 'string' ? String(port) : '';
-  return address && number ? `${address}:${number}` : address || number;
+  const withBrackets = address.includes(':') && !(address.startsWith('[') && address.endsWith(']'))
+    ? `[${address}]` : address;
+  return address && number ? `${withBrackets}:${number}` : address || number;
 }
 
 async function getMihomoJson(path: string, operation: string, signal?: AbortSignal): Promise<unknown> {

@@ -144,7 +144,8 @@ fn install_or_update(options: &InstallOptions) -> Result<(), Box<dyn Error>> {
     if was_installed {
         service_stop(&options.prefix)?;
     }
-    let port = match choose_port(options.port) {
+    let requested_port = preferred_install_port(options.port, was_installed, saved.port);
+    let port = match choose_port(requested_port) {
         Ok(port) => port,
         Err(error) => {
             if was_installed {
@@ -296,6 +297,14 @@ fn choose_port(requested: Option<u16>) -> io::Result<u16> {
         };
     }
     first_available_port(DEFAULT_PORT)
+}
+
+fn preferred_install_port(
+    override_port: Option<u16>,
+    was_installed: bool,
+    saved_port: u16,
+) -> Option<u16> {
+    override_port.or_else(|| was_installed.then_some(saved_port))
 }
 
 fn first_available_port(start: u16) -> io::Result<u16> {
@@ -700,8 +709,8 @@ fn timestamp() -> io::Result<u64> {
 #[cfg(test)]
 mod tests {
     use super::{
-        choose_port, first_available_port, parse_install_options, validate_prefix, Config,
-        InstallOptions, DEFAULT_PORT,
+        choose_port, first_available_port, parse_install_options, preferred_install_port,
+        validate_prefix, Config, InstallOptions, DEFAULT_PORT,
     };
     use std::net::TcpListener;
     use std::path::Path;
@@ -743,6 +752,13 @@ mod tests {
         let port = occupied.local_addr().unwrap().port();
         assert!(first_available_port(port).unwrap() > port);
         assert!(choose_port(None).unwrap() >= DEFAULT_PORT);
+    }
+
+    #[test]
+    fn reinstall_keeps_the_saved_port_and_new_install_uses_automatic_selection() {
+        assert_eq!(preferred_install_port(None, true, 1002), Some(1002));
+        assert_eq!(preferred_install_port(None, false, 1002), None);
+        assert_eq!(preferred_install_port(Some(1001), true, 1002), Some(1001));
     }
 
     #[test]

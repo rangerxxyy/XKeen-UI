@@ -20,6 +20,7 @@ const MAX_LOG_LINES: usize = 1000;
 const MAX_LIFECYCLE_ENTRY_BYTES: usize = 4096;
 const MAX_LIFECYCLE_WRITE_BYTES: usize = 16 * 1024;
 const XKEEN_UI_LOG_PATH: &str = "/opt/var/log/xkeen-ui.log";
+const XKEEN_RUNTIME_LOG_PATH: &str = "/opt/var/log/xkeen-detached.log";
 
 #[derive(Deserialize)]
 pub(super) struct LogQuery {
@@ -60,6 +61,24 @@ const LOG_SOURCES: &[LogSource] = &[
     },
 ];
 
+const ERROR_LOG_SOURCES: &[LogSource] = &[
+    LogSource {
+        id: "xkeen-runtime",
+        label: "XKeen",
+        path: XKEEN_RUNTIME_LOG_PATH,
+    },
+    LogSource {
+        id: "xray-error",
+        label: "Xray",
+        path: "/opt/var/log/xray/error.log",
+    },
+    LogSource {
+        id: "xkeen-ui",
+        label: "XKeen UI",
+        path: XKEEN_UI_LOG_PATH,
+    },
+];
+
 // Kept as an internal updater diagnostic endpoint; it is intentionally absent
 // from the user-facing journal selector, which exposes only Access and Error Log.
 const UPDATE_LOG_SOURCE: LogSource = LogSource {
@@ -90,7 +109,12 @@ pub(super) async fn read_logs(
         )
             .into_response();
     };
-    match read_tail(source).await {
+    let result = if query.file == "xkeen-ui" {
+        read_error_log_bundle().await
+    } else {
+        read_tail(source).await
+    };
+    match result {
         Ok(result) => Json(result).into_response(),
         Err(error) if error.kind() == std::io::ErrorKind::NotFound => (
             StatusCode::NOT_FOUND,
@@ -130,7 +154,7 @@ pub(super) async fn append_ui_error(
         )
             .into_response();
     };
-    if is_expected_ui_noise(&request.source, &request.message) {
+    if is_legacy_noise_line(&entry) {
         return StatusCode::NO_CONTENT.into_response();
     }
     match append_xkeen_lifecycle(&[entry]) {
@@ -187,7 +211,7 @@ async fn read_tail(source: &LogSource) -> std::io::Result<LogResult> {
         .lines()
         .map(sanitize_line)
         .filter(|line| !line.is_empty())
-        .filter(|line| source.id != "xkeen-ui" || !is_legacy_noise_line(line))
+        .filter(|line| !should_filter_legacy_noise(source.id, line))
         .collect();
     let truncated = lines.len() > MAX_LOG_LINES || start > 0;
     if lines.len() > MAX_LOG_LINES {
@@ -195,6 +219,46 @@ async fn read_tail(source: &LogSource) -> std::io::Result<LogResult> {
     }
     Ok(LogResult {
         file: source.label,
+        lines,
+        truncated,
+    })
+}
+
+async fn read_error_log_bundle() -> std::io::Result<LogResult> {
+    let mut groups = Vec::new();
+    let mut truncated = false;
+    for source in ERROR_LOG_SOURCES {
+        match read_tail(source).await {
+            Ok(result) => {
+                truncated |= result.truncated;
+                if !result.lines.is_empty() {
+                    groups.push((source.label, result.lines));
+                }
+            }
+            Err(error) if error.kind() == std::io::ErrorKind::NotFound => {}
+            Err(error) => return Err(error),
+        }
+    }
+    if groups.is_empty() {
+        return Err(std::io::Error::new(
+            std::io::ErrorKind::NotFound,
+            "no runtime error logs exist yet",
+        ));
+    }
+    let mut lines = Vec::new();
+    for (label, source_lines) in groups {
+        lines.extend(
+            source_lines
+                .into_iter()
+                .map(|line| format!("{line}  [{label}]")),
+        );
+    }
+    if lines.len() > MAX_LOG_LINES {
+        lines.drain(..lines.len() - MAX_LOG_LINES);
+        truncated = true;
+    }
+    Ok(LogResult {
+        file: "Error Log",
         lines,
         truncated,
     })
@@ -212,7 +276,18 @@ fn is_expected_ui_noise(source: &str, message: &str) -> bool {
 }
 
 fn is_legacy_noise_line(line: &str) -> bool {
-    is_expected_ui_noise("ui", line)
+    let normalized = line.to_lowercase();
+    normalized.contains("component=xkeen phase=requested")
+        || normalized.contains("component=xkeen phase=completed")
+        || normalized.contains("source=update")
+        || normalized.contains("[fatal] received sigterm")
+        || (normalized.contains("mihomo proxy ping:")
+            && normalized.contains("operation was aborted"))
+        || is_expected_ui_noise("ui", line)
+}
+
+fn should_filter_legacy_noise(source_id: &str, line: &str) -> bool {
+    matches!(source_id, "xkeen-ui" | "xkeen-runtime") && is_legacy_noise_line(line)
 }
 
 pub(super) fn append_xkeen_lifecycle(entries: &[String]) -> std::io::Result<()> {
@@ -374,6 +449,14 @@ mod tests {
     }
 
     #[test]
+    fn error_log_uses_real_xkeen_xray_and_ui_error_sources() {
+        assert_eq!(ERROR_LOG_SOURCES.len(), 3);
+        assert_eq!(ERROR_LOG_SOURCES[0].path, "/opt/var/log/xkeen-detached.log");
+        assert_eq!(ERROR_LOG_SOURCES[1].path, "/opt/var/log/xray/error.log");
+        assert_eq!(ERROR_LOG_SOURCES[2].path, XKEEN_UI_LOG_PATH);
+    }
+
+    #[test]
     fn ui_error_entries_are_whitelisted_bounded_and_sanitized() {
         assert_eq!(
             ui_error_entry(42, "yaml", "Ошибка YAML token=private\nsecond line"),
@@ -401,6 +484,24 @@ mod tests {
         assert!(!is_expected_ui_noise("ui", "DNS lookup failed"));
         assert!(is_legacy_noise_line(
             "unix=42 level=ERROR component=xkeen-ui source=ui message=Clash WS proxy error: Connection refused (os error 111)"
+        ));
+        assert!(is_legacy_noise_line(
+            "unix=42 component=xkeen phase=completed action=restart result=success"
+        ));
+        assert!(is_legacy_noise_line(
+            "unix=42 level=ERROR component=xkeen-ui source=update message=installer exited with code 1"
+        ));
+        assert!(is_legacy_noise_line(
+            "unix=42 level=ERROR component=xkeen-ui source=ui message=Mihomo proxy ping: The operation was aborted."
+        ));
+        assert!(is_legacy_noise_line("[FATAL] received SIGTERM"));
+        assert!(should_filter_legacy_noise(
+            "xkeen-runtime",
+            "[FATAL] received SIGTERM"
+        ));
+        assert!(!should_filter_legacy_noise(
+            "xray-access",
+            "[FATAL] received SIGTERM"
         ));
         assert!(!is_legacy_noise_line(
             "unix=42 level=ERROR component=xkeen-ui source=yaml message=Ошибка YAML"

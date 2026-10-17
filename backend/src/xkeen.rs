@@ -96,30 +96,14 @@ pub async fn control(action: &str) -> Result<XkeenStatus, String> {
         .as_deref()
         .map(process_identities)
         .unwrap_or_default();
-    let requested_at = SystemTime::now()
-        .duration_since(UNIX_EPOCH)
-        .unwrap_or_default()
-        .as_secs();
-    let requested_event = format!(
-        "unix={requested_at} component=xkeen phase=requested action={action_name} running_before={} result=started",
-        display_running(before.running),
-    );
-    if let Err(error) = crate::logs::append_xkeen_lifecycle(&[requested_event]) {
-        tracing::warn!(%error, "Could not append XKeen lifecycle request to Journal log");
-    }
     let path = before.init_path.as_deref().filter(|_| before.installed);
-    let mut command_result = "not-started";
     let result = match control_args(action) {
         Err(error) => Err(error),
         Ok(args) => match path {
             None => Err("Не найден исполняемый init-файл XKeen".to_owned()),
             Some(path) => match execute_init_command(Path::new(path), args).await {
-                Err(error) => {
-                    command_result = "failed";
-                    Err(error)
-                }
+                Err(error) => Err(error),
                 Ok(()) => {
-                    command_result = "exit-0";
                     let mut confirmed = None;
                     for _ in 0..SERVICE_STATE_TIMEOUT {
                         let current = before
@@ -156,28 +140,18 @@ pub async fn control(action: &str) -> Result<XkeenStatus, String> {
         .duration_since(UNIX_EPOCH)
         .unwrap_or_default()
         .as_secs();
-    let mut event = format!(
-        "unix={timestamp} component=xkeen phase=completed action={action_name} command={command_result} running_before={} running_after={} process_transition={} result={}",
-        display_running(before.running),
-        display_running(after.running),
-        if verified { "verified" } else { "unverified" },
-        if verified { "success" } else { "failure" },
-    );
-    if let Err(error) = &result {
-        event.push_str(" error=");
-        event.push_str(error);
-    }
-    let log_result = crate::logs::append_xkeen_lifecycle(&[event]);
-    if let Err(error) = &log_result {
-        tracing::warn!(%error, "Could not append XKeen lifecycle event to Journal log");
-    }
-    result.map(|_| {
-        let mut status = after;
-        if let Err(error) = log_result {
-            status.detail = format!("{}. Запись в журнал не удалась: {error}", status.detail);
+    if !verified {
+        let error_event = format!(
+            "unix={timestamp} level=ERROR component=xkeen action={action_name} running_before={} running_after={} message={}",
+            display_running(before.running),
+            display_running(after.running),
+            result.as_ref().err().map(String::as_str).unwrap_or("transition was not verified"),
+        );
+        if let Err(error) = crate::logs::append_xkeen_lifecycle(&[error_event]) {
+            tracing::warn!(%error, "Could not append XKeen control error to Error Log");
         }
-        status
-    })
+    }
+    result.map(|_| after)
 }
 
 pub(super) fn log_blocked_action(action: &str, reason: &str) {

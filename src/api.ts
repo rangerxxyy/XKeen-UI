@@ -613,7 +613,7 @@ export async function getSystemLog(file: string, signal?: AbortSignal): Promise<
   return { file: payload.file, lines: payload.lines as string[], truncated: payload.truncated };
 }
 
-export async function logUiError(source: 'yaml' | 'config' | 'ui' | 'update', message: string, signal?: AbortSignal): Promise<void> {
+export async function logUiError(source: 'yaml' | 'config' | 'ui', message: string, signal?: AbortSignal): Promise<void> {
   const response = await fetch('/api/v1/logs/ui-error', {
     method: 'POST',
     headers: { Accept: 'application/json', 'Content-Type': 'application/json' },

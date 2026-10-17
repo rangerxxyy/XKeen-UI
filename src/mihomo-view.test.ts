@@ -93,6 +93,8 @@ describe('renderSelectors', () => {
     expect(html).toContain('proxy-health proxy-ping-value is-dead');
     expect(html).toContain('class="ping-status-icon"');
     expect(html).toContain('Узел не отвечает. Нажмите, чтобы проверить ping');
+    expect(renderPingStatusIcon(false)).toContain('M5 2.5h6l2 2v7l-5 2-5-2v-7z');
+    expect(renderPingStatusIcon(false)).toContain('M8 5v4m-1.5-2h3');
   });
 
   it('keeps protocol and transport labels together for VLESS XUDP and Hysteria2 UDP nodes', () => {

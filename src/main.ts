@@ -200,7 +200,7 @@ function drawJournal(): void {
     return;
   }
   if (viewState === 'cleared') {
-    body.innerHTML = '<div class="journal-empty"><span class="journal-empty-icon">✓</span><strong>Отображение очищено</strong><p>Исходный файл на устройстве не изменён.</p></div>';
+    body.innerHTML = '<div class="journal-empty"><span class="journal-empty-icon">✓</span><strong>Отображение очищено</strong></div>';
     return;
   }
   const filter = logFilter.trim().toLocaleLowerCase();

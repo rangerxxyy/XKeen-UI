@@ -1,43 +1,1177 @@
-YªçŠx-®éÜj×¢ëiºÚ+Š§j[h‘éÜ¢éíßmºÕ:-jZ.¶›­–)Ş³V–×÷'BrâöföçG2æ772s°¦–×÷'Brâö6÷VçG'’ÖfÆw2æ772s°¦–×÷'Brâ÷7G–ÆRæ772s°¦–×÷'Brâ÷G—öw&‡’æ772s°¦–×÷'Brâö6öææV7F–öâÖFWF–Ç2æ772s°¦–×÷'Brâ÷7G–ÆVB×6VÆV7Bæ772s°¦–×÷'Brâ÷V’×öÆ—6‚æ772s°¦–×÷'B²Væ†æ6U7G–ÆVE6VÆV7G2Â7–æ57G–ÆVE6VÆV7G2Òg&öÒrâ÷7G–ÆVB×6VÆV7Bs°¦–×÷'B²4ôäd”uôÅ•ôUdTåBÂG—R6öæf–tÇ”WfVçDFWF–ÂÒg&öÒrâö6öæf–rÖ7F–öç2s°¦–×÷'B²7&VFU6WGF–æw4ÆöFW"ÂG—R6WGF–æw4ÆöFW"Òg&öÒrâ÷6WGF–æw2ÖÆöBs°¦–×÷'B²&VæFW$6öææV7F–öäFWF–Ç2Òg&öÒrâö6öææV7F–öâÖFWF–Ç2s°¦–×÷'B²Ç”7F—fTÖ–†öÖô6öæf–rÂ6Æ÷6TÆÄÖ–†öÖô6öææV7F–öç2Â6Æ÷6TÖ–†öÖô6öææV7F–öâÂ6öçG&öÅ†¶VVâÂvWD7F—fTÖ–†öÖô6öæf–rÂvWD6÷&U6÷W&6W2ÂvWD†VÇF‚ÂvWDÖ–†öÖô6öææV7F–öç2ÂvWDÖ–†öÖõ&÷‡•&÷f–FW'2ÂvWDÖ–†öÖõ6VÆV7F÷'2ÂvWDÖ–†öÖõfW'6–öâÂvWE&÷WFW$FWf–6TÆ—7BÂvWE&÷WFW$Fç57FGW2ÂvWE7FGW2ÂvWE7—7FVÔÆörÂvWEWFFU&÷†–W2ÂvWE†¶VVå7FGW2ÂÆöuV”W'&÷"Â–ætÖ–†öÖôw&÷WÂ–ætÖ–†öÖõ&÷‡’ÂVW'”Ö–†öÖôFç2Â&WVW7DWFFRÂ6fT6÷&U6÷W&6W2Â6fUWFFU&÷†–W2Â6VÆV7DÖ–†öÖõ&÷‡’Â6WE&÷WFW$Fç4ÖævVÖVçBÂG—R•7FFRÂG—R6÷&U6÷W&6W2ÂG—RÖ–†öÖô6öææV7F–öç2ÂG—RÖ–†öÖôFç5&W7VÇBÂG—RÖ–†öÖõ6VÆV7F÷"ÂG—R&÷WFW$Fç57FGW2ÂG—R7—7FVÔÆörÂG—R†¶VVå7FGW2Òg&öÒrâö’s°¦–×÷'B²Ç•–æu&W7VÇG2Â÷&FW%6VÆV7F÷'4'”6öæf–rÂ&VæFW$6öææV7F–öç2Â&VæFW%–æu7FGW4–6öâÂ&VæFW%6VÆV7F÷'2Òg&öÒrâöÖ–†öÖò×f–Wrs°¦–×÷'B²F6„Fç4ÖævVÖVçBÂF6„Ö–†öÖôFç56WGF–æw2Â&VDÖ–†öÖôFç56WGF–æw2Â&VæFW$Fç2ÂG—RÖ–†öÖôFç56WGF–æw2Òg&öÒrâöFç2×f–Wrs°¦–×÷'B²fWF6„6÷&U&VÆV6W2Â—57F&ÆT6ö×F–&ÆU&VÆV6RÂ÷Vä6÷&U&VÆV6TF–ÆörÒg&öÒrâö6÷&R×&VÆV6W2s°¦–×÷'B²÷Vä6÷&TÖævW$F–ÆörÒg&öÒrâö6÷&RÖÖævW"s°¦–×÷'B²—4æWvW%fW'6–öâÂÆ—7D&VÆV6W2ÂG—R&VÆV6RÒg&öÒrâö×WFFRs°¦–×÷'B²6öæf—&Ô–äÒg&öÒrâö6öæf—&ÒÖF–Æörs°¦–×÷'B²&–æDF–ÆötÖ÷F–öâÂ6Æ÷6TF–Æöuv—F„Ö÷F–öâÒg&öÒrâöF–ÆörÖÖ÷F–öâs°¦–×÷'B²Æ–fV7–6ÆTfVVF&6²Òg&öÒrâ÷6W'f–6RÖfVVF&6²s°¦–×÷'B²&VEV•&VfW&Væ6W2ÂfÆ–E–æuW&ÂÂw&—FUV•&VfW&Væ6W2ÂG—RV•&VfW&Væ6W2Òg&öÒrâ÷&VfW&Væ6W2s°¦–×÷'B²FVGWÆ–6FU&WVFVEV”W'&÷'2Âf÷&ÖD¦÷W&æÄÖW76vRÂf÷&ÖD¦÷W&æÅF–ÖW7F×ÂvWD¦÷W&æÅf–Wu7FFRÂ&VæFW$¦÷W&æÄÆöF–æu6¶VÆWFöâÂ7Æ—D¦÷W&æÄÆWfVÂÂ7G&—Æöu6÷W&6TÆ&VÂÒg&öÒrâö¦÷W&æÂ×f–Wr×7FFRs°¦–×÷'B²vWD¦÷W&æÅ67&öÆÅF÷ÂvWDæWt¦÷W&æÄÆ–æW2Â†4¦÷W&æÄÆ–æW46†ævVBÒg&öÒrâö¦÷W&æÂ×67&öÆÂs°¦–×÷'B²†–FT6ÆV&VD¦÷W&æÄÆ–æW2Â&VÖVÖ&W$6ÆV&VD¦÷W&æÂÒg&öÒrâö¦÷W&æÂÖ6ÆV"s°¦–×÷'B²¦÷W&æÄW‡æD–6öâÂ¦÷W&æÄW‡æDÆ&VÂÒg&öÒrâö¦÷W&æÂ×V’s°¦–×÷'B²&VæFW$&VÆV6T7F–öç2Â&VæFW$WFFTæ÷F–6RÂ&VæFW$fW'6–öä6†—Òg&öÒrâö×&VÆV6R×V’s°¦–×÷'B²4UED”äu5õD%2ÂG—R6WGF–æw5F$–BÒg&öÒrâ÷6WGF–æw2×F'2s°¦–×÷'B²&–æE6VÆV7F÷%6÷'D6öçG&öÂÂ&VæFW%6VÆV7F÷%6÷'D6öçG&öÂÒg&öÒrâ÷6VÆV7F÷"×6÷'BÖ6öçG&öÂs°¦–×÷'B²&–æE–æuW&Ä6öçG&öÂÂ&VæFW%–æuW&Ä6öçG&öÂÒg&öÒrâ÷–ær×W&ÂÖ6öçG&öÂs°¦–×÷'B²6÷W&6TæÖU&W6öÇfW"Òg&öÒrâ÷6÷W&6RÖæÖW2s°¦–×÷'B²&VæFW%&W6÷W&6TÖWG&–72Òg&öÒrâ÷&W6÷W&6RÖÖWG&–72s°¦–×÷'B²6†÷VÆE&W÷'EV”W'&÷"Òg&öÒrâ÷V’ÖW'&÷"ÖFVGWRs°¦–×÷'B²6÷'DÖ–†öÖô6öææV7F–öç2ÂG—R6öææV7F–öå6÷'BÂG—R6öææV7F–öå6÷'D¶W’Òg&öÒrâö6öææV7F–öâ×6÷'Bs°¦–×÷'B²'6U&÷‡•&÷f–FW'2Â&VæFW%&÷‡•&÷f–FW'2ÂG—R&÷‡•&÷f–FW%f–WrÒg&öÒrâ÷&÷‡’×&÷f–FW'2×f–Wrs° §G—RvRÒw6VÆV7F÷'2rÂv6öææV7F–öç2rÂw&÷†–W2rÂv6öæf–wW&F–öârÂvFç2s° ¦6öç7BvW3¢²–C¢vS²Æ&VÃ¢7G&–æs²–6öã¢7G&–ærÕµÒÒ°¢²–C¢w6VÆV7F÷'2rÂÆ&VÃ¢}
-]½]­-í²rÂ–6öã¢~(xBrÒÀ¢²–C¢v6öææV7F–öç2rÂÆ&VÃ¢}
-í]Mİ]İòrÂ–6öã¢~(ÈrÒÀ¢²–C¢w&÷†–W2rÂÆ&VÃ¢}	ıí­‚rÂ–6öã¢~)x‚rÒÀ¢²–C¢v6öæf–wW&F–öârÂÆ&VÃ¢}	­íİM==mòrÂ–6öã¢~(É‚rÒÀ¢²–C¢vFç2rÂÆ&VÃ¢tDå2rÂ–6öã¢~)xârÒÀ¥Ó° ¦6öç7B7FFS¢•7FFRÒ²6öææV7FVC¢fÇ6RÂ7FGW3¢çVÆÂÂW'&÷#¢çVÆÂÂ6†V6¶VDC¢çVÆÂÓ°§G—R–ÖÄVF—F÷$ÖöGVÆRÒG—Vöb–×÷'B‚râ÷–ÖÂÖVF—F÷"r“°¦ÆWB–ÖÄVF—F÷$ÖöGVÆS¢–ÖÄVF—F÷$ÖöGVÆRÂçVÆÂÒçVÆÃ°¦ÆWB–ÖÄVF—F÷$ÆöC¢&öÖ—6SÅ–ÖÄVF—F÷$ÖöGVÆSâÂçVÆÂÒçVÆÃ°¦ÆWB7F—fUvS¢vRÒw6VÆV7F÷'2s°¦ÆWBæ–ÖFUvTVçG'’ÒfÇ6S°¦ÆWB&Vg&W6…F–ÖW#¢çVÖ&W"ÂVæFVf–æVC°¦ÆWBWFõWFFUF–ÖW#¢çVÖ&W"ÂVæFVf–æVC°¦6öç7BWFFTæ÷F–6W2ÒæWr6WCÇ7G&–æsâ‚“°¦ÆWB&WVW7D6öçG&öÆÆW#¢&÷'D6öçG&öÆÆW"ÂVæFVf–æVC°¦ÆWBÖ–†öÖô6öçG&öÆÆW#¢&÷'D6öçG&öÆÆW"ÂVæFVf–æVC°¦ÆWB6VÆV7F÷'3¢Ö–†öÖõ6VÆV7F÷%µÒÒµÓ°¦ÆWB6VÆV7F÷'4ÆöF–ærÒG'VS°¦ÆWB6VÆV7F÷'4W'&÷#¢7G&–ærÂçVÆÂÒçVÆÃ°¦ÆWB6öææV7F–öç3¢Ö–†öÖô6öææV7F–öç2ÂçVÆÂÒçVÆÃ°¦ÆWB6öææV7F–öå6÷W&6TæÖW3¢&V6÷&CÇ7G&–ærÂ7G&–æsâÒ·Ó°¦ÆWB6öææV7F–öå6÷'C¢6öææV7F–öå6÷'BÒ²¶W“¢w7F'BrÂF—&V7F–öã¢vFW66VæF–ærrÓ°¦6öç7B6÷W&6TæÖU&W6öÇfW"ÒæWr6÷W&6TæÖU&W6öÇfW"‚‚’ÓâvWE&÷WFW$FWf–6TÆ—7B‚’“°¦ÆWB6öææV7F–öç4ÆöF–ærÒG'VS°¦ÆWB6öææV7F–öç4W'&÷#¢7G&–ærÂçVÆÂÒçVÆÃ°¦ÆWB&÷‡•&÷f–FW'3¢&÷‡•&÷f–FW%f–WuµÒÒµÓ°¦ÆWB&÷‡•&÷f–FW'4ÆöF–ærÒfÇ6S°¦ÆWB&÷‡•&÷f–FW'4W'&÷#¢7G&–ærÂçVÆÂÒçVÆÃ°¦ÆWBFç5&W7VÇC¢Ö–†öÖôFç5&W7VÇBÂçVÆÂÒçVÆÃ°¦ÆWBFç4ÆöF–ærÒfÇ6S°¦ÆWBFç4W'&÷#¢7G&–ærÂçVÆÂÒçVÆÃ°¦ÆWBFç5VW'”æÖRÒrs°¦ÆWBFç5VW'•G—RÒts°¦ÆWBFç46öçG&öÆÆW#¢&÷'D6öçG&öÆÆW"ÂVæFVf–æVC°¦ÆWBFç4ÖævVÖVçE7FGW3¢&÷WFW$Fç57FGW2ÂçVÆÂÒçVÆÃ°¦ÆWBFç4ÖævVÖVçDÆöF–ærÒfÇ6S°¦ÆWBFç4ÖævVÖVçDW'&÷#¢7G&–ærÂçVÆÂÒçVÆÃ°¦ÆWBFç4ÖævVÖVçD'W7’ÒfÇ6S°¦ÆWBFç4ÖævVÖVçD6öæf—&ÒÒfÇ6S°¦ÆWBFç46öæf–s¢²6öçFVçC¢7G&–æs²fÇVW3¢Ö–†öÖôFç56WGF–æw2ÒÂçVÆÂÒçVÆÃ°¦ÆWBFç46öæf–tÆöF–ærÒfÇ6S°¦ÆWBFç46öæf–tW'&÷#¢7G&–ærÂçVÆÂÒçVÆÃ°¦ÆWBFç46öæf–t'W7’ÒfÇ6S°¦ÆWBÖ–†öÖõfW'6–öã¢7G&–ærÂçVÆÂÒçVÆÃ°¦ÆWB†¶VVå7FGW3¢†¶VVå7FGW2ÂçVÆÂÒçVÆÃ°¦ÆWB†¶VVä6öçG&öÄ'W7’ÒfÇ6S°¦ÆWB6öæf–tÇ”'W7’ÒfÇ6S°¦ÆWB†¶VVä6öçG&öÄ7F–öã¢w7F'BrÂw7F÷rÂw&W7F'BrÂçVÆÂÒçVÆÃ°¦6öç7BÆötf–ÆW2Ò°¢²–C¢w†¶VVâ×V’rÂÆ&VÃ¢vW'&÷"æÆörrÒÀ¢²–C¢w‡&’Ö66W72rÂÆ&VÃ¢v66W72æÆörrÒÀ¥Ó°¦ÆWB6VÆV7FVDÆörÒw†¶VVâ×V’s°¦ÆWBÆötFF¢7—7FVÔÆörÂçVÆÂÒçVÆÃ°¦ÆWBÆötæWtÆ–æW2ÒæWr6WCÇ7G&–æsâ‚“°¦ÆWBÆötW'&÷#¢7G&–ærÂçVÆÂÒçVÆÃ°¦ÆWBÆötÆöF–ærÒfÇ6S°¦ÆWBÆöt6ÆV&VBÒfÇ6S°¦ÆWBÆötW‡æFVBÒfÇ6S°¦ÆWBÆötf–ÇFW"Òrs°¦ÆWBÆöt6öçG&öÆÆW#¢&÷'D6öçG&öÆÆW"ÂVæFVf–æVC°¦ÆWBÆöu&Vg&W6…F–ÖW#¢çVÖ&W"ÂVæFVf–æVC°¦ÆWBÆöu&Vg&W6„gFW$7W'&VçBÒfÇ6S°¦ÆWB&VÆV6S¢&VÆV6RÂçVÆÂÒçVÆÃ°¦ÆWB&VÆV6W3¢&VÆV6UµÒÒµÓ°¦ÆWBWFFTf–Æ&ÆS¢&VÆV6RÂçVÆÂÒçVÆÃ°¦ÆWBWFFTæ÷F–6TF—6Ö—76VBÒfÇ6S°¦ÆWBWFFTÖW76vRÒ}	ıíM=í-í-­íİí-½]İş(
-bs°¦ÆWBWFFT–ç7FÆÆ–ærÒfÇ6S°¦ÆWBV•&VfW&Væ6W3¢V•&VfW&Væ6W2Ò&VEV•&VfW&Væ6W2‚“°¦6öç7B&÷‡•–ætf–ÇW&W2ÒæWrÖÇ7G&–ærÂçVÖ&W#â‚“°¦6öç7B&V6VçEV”W'&÷'2ÒæWrÖÇ7G&–ærÂçVÖ&W#â‚“° ¦gVæ7F–öâÇ•V•F†VÖR‚“¢fö–B°¢6öç7BF†VÖRÒV•&VfW&Væ6W2çF†VÖS°¢Fö7VÖVçBæFö7VÖVçDVÆVÖVçBæFF6WBçF†VÖRÒF†VÖS°¢Fö7VÖVçBæFö7VÖVçDVÆVÖVçBç7G–ÆRæ6öÆ÷%66†VÖRÒF†VÖS°§Ğ ¦Ç•V•F†VÖR‚“° ¦6öç7BÒFö7VÖVçBçVW'•6VÆV7F÷#Ä…DÔÄF—dVÆVÖVçCâ‚r6r“°¦–b‚’F‡&÷ræWrW'&÷"‚}	­íİ]-í’İ½]Í]İ"İ-]M]6İRİM]Òr“°¦6öç7BõdU%4”ôâÒõôõdU%4”ôåõó° ¦gVæ7F–öâW66T‡FÖÂ‡fÇVS¢7G&–ær“¢7G&–ær°¢&WGW&âfÇVRç&WÆ6R‚õ²cÃâ"uÒörÂ†6†&7FW"’Óâ°¢6öç7BVçF—F–W3¢&V6÷&CÇ7G&–ærÂ7G&–æsâÒ²rbs¢rf×²rÂsÂs¢rfÇC²rÂsâs¢rfwC²rÂr"s¢rgV÷C²rÂ"r#¢rb33“²rÓ°¢&WGW&âVçF—F–W5¶6†&7FW%Òóò6†&7FW#°¢Ò“°§Ğ ¦gVæ7F–öâf÷&ÖD&VÆV6Tæ÷FW2‡fÇVS¢7G&–ær“¢7G&–ær°¢&WGW&âfÇVRç7Æ—B‚õÇ#õÆâò’æÖ‚†Æ–æR’Óâ°¢6öç7BG&–ÖÖVBÒÆ–æRçG&–Ò‚“°¢–b‚G&–ÖÖVB’&WGW&âsÆ'#âs°¢6öç7B†VF–ærÒG&–ÖÖVBæÖF6‚‚õâ7³ÃGÕÇ2²‚â²’Bò“°¢–b††VF–ær’&WGW&âÇ7G&öæsâG¶W66T‡FÖÂ††VF–æu³Òóòrr—ÓÂ÷7G&öæsæ°¢–b‚õå²Ò¥ÕÇ2²òçFW7B‡G&–ÖÖVB’’&WGW&âÇ7â6Æ73Ò&×&VÆV6RÖ'VÆÆWB#î(
-#Â÷7ãâG¶W66T‡FÖÂ‡G&–ÖÖVBç&WÆ6R‚õå²Ò¥ÕÇ2²òÂrr’ç&WÆ6R‚ö…µæÒ²–örÂrCr’—Ö°¢&WGW&âW66T‡FÖÂ‡G&–ÖÖVBç&WÆ6R‚ö…µæÒ²–örÂrCr’ç&WÆ6R‚õÅ²…µåÅÕÒ²•ÅÕÂ‚†‡GG3ó¥ÂõÂõµâ•Ò²•Â’örÂrC‚C"’r’“°¢Ò’æ¦ö–â‚sÆ'#âr“°§Ğ ¦gVæ7F–öâ&VæFW$†VFW"‚“¢7G&–ær°¢6öç7B6W'f–6T'W7’Ò†¶VVä6öçG&öÄ'W7’ÇÂ6öæf–tÇ”'W7“°¢6öç7B7FGW2Ò7FFRç7FGW3°¢6öç7B6W'f–6RÒ7FGW3òç6W'f–6W2æf–æB‚†—FVÒ’Óâ—FVÒææÖRçFôÆ÷vW$66R‚’ÓÓÒvÖ–†öÖòr“°¢6öç7Bf÷&ÖEfW'6–öâÒ‡fW'6–öã¢7G&–ær’ÓâbG¶W66T‡FÖÂ‡fW'6–öâç&WÆ6R‚õçb²ö’Ârr’—Ö°¢6öç7B6÷&TÆ&VÂÒÖ–†öÖõfW'6–öâòf÷&ÖEfW'6–öâ†Ö–†öÖõfW'6–öâ’¢6W'f–6Rò‡6W'f–6RçfW'6–öâòf÷&ÖEfW'6–öâ‡6W'f–6RçfW'6–öâ’¢6W'f–6Rç7FFRÓÓÒw'Vææ–ærrò}	­--]Òr¢6W'f–6Rç7FFRÓÓÒw7F÷VBrò}	í-İí-½]Òr¢}	İ]Mí-=ı]Òr’¢7FFRæ6öææV7FVBò}	İRıí-]]Òr¢}	ímMİRs°¢6öç7B6W'f–6UFW‡BÒ6W'f–6T'W7¢òG·†¶VVä6öçG&öÄ7F–öâÓÓÒw7F÷rò}	í-İí-­r¢†¶VVä6öçG&öÄ7F–öâÓÓÒw7F'Brò}	}ı=¢r¢}	ı]]}ı=¢wÒ„¶VVî(
-f ¢¢7FGW3òæÖöFRÓÓÒw&÷WFW"p¢ò†¶VVå7FGW3òæ–ç7FÆÆV@¢ò†¶VVå7FGW2ç'Vææ–ærÓÓÒG'VRòu„¶VVâ}ı=]Òr¢†¶VVå7FGW2ç'Vææ–ærÓÓÒfÇ6Ròu„¶VVâí-İí-½]Òr¢}
---=„¶VVâİ]Mí-=ı]Òp¢¢u„¶VVâİRİM]Òp¢¢6W'f–6Rò‡6W'f–6Rç7FFRÓÓÒw'Vææ–ærrò}
-]-}ı=]Òr¢6W'f–6Rç7FFRÓÓÒw7F÷VBrò}
-]-í-İí-½]Òr¢}
---=İ]Mí-=ı]Òr’¢}
-í-íıİR}==m]-òs°¢6öç7B&W6÷W&6TÖWG&–72Ò&VæFW%&W6÷W&6TÖWG&–72‡7FGW3òæÖVÖ÷'’óòçVÆÂÂ7FGW3òæ7UW&6VçBóòçVÆÂ“°¢6öç7B6ä6öçG&öÂÒ7FGW3òæÖöFRÓÓÒw&÷WFW"rbb&ööÆVâ‡†¶VVå7FGW3òæ–ç7FÆÆVB“°¢6öç7B6öçG&öÇ2Ò6ä6öçG&öÀ¢òG·†¶VVå7FGW3òç'Vææ–ærÓÓÒfÇ6P¢òÆ'WGFöâ6Æ73Ò&†VFW"×6W'f–6RÖ7F–öâ"FF×†¶VVâÖ7F–öãÒ'7F'B"G—SÒ&'WGFöâ"F—FÆSÒ-	}ı=--Â„¶VVâ"&–ÖÆ&VÃÒ-	}ı=--Â„¶VVâ"G·6W'f–6T'W7’òvF—6&ÆVBr¢rwÓâG·6W'f–6T'W7’bb†¶VVä6öçG&öÄ7F–öâÓÓÒw7F'BròsÇ7â6Æ73Ò'6W'f–6RÖ6öçG&öÂ×7–ææW""&–Ö†–FFVãÒ'G'VR#ãÂ÷7ãâr¢~)kbwÓÂö'WGFöãæ ¢¢Æ'WGFöâ6Æ73Ò&†VFW"×6W'f–6RÖ7F–öâ†VFW"×6W'f–6R×&W7F'B"FF×†¶VVâÖ7F–öãÒ'&W7F'B"G—SÒ&'WGFöâ"F—FÆSÒ-	ı]]}ı=--Â„¶VVâ"&–ÖÆ&VÃÒ-	ı]]}ı=--Â„¶VVâ"G·6W'f–6T'W7’òvF—6&ÆVBr¢rwÓâG¶6öæf–tÇ”'W7’ÇÂ‡†¶VVä6öçG&öÄ'W7’bb†¶VVä6öçG&öÄ7F–öâÓÓÒw&W7F'Br’òsÇ7â6Æ73Ò'6W'f–6RÖ6öçG&öÂ×7–ææW""&–Ö†–FFVãÒ'G'VR#ãÂ÷7ãâr¢sÇ7frf–Wt&÷ƒÒ##B#B"&–Ö†–FFVãÒ'G'VR#ãÇF‚CÒ$Ó#wcV‚ÓTÓBã’–rãRrãR"ãBÓ$Ã#$ÓBwbÓVƒVÓã6rãRrãRÓ"ãB$ÃB""óãÂ÷7fsâwÓÂö'WGFöããÆ'WGFöâ6Æ73Ò&†VFW"×6W'f–6RÖ7F–öâ†VFW"×6W'f–6R×7F÷"FF×†¶VVâÖ7F–öãÒ'7F÷"G—SÒ&'WGFöâ"F—FÆSÒ-	í-İí--Â„¶VVâ"&–ÖÆ&VÃÒ-	í-İí--Â„¶VVâ"G·6W'f–6T'W7’ÇÂ†¶VVå7FGW3òç'Vææ–ærÓÒG'VRòvF—6&ÆVBr¢rwÓâG·6W'f–6T'W7’bb†¶VVä6öçG&öÄ7F–öâÓÓÒw7F÷ròsÇ7â6Æ73Ò'6W'f–6RÖ6öçG&öÂ×7–ææW""&–Ö†–FFVãÒ'G'VR#ãÂ÷7ãâr¢sÇ7frf–Wt&÷ƒÒ##B#B"&–Ö†–FFVãÒ'G'VR#ãÇ&V7BƒÒ#b"“Ò#b"v–GFƒÒ#""†V–v‡CÒ#""'ƒÒ#""óãÂ÷7fsâwÓÂö'WGFöãæÖ ¢¢rs°¢&WGW&âÆ†VFW"6Æ73Ò'F÷&"#à¢ÆF—b6Æ73Ò'F÷×7FGW2Ö6ÇW7FW"G·6W'f–6T'W7’òv—2×†¶VVâÖ'W7’r¢rwÒ#ãÆF—b6Æ73Ò'F÷×7FGW2"&–ÖÆ&VÃÒ-
-í-íıİR„¶VVâ"&–ÖÆ—fSÒ'öÆ—FR#ãÇ7â–CÒ'7FGW2ÖÆVB"6Æ73Ò&6öææV7F–öâÖÆVBG·7FFRæ6öææV7FVBòv—2ÖöæÆ–æRr¢v—2ÖöffÆ–æRwÒ#ãÂ÷7ããÇ7ããÇ7G&öær–CÒ'6W'f–6RÖÆ&VÂ#âG¶W66T‡FÖÂ‡6W'f–6UFW‡B—ÓÂ÷7G&öæsãÇ6ÖÆÂ–CÒ'6W'f–6R×7VÖÖ'’#âG·7FFRæ6öææV7FVBò&W6÷W&6TÖWG&–72¢}	ímMİRí]Mİ]İò&6¶VæBwÓÂ÷6ÖÆÃãÂ÷7ããÂöF—cãÆF—b6Æ73Ò&†VFW"×6W'f–6RÖ6öçG&öÇ2"&–ÖÆ&VÃÒ-
-=ı-½]İR„¶VVâ"&–Ö'W7“Ò"G·6W'f–6T'W7—Ò#âG¶6öçG&öÇ7ÓÂöF—cãÂöF—cà¢Æ6Æ73Ò&'&æB"‡&VcÒ"76VÆV7F÷'2"&–ÖÆ&VÃÒ%„¶VVâT’Â]½]­-í²#ãÇ7ãå„¶VVâÆ#åT“Âö#ãÂ÷7ããÂöà¢ÆF—b6Æ73Ò'F÷Ö7F–öç2#ãÆ'WGFöâ6Æ73Ò'fW'6–öâÖ6†—6÷&RÖ6†—6÷&R×fW'6–öâÖ'WGFöâ"–CÒ&6÷&R×fW'6–öâ"G—SÒ&'WGFöâ"F—FÆSÒ-
-=ı-½]İRıMÍ‚"&–ÖÆ&VÃÒ-
-=ı-½]İRıMÍ‚#ãÇ7â6Æ73Ò&6†—Ö–6öâ#î)xƒÂ÷7ãâÖ–†öÖòÆ"–CÒ&6÷&R×fW'6–öâÖÆ&VÂ#âG¶6÷&TÆ&VÇÓÂö#ãÇ7â6Æ73Ò&6†—Ö6†Wg&öâ"&–Ö†–FFVãÒ'G'VR#î(ÈCÂ÷7ããÂö'WGFöãâG·&VæFW$fW'6–öä6†—‡7FGW3òæfW'6–öâóòõdU%4”ôâÂ&ööÆVâ†WFFTf–Æ&ÆR’—ÓÆ'WGFöâ6Æ73Ò&–6öâÖ'WGFöâ"–CÒ'6WGF–æw2"F—FÆSÒ-	İ-í­‚"&–ÖÆ&VÃÒ-	İ-í­‚#î)©“Âö'WGFöããÂöF—cà¢Âö†VFW#æ°§Ğ ¦gVæ7F–öâ&VæFW$æf–vF–öâ‚“¢7G&–ær°¢6öç7Bf–ÆT'WGFöç2Ò7F—fUvRÓÓÒv6öæf–wW&F–öârò&VæFW$6öæf–tf–ÆT'WGFöç2‚’¢rs°¢&WGW&âÆæb6Æ73Ò&æf–vF–öâG¶7F—fUvRÓÓÒv6öæf–wW&F–öâròvæf–vF–öâÖ6öæf–rr¢rwÒ"&–ÖÆ&VÃÒ-
-}M]½²ıİ]½‚#âG·vW2æÖ‚‡vR’ÓâÆ'WGFöâ6Æ73Ò&æbÖ—FVÒG¶7F—fUvRÓÓÒvRæ–Bòv7F—fRr¢rwÒ"FF×vSÒ"G·vRæ–GÒ"G¶7F—fUvRÓÓÒvRæ–Bòv&–Ö7W'&VçCÒ'vR"r¢rwÓãÇ7â6Æ73Ò&æbÖ–6öâ#âG·vRæ–6öçÓÂ÷7ãâG·vRæÆ&VÇÓÂö'WGFöãæ’æ¦ö–â‚rr—ÓÇ7â6Æ73Ò&æf–vF–öâ×76W"#ãÂ÷7ãâG¶f–ÆT'WGFöç7ÓÂöæcæ°§Ğ ¦gVæ7F–öâ&VæFW$6öæf–tf–ÆT'WGFöç2‚“¢7G&–ær°¢6öç7B‡&’Ò†¶VVå7FGW3òæ6÷&RÓÓÒw‡&’s°¢6öç7B‡&”f–ÆW2Ò²w‡&•öÆörrÂw‡&•ö–æ&÷VæG2rÂw‡&•ö§6öârÂw‡&•÷&÷WF–ærrÂw‡&•÷öÆ–7’uÓ°¢6öç7B–G2Ò²âââ‡‡&’ò‡&”f–ÆW2¢²v6öæf–ruÒ’Âv—öW†6ÇVFRrÂw÷'EöW†6ÇVFRrÂw÷'E÷&÷‡––ærrÂw†¶VVâuÓ°¢6öç7BFVfVÇDf–ÆRÒ‡&’òw‡&•ö§6öâr¢v6öæf–rs°¢6öç7B6fVDf–ÆRÒ6W76–öå7F÷&vRævWD—FVÒ‚w†¶VVâ×V“¦G&gBÖ7F—fRÖf–ÆRr“°¢6öç7B7F—fTf–ÆRÒ‡&¢ò6fVDf–ÆRÓÓÒw‡&•ö§6öæ2ròw‡&•÷&÷WF–ærr¢‡&”f–ÆW2æ–æ6ÇVFW2‡6fVDf–ÆRóòrr’ò6fVDf–ÆR¢FVfVÇDf–ÆP¢¢–G2æ–æ6ÇVFW2‡6fVDf–ÆRóòrr’ò6fVDf–ÆR¢FVfVÇDf–ÆS°¢6öç7BÆ&VÇ3¢&V6÷&CÇ7G&–ærÂ7G&–æsâÒ²6öæf–s¢v6öæf–rrÂ‡&•ö§6öã¢v÷WF&÷VæG2rÂ‡&•öÆös¢vÆörrÂ‡&•ö–æ&÷VæG3¢v–æ&÷VæG2rÂ‡&•÷öÆ–7“¢wöÆ–7’rÂ—öW†6ÇVFS¢v—öW†6ÇVFRrÂ÷'EöW†6ÇVFS¢w÷'EöW†6ÇVFRrÂ÷'E÷&÷‡––æs¢w÷'E÷&÷‡––ærrÂ†¶VVã¢w†¶VVârÂ‡&•÷&÷WF–æs¢w&÷WF–ærrÓ°¢6öç7BFW67&—F–öç3¢&V6÷&CÇ7G&–ærÂ7G&–æsâÒ°¢6öæf–s¢}	íİí-İí’­íİM2Ö–†öÖòrÂ‡&•öÆös¢}	İ-í­‚m=İ½‡&’rÂ‡&•ö–æ&÷VæG3¢}	-]íMıRıíM­½í}]İò‡&’rÂ‡&•ö§6öã¢}	]íMıRıíM­½í}]İò‡&’rÂ‡&•÷&÷WF–æs¢}	ı-½Í=-}m‚‡&’rÂ‡&•÷öÆ–7“¢}	ıí½-­‚‡&’rÀ¢—öW†6ÇVFS¢t•İM]‚ıíM]-‚-İRíí-­‚„¶VVârÂ÷'EöW†6ÇVFS¢}	ıí-²Â­½í}İİ½Rríí-­‚„¶VVârÀ¢÷'E÷&÷‡––æs¢}	ıí-²Âİı-½ı]Í½R}]]rıí­‚rÂ†¶VVã¢}	ıÍ]-²}ı=­‚Í=-}m‚„¶VVârÀ¢Ó°¢&WGW&âÆF—b6Æ73Ò&6öæf–rÖf–ÆRÖæb"&–ÖÆ&VÃÒ-
-M½²­íİM==m‚#âG¶–G2æÖ‚†–B’Óâ°¢6öç7Bf–ÆT–BÒ–C°¢6öç7B6VÆV7FVBÒf–ÆT–BÓÓÒ7F—fTf–ÆS°¢&WGW&âÆ'WGFöâ6Æ73Ò&6öæf–rÖf–ÆR×F"G·6VÆV7FVBòw6VÆV7FVBr¢rwÒ"FFÖ6öæf–rÖf–ÆSÒ"G¶f–ÆT–GÒ"G—SÒ&'WGFöâ"F—FÆSÒ"G¶FW67&—F–öç5¶f–ÆT–EÒóòFW67&—F–öç5¶–EÒóò–GÒ"&–ÖÆ&VÃÒ"G¶Æ&VÇ5¶–EÒóò–GÓ¢G¶FW67&—F–öç5¶f–ÆT–EÒóòFW67&—F–öç5¶–EÒóò–GÒ"&–×&W76VCÒ"G·6VÆV7FVGÒ#âG¶Æ&VÇ5¶–EÒóò–GÓÂö'WGFöãæ°¢Ò’æ¦ö–â‚rr—ÓÂöF—cæ°§Ğ ¦gVæ7F–öâ&VæFW$6öÖ–æu6ööâ‡vS¢vR“¢7G&–ær°¢6öç7B7W'&VçBÒvW2æf–æB‚†—FVÒ’Óâ—FVÒæ–BÓÓÒvR“°¢–b‡vRÓÓÒv6öæf–wW&F–öâr’&WGW&â&VæFW$6öæf–wW&F–öâ‚“°¢6öç7BFW67&—F–öç3¢&V6÷&CÅvRÂ7G&–æsâÒ°¢6VÆV7F÷'3¢}	ıíM­½í}-Rıí-]]İİ½’Ö–†öÖò’Â}-í²ıí­}½--ÂM­-}]­R==ıı²Â=}½²‚-½İİ½R}İ}]İòârÀ¢6öææV7F–öç3¢}	}M]Âıíı-ı-òí]Mİ]İòÂ-í}İ­‚Âm]ıí}­‚ıí­‚‚í­Í²-M­r'VçF–ÖR’ıMârÀ¢&÷†–W3¢}	ıíMı­‚‚=}½²Âı]Mí--½]İİ½R-]­=]’­íİM==m]’Ö–†öÖòârÀ¢Fç3¢}
-=ı-½]İRDå2=M]"}M]½Íİ½ÂM½òÖ–†öÖò‚‡&’Âıí-]­í’­íİM==m‚‚]}íıİ½ÂıÍ]İ]İ]ÂârÀ¢6öæf–wW&F–öã¢}
-]M­-íıíM½]’ıíı--òıí½RıíM­½í}]İò”ÔÂô¥4ôâ-½M-íí"‚m]İò]}]-İí=â­íıí-İòârÀ¢Ó°¢&WGW&âÇ6V7F–öâ6Æ73Ò'vRÖ†VF–ær#ãÆF—cãÆF—b6Æ73Ò&W–V'&÷r#ãÇ7â6Æ73Ò&W–V'&÷rÖÆ–æR#ãÂ÷7ãâ„¶VVâT“ÂöF—cãÆƒâG¶7W'&VçCòæÆ&VÂóòrwÓÂöƒãÇâG¶FW67&—F–öç5·vU×ÓÂ÷ãÂöF—cãÂ÷6V7F–öããÇ6V7F–öâ6Æ73Ò&fVGW&R×Æ6V†öÆFW"#ãÆF—b6Æ73Ò'Æ6V†öÆFW"×7–Ö&öÂ#âG¶7W'&VçCòæ–6öâóò~)xÂwÓÂöF—cãÆF—b6Æ73Ò'Æ6V†öÆFW"Ö6÷’#ãÇ7â6Æ73Ò'7FGW2ÖÆ&VÂ#í		İ
--	]	=
-	
-m	
-ò
-ı	M
-	Â÷7ããÆƒ#í	M½òİ-í=â}M]½]İRıíM­½í}Òıí-]]İİ½’“Âöƒ#ãÇâG¶FW67&—F–öç5·vU×ÓÂ÷ãÇ6Æ73Ò'Æ6V†öÆFW"Öæ÷FR#í	Mİİ½Rıíı-ı-òıí½RıíM­½í}]İòıíM--]mMİİí=â-]Íİí=â-í}İ­ãÂ÷ãÂöF—cãÂ÷6V7F–öãæ°§Ğ ¦gVæ7F–öâ&VæFW$6öæf–wW&F–öâ‚“¢7G&–ær°¢&WGW&âÇ6V7F–öâ6Æ73Ò&VF—F÷"×v÷&·76R6öæf–rÖÆ–÷WB"&–ÖÆ&VÃÒ-
-]M­-í­íİM==m‚#à¢ÆF—b6Æ73Ò&6öæf–rÖVF—F÷"ÖÖ–â#à¢ÆF—b6Æ73Ò&6öFRÖVF—F÷"×6†VÆÂ#ãÆF—b6Æ73Ò&VF—F÷"×f–WrÖ†–çB"–CÒ&VF—F÷"×f–WrÖ†–çB#í	ıíÍí-+rİmÍ-Rİıí½RÂ}-í²]M­-í--ÃÂöF—cãÆF—b6Æ73Ò&6öFRÖVF—F÷""–CÒ'–ÖÂÖVF—F÷""&–ÖÆ&VÃÒ-
--]­"­íİM==m‚#ãÂöF—cãÂöF—cà¢ÆF—b6Æ73Ò&VF—F÷"×7FGW6&"#ãÇ7â–CÒ'–ÖÂ×fÆ–FF–öâ"6Æ73Ò&VF—F÷"×fÆ–FF–öâ"&–ÖÆ—fSÒ'öÆ—FR#í	ıí-]­­íİM==m(
-cÂ÷7ããÆF—b6Æ73Ò&VF—F÷"Ö7F–öç2#ãÆ'WGFöâ6Æ73Ò&VF—F÷"Ö'WGFöâ"–CÒ&6öæf–r×6fRÖ7F—fR"G—SÒ&'WGFöâ"FF×&÷WFW"Öf–ÆRF—6&ÆVBF—FÆSÒ-
-í]İ-ÂM²İí=-]R]rıÍ]İ]İò#í
-í]İ-ÃÂö'WGFöããÆ'WGFöâ6Æ73Ò&VF—F÷"Ö'WGFöâVF—F÷"Ö'WGFöâ×&–Ö'’"–CÒ&6öæf–rÖÇ’Ö7F—fR"G—SÒ&'WGFöâ"FF×&÷WFW"Öf–ÆRF—6&ÆVBF—FÆSÒ-	ıí-]-ÂÂí]İ-Â‚ı]]}ı=--Â­--İíRıMâ#í	ıÍ]İ-ÃÂö'WGFöããÆFWF–Ç26Æ73Ò&VF—F÷"×WF–Æ—F–W2#ãÇ7VÖÖ'’6Æ73Ò&VF—F÷"Ö'WGFöâ#ãÇ7â6Æ73Ò'WF–Æ—F–W2×G&–vvW"Ö–6öâ"&–Ö†–FFVãÒ'G'VR#î(
-.(
-.(
-#Â÷7ããÇ7ãí
-=-½-³Â÷7ããÇ7â6Æ73Ò'WF–Æ—F–W2Ö6†Wg&öâ"&–Ö†–FFVãÒ'G'VR#ãÂ÷7ããÂ÷7VÖÖ'“ãÆF—b6Æ73Ò&VF—F÷"×WF–Æ—F–W2ÖÖVçR"&öÆSÒ&ÖVçR"&–ÖÆ&VÃÒ-
-=-½-²­íİM==m‚#ãÆ'WGFöâG—SÒ&'WGFöâ"&öÆSÒ&ÖVçV—FVÒ"–CÒ'–ÖÂÖFB×&÷‡’"FFÖÖ–†öÖòÖöæÇ“ãÇ7â6Æ73Ò'WF–Æ—G’Ö–6öâ"&–Ö†–FFVãÒ'G'VR#î(isÂ÷7ããÇ7ãí	Mí--Âıí­ƒÂ÷7ããÂö'WGFöããÆ'WGFöâG—SÒ&'WGFöâ"&öÆSÒ&ÖVçV—FVÒ"–CÒ'–ÖÂ×FV×ÆFR"FF×7G'V7GW&VBÖöæÇ“ãÇ7â6Æ73Ò'WF–Æ—G’Ö–6öâ"&–Ö†–FFVãÒ'G'VR#î)jCÂ÷7ããÇ7ãí
-½íÒ­íİM==mƒÂ÷7ããÂö'WGFöããÆ'WGFöâG—SÒ&'WGFöâ"&öÆSÒ&ÖVçV—FVÒ"–CÒ'–ÖÂÖ&6·W2"FFÖÖ–†öÖòÖöæÇ“ãÇ7â6Æ73Ò'WF–Æ—G’Ö–6öâ"&–Ö†–FFVãÒ'G'VR#î){sÂ÷7ããÇ7ãí
-]}]-İ½R­íıƒÂ÷7ããÂö'WGFöããÂöF—cãÂöFWF–Ç3ãÂöF—cãÂöF—cà¢ÂöF—cà¢Â÷6V7F–öãæ°§Ğ ¦gVæ7F–öâ&VæFW$¦÷W&æÂ‚“¢7G&–ær°¢6öç7BW‡æDÆ&VÂÒ¦÷W&æÄW‡æDÆ&VÂ†ÆötW‡æFVB“°¢6öç7B6ÆV$–6öâÒsÇ7frf–Wt&÷ƒÒ##B#B"v–GFƒÒ#‚"†V–v‡CÒ#‚"f–ÆÃÒ&æöæR"7G&ö¶SÒ&7W'&VçD6öÆ÷""7G&ö¶R×v–GFƒÒ#ã‚"7G&ö¶RÖÆ–æV6Ò'&÷VæB"7G&ö¶RÖÆ–æV¦ö–ãÒ'&÷VæB"&–Ö†–FFVãÒ'G'VR#ãÇF‚CÒ$ÓBvƒdÓcfÓBÓgcdÓbvÃFƒÃÓDÓ’ucFƒgc2"óãÂ÷7fsâs°¢&WGW&âÇ6V7F–öâ6Æ73Ò&¦÷W&æÂ×æVÂG¶ÆötW‡æFVBòv—2ÖW‡æFVBr¢rwÒ"&–ÖÆ&VÃÒ-	m=İ²í½-’#ãÆ†VFW"6Æ73Ò&¦÷W&æÂÖ†VF–ær#ãÆF—b6Æ73Ò&¦÷W&æÂ×F—FÆR#ãÆƒ#í	m=İ³Âöƒ#ãÇ7â–CÒ&¦÷W&æÂÖÆ—fR"6Æ73Ò&¦÷W&æÂÖÆ—fR"G·†¶VVä6öçG&öÄ'W7’ÇÂ6öæf–tÇ”'W7’òrr¢v†–FFVâwÓãÆ’&–Ö†–FFVãÒ'G'VR#ãÂö“â„¶VVâ}ı=­]-óÂ÷7ããÂöF—cãÆF—b6Æ73Ò&¦÷W&æÂ×FööÇ2#ãÆÆ&VÂ6Æ73Ò&¦÷W&æÂÖf–ÇFW"#ãÇ7â&–Ö†–FFVãÒ'G'VR#î(ÉSÂ÷7ããÆ–çWB–CÒ&¦÷W&æÂÖf–ÇFW""G—SÒ'6V&6‚"Æ6V†öÆFW#Ò-
-M½Í-"&–ÖÆ&VÃÒ-
-M½Í-m=İ½"fÇVSÒ"G¶W66T‡FÖÂ†Æötf–ÇFW"—Ò#ãÂöÆ&VÃãÇ6VÆV7B–CÒ&¦÷W&æÂÖf–ÆR"&–ÖÆ&VÃÒ-
-M²m=İ½#âG¶Æötf–ÆW2æÖ‚†f–ÆR’ÓâÆ÷F–öâfÇVSÒ"G¶f–ÆRæ–GÒ"G·6VÆV7FVDÆörÓÓÒf–ÆRæ–Bòw6VÆV7FVBr¢rwÓâG¶f–ÆRæÆ&VÇÓÂö÷F–öãæ’æ¦ö–â‚rr—ÓÂ÷6VÆV7CãÆ'WGFöâ6Æ73Ò&¦÷W&æÂÖ–6öâÖ'WGFöâ¦÷W&æÂÖ6ÆV"Ö'WGFöâ"–CÒ&¦÷W&æÂÖ6ÆV""G—SÒ&'WGFöâ"F—FÆSÒ-	í}--Âm=İ²"İ-íÂ=}]R"&–ÖÆ&VÃÒ-	í}--Âm=İ²#âG¶6ÆV$–6öçÓÂö'WGFöããÆ'WGFöâ6Æ73Ò&¦÷W&æÂÖ–6öâÖ'WGFöâ¦÷W&æÂÖW‡æBÖ'WGFöâ"–CÒ&¦÷W&æÂÖW‡æB"G—SÒ&'WGFöâ"F—FÆSÒ"G¶W‡æDÆ&VÇÒ"&–ÖÆ&VÃÒ"G¶W‡æDÆ&VÇÒ"&–×&W76VCÒ"G¶ÆötW‡æFVGÒ#âG¶¦÷W&æÄW‡æD–6öâ†ÆötW‡æFVB—ÓÂö'WGFöããÂöF—cãÂö†VFW#ãÆF—b6Æ73Ò&¦÷W&æÂÖ&öG’"–CÒ&¦÷W&æÂÖ&öG’"&–ÖÆ—fSÒ&öfb#ãÂöF—cãÇ7â6Æ73Ò'7"ÖöæÇ’"–CÒ&¦÷W&æÂÖææ÷Væ6VÖVçB"&öÆSÒ'7FGW2"&–ÖÆ—fSÒ'öÆ—FR#ãÂ÷7ããÂ÷6V7F–öãæ°§Ğ ¦gVæ7F–öâ6WD¦÷W&æÅ&VÇF–ÖR†7F—fS¢&ööÆVâ“¢fö–B°¢6öç7B–æF–6F÷"ÒFö7VÖVçBçVW'•6VÆV7F÷#Ä…DÔÄVÆVÖVçCâ‚r6¦÷W&æÂÖÆ—fRr“°¢–b†–æF–6F÷"’°¢–æF–6F÷"æ†–FFVâÒ7F—fS°¢6öç7BÆ&VÂÒ6öæf–tÇ”'W7’ò}	ı]]}ı=¢ıMr¢†¶VVä6öçG&öÄ7F–öâÓÓÒw7F÷rò}	í-İí-­„¶VVâr¢†¶VVä6öçG&öÄ7F–öâÓÓÒw&W7F'Brò}	ı]]}ı=¢„¶VVâr¢}	}ı=¢„¶VVâs°¢–æF–6F÷"æÆ7D6†–ÆBçFW‡D6öçFVçBÒG¶Æ&VÇÖ°¢Ğ§Ğ ¦gVæ7F–öâG&t¦÷W&æÂ‚“¢fö–B°¢6öç7B&öG’ÒFö7VÖVçBçVW'•6VÆV7F÷#Ä…DÔÄVÆVÖVçCâ‚r6¦÷W&æÂÖ&öG’r“°¢–b‚&öG’’&WGW&ã°¢6öç7Bf–Wu7FFRÒvWD¦÷W&æÅf–Wu7FFR‡²ÆöF–æs¢ÆötÆöF–ærÂ†4FF¢ÆötFFÓÒçVÆÂÂW'&÷#¢ÆötW'&÷"Â6ÆV&VC¢Æöt6ÆV&VBÒ“°¢–b‡f–Wu7FFRÓÓÒvÆöF–ær}|Û­m¢G§²ÚîÆ­yŞ Ğ¿Ğ¾Ñ€ÑĞ´ĞºÑƒ ÑĞ²ĞµÑ€Ñ…Ñƒ Ğ²Ğ½Ğ¸Ğ· Ğ¿Ñ€Ğ¸ Ğ½ĞµĞ´Ğ¾ÑÑ‚ÑƒĞ¿Ğ½Ğ¾ÑÑ‚Ğ¸ GitHub. ĞÑÑ‚Ğ°Ğ²ÑŒÑ‚Ğµ ÑĞ¿Ğ¸ÑĞ¾Ğº Ğ¿ÑƒÑÑ‚Ñ‹Ğ¼, Ñ‡Ñ‚Ğ¾Ğ±Ñ‹ Ğ·Ğ°Ğ³Ñ€ÑƒĞ¶Ğ°Ñ‚ÑŒ Ğ¾Ğ±Ğ½Ğ¾Ğ²Ğ»ĞµĞ½Ğ¸Ğµ Ğ½Ğ°Ğ¿Ñ€ÑĞ¼ÑƒÑ.</p><div id="github-proxy-list"><p class="settings-inline-note">Ğ—Ğ°Ğ³Ñ€ÑƒĞ¶Ğ°ĞµĞ¼ ÑĞ¾Ñ…Ñ€Ğ°Ğ½Ñ‘Ğ½Ğ½Ñ‹Ğ¹ ÑĞ¿Ğ¸ÑĞ¾Ğºâ€¦</p></div><div class="github-proxy-add-row"><input id="github-proxy-new" type="url" placeholder="https://proxy.example" autocomplete="url"><button class="editor-button" type="button" id="github-proxy-add">Ğ”Ğ¾Ğ±Ğ°Ğ²Ğ¸Ñ‚ÑŒ</button></div><div class="source-save-row"><span class="sources-feedback" id="github-proxy-feedback" aria-live="polite">Ğ¡Ğ¿Ğ¸ÑĞ¾Ğº Ñ…Ñ€Ğ°Ğ½Ğ¸Ñ‚ÑÑ Ğ½Ğ° Ñ€Ğ¾ÑƒÑ‚ĞµÑ€Ğµ.</span><button class="editor-button editor-button-primary" type="button" id="github-proxy-save">Ğ¡Ğ¾Ñ…Ñ€Ğ°Ğ½Ğ¸Ñ‚ÑŒ Ğ¿Ñ€Ğ¾ĞºÑĞ¸</button></div></section>`;
+import './fonts.css';
+import './country-flags.css';
+import './style.css';
+import './typography.css';
+import './connection-details.css';
+import './styled-select.css';
+import './ui-polish.css';
+import { enhanceStyledSelects, syncStyledSelects } from './styled-select';
+import { CONFIG_APPLY_EVENT, type ConfigApplyEventDetail } from './config-actions';
+import { createSettingsLoader, type SettingsLoader } from './settings-load';
+import { renderConnectionDetails } from './connection-details';
+import { applyActiveMihomoConfig, closeAllMihomoConnections, closeMihomoConnection, controlXkeen, getActiveMihomoConfig, getCoreSources, getHealth, getMihomoConnections, getMihomoProxyProviders, getMihomoSelectors, getMihomoVersion, getRouterDeviceList, getRouterDnsStatus, getStatus, getSystemLog, getUpdateProxies, getXkeenStatus, logUiError, pingMihomoGroup, pingMihomoProxy, queryMihomoDns, requestAppUpdate, saveCoreSources, saveUpdateProxies, selectMihomoProxy, setRouterDnsManagement, type ApiState, type CoreSources, type MihomoConnections, type MihomoDnsResult, type MihomoSelector, type RouterDnsStatus, type SystemLog, type XkeenStatus } from './api';
+import { applyPingResults, orderSelectorsByConfig, renderConnections, renderPingStatusIcon, renderSelectors } from './mihomo-view';
+import { patchDnsManagement, patchMihomoDnsSettings, readMihomoDnsSettings, renderDns, type MihomoDnsSettings } from './dns-view';
+import { fetchCoreReleases, isStableCompatibleRelease, openCoreReleaseDialog } from './core-releases';
+import { openCoreManagerDialog } from './core-manager';
+import { isNewerVersion, listAppReleases, type AppRelease } from './app-update';
+import { confirmInApp } from './confirm-dialog';
+import { bindDialogMotion, closeDialogWithMotion } from './dialog-motion';
+import { lifecycleFeedback } from './service-feedback';
+import { readUiPreferences, validPingUrl, writeUiPreferences, type UiPreferences } from './preferences';
+import { deduplicateRepeatedUiErrors, formatJournalMessage, formatJournalTimestamp, getJournalViewState, renderJournalLoadingSkeleton, splitJournalLevel, stripLogSourceLabel } from './journal-view-state';
+import { getJournalScrollTop, getNewJournalLines, hasJournalLinesChanged } from './journal-scroll';
+import { hideClearedJournalLines, rememberClearedJournal } from './journal-clear';
+import { journalExpandIcon, journalExpandLabel } from './journal-ui';
+import { renderAppReleaseActions, renderAppUpdateNotice, renderAppVersionChip } from './app-release-ui';
+import { SETTINGS_TABS, type SettingsTabId } from './settings-tabs';
+import { bindSelectorSortControl, renderSelectorSortControl } from './selector-sort-control';
+import { bindPingUrlControl, renderPingUrlControl } from './ping-url-control';
+import { SourceNameResolver } from './source-names';
+import { renderResourceMetrics } from './resource-metrics';
+import { shouldReportUiError } from './ui-error-dedupe';
+import { sortMihomoConnections, type ConnectionSort, type ConnectionSortKey } from './connection-sort';
+import { parseProxyProviders, renderProxyProviders, type ProxyProviderView } from './proxy-providers-view';
+
+type Page = 'selectors' | 'connections' | 'proxies' | 'configuration' | 'dns';
+
+const pages: { id: Page; label: string; icon: string }[] = [
+  { id: 'selectors', label: 'Ğ¡ĞµĞ»ĞµĞºÑ‚Ğ¾Ñ€Ñ‹', icon: 'â‡„' },
+  { id: 'connections', label: 'Ğ¡Ğ¾ĞµĞ´Ğ¸Ğ½ĞµĞ½Ğ¸Ñ', icon: 'âŒ' },
+  { id: 'proxies', label: 'ĞŸÑ€Ğ¾ĞºÑĞ¸', icon: 'â—ˆ' },
+  { id: 'configuration', label: 'ĞšĞ¾Ğ½Ñ„Ğ¸Ğ³ÑƒÑ€Ğ°Ñ†Ğ¸Ñ', icon: 'âŒ˜' },
+  { id: 'dns', label: 'DNS', icon: 'â—' },
+];
+
+const state: ApiState = { connected: false, status: null, error: null, checkedAt: null };
+type YamlEditorModule = typeof import('./yaml-editor');
+let yamlEditorModule: YamlEditorModule | null = null;
+let yamlEditorLoad: Promise<YamlEditorModule> | null = null;
+let activePage: Page = 'selectors';
+let animatePageEntry = false;
+let refreshTimer: number | undefined;
+let autoUpdateTimer: number | undefined;
+const updateNotices = new Set<string>();
+let requestController: AbortController | undefined;
+let mihomoController: AbortController | undefined;
+let selectors: MihomoSelector[] = [];
+let selectorsLoading = true;
+let selectorsError: string | null = null;
+let connections: MihomoConnections | null = null;
+let connectionSourceNames: Record<string, string> = {};
+let connectionSort: ConnectionSort = { key: 'start', direction: 'descending' };
+const sourceNameResolver = new SourceNameResolver(() => getRouterDeviceList());
+let connectionsLoading = true;
+let connectionsError: string | null = null;
+let proxyProviders: ProxyProviderView[] = [];
+let proxyProvidersLoading = false;
+let proxyProvidersError: string | null = null;
+let dnsResult: MihomoDnsResult | null = null;
+let dnsLoading = false;
+let dnsError: string | null = null;
+let dnsQueryName = '';
+let dnsQueryType = 'A';
+let dnsController: AbortController | undefined;
+let dnsManagementStatus: RouterDnsStatus | null = null;
+let dnsManagementLoading = false;
+let dnsManagementError: string | null = null;
+let dnsManagementBusy = false;
+let dnsManagementConfirm = false;
+let dnsConfig: { content: string; values: MihomoDnsSettings } | null = null;
+let dnsConfigLoading = false;
+let dnsConfigError: string | null = null;
+let dnsConfigBusy = false;
+let mihomoVersion: string | null = null;
+let xkeenStatus: XkeenStatus | null = null;
+let xkeenControlBusy = false;
+let configApplyBusy = false;
+let xkeenControlAction: 'start' | 'stop' | 'restart' | null = null;
+const logFiles = [
+  { id: 'xkeen-ui', label: 'error.log' },
+  { id: 'xray-access', label: 'access.log' },
+];
+let selectedLog = 'xkeen-ui';
+let logData: SystemLog | null = null;
+let logNewLines = new Set<string>();
+let logError: string | null = null;
+let logLoading = false;
+let logCleared = false;
+let logExpanded = false;
+let logFilter = '';
+let logController: AbortController | undefined;
+let logRefreshTimer: number | undefined;
+let logRefreshAfterCurrent = false;
+let appRelease: AppRelease | null = null;
+let appReleases: AppRelease[] = [];
+let appUpdateAvailable: AppRelease | null = null;
+let appUpdateNoticeDismissed = false;
+let appUpdateMessage = 'ĞŸĞ¾Ğ´Ğ³Ğ¾Ñ‚Ğ¾Ğ²ĞºĞ° Ğ¾Ğ±Ğ½Ğ¾Ğ²Ğ»ĞµĞ½Ğ¸Ñâ€¦';
+let appUpdateInstalling = false;
+let uiPreferences: UiPreferences = readUiPreferences();
+const proxyPingFailures = new Map<string, number>();
+const recentUiErrors = new Map<string, number>();
+
+function applyUiTheme(): void {
+  const theme = uiPreferences.theme;
+  document.documentElement.dataset.theme = theme;
+  document.documentElement.style.colorScheme = theme;
+}
+
+applyUiTheme();
+
+const app = document.querySelector<HTMLDivElement>('#app');
+if (!app) throw new Error('ĞšĞ¾Ñ€Ğ½ĞµĞ²Ğ¾Ğ¹ ÑĞ»ĞµĞ¼ĞµĞ½Ñ‚ Ğ¸Ğ½Ñ‚ĞµÑ€Ñ„ĞµĞ¹ÑĞ° #app Ğ½Ğµ Ğ½Ğ°Ğ¹Ğ´ĞµĞ½');
+const APP_VERSION = __APP_VERSION__;
+
+function escapeHtml(value: string): string {
+  return value.replace(/[&<>"']/g, (character) => {
+    const entities: Record<string, string> = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' };
+    return entities[character] ?? character;
+  });
+}
+
+function formatAppReleaseNotes(value: string): string {
+  return value.split(/\r?\n/).map((line) => {
+    const trimmed = line.trim();
+    if (!trimmed) return '<br>';
+    const heading = trimmed.match(/^#{1,4}\s+(.+)$/);
+    if (heading) return `<strong>${escapeHtml(heading[1] ?? '')}</strong>`;
+    if (/^[-*]\s+/.test(trimmed)) return `<span class="app-release-bullet">â€¢</span> ${escapeHtml(trimmed.replace(/^[-*]\s+/, '').replace(/`([^`]+)`/g, '$1'))}`;
+    return escapeHtml(trimmed.replace(/`([^`]+)`/g, '$1').replace(/\[([^\]]+)\]\((https?:\/\/[^)]+)\)/g, '$1 ($2)'));
+  }).join('<br>');
+}
+
+function renderHeader(): string {
+  const serviceBusy = xkeenControlBusy || configApplyBusy;
+  const status = state.status;
+  const service = status?.services.find((item) => item.name.toLowerCase() === 'mihomo');
+  const formatVersion = (version: string) => `v${escapeHtml(version.replace(/^v+/i, ''))}`;
+  const coreLabel = mihomoVersion ? formatVersion(mihomoVersion) : service ? (service.version ? formatVersion(service.version) : service.state === 'running' ? 'ĞĞºÑ‚Ğ¸Ğ²ĞµĞ½' : service.state === 'stopped' ? 'ĞÑÑ‚Ğ°Ğ½Ğ¾Ğ²Ğ»ĞµĞ½' : 'ĞĞµĞ´Ğ¾ÑÑ‚ÑƒĞ¿ĞµĞ½') : state.connected ? 'ĞĞµ Ğ¿Ñ€Ğ¾Ğ²ĞµÑ€ĞµĞ½' : 'ĞĞ¶Ğ¸Ğ´Ğ°Ğ½Ğ¸Ğµ';
+  const serviceText = serviceBusy
+    ? `${xkeenControlAction === 'stop' ? 'ĞÑÑ‚Ğ°Ğ½Ğ¾Ğ²ĞºĞ°' : xkeenControlAction === 'start' ? 'Ğ—Ğ°Ğ¿ÑƒÑĞº' : 'ĞŸĞµÑ€ĞµĞ·Ğ°Ğ¿ÑƒÑĞº'} XKeenâ€¦`
+    : status?.mode === 'router'
+      ? xkeenStatus?.installed
+        ? xkeenStatus.running === true ? 'XKeen Ğ·Ğ°Ğ¿ÑƒÑ‰ĞµĞ½' : xkeenStatus.running === false ? 'XKeen Ğ¾ÑÑ‚Ğ°Ğ½Ğ¾Ğ²Ğ»ĞµĞ½' : 'Ğ¡Ñ‚Ğ°Ñ‚ÑƒÑ XKeen Ğ½ĞµĞ´Ğ¾ÑÑ‚ÑƒĞ¿ĞµĞ½'
+        : 'XKeen Ğ½Ğµ Ğ½Ğ°Ğ¹Ğ´ĞµĞ½'
+      : service ? (service.state === 'running' ? 'Ğ¡ĞµÑ€Ğ²Ğ¸Ñ Ğ·Ğ°Ğ¿ÑƒÑ‰ĞµĞ½' : service.state === 'stopped' ? 'Ğ¡ĞµÑ€Ğ²Ğ¸Ñ Ğ¾ÑÑ‚Ğ°Ğ½Ğ¾Ğ²Ğ»ĞµĞ½' : 'Ğ¡Ñ‚Ğ°Ñ‚ÑƒÑ Ğ½ĞµĞ´Ğ¾ÑÑ‚ÑƒĞ¿ĞµĞ½') : 'Ğ¡Ğ¾ÑÑ‚Ğ¾ÑĞ½Ğ¸Ğµ Ğ·Ğ°Ğ³Ñ€ÑƒĞ¶Ğ°ĞµÑ‚ÑÑ';
+  const resourceMetrics = renderResourceMetrics(status?.memory ?? null, status?.cpuPercent ?? null);
+  const canControl = status?.mode === 'router' && Boolean(xkeenStatus?.installed);
+  const controls = canControl
+    ? `${xkeenStatus?.running === false
+      ? `<button class="header-service-action" data-xkeen-action="start" type="button" title="Ğ—Ğ°Ğ¿ÑƒÑÑ‚Ğ¸Ñ‚ÑŒ XKeen" aria-label="Ğ—Ğ°Ğ¿ÑƒÑÑ‚Ğ¸Ñ‚ÑŒ XKeen" ${serviceBusy ? 'disabled' : ''}>${serviceBusy && xkeenControlAction === 'start' ? '<span class="service-control-spinner" aria-hidden="true"></span>' : 'â–¶'}</button>`
+      : `<button class="header-service-action header-service-restart" data-xkeen-action="restart" type="button" title="ĞŸĞµÑ€ĞµĞ·Ğ°Ğ¿ÑƒÑÑ‚Ğ¸Ñ‚ÑŒ XKeen" aria-label="ĞŸĞµÑ€ĞµĞ·Ğ°Ğ¿ÑƒÑÑ‚Ğ¸Ñ‚ÑŒ XKeen" ${serviceBusy ? 'disabled' : ''}>${configApplyBusy || (xkeenControlBusy && xkeenControlAction === 'restart') ? '<span class="service-control-spinner" aria-hidden="true"></span>' : '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 7v5h-5M4.9 9a7.5 7.5 0 0 1 12.4-2L20 12M4 17v-5h5m10.1 3a7.5 7.5 0 0 1-12.4 2L4 12"/></svg>'}</button><button class="header-service-action header-service-stop" data-xkeen-action="stop" type="button" title="ĞÑÑ‚Ğ°Ğ½Ğ¾Ğ²Ğ¸Ñ‚ÑŒ XKeen" aria-label="ĞÑÑ‚Ğ°Ğ½Ğ¾Ğ²Ğ¸Ñ‚ÑŒ XKeen" ${serviceBusy || xkeenStatus?.running !== true ? 'disabled' : ''}>${serviceBusy && xkeenControlAction === 'stop' ? '<span class="service-control-spinner" aria-hidden="true"></span>' : '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="6" y="6" width="12" height="12" rx="2"/></svg>'}</button>`}`
+    : '';
+  return `<header class="topbar">
+    <div class="top-status-cluster ${serviceBusy ? 'is-xkeen-busy' : ''}"><div class="top-status" aria-label="Ğ¡Ğ¾ÑÑ‚Ğ¾ÑĞ½Ğ¸Ğµ XKeen" aria-live="polite"><span id="status-led" class="connection-led ${state.connected ? 'is-online' : 'is-offline'}"></span><span><strong id="service-label">${escapeHtml(serviceText)}</strong><small id="service-summary">${state.connected ? resourceMetrics : 'ĞĞ¶Ğ¸Ğ´Ğ°Ğ½Ğ¸Ğµ ÑĞ¾ĞµĞ´Ğ¸Ğ½ĞµĞ½Ğ¸Ñ Ñ backend'}</small></span></div><div class="header-service-controls" aria-label="Ğ£Ğ¿Ñ€Ğ°Ğ²Ğ»ĞµĞ½Ğ¸Ğµ XKeen" aria-busy="${serviceBusy}">${controls}</div></div>
+    <a class="brand" href="#selectors" aria-label="XKeen UI, ÑĞµĞ»ĞµĞºÑ‚Ğ¾Ñ€Ñ‹"><span>XKeen <b>UI</b></span></a>
+    <div class="top-actions"><button class="version-chip core-chip core-version-button" id="core-version" type="button" title="Ğ£Ğ¿Ñ€Ğ°Ğ²Ğ»ĞµĞ½Ğ¸Ğµ ÑĞ´Ñ€Ğ°Ğ¼Ğ¸" aria-label="Ğ£Ğ¿Ñ€Ğ°Ğ²Ğ»ĞµĞ½Ğ¸Ğµ ÑĞ´Ñ€Ğ°Ğ¼Ğ¸"><span class="chip-icon">â—ˆ</span> Mihomo <b id="core-version-label">${coreLabel}</b><span class="chip-chevron" aria-hidden="true">âŒ„</span></button>${renderAppVersionChip(status?.appVersion ?? APP_VERSION, Boolean(appUpdateAvailable))}<button class="icon-button" id="settings" title="ĞĞ°ÑÑ‚Ñ€Ğ¾Ğ¹ĞºĞ¸" aria-label="ĞĞ°ÑÑ‚Ñ€Ğ¾Ğ¹ĞºĞ¸">âš™</button></div>
+  </header>`;
+}
+
+function renderNavigation(): string {
+  const fileButtons = activePage === 'configuration' ? renderConfigFileButtons() : '';
+  return `<nav class="navigation ${activePage === 'configuration' ? 'navigation-config' : ''}" aria-label="Ğ Ğ°Ğ·Ğ´ĞµĞ»Ñ‹ Ğ¿Ğ°Ğ½ĞµĞ»Ğ¸">${pages.map((page) => `<button class="nav-item ${activePage === page.id ? 'active' : ''}" data-page="${page.id}" ${activePage === page.id ? 'aria-current="page"' : ''}><span class="nav-icon">${page.icon}</span>${page.label}</button>`).join('')}<span class="navigation-spacer"></span>${fileButtons}</nav>`;
+}
+
+function renderConfigFileButtons(): string {
+  const xray = xkeenStatus?.core === 'xray';
+  const xrayFiles = ['xray_log', 'xray_inbounds', 'xray_json', 'xray_routing', 'xray_policy'];
+  const ids = [...(xray ? xrayFiles : ['config']), 'ip_exclude', 'port_exclude', 'port_proxying', 'xkeen'];
+  const defaultFile = xray ? 'xray_json' : 'config';
+  const savedFile = sessionStorage.getItem('xkeen-ui:draft-active-file');
+  const activeFile = xray
+    ? savedFile === 'xray_jsonc' ? 'xray_routing' : xrayFiles.includes(savedFile ?? '') ? savedFile : defaultFile
+    : ids.includes(savedFile ?? '') ? savedFile : defaultFile;
+  const labels: Record<string, string> = { config: 'config', xray_json: 'outbounds', xray_log: 'log', xray_inbounds: 'inbounds', xray_policy: 'policy', ip_exclude: 'ip_exclude', port_exclude: 'port_exclude', port_proxying: 'port_proxying', xkeen: 'xkeen', xray_routing: 'routing' };
+  const descriptions: Record<string, string> = {
+    config: 'ĞÑĞ½Ğ¾Ğ²Ğ½Ğ¾Ğ¹ ĞºĞ¾Ğ½Ñ„Ğ¸Ğ³ Mihomo', xray_log: 'ĞĞ°ÑÑ‚Ñ€Ğ¾Ğ¹ĞºĞ¸ Ğ¶ÑƒÑ€Ğ½Ğ°Ğ»Ğ° Xray', xray_inbounds: 'Ğ’Ñ…Ğ¾Ğ´ÑÑ‰Ğ¸Ğµ Ğ¿Ğ¾Ğ´ĞºĞ»ÑÑ‡ĞµĞ½Ğ¸Ñ Xray', xray_json: 'Ğ˜ÑÑ…Ğ¾Ğ´ÑÑ‰Ğ¸Ğµ Ğ¿Ğ¾Ğ´ĞºĞ»ÑÑ‡ĞµĞ½Ğ¸Ñ Xray', xray_routing: 'ĞŸÑ€Ğ°Ğ²Ğ¸Ğ»Ğ° Ğ¼Ğ°Ñ€ÑˆÑ€ÑƒÑ‚Ğ¸Ğ·Ğ°Ñ†Ğ¸Ğ¸ Xray', xray_policy: 'ĞŸĞ¾Ğ»Ğ¸Ñ‚Ğ¸ĞºĞ¸ Xray',
+    ip_exclude: 'IP-Ğ°Ğ´Ñ€ĞµÑĞ° Ğ¸ Ğ¿Ğ¾Ğ´ÑĞµÑ‚Ğ¸ Ğ²Ğ½Ğµ Ğ¾Ğ±Ñ€Ğ°Ğ±Ğ¾Ñ‚ĞºĞ¸ XKeen', port_exclude: 'ĞŸĞ¾Ñ€Ñ‚Ñ‹, Ğ¸ÑĞºĞ»ÑÑ‡Ñ‘Ğ½Ğ½Ñ‹Ğµ Ğ¸Ğ· Ğ¾Ğ±Ñ€Ğ°Ğ±Ğ¾Ñ‚ĞºĞ¸ XKeen',
+    port_proxying: 'ĞŸĞ¾Ñ€Ñ‚Ñ‹, Ğ½Ğ°Ğ¿Ñ€Ğ°Ğ²Ğ»ÑĞµĞ¼Ñ‹Ğµ Ñ‡ĞµÑ€ĞµĞ· Ğ¿Ñ€Ğ¾ĞºÑĞ¸', xkeen: 'ĞŸĞ°Ñ€Ğ°Ğ¼ĞµÑ‚Ñ€Ñ‹ Ğ·Ğ°Ğ¿ÑƒÑĞºĞ° Ğ¸ Ğ¼Ğ°Ñ€ÑˆÑ€ÑƒÑ‚Ğ¸Ğ·Ğ°Ñ†Ğ¸Ğ¸ XKeen',
+  };
+  return `<div class="config-file-nav" aria-label="Ğ¤Ğ°Ğ¹Ğ»Ñ‹ ĞºĞ¾Ğ½Ñ„Ğ¸Ğ³ÑƒÑ€Ğ°Ñ†Ğ¸Ğ¸">${ids.map((id) => {
+    const fileId = id;
+    const selected = fileId === activeFile;
+    return `<button class="config-file-tab ${selected ? 'selected' : ''}" data-config-file="${fileId}" type="button" title="${descriptions[fileId] ?? descriptions[id] ?? id}" aria-label="${labels[id] ?? id}: ${descriptions[fileId] ?? descriptions[id] ?? id}" aria-pressed="${selected}">${labels[id] ?? id}</button>`;
+  }).join('')}</div>`;
+}
+
+function renderComingSoon(page: Page): string {
+  const current = pages.find((item) => item.id === page);
+  if (page === 'configuration') return renderConfiguration();
+  const descriptions: Record<Page, string> = {
+    selectors: 'ĞŸĞ¾Ğ´ĞºĞ»ÑÑ‡Ğ¸Ñ‚Ğµ Ğ¿Ñ€Ğ¾Ğ²ĞµÑ€ĞµĞ½Ğ½Ñ‹Ğ¹ Mihomo API, Ñ‡Ñ‚Ğ¾Ğ±Ñ‹ Ğ¿Ğ¾ĞºĞ°Ğ·Ñ‹Ğ²Ğ°Ñ‚ÑŒ Ñ„Ğ°ĞºÑ‚Ğ¸Ñ‡ĞµÑĞºĞ¸Ğµ Ğ³Ñ€ÑƒĞ¿Ğ¿Ñ‹, ÑƒĞ·Ğ»Ñ‹ Ğ¸ Ğ²Ñ‹Ğ±Ñ€Ğ°Ğ½Ğ½Ñ‹Ğµ Ğ·Ğ½Ğ°Ñ‡ĞµĞ½Ğ¸Ñ.',
+    connections: 'Ğ—Ğ´ĞµÑÑŒ Ğ¿Ğ¾ÑĞ²ÑÑ‚ÑÑ ÑĞ¾ĞµĞ´Ğ¸Ğ½ĞµĞ½Ğ¸Ñ, Ğ¸ÑÑ‚Ğ¾Ñ‡Ğ½Ğ¸ĞºĞ¸, Ñ†ĞµĞ¿Ğ¾Ñ‡ĞºĞ¸ Ğ¿Ñ€Ğ¾ĞºÑĞ¸ Ğ¸ Ğ¾Ğ±ÑŠÑ‘Ğ¼Ñ‹ Ñ‚Ñ€Ğ°Ñ„Ğ¸ĞºĞ° Ğ¸Ğ· runtime API ÑĞ´Ñ€Ğ°.',
+    proxies: 'ĞŸĞ¾Ğ´Ğ¿Ğ¸ÑĞºĞ¸ Ğ¸ ÑƒĞ·Ğ»Ñ‹, Ğ¿Ñ€ĞµĞ´Ğ¾ÑÑ‚Ğ°Ğ²Ğ»ĞµĞ½Ğ½Ñ‹Ğµ Ñ‚ĞµĞºÑƒÑ‰ĞµĞ¹ ĞºĞ¾Ğ½Ñ„Ğ¸Ğ³ÑƒÑ€Ğ°Ñ†Ğ¸ĞµĞ¹ Mihomo.',
+    dns: 'Ğ£Ğ¿Ñ€Ğ°Ğ²Ğ»ĞµĞ½Ğ¸Ğµ DNS Ğ±ÑƒĞ´ĞµÑ‚ Ñ€Ğ°Ğ·Ğ´ĞµĞ»ÑŒĞ½Ñ‹Ğ¼ Ğ´Ğ»Ñ Mihomo Ğ¸ Xray, Ñ Ğ¿Ñ€Ğ¾Ğ²ĞµÑ€ĞºĞ¾Ğ¹ ĞºĞ¾Ğ½Ñ„Ğ¸Ğ³ÑƒÑ€Ğ°Ñ†Ğ¸Ğ¸ Ğ¸ Ğ±ĞµĞ·Ğ¾Ğ¿Ğ°ÑĞ½Ñ‹Ğ¼ Ğ¿Ñ€Ğ¸Ğ¼ĞµĞ½ĞµĞ½Ğ¸ĞµĞ¼.',
+    configuration: 'Ğ ĞµĞ´Ğ°ĞºÑ‚Ğ¾Ñ€ Ğ¿Ñ€Ğ¾Ñ„Ğ¸Ğ»ĞµĞ¹ Ğ¿Ğ¾ÑĞ²Ğ¸Ñ‚ÑÑ Ğ¿Ğ¾ÑĞ»Ğµ Ğ¿Ğ¾Ğ´ĞºĞ»ÑÑ‡ĞµĞ½Ğ¸Ñ YAML/JSON Ğ²Ğ°Ğ»Ğ¸Ğ´Ğ°Ñ‚Ğ¾Ñ€Ğ¾Ğ² Ğ¸ ÑÑ†ĞµĞ½Ğ°Ñ€Ğ¸Ñ Ñ€ĞµĞ·ĞµÑ€Ğ²Ğ½Ğ¾Ğ³Ğ¾ ĞºĞ¾Ğ¿Ğ¸Ñ€Ğ¾Ğ²Ğ°Ğ½Ğ¸Ñ.',
+  };
+  return `<section class="page-heading"><div><div class="eyebrow"><span class="eyebrow-line"></span> XKeen UI</div><h1>${current?.label ?? ''}</h1><p>${descriptions[page]}</p></div></section><section class="feature-placeholder"><div class="placeholder-symbol">${current?.icon ?? 'â—Œ'}</div><div class="placeholder-copy"><span class="status-label">Ğ˜ĞĞ¢Ğ•Ğ“Ğ ĞĞ¦Ğ˜Ğ¯ Ğ¯Ğ”Ğ Ğ</span><h2>Ğ”Ğ»Ñ ÑÑ‚Ğ¾Ğ³Ğ¾ Ñ€Ğ°Ğ·Ğ´ĞµĞ»Ğ° ĞµÑ‰Ñ‘ Ğ½Ğµ Ğ¿Ğ¾Ğ´ĞºĞ»ÑÑ‡Ñ‘Ğ½ Ğ¿Ñ€Ğ¾Ğ²ĞµÑ€ĞµĞ½Ğ½Ñ‹Ğ¹ API</h2><p>${descriptions[page]}</p><p class="placeholder-note">Ğ”Ğ°Ğ½Ğ½Ñ‹Ğµ Ğ¿Ğ¾ÑĞ²ÑÑ‚ÑÑ Ğ¿Ğ¾ÑĞ»Ğµ Ğ¿Ğ¾Ğ´ĞºĞ»ÑÑ‡ĞµĞ½Ğ¸Ñ Ğ¿Ğ¾Ğ´Ñ‚Ğ²ĞµÑ€Ğ¶Ğ´Ñ‘Ğ½Ğ½Ğ¾Ğ³Ğ¾ ÑĞ¸ÑÑ‚ĞµĞ¼Ğ½Ğ¾Ğ³Ğ¾ Ğ¸ÑÑ‚Ğ¾Ñ‡Ğ½Ğ¸ĞºĞ°.</p></div></section>`;
+}
+
+function renderConfiguration(): string {
+  return `<section class="editor-workspace config-layout" aria-label="Ğ ĞµĞ´Ğ°ĞºÑ‚Ğ¾Ñ€ ĞºĞ¾Ğ½Ñ„Ğ¸Ğ³ÑƒÑ€Ğ°Ñ†Ğ¸Ğ¸">
+    <div class="config-editor-main">
+      <div class="code-editor-shell"><div class="editor-view-hint" id="editor-view-hint">ĞŸÑ€Ğ¾ÑĞ¼Ğ¾Ñ‚Ñ€ Â· Ğ½Ğ°Ğ¶Ğ¼Ğ¸Ñ‚Ğµ Ğ½Ğ° Ğ¿Ğ¾Ğ»Ğµ, Ñ‡Ñ‚Ğ¾Ğ±Ñ‹ Ñ€ĞµĞ´Ğ°ĞºÑ‚Ğ¸Ñ€Ğ¾Ğ²Ğ°Ñ‚ÑŒ</div><div class="code-editor" id="yaml-editor" aria-label="Ğ¢ĞµĞºÑÑ‚ ĞºĞ¾Ğ½Ñ„Ğ¸Ğ³ÑƒÑ€Ğ°Ñ†Ğ¸Ğ¸"></div></div>
+        <div class="editor-statusbar"><span id="yaml-validation" class="editor-validation" aria-live="polite">ĞŸÑ€Ğ¾Ğ²ĞµÑ€ĞºĞ° ĞºĞ¾Ğ½Ñ„Ğ¸Ğ³ÑƒÑ€Ğ°Ñ†Ğ¸Ğ¸â€¦</span><div class="editor-actions"><button class="editor-button" id="config-save-active" type="button" data-router-file disabled title="Ğ¡Ğ¾Ñ…Ñ€Ğ°Ğ½Ğ¸Ñ‚ÑŒ Ñ„Ğ°Ğ¹Ğ» Ğ½Ğ° Ñ€Ğ¾ÑƒÑ‚ĞµÑ€Ğµ Ğ±ĞµĞ· Ğ¿Ñ€Ğ¸Ğ¼ĞµĞ½ĞµĞ½Ğ¸Ñ">Ğ¡Ğ¾Ñ…Ñ€Ğ°Ğ½Ğ¸Ñ‚ÑŒ</button><button class="editor-button editor-button-primary" id="config-apply-active" type="button" data-router-file disabled title="ĞŸÑ€Ğ¾Ğ²ĞµÑ€Ğ¸Ñ‚ÑŒ, ÑĞ¾Ñ…Ñ€Ğ°Ğ½Ğ¸Ñ‚ÑŒ Ğ¸ Ğ¿ĞµÑ€ĞµĞ·Ğ°Ğ¿ÑƒÑÑ‚Ğ¸Ñ‚ÑŒ Ğ°ĞºÑ‚Ğ¸Ğ²Ğ½Ğ¾Ğµ ÑĞ´Ñ€Ğ¾">ĞŸÑ€Ğ¸Ğ¼ĞµĞ½Ğ¸Ñ‚ÑŒ</button><details class="editor-utilities"><summary class="editor-button"><span class="utilities-trigger-icon" aria-hidden="true">â€¢â€¢â€¢</span><span>Ğ£Ñ‚Ğ¸Ğ»Ğ¸Ñ‚Ñ‹</span><span class="utilities-chevron" aria-hidden="true"></span></summary><div class="editor-utilities-menu" role="menu" aria-label="Ğ£Ñ‚Ğ¸Ğ»Ğ¸Ñ‚Ñ‹ ĞºĞ¾Ğ½Ñ„Ğ¸Ğ³ÑƒÑ€Ğ°Ñ†Ğ¸Ğ¸"><button type="button" role="menuitem" id="yaml-add-proxy" data-mihomo-only><span class="utility-icon" aria-hidden="true">â†—</span><span>Ğ”Ğ¾Ğ±Ğ°Ğ²Ğ¸Ñ‚ÑŒ Ğ¿Ñ€Ğ¾ĞºÑĞ¸</span></button><button type="button" role="menuitem" id="yaml-template" data-structured-only><span class="utility-icon" aria-hidden="true">â–¤</span><span>Ğ¨Ğ°Ğ±Ğ»Ğ¾Ğ½ ĞºĞ¾Ğ½Ñ„Ğ¸Ğ³ÑƒÑ€Ğ°Ñ†Ğ¸Ğ¸</span></button><button type="button" role="menuitem" id="yaml-backups" data-mihomo-only><span class="utility-icon" aria-hidden="true">â—·</span><span>Ğ ĞµĞ·ĞµÑ€Ğ²Ğ½Ñ‹Ğµ ĞºĞ¾Ğ¿Ğ¸Ğ¸</span></button></div></details></div></div>
+    </div>
+  </section>`;
+}
+
+function renderJournal(): string {
+  const expandLabel = journalExpandLabel(logExpanded);
+  const clearIcon = '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h16M10 11v6m4-6v6M6 7l1 14h10l1-14M9 7V4h6v3"/></svg>';
+  return `<section class="journal-panel ${logExpanded ? 'is-expanded' : ''}" aria-label="Ğ–ÑƒÑ€Ğ½Ğ°Ğ» ÑĞ¾Ğ±Ñ‹Ñ‚Ğ¸Ğ¹"><header class="journal-heading"><div class="journal-title"><h2>Ğ–ÑƒÑ€Ğ½Ğ°Ğ»</h2><span id="journal-live" class="journal-live" ${xkeenControlBusy || configApplyBusy ? '' : 'hidden'}><i aria-hidden="true"></i> XKeen Ğ·Ğ°Ğ¿ÑƒÑĞºĞ°ĞµÑ‚ÑÑ</span></div><div class="journal-tools"><label class="journal-filter"><span aria-hidden="true">âŒ•</span><input id="journal-filter" type="search" placeholder="Ğ¤Ğ¸Ğ»ÑŒÑ‚Ñ€" aria-label="Ğ¤Ğ¸Ğ»ÑŒÑ‚Ñ€ Ğ¶ÑƒÑ€Ğ½Ğ°Ğ»Ğ°" value="${escapeHtml(logFilter)}"></label><select id="journal-file" aria-label="Ğ¤Ğ°Ğ¹Ğ» Ğ¶ÑƒÑ€Ğ½Ğ°Ğ»Ğ°">${logFiles.map((file) => `<option value="${file.id}" ${selectedLog === file.id ? 'selected' : ''}>${file.label}</option>`).join('')}</select><button class="journal-icon-button journal-clear-button" id="journal-clear" type="button" title="ĞÑ‡Ğ¸ÑÑ‚Ğ¸Ñ‚ÑŒ Ğ¶ÑƒÑ€Ğ½Ğ°Ğ» Ğ² ÑÑ‚Ğ¾Ğ¼ Ğ±Ñ€Ğ°ÑƒĞ·ĞµÑ€Ğµ" aria-label="ĞÑ‡Ğ¸ÑÑ‚Ğ¸Ñ‚ÑŒ Ğ¶ÑƒÑ€Ğ½Ğ°Ğ»">${clearIcon}</button><button class="journal-icon-button journal-expand-button" id="journal-expand" type="button" title="${expandLabel}" aria-label="${expandLabel}" aria-pressed="${logExpanded}">${journalExpandIcon(logExpanded)}</button></div></header><div class="journal-body" id="journal-body" aria-live="off"></div><span class="sr-only" id="journal-announcement" role="status" aria-live="polite"></span></section>`;
+}
+
+function setJournalRealtime(active: boolean): void {
+  const indicator = document.querySelector<HTMLElement>('#journal-live');
+  if (indicator) {
+    indicator.hidden = !active;
+    const label = configApplyBusy ? 'ĞŸĞµÑ€ĞµĞ·Ğ°Ğ¿ÑƒÑĞº ÑĞ´Ñ€Ğ°' : xkeenControlAction === 'stop' ? 'ĞÑÑ‚Ğ°Ğ½Ğ¾Ğ²ĞºĞ° XKeen' : xkeenControlAction === 'restart' ? 'ĞŸĞµÑ€ĞµĞ·Ğ°Ğ¿ÑƒÑĞº XKeen' : 'Ğ—Ğ°Ğ¿ÑƒÑĞº XKeen';
+    indicator.lastChild!.textContent = ` ${label}`;
+  }
+}
+
+function drawJournal(): void {
+  const body = document.querySelector<HTMLElement>('#journal-body');
+  if (!body) return;
+  const viewState = getJournalViewState({ loading: logLoading, hasData: logData !== null, error: logError, cleared: logCleared });
+  if (viewState === 'loading') {
+    body.innerHTML = renderJournalLoadingSkeleton();
+    return;
+  }
+  if (viewState === 'error') {
+    body.innerHTML = `<div class="journal-empty"><span class="journal-empty-icon">!</span><strong>Ğ–ÑƒÑ€Ğ½Ğ°Ğ» Ğ½ĞµĞ´Ğ¾ÑÑ‚ÑƒĞ¿ĞµĞ½</strong><p>${escapeHtml(logError ?? 'ĞĞµ ÑƒĞ´Ğ°Ğ»Ğ¾ÑÑŒ Ğ·Ğ°Ğ³Ñ€ÑƒĞ·Ğ¸Ñ‚ÑŒ Ğ¶ÑƒÑ€Ğ½Ğ°Ğ»')}</p></div>`;
+    return;
+  }
+  if (viewState === 'cleared') {
+    body.innerHTML = '<div class="journal-empty"><span class="journal-empty-icon">âœ“</span><strong>ĞÑ‚Ğ¾Ğ±Ñ€Ğ°Ğ¶ĞµĞ½Ğ¸Ğµ Ğ¾Ñ‡Ğ¸Ñ‰ĞµĞ½Ğ¾</strong></div>';
+    return;
+  }
+  const filter = logFilter.trim().toLocaleLowerCase();
+  const lines = deduplicateRepeatedUiErrors(logData?.lines ?? []).filter((line) => {
+    return !filter || line.toLocaleLowerCase().includes(filter);
+  });
+  const previousList = body.querySelector<HTMLElement>('.journal-lines');
+  const previousScroll = previousList ? {
+    scrollTop: previousList.scrollTop,
+    clientHeight: previousList.clientHeight,
+    scrollHeight: previousList.scrollHeight,
+  } : null;
+  const list = document.createElement('div');
+  list.className = 'journal-lines';
+  for (const line of lines) {
+    const displayLine = stripLogSourceLabel(line);
+    const row = document.createElement('div');
+    row.className = 'journal-line';
+    if (logNewLines.has(line)) {
+      row.classList.add('journal-line-new');
+      logNewLines.delete(line);
+    }
+    const parsed = formatJournalTimestamp(displayLine, uiPreferences.journalTimeZone);
+    const severity = splitJournalLevel(parsed?.message ?? displayLine, displayLine);
+    row.dataset.level = severity.level === 'ERROR' || severity.level === 'FATAL' ? 'error'
+      : severity.level === 'WARN' || severity.level === 'WARNING' ? 'warning'
+        : severity.level === 'DEBUG' ? 'debug' : 'info';
+    const timestamp = document.createElement('time');
+    timestamp.className = 'journal-timestamp';
+    timestamp.hidden = !parsed;
+    timestamp.textContent = parsed?.timestamp ?? '';
+    if (parsed) timestamp.dateTime = displayLine.match(/^(?:time=")?\[?(\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d{1,9})?(?:Z|[+-]\d{2}:\d{2}))/)?.[1] ?? '';
+    if (severity.level) {
+      const badge = document.createElement('span');
+      badge.className = 'journal-level-badge';
+      badge.textContent = severity.level;
+      row.append(timestamp, badge);
+    } else row.append(timestamp);
+    const message = document.createElement('code');
+    for (const segment of formatJournalMessage(severity.message)) {
+      if (!segment.tone) {
+        message.append(document.createTextNode(segment.text));
+        continue;
+      }
+      const highlight = document.createElement('span');
+      highlight.className = `journal-message-${segment.tone}`;
+      highlight.textContent = segment.text;
+      message.append(highlight);
+    }
+    row.append(message);
+    list.append(row);
+  }
+  body.replaceChildren();
+  if (logData?.truncated) {
+    const note = document.createElement('p');
+    note.className = 'journal-truncated';
+    note.textContent = 'ĞŸĞ¾ĞºĞ°Ğ·Ğ°Ğ½ Ğ¾Ğ³Ñ€Ğ°Ğ½Ğ¸Ñ‡ĞµĞ½Ğ½Ñ‹Ğ¹ Ñ…Ğ²Ğ¾ÑÑ‚ Ñ„Ğ°Ğ¹Ğ»Ğ° Ğ¶ÑƒÑ€Ğ½Ğ°Ğ»Ğ°.';
+    body.append(note);
+  }
+  if (!lines.length) {
+    const empty = document.createElement('div');
+    empty.className = 'journal-empty';
+    const icon = document.createElement('span');
+    icon.className = 'journal-empty-icon';
+    icon.textContent = 'â–¤';
+    const title = document.createElement('strong');
+    title.textContent = filter ? 'Ğ¡Ğ¾Ğ²Ğ¿Ğ°Ğ´ĞµĞ½Ğ¸Ğ¹ Ğ½ĞµÑ‚' : 'Ğ’ Ğ²Ñ‹Ğ±Ñ€Ğ°Ğ½Ğ½Ğ¾Ğ¼ Ğ¶ÑƒÑ€Ğ½Ğ°Ğ»Ğµ Ğ¿Ğ¾ĞºĞ° Ğ½ĞµÑ‚ Ğ·Ğ°Ğ¿Ğ¸ÑĞµĞ¹';
+    const file = document.createElement('p');
+    file.textContent = logData?.file ?? 'ĞĞ¶Ğ¸Ğ´Ğ°ĞµÑ‚ÑÑ Ğ¾Ñ‚Ğ²ĞµÑ‚ backend';
+    empty.append(icon, title, file);
+    body.append(empty);
+  } else {
+    body.append(list);
+    list.scrollTop = getJournalScrollTop(previousScroll, list.scrollHeight, list.clientHeight);
+  }
+}
+
+async function loadSystemLog(): Promise<void> {
+  if (logLoading) return;
+  logController?.abort();
+  const controller = new AbortController();
+  logController = controller;
+  logLoading = true;
+  let shouldRedraw = !logData;
+  if (!logData) drawJournal();
+  try {
+    const previousLog = logData;
+    const previousLines = previousLog?.lines ?? null;
+    const fetchedLog = await getSystemLog(selectedLog, AbortSignal.any([controller.signal, AbortSignal.timeout(12_000)]));
+    const nextLog = { ...fetchedLog, lines: hideClearedJournalLines(selectedLog, fetchedLog.lines) };
+    shouldRedraw = hasJournalLinesChanged(previousLines, nextLog.lines)
+      || previousLog?.file !== nextLog.file
+      || previousLog?.truncated !== nextLog.truncated;
+    logNewLines = new Set(previousLines ? getNewJournalLines(previousLines, nextLog.lines) : []);
+    logData = nextLog;
+    if (nextLog.lines.length > 0) logCleared = false;
+    logError = null;
+  } catch (error) {
+    if (error instanceof DOMException && error.name === 'AbortError') return;
+    if (!logData) logError = error instanceof Error ? error.message : 'ĞĞµ ÑƒĞ´Ğ°Ğ»Ğ¾ÑÑŒ Ğ·Ğ°Ğ³Ñ€ÑƒĞ·Ğ¸Ñ‚ÑŒ Ğ¶ÑƒÑ€Ğ½Ğ°Ğ»';
+  } finally {
+    if (logController === controller) {
+      logLoading = false;
+      if (shouldRedraw || !logData) drawJournal();
+      if (logRefreshAfterCurrent) {
+        logRefreshAfterCurrent = false;
+        window.setTimeout(() => void loadSystemLog(), 0);
+      }
+    }
+  }
+}
+
+function bindJournal(): void {
+  const fileSelect = document.querySelector<HTMLSelectElement>('#journal-file');
+  fileSelect?.addEventListener('change', () => {
+    selectedLog = fileSelect.value;
+    logController?.abort();
+    logLoading = false;
+    logData = null;
+    logError = null;
+    logCleared = false;
+    void loadSystemLog();
+  });
+  document.querySelector<HTMLInputElement>('#journal-filter')?.addEventListener('input', (event) => {
+    logFilter = (event.currentTarget as HTMLInputElement).value;
+    drawJournal();
+  });
+  document.querySelector<HTMLButtonElement>('#journal-clear')?.addEventListener('click', () => {
+    if (logData) rememberClearedJournal(selectedLog, logData.lines);
+    logCleared = true;
+    if (logData) logData = { ...logData, lines: [] };
+    drawJournal();
+  });
+  document.querySelector<HTMLButtonElement>('#journal-expand')?.addEventListener('click', () => {
+    logExpanded = !logExpanded;
+    document.querySelector('.journal-panel')?.classList.toggle('is-expanded', logExpanded);
+    const button = document.querySelector<HTMLButtonElement>('#journal-expand');
+    if (button) {
+      button.setAttribute('aria-pressed', String(logExpanded));
+      const label = journalExpandLabel(logExpanded);
+      button.setAttribute('aria-label', label);
+      button.title = label;
+      button.innerHTML = journalExpandIcon(logExpanded);
+    }
+  });
+  drawJournal();
+  if (!logData && !logError && !logLoading) void loadSystemLog();
+}
+
+document.addEventListener('keydown', (event) => {
+  if (event.key !== 'Escape' || !logExpanded) return;
+  logExpanded = false;
+  document.querySelector('.journal-panel')?.classList.remove('is-expanded');
+  const button = document.querySelector<HTMLButtonElement>('#journal-expand');
+  if (button) {
+    const label = journalExpandLabel(false);
+    button.setAttribute('aria-label', label);
+    button.title = label;
+    button.setAttribute('aria-pressed', 'false');
+    button.innerHTML = journalExpandIcon(false);
+  }
+});
+
+async function mountConfigurationEditor(): Promise<void> {
+  try {
+    yamlEditorLoad ??= import('./yaml-editor');
+    yamlEditorModule = await yamlEditorLoad;
+    if (activePage === 'configuration') yamlEditorModule.mountYamlEditor(state.status?.mode === 'router', xkeenStatus?.core);
+  } catch (error) {
+    yamlEditorLoad = null;
+    const status = document.querySelector<HTMLElement>('#yaml-validation');
+    if (status) status.textContent = error instanceof Error ? `ĞĞµ ÑƒĞ´Ğ°Ğ»Ğ¾ÑÑŒ Ğ·Ğ°Ğ³Ñ€ÑƒĞ·Ğ¸Ñ‚ÑŒ Ñ€ĞµĞ´Ğ°ĞºÑ‚Ğ¾Ñ€: ${error.message}` : 'ĞĞµ ÑƒĞ´Ğ°Ğ»Ğ¾ÑÑŒ Ğ·Ğ°Ğ³Ñ€ÑƒĞ·Ğ¸Ñ‚ÑŒ Ñ€ĞµĞ´Ğ°ĞºÑ‚Ğ¾Ñ€ ĞºĞ¾Ğ½Ñ„Ğ¸Ğ³ÑƒÑ€Ğ°Ñ†Ğ¸Ğ¸.';
+  }
+}
+
+function render(): void {
+  if (!app) return;
+  const scrollTop = app.querySelector<HTMLElement>('.workspace-scroll')?.scrollTop ?? 0;
+  const nestedScrollPositions = new Map<string, number>();
+  for (const selector of ['.selector-list', '.connection-table-wrap', '.journal-lines']) {
+    app.querySelectorAll<HTMLElement>(selector).forEach((element, index) => {
+      nestedScrollPositions.set(`${selector}:${index}`, element.scrollTop);
+    });
+  }
+  if (activePage !== 'configuration') yamlEditorModule?.unmountYamlEditor();
+  const pageContent = activePage === 'selectors' ? renderSelectors(visibleSelectors(), selectorsLoading, selectorsError)
+    : activePage === 'connections' ? renderConnections(connections, connectionsLoading, connectionsError, uiPreferences.showConnectionSource, connectionSourceNames, connectionSort)
+      : activePage === 'proxies' ? renderProxyProviders(proxyProviders, proxyProvidersLoading, proxyProvidersError)
+        : activePage === 'dns' ? renderDns(dnsResult, dnsLoading, dnsError, dnsQueryName, dnsQueryType, {
+          status: dnsManagementStatus, loading: dnsManagementLoading, error: dnsManagementError,
+          busy: dnsManagementBusy, confirm: dnsManagementConfirm,
+        }, { values: dnsConfig?.values ?? null, loading: dnsConfigLoading, error: dnsConfigError, busy: dnsConfigBusy })
+        : renderComingSoon(activePage);
+  app.innerHTML = `<div class="app-shell">${renderHeader()}${renderNavigation()}<div class="workspace-scroll"><main class="main-content${animatePageEntry ? ' page-enter' : ''}">${pageContent}</main>${renderJournal()}</div><div class="toast-region" aria-live="polite"></div></div>`;
+  animatePageEntry = false;
+  updateAppUpdateNotice();
+  app.querySelector<HTMLElement>('.workspace-scroll')!.scrollTop = scrollTop;
+  for (const selector of ['.selector-list', '.connection-table-wrap', '.journal-lines']) {
+    app.querySelectorAll<HTMLElement>(selector).forEach((element, index) => {
+      const previous = nestedScrollPositions.get(`${selector}:${index}`);
+      if (previous !== undefined) element.scrollTop = previous;
+    });
+  }
+  bindJournal();
+  document.querySelectorAll<HTMLButtonElement>('[data-page]').forEach((button) => {
+    button.addEventListener('click', () => {
+      const page = button.dataset.page as Page | undefined;
+      if (page && pages.some((item) => item.id === page)) {
+        if (page !== 'dns') {
+          dnsController?.abort();
+          dnsLoading = false;
+        }
+        activePage = page;
+        animatePageEntry = true;
+        render();
+        void loadMihomoPage(page);
+        if (page === 'dns') {
+          void loadRouterDnsStatus();
+          void loadMihomoDnsConfig();
+        }
+      }
+    });
+  });
+  document.querySelectorAll<HTMLButtonElement>('#retry').forEach((button) => button.addEventListener('click', () => void refresh()));
+  document.querySelector<HTMLButtonElement>('#settings')?.addEventListener('click', openSettings);
+  document.querySelector<HTMLButtonElement>('#app-version')?.addEventListener('click', () => void openAppReleases());
+  document.querySelector<HTMLButtonElement>('#core-version')?.addEventListener('click', () => {
+    const serviceFor = (name: string) => state.status?.services.find((service) => service.name.toLowerCase() === name);
+    const managerState = (core: 'mihomo' | 'xray') => {
+      const service = serviceFor(core);
+      const configured = xkeenStatus?.installed === true && xkeenStatus.core === core;
+      return {
+        installed: Boolean((core === 'mihomo' ? mihomoVersion : service?.version) || service?.state === 'running' || configured),
+        active: service?.state === 'running' || (configured && xkeenStatus?.running === true),
+        version: core === 'mihomo' ? mihomoVersion ?? service?.version ?? null : service?.version ?? null,
+      };
+    };
+    const open = () => openCoreManagerDialog({ mihomo: managerState('mihomo'), xray: managerState('xray') }, (core) => {
+      const version = managerState(core).version;
+      void openCoreReleaseDialog(core, async () => (await getCoreSources())[core], version, () => uiPreferences.keepCoreBackup);
+    });
+    open();
+  });
+  bindXkeenControls(app);
+  bindDnsManagementControls(app);
+  document.querySelector<HTMLFormElement>('#dns-query-form')?.addEventListener('submit', (event) => {
+    event.preventDefault();
+    const form = event.currentTarget as HTMLFormElement;
+    const data = new FormData(form);
+    dnsQueryName = String(data.get('name') ?? '').trim();
+    dnsQueryType = String(data.get('type') ?? 'A');
+    void runDnsQuery();
+  });
+  document.querySelector<HTMLFormElement>('#mihomo-dns-settings')?.addEventListener('submit', (event) => {
+    event.preventDefault();
+    const data = new FormData(event.currentTarget as HTMLFormElement);
+    const settings: MihomoDnsSettings = {
+      enhancedMode: data.get('enhancedMode') === 'fake-ip' ? 'fake-ip' : 'redir-host',
+      bootstrap: String(data.get('bootstrap') ?? ''),
+      nameserver: String(data.get('nameserver') ?? ''),
+      nameserverPolicy: String(data.get('nameserverPolicy') ?? ''),
+      proxyServerNameserver: String(data.get('proxyServerNameserver') ?? ''),
+      fallback: String(data.get('fallback') ?? ''),
+    };
+    void saveMihomoDnsConfig(settings);
+  });
+  if (activePage === 'configuration') void mountConfigurationEditor();
+  bindMihomoInteractions();
+}
+
+async function runXkeenAction(action: string | undefined): Promise<void> {
+  if (action !== 'start' && action !== 'stop' && action !== 'restart') return;
+  if (xkeenControlBusy || configApplyBusy) return;
+  if (action === 'stop' && !(await confirmInApp('ĞÑÑ‚Ğ°Ğ½Ğ¾Ğ²Ğ¸Ñ‚ÑŒ XKeen?',
+    'Ğ¢Ñ€Ğ°Ñ„Ğ¸Ğº Ñ‡ĞµÑ€ĞµĞ· XKeen Ğ¾ÑÑ‚Ğ°Ğ½Ğ¾Ğ²Ğ¸Ñ‚ÑÑ. Ğ•ÑĞ»Ğ¸ DNS Ğ¿ĞµÑ€ĞµĞ´Ğ°Ğ½ Mihomo, Ğ¾ÑÑ‚Ğ°Ğ½Ğ¾Ğ²ĞºĞ° Ğ±ÑƒĞ´ĞµÑ‚ Ğ·Ğ°Ğ±Ğ»Ğ¾ĞºĞ¸Ñ€Ğ¾Ğ²Ğ°Ğ½Ğ°.', 'ĞÑÑ‚Ğ°Ğ½Ğ¾Ğ²Ğ¸Ñ‚ÑŒ'))) return;
+  xkeenControlBusy = true;
+  xkeenControlAction = action;
+  selectedLog = 'xkeen-ui';
+  logCleared = false;
+  render();
+  setJournalRealtime(true);
+  void loadSystemLog();
+  let actionError: string | undefined;
+  try {
+    xkeenStatus = await controlXkeen(action);
+    if (action === 'start') await maybeEnableDnsAfterStart();
+    await refresh();
+  } catch (error) {
+    actionError = error instanceof Error ? error.message : 'ĞĞµ ÑƒĞ´Ğ°Ğ»Ğ¾ÑÑŒ Ğ²Ñ‹Ğ¿Ğ¾Ğ»Ğ½Ğ¸Ñ‚ÑŒ ĞºĞ¾Ğ¼Ğ°Ğ½Ğ´Ñƒ XKeen';
+    await refresh();
+  } finally {
+    xkeenControlBusy = false;
+    xkeenControlAction = null;
+    setJournalRealtime(false);
+    const feedback = lifecycleFeedback(action, actionError);
+    selectedLog = feedback.logFile;
+    logController?.abort();
+    logLoading = false;
+    logData = null;
+    logError = null;
+    logCleared = false;
+    render();
+    void loadSystemLog();
+    showToast(feedback.message, feedback.kind);
+  }
+}
+
+async function maybeEnableDnsAfterStart(): Promise<void> {
+  if (uiPreferences.dnsAutostart !== 'confirm' || state.status?.mode !== 'router') return;
+  try {
+    dnsManagementStatus = await getRouterDnsStatus();
+    if (dnsManagementStatus.dnsOverride) return;
+    const confirmed = await confirmInApp(
+      'ĞŸĞµÑ€ĞµĞ´Ğ°Ñ‚ÑŒ DNS Ñ‡ĞµÑ€ĞµĞ· Mihomo?',
+      'KeeneticOS Ğ²Ñ€ĞµĞ¼ĞµĞ½Ğ½Ğ¾ Ğ½Ğ°Ğ¿Ñ€Ğ°Ğ²Ğ¸Ñ‚ IPv4 DNS Ğ½Ğ° Mihomo. Ğ¡Ñ‚Ğ°Ñ‚Ğ¸Ñ‡ĞµÑĞºĞ¸Ğµ IPv6 DNS Ğ¸ DoH/DoT Ğ½Ğµ Ğ¼ĞµĞ½ÑÑÑ‚ÑÑ. ĞÑÑ‚Ğ°Ğ½Ğ¾Ğ²Ğ¸Ñ‚ÑŒ XKeen Ğ¿Ñ€Ğ¸ Ğ°ĞºÑ‚Ğ¸Ğ²Ğ½Ğ¾Ğ¹ Ğ¿ĞµÑ€ĞµĞ´Ğ°Ñ‡Ğµ DNS Ğ½ĞµĞ»ÑŒĞ·Ñ, Ğ¿Ğ¾ĞºĞ° Ğ²Ñ‹ Ğ½Ğµ Ğ²ĞµÑ€Ğ½Ñ‘Ñ‚Ğµ DNS KeeneticOS.',
+      'Ğ’ĞºĞ»ÑÑ‡Ğ¸Ñ‚ÑŒ ÑƒĞ¿Ñ€Ğ°Ğ²Ğ»ĞµĞ½Ğ¸Ğµ DNS',
+    );
+    if (!confirmed) return;
+    const activeConfig = await getActiveMihomoConfig();
+    patchDnsManagement(activeConfig.content, true);
+    await setRouterDnsManagement({ enabled: true, expectedContent: activeConfig.content });
+    dnsManagementStatus = await getRouterDnsStatus();
+    showToast('Ğ£Ğ¿Ñ€Ğ°Ğ²Ğ»ĞµĞ½Ğ¸Ğµ DNS Mihomo Ğ²ĞºĞ»ÑÑ‡ĞµĞ½Ğ¾', 'success');
+  } catch (error) {
+    showToast(error instanceof Error ? `ĞĞ²Ñ‚Ğ¾Ğ²ĞºĞ»ÑÑ‡ĞµĞ½Ğ¸Ğµ DNS Ğ½Ğµ Ğ²Ñ‹Ğ¿Ğ¾Ğ»Ğ½ĞµĞ½Ğ¾: ${error.message}` : 'ĞĞ²Ñ‚Ğ¾Ğ²ĞºĞ»ÑÑ‡ĞµĞ½Ğ¸Ğµ DNS Ğ½Ğµ Ğ²Ñ‹Ğ¿Ğ¾Ğ»Ğ½ĞµĞ½Ğ¾', 'error');
+  }
+}
+
+function bindXkeenControls(root: ParentNode): void {
+  root.querySelectorAll<HTMLButtonElement>('[data-xkeen-action]').forEach((button) => {
+    button.addEventListener('click', () => void runXkeenAction(button.dataset.xkeenAction));
+  });
+}
+
+function showToast(message: string, kind: 'success' | 'error' | 'info'): void {
+  if (kind === 'error') {
+    if (!shouldReportUiError(message, Date.now(), recentUiErrors)) return;
+    void logUiError('ui', message).catch(() => undefined);
+  }
+  const region = document.querySelector<HTMLElement>('.toast-region');
+  if (!region) return;
+  const toast = document.createElement('div');
+  toast.className = `toast toast-${kind}`;
+  toast.textContent = message;
+  region.append(toast);
+  window.setTimeout(() => toast.remove(), 3500);
+}
+
+function updateAppUpdateNotice(): void {
+  const region = document.querySelector<HTMLElement>('.toast-region');
+  if (!region) return;
+  region.querySelector('.update-toast')?.remove();
+  if (!appUpdateAvailable || appUpdateNoticeDismissed) return;
+  const template = document.createElement('template');
+  template.innerHTML = renderAppUpdateNotice(appUpdateAvailable.tag_name, appUpdateAvailable.html_url);
+  const notice = template.content.firstElementChild;
+  if (!notice) return;
+  region.append(notice);
+  notice.querySelector<HTMLButtonElement>('[data-open-app-update]')?.addEventListener('click', () => void openAppReleases());
+  notice.querySelector<HTMLButtonElement>('[data-dismiss-app-update]')?.addEventListener('click', () => {
+    appUpdateNoticeDismissed = true;
+    notice.remove();
+  });
+}
+
+async function runDnsQuery(): Promise<void> {
+  dnsController?.abort();
+  const controller = new AbortController();
+  dnsController = controller;
+  dnsLoading = true;
+  dnsError = null;
+  render();
+  try {
+    dnsResult = await queryMihomoDns(dnsQueryName, dnsQueryType, controller.signal);
+  } catch (error) {
+    if (error instanceof DOMException && error.name === 'AbortError') return;
+    dnsError = error instanceof Error ? error.message : 'DNS-Ğ·Ğ°Ğ¿Ñ€Ğ¾Ñ Ğ·Ğ°Ğ²ĞµÑ€ÑˆĞ¸Ğ»ÑÑ Ğ¾ÑˆĞ¸Ğ±ĞºĞ¾Ğ¹';
+    void logUiError('ui', `DNS lookup: ${dnsError}`).catch(() => undefined);
+  } finally {
+    if (!controller.signal.aborted) {
+      dnsLoading = false;
+      if (activePage === 'dns') render();
+    }
+  }
+}
+
+function bindDnsManagementControls(root: ParentNode): void {
+  root.querySelector<HTMLButtonElement>('#dns-management-refresh')?.addEventListener('click', () => void loadRouterDnsStatus());
+  root.querySelector<HTMLInputElement>('#dns-management-toggle')?.addEventListener('change', () => {
+    dnsManagementConfirm = true;
+    render();
+  });
+  root.querySelector<HTMLButtonElement>('#dns-management-cancel')?.addEventListener('click', () => {
+    dnsManagementConfirm = false;
+    render();
+  });
+  root.querySelector<HTMLButtonElement>('#dns-management-apply')?.addEventListener('click', () => void runDnsManagementToggle());
+}
+
+async function loadRouterDnsStatus(): Promise<void> {
+  dnsManagementLoading = true;
+  dnsManagementError = null;
+  render();
+  try {
+    dnsManagementStatus = await getRouterDnsStatus();
+  } catch (error) {
+    dnsManagementError = error instanceof Error ? error.message : 'ĞĞµ ÑƒĞ´Ğ°Ğ»Ğ¾ÑÑŒ Ğ¿Ñ€Ğ¾Ñ‡Ğ¸Ñ‚Ğ°Ñ‚ÑŒ ÑĞ¾ÑÑ‚Ğ¾ÑĞ½Ğ¸Ğµ DNS';
+    void logUiError('ui', `DNS status: ${dnsManagementError}`).catch(() => undefined);
+  } finally {
+    dnsManagementLoading = false;
+    if (activePage === 'dns') render();
+  }
+}
+
+async function loadMihomoDnsConfig(): Promise<void> {
+  dnsConfigLoading = true;
+  dnsConfigError = null;
+  render();
+  try {
+    const current = await getActiveMihomoConfig();
+    dnsConfig = { content: current.content, values: readMihomoDnsSettings(current.content) };
+  } catch (error) {
+    dnsConfig = null;
+    dnsConfigError = error instanceof Error ? error.message : 'ĞĞµ ÑƒĞ´Ğ°Ğ»Ğ¾ÑÑŒ Ğ¿Ñ€Ğ¾Ñ‡Ğ¸Ñ‚Ğ°Ñ‚ÑŒ DNS-ĞºĞ¾Ğ½Ñ„Ğ¸Ğ³ÑƒÑ€Ğ°Ñ†Ğ¸Ñ Mihomo';
+    void logUiError('config', `DNS config load: ${dnsConfigError}`).catch(() => undefined);
+  } finally {
+    dnsConfigLoading = false;
+    if (activePage === 'dns') render();
+  }
+}
+
+async function saveMihomoDnsConfig(settings: MihomoDnsSettings): Promise<void> {
+  if (!dnsConfig || dnsConfigBusy) return;
+  dnsConfig = { ...dnsConfig, values: settings };
+  dnsConfigBusy = true;
+  dnsConfigError = null;
+  render();
+  try {
+    const updated = patchMihomoDnsSettings(dnsConfig.content, settings);
+    await applyActiveMihomoConfig(updated, dnsConfig.content);
+    const current = await getActiveMihomoConfig();
+    dnsConfig = { content: current.content, values: readMihomoDnsSettings(current.content) };
+    await loadRouterDnsStatus();
+    showToast('ĞĞ°ÑÑ‚Ñ€Ğ¾Ğ¹ĞºĞ¸ DNS Mihomo ÑĞ¾Ñ…Ñ€Ğ°Ğ½ĞµĞ½Ñ‹ Ğ¸ Ğ¿Ñ€Ğ¸Ğ¼ĞµĞ½ĞµĞ½Ñ‹', 'success');
+  } catch (error) {
+    dnsConfigError = error instanceof Error ? error.message : 'ĞĞµ ÑƒĞ´Ğ°Ğ»Ğ¾ÑÑŒ Ğ¿Ñ€Ğ¸Ğ¼ĞµĞ½Ğ¸Ñ‚ÑŒ Ğ½Ğ°ÑÑ‚Ñ€Ğ¾Ğ¹ĞºĞ¸ DNS Mihomo';
+    showToast(dnsConfigError, 'error');
+  } finally {
+    dnsConfigBusy = false;
+    if (activePage === 'dns') render();
+  }
+}
+
+async function runDnsManagementToggle(): Promise<void> {
+  const currentStatus = dnsManagementStatus;
+  if (!currentStatus || dnsManagementBusy) return;
+  const enabled = !currentStatus.dnsOverride;
+  dnsManagementBusy = true;
+  dnsManagementConfirm = false;
+  dnsManagementError = null;
+  render();
+  let notice = '';
+  let noticeKind: 'success' | 'error' = 'success';
+  try {
+    const activeConfig = await getActiveMihomoConfig();
+    patchDnsManagement(activeConfig.content, enabled);
+    await setRouterDnsManagement({ enabled, expectedContent: activeConfig.content });
+    notice = enabled ? 'DNS Mihomo Ğ²ĞºĞ»ÑÑ‡Ñ‘Ğ½' : 'DNS Ğ²Ğ¾Ğ·Ğ²Ñ€Ğ°Ñ‰Ñ‘Ğ½ KeeneticOS';
+    try {
+      dnsManagementStatus = await getRouterDnsStatus();
+    } catch (error) {
+      dnsManagementStatus = null;
+      dnsManagementError = error instanceof Error ? `ĞĞ°ÑÑ‚Ñ€Ğ¾Ğ¹ĞºĞ¸ Ğ¿Ñ€Ğ¸Ğ¼ĞµĞ½Ğ¸Ğ»Ğ¸ÑÑŒ, Ğ½Ğ¾ ÑĞ¾ÑÑ‚Ğ¾ÑĞ½Ğ¸Ğµ Ğ½Ğµ Ğ¾Ğ±Ğ½Ğ¾Ğ²Ğ¸Ğ»Ğ¾ÑÑŒ: ${error.message}` : 'ĞĞ°ÑÑ‚Ñ€Ğ¾Ğ¹ĞºĞ¸ Ğ¿Ñ€Ğ¸Ğ¼ĞµĞ½Ğ¸Ğ»Ğ¸ÑÑŒ, Ğ½Ğ¾ ÑĞ¾ÑÑ‚Ğ¾ÑĞ½Ğ¸Ğµ Ğ½Ğµ Ğ¾Ğ±Ğ½Ğ¾Ğ²Ğ¸Ğ»Ğ¾ÑÑŒ';
+    }
+    await loadMihomoDnsConfig();
+  } catch (error) {
+    dnsManagementError = error instanceof Error ? error.message : 'ĞĞµ ÑƒĞ´Ğ°Ğ»Ğ¾ÑÑŒ Ğ¸Ğ·Ğ¼ĞµĞ½Ğ¸Ñ‚ÑŒ ÑƒĞ¿Ñ€Ğ°Ğ²Ğ»ĞµĞ½Ğ¸Ğµ DNS';
+    notice = dnsManagementError;
+    noticeKind = 'error';
+  } finally {
+    dnsManagementBusy = false;
+    if (activePage === 'dns') render();
+    showToast(notice, noticeKind);
+  }
+}
+
+function openConnectionDetails(id: string): void {
+  const connection = connections?.connections.find((item) => item.id === id);
+  if (!connection) return;
+  const sourceName = uiPreferences.showConnectionSource && connection.sourceIp ? connectionSourceNames[connection.sourceIp] : undefined;
+  const modal = document.createElement('dialog');
+  modal.className = 'modal connection-details-dialog';
+  modal.setAttribute('aria-labelledby', 'connection-details-title');
+  modal.innerHTML = `<section class="modal-panel connection-details-panel"><header class="modal-heading"><h2 id="connection-details-title">ĞŸĞ¾Ğ´Ñ€Ğ¾Ğ±Ğ½Ğ¾ÑÑ‚Ğ¸ ÑĞ¾ĞµĞ´Ğ¸Ğ½ĞµĞ½Ğ¸Ñ</h2><button class="icon-button" type="button" data-close-details aria-label="Ğ—Ğ°ĞºÑ€Ñ‹Ñ‚ÑŒ Ğ¿Ğ¾Ğ´Ñ€Ğ¾Ğ±Ğ½Ğ¾ÑÑ‚Ğ¸">Ã—</button></header><div class="connection-details-body">${renderConnectionDetails(connection, sourceName)}</div></section>`;
+  document.body.append(modal);
+  bindDialogMotion(modal);
+  modal.querySelector<HTMLButtonElement>('[data-close-details]')?.addEventListener('click', () => closeDialogWithMotion(modal));
+  modal.addEventListener('close', () => modal.remove(), { once: true });
+  modal.showModal();
+}
+
+function bindMihomoInteractions(): void {
+  document.querySelectorAll<HTMLButtonElement>('[data-inspect-connection]').forEach((button) => {
+    button.addEventListener('click', () => openConnectionDetails(button.dataset.inspectConnection ?? ''));
+  });
+  document.querySelector<HTMLButtonElement>('#mihomo-retry')?.addEventListener('click', () => void loadMihomoPage(activePage));
+  document.querySelector<HTMLButtonElement>('#proxy-providers-retry')?.addEventListener('click', () => void loadMihomoPage('proxies'));
+  document.querySelectorAll<HTMLButtonElement>('.proxy-option-select').forEach((button) => {
+    button.addEventListener('click', () => void selectProxyFromUi(button));
+  });
+  document.querySelectorAll<HTMLButtonElement>('.ping-group').forEach((button) => {
+    button.addEventListener('click', () => void pingGroupFromUi(button));
+  });
+  document.querySelectorAll<HTMLButtonElement>('.proxy-ping-value').forEach((button) => {
+    button.addEventListener('click', () => void pingProxyFromUi(button));
+  });
+  document.querySelectorAll<HTMLButtonElement>('[data-close-connection]').forEach((button) => {
+    button.addEventListener('click', () => void closeConnectionFromUi(button));
+  });
+  document.querySelector<HTMLButtonElement>('#close-all-connections')?.addEventListener('click', () => void closeAllConnectionsFromUi());
+  document.querySelectorAll<HTMLButtonElement>('[data-connection-sort]').forEach((button) => {
+    button.addEventListener('click', () => {
+      const key = button.dataset.connectionSort;
+      if (!key || !['route', 'host', 'network', 'source', 'traffic', 'start'].includes(key)) return;
+      const typedKey = key as ConnectionSortKey;
+      connectionSort = connectionSort.key === typedKey
+        ? { key: typedKey, direction: connectionSort.direction === 'ascending' ? 'descending' : 'ascending' }
+        : { key: typedKey, direction: typedKey === 'start' ? 'descending' : 'ascending' };
+      const rows = new Map(Array.from(document.querySelectorAll<HTMLTableRowElement>('.connection-table tbody tr'), (row) => [row.dataset.connectionId ?? '', row]));
+      const body = document.querySelector<HTMLTableSectionElement>('.connection-table tbody');
+      if (body) {
+        for (const connection of sortMihomoConnections(connections?.connections ?? [], connectionSort, uiPreferences.showConnectionSource ? connectionSourceNames : {})) {
+          const row = rows.get(connection.id);
+          if (row) body.append(row);
+        }
+      }
+      document.querySelectorAll<HTMLTableCellElement>('.connection-table thead th[aria-sort]').forEach((heading) => {
+        const headingButton = heading.querySelector<HTMLButtonElement>('[data-connection-sort]');
+        const selected = headingButton?.dataset.connectionSort === connectionSort.key;
+        heading.setAttribute('aria-sort', selected ? connectionSort.direction : 'none');
+        const arrow = headingButton?.querySelector<HTMLElement>('span');
+        if (arrow) arrow.textContent = selected ? (connectionSort.direction === 'ascending' ? 'â†‘' : 'â†“') : 'â†•';
+      });
+    });
+  });
+  document.querySelector<HTMLInputElement>('#connection-filter')?.addEventListener('input', (event) => {
+    const query = (event.currentTarget as HTMLInputElement).value.trim().toLocaleLowerCase();
+    let visible = 0;
+    document.querySelectorAll<HTMLElement>('.connection-table tbody tr').forEach((row) => {
+      const matches = row.dataset.search?.includes(query) ?? false;
+      row.hidden = !matches;
+      if (matches) visible += 1;
+    });
+    const noResults = document.querySelector<HTMLElement>('.connection-no-results.is-filtered');
+    if (noResults) noResults.hidden = query.length === 0 || visible > 0;
+  });
+}
+
+function updatePingControls(): void {
+  const options = new Map(selectors.flatMap((group) => group.options).map((option) => [option.name, option]));
+  document.querySelectorAll<HTMLButtonElement>('.proxy-ping-value').forEach((button) => {
+    const option = options.get(button.dataset.pingProxy ?? '');
+    if (!option) return;
+    button.classList.toggle('is-alive', option.alive === true);
+    button.classList.toggle('is-dead', option.alive === false);
+    const pingLabel = option.alive === null ? 'ĞŸÑ€Ğ¾Ğ²ĞµÑ€Ğ¸Ñ‚ÑŒ ping' : option.alive ? 'Ğ£Ğ·ĞµĞ» Ğ¾Ñ‚Ğ²ĞµÑ‡Ğ°ĞµÑ‚' : 'Ğ£Ğ·ĞµĞ» Ğ½Ğµ Ğ¾Ñ‚Ğ²ĞµÑ‡Ğ°ĞµÑ‚';
+    button.title = `${option.alive === null ? 'ĞŸÑ€Ğ¾Ğ²ĞµÑ€ĞºĞ° Ğ½ĞµĞ´Ğ¾ÑÑ‚ÑƒĞ¿Ğ½Ğ°' : pingLabel}. ĞĞ°Ğ¶Ğ¼Ğ¸Ñ‚Ğµ, Ñ‡Ñ‚Ğ¾Ğ±Ñ‹ Ğ¿Ñ€Ğ¾Ğ²ĞµÑ€Ğ¸Ñ‚ÑŒ ping`;
+    button.setAttribute('aria-label', `${pingLabel}. ĞĞ°Ğ¶Ğ¼Ğ¸Ñ‚Ğµ, Ñ‡Ñ‚Ğ¾Ğ±Ñ‹ Ğ¿Ğ¾Ğ²Ñ‚Ğ¾Ñ€Ğ¸Ñ‚ÑŒ ping ÑƒĞ·Ğ»Ğ° ${option.name}`);
+    const icon = button.querySelector('.ping-status-icon');
+    if (icon) icon.outerHTML = renderPingStatusIcon(option.alive);
+    const value = button.querySelector('span');
+    if (value) value.textContent = option.alive === true && option.delay !== null ? String(option.delay) : '';
+  });
+}
+
+async function pingGroupFromUi(button: HTMLButtonElement): Promise<void> {
+  const group = button.dataset.pingGroup;
+  if (!group || button.disabled) return;
+  button.disabled = true;
+  button.classList.add('is-pinging');
+  button.setAttribute('aria-busy', 'true');
+  button.textContent = 'â€¦';
+  try {
+    const results = await pingMihomoGroup(group, currentPingOptions(), mihomoController?.signal);
+    updatePingFailures(group, results);
+    selectors = applyPingResults(selectors, results);
+    updatePingControls();
+    if (uiPreferences.hideUnavailableProxies && activePage === 'selectors') render();
+  } catch (error) {
+    if (error instanceof DOMException && error.name === 'AbortError') return;
+    button.title = error instanceof Error ? error.message : 'ĞĞµ ÑƒĞ´Ğ°Ğ»Ğ¾ÑÑŒ Ğ¿Ñ€Ğ¾Ğ²ĞµÑ€Ğ¸Ñ‚ÑŒ ÑĞµÑ€Ğ²ĞµÑ€Ñ‹';
+  } finally {
+    button.disabled = false;
+    button.classList.remove('is-pinging');
+    button.removeAttribute('aria-busy');
+    button.textContent = 'ÏŸ';
+  }
+}
+
+async function pingProxyFromUi(button: HTMLButtonElement): Promise<void> {
+  const group = button.dataset.pingGroup;
+  const name = button.dataset.pingProxy;
+  if (!group || !name || button.disabled) return;
+  button.disabled = true;
+  button.classList.add('is-pinging');
+  button.setAttribute('aria-busy', 'true');
+  const value = button.querySelector('span');
+  if (value) value.textContent = 'â€¦';
+  try {
+    const result = await pingMihomoProxy(group, name, currentPingOptions(), mihomoController?.signal);
+    if (result) {
+      updatePingFailures(group, [result]);
+      selectors = applyPingResults(selectors, [result]);
+    }
+    updatePingControls();
+    if (result && uiPreferences.hideUnavailableProxies && activePage === 'selectors') render();
+  } catch (error) {
+    if (error instanceof DOMException && error.name === 'AbortError') return;
+    button.title = error instanceof Error ? error.message : 'ĞĞµ ÑƒĞ´Ğ°Ğ»Ğ¾ÑÑŒ Ğ¿Ñ€Ğ¾Ğ²ĞµÑ€Ğ¸Ñ‚ÑŒ ÑƒĞ·ĞµĞ»';
+  } finally {
+    button.disabled = false;
+    button.classList.remove('is-pinging');
+    button.removeAttribute('aria-busy');
+    const latest = selectors.flatMap((selector) => selector.options).find((option) => option.name === name)?.delay;
+    if (value?.isConnected) value.textContent = latest === null || latest === undefined ? 'â€”' : `${latest} Ğ¼Ñ`;
+  }
+}
+
+function currentPingOptions(): { url: string; timeoutMs: number } {
+  return { url: `${uiPreferences.pingScheme}://${uiPreferences.pingUrl}`, timeoutMs: uiPreferences.pingTimeoutMs };
+}
+
+function updatePingFailures(group: string, results: Array<{ name: string; delay: number | null }>): void {
+  for (const result of results) {
+    const key = `${group}\u0000${result.name}`;
+    proxyPingFailures.set(key, result.delay === null ? (proxyPingFailures.get(key) ?? 0) + 1 : 0);
+  }
+}
+
+function visibleSelectors(): MihomoSelector[] {
+  return selectors.map((group) => {
+    let options = group.options;
+    if (uiPreferences.hideUnavailableProxies) {
+      options = options.filter((option) => (proxyPingFailures.get(`${group.name}\u0000${option.name}`) ?? 0) < uiPreferences.unavailableThreshold);
+    }
+    if (uiPreferences.selectorSort === 'name') options = [...options].sort((a, b) => a.name.localeCompare(b.name, 'ru'));
+    if (uiPreferences.selectorSort === 'delay') options = [...options].sort((a, b) => (a.delay ?? Number.MAX_SAFE_INTEGER) - (b.delay ?? Number.MAX_SAFE_INTEGER) || a.name.localeCompare(b.name, 'ru'));
+    return { ...group, options };
+  });
+}
+
+async function closeConnectionFromUi(button: HTMLButtonElement): Promise<void> {
+  const id = button.dataset.closeConnection;
+  if (!id || button.disabled) return;
+  button.disabled = true;
+  try {
+    await closeMihomoConnection(id, mihomoController?.signal);
+    await loadMihomoPage('connections');
+    showToast('Mihomo Ğ·Ğ°ĞºÑ€Ñ‹Ğ» ÑĞ¾ĞµĞ´Ğ¸Ğ½ĞµĞ½Ğ¸Ğµ. Ğ•ÑĞ»Ğ¸ Ğ¾Ğ½Ğ¾ Ğ¿Ğ¾ÑĞ²Ğ¸Ñ‚ÑÑ ÑĞ½Ğ¾Ğ²Ğ°, ĞºĞ»Ğ¸ĞµĞ½Ñ‚ Ğ¾Ñ‚ĞºÑ€Ñ‹Ğ» ĞµĞ³Ğ¾ Ğ¿Ğ¾Ğ²Ñ‚Ğ¾Ñ€Ğ½Ğ¾.', 'success');
+  } catch (error) {
+    connectionsError = error instanceof Error ? error.message : 'ĞĞµ ÑƒĞ´Ğ°Ğ»Ğ¾ÑÑŒ Ğ·Ğ°ĞºÑ€Ñ‹Ñ‚ÑŒ ÑĞ¾ĞµĞ´Ğ¸Ğ½ĞµĞ½Ğ¸Ğµ';
+    connectionsLoading = false;
+    render();
+  }
+}
+
+async function closeAllConnectionsFromUi(): Promise<void> {
+  const count = connections?.connections.length ?? 0;
+  if (!count) return;
+  const button = document.querySelector<HTMLButtonElement>('#close-all-connections');
+  if (button) { button.disabled = true; button.textContent = 'Ğ—Ğ°ĞºÑ€Ñ‹Ğ²Ğ°ĞµĞ¼â€¦'; }
+  try {
+    await closeAllMihomoConnections(mihomoController?.signal);
+    await loadMihomoPage('connections');
+    showToast('Mihomo Ğ·Ğ°ĞºÑ€Ñ‹Ğ» Ğ°ĞºÑ‚Ğ¸Ğ²Ğ½Ñ‹Ğµ ÑĞ¾ĞµĞ´Ğ¸Ğ½ĞµĞ½Ğ¸Ñ. ĞšĞ»Ğ¸ĞµĞ½Ñ‚Ñ‹ Ğ¼Ğ¾Ğ³ÑƒÑ‚ Ğ¾Ñ‚ĞºÑ€Ñ‹Ñ‚ÑŒ Ğ½Ğ¾Ğ²Ñ‹Ğµ.', 'success');
+  } catch (error) {
+    connectionsError = error instanceof Error ? error.message : 'ĞĞµ ÑƒĞ´Ğ°Ğ»Ğ¾ÑÑŒ Ğ·Ğ°ĞºÑ€Ñ‹Ñ‚ÑŒ ÑĞ¾ĞµĞ´Ğ¸Ğ½ĞµĞ½Ğ¸Ñ';
+    connectionsLoading = false;
+    render();
+  }
+}
+
+async function autoCloseConnectionsAfterApply(): Promise<void> {
+  if (!uiPreferences.closeConnectionsAfterApply) return;
+  try {
+    await closeAllMihomoConnections();
+    if (activePage === 'connections') await loadMihomoPage('connections');
+    showToast('Ğ¡Ğ¾ĞµĞ´Ğ¸Ğ½ĞµĞ½Ğ¸Ñ Ğ·Ğ°ĞºÑ€Ñ‹Ñ‚Ñ‹ Ğ¿Ğ¾ÑĞ»Ğµ Ğ¿Ñ€Ğ¸Ğ¼ĞµĞ½ĞµĞ½Ğ¸Ñ ĞºĞ¾Ğ½Ñ„Ğ¸Ğ³ÑƒÑ€Ğ°Ñ†Ğ¸Ğ¸', 'success');
+  } catch (error) {
+    showToast(error instanceof Error ? `ĞĞµ ÑƒĞ´Ğ°Ğ»Ğ¾ÑÑŒ Ğ·Ğ°ĞºÑ€Ñ‹Ñ‚ÑŒ ÑĞ¾ĞµĞ´Ğ¸Ğ½ĞµĞ½Ğ¸Ñ: ${error.message}` : 'ĞĞµ ÑƒĞ´Ğ°Ğ»Ğ¾ÑÑŒ Ğ·Ğ°ĞºÑ€Ñ‹Ñ‚ÑŒ ÑĞ¾ĞµĞ´Ğ¸Ğ½ĞµĞ½Ğ¸Ñ Ğ¿Ğ¾ÑĞ»Ğµ Ğ¿Ñ€Ğ¸Ğ¼ĞµĞ½ĞµĞ½Ğ¸Ñ', 'error');
+  }
+}
+
+async function loadMihomoPage(page: Page): Promise<void> {
+  if (page !== 'selectors' && page !== 'connections' && page !== 'proxies') return;
+  const hadData = page === 'selectors' ? selectors.length > 0 : page === 'connections' ? connections !== null : proxyProviders.length > 0;
+  mihomoController?.abort();
+  mihomoController = new AbortController();
+  const { signal } = mihomoController;
+  if (!mihomoVersion) {
+    void getMihomoVersion(signal).then((version) => {
+      if (signal.aborted) return;
+      mihomoVersion = version;
+      if (activePage === page) updateChrome();
+    }).catch(() => undefined);
+  }
+  if (page === 'selectors') { selectorsLoading = !hadData; selectorsError = null; }
+  else if (page === 'connections') { connectionsLoading = !hadData; connectionsError = null; }
+  else { proxyProvidersLoading = !hadData; proxyProvidersError = null; }
+  if (activePage === page && !hadData) render();
+  try {
+    if (page === 'selectors') {
+      const [groups, config] = await Promise.all([
+        getMihomoSelectors(signal),
+        getActiveMihomoConfig(signal).catch(() => null),
+      ]);
+      if (signal.aborted) return;
+      selectors = config ? orderSelectorsByConfig(groups, config.content) : groups;
+    }
+    else if (page === 'connections') {
+      connections = await getMihomoConnections(signal);
+      if (uiPreferences.showConnectionSource) refreshConnectionSourceNames(connections, signal);
+    } else {
+      proxyProviders = parseProxyProviders(await getMihomoProxyProviders(signal));
+    }
+  } catch (error) {
+    if (error instanceof DOMException && error.name === 'AbortError') return;
+    const message = error instanceof Error ? error.message : 'ĞĞµĞ¸Ğ·Ğ²ĞµÑÑ‚Ğ½Ğ°Ñ Ğ¾ÑˆĞ¸Ğ±ĞºĞ° API Mihomo';
+    if (page === 'selectors') selectorsError = hadData ? null : message;
+    else if (page === 'connections') connectionsError = hadData ? null : message;
+    else proxyProvidersError = hadData ? null : message;
+    if (hadData) showToast(`Ğ”Ğ°Ğ½Ğ½Ñ‹Ğµ Ğ½Ğµ Ğ¾Ğ±Ğ½Ğ¾Ğ²Ğ¸Ğ»Ğ¸ÑÑŒ: ${message}`, 'error');
+  } finally {
+    if (!signal.aborted) {
+      if (page === 'selectors') selectorsLoading = false;
+      else if (page === 'connections') connectionsLoading = false;
+      else proxyProvidersLoading = false;
+      if (activePage === page) render();
+    }
+  }
+}
+
+function refreshConnectionSourceNames(data: MihomoConnections, signal: AbortSignal): void {
+  const ips = data.connections.map((connection) => connection.sourceIp || '');
+  void sourceNameResolver.resolve(ips).then((names) => {
+    if (signal.aborted) return;
+    connectionSourceNames = names;
+    if (activePage === 'connections') render();
+  });
+}
+
+async function selectProxyFromUi(button: HTMLButtonElement): Promise<void> {
+  const group = button.dataset.proxyGroup;
+  const name = button.dataset.proxyName;
+  if (button.getAttribute('aria-current') === 'true') return;
+  if (!group || !name) return;
+  button.disabled = true;
+  try {
+    await selectMihomoProxy(group, name, mihomoController?.signal);
+    await loadMihomoPage('selectors');
+  } catch (error) {
+    selectorsError = error instanceof Error ? error.message : 'ĞĞµ ÑƒĞ´Ğ°Ğ»Ğ¾ÑÑŒ Ğ²Ñ‹Ğ±Ñ€Ğ°Ñ‚ÑŒ ÑƒĞ·ĞµĞ»';
+    selectorsLoading = false;
+    render();
+  }
+}
+
+function updateChrome(): void {
+  const header = document.querySelector<HTMLElement>('.topbar');
+  if (header) {
+    const template = document.createElement('template');
+    template.innerHTML = renderHeader();
+    const nextHeader = template.content.firstElementChild as HTMLElement | null;
+    if (nextHeader) {
+      const setText = (selector: string) => {
+        const current = header.querySelector<HTMLElement>(selector);
+        const next = nextHeader.querySelector<HTMLElement>(selector);
+        if (current && next && current.textContent !== next.textContent) current.textContent = next.textContent;
+      };
+      const currentLed = header.querySelector<HTMLElement>('#status-led');
+      const nextLed = nextHeader.querySelector<HTMLElement>('#status-led');
+      if (currentLed && nextLed && currentLed.className !== nextLed.className) currentLed.className = nextLed.className;
+      setText('#service-label');
+      const currentSummary = header.querySelector<HTMLElement>('#service-summary');
+      const nextSummary = nextHeader.querySelector<HTMLElement>('#service-summary');
+      if (currentSummary && nextSummary && currentSummary.innerHTML !== nextSummary.innerHTML) currentSummary.innerHTML = nextSummary.innerHTML;
+      setText('#core-version-label');
+      setText('#app-version-label');
+      const currentAppVersion = header.querySelector<HTMLButtonElement>('#app-version');
+      const nextAppVersion = nextHeader.querySelector<HTMLButtonElement>('#app-version');
+      if (currentAppVersion && nextAppVersion) {
+        currentAppVersion.classList.toggle('is-update-available', nextAppVersion.classList.contains('is-update-available'));
+        currentAppVersion.title = nextAppVersion.title;
+        currentAppVersion.setAttribute('aria-label', nextAppVersion.getAttribute('aria-label') ?? 'ĞĞ±Ğ½Ğ¾Ğ²Ğ¸Ñ‚ÑŒ XKeen UI');
+      }
+      header.querySelector('.top-status-cluster')?.classList.toggle('is-xkeen-busy', xkeenControlBusy || configApplyBusy);
+      const currentControls = header.querySelector<HTMLElement>('.header-service-controls');
+      const nextControls = nextHeader.querySelector<HTMLElement>('.header-service-controls');
+      if (currentControls && nextControls) {
+        currentControls.setAttribute('aria-busy', nextControls.getAttribute('aria-busy') ?? 'false');
+        if (currentControls.innerHTML !== nextControls.innerHTML) {
+          currentControls.innerHTML = nextControls.innerHTML;
+          bindXkeenControls(currentControls);
+        }
+      }
+    }
+  }
+}
+
+async function openAppReleases(): Promise<void> {
+  const dialog = document.createElement('dialog');
+  dialog.className = 'modal app-release-dialog';
+  dialog.innerHTML = `<div class="modal-panel app-releases-panel"><div class="modal-heading"><span class="modal-icon">â¬¡</span><h2>ĞĞ±Ğ½Ğ¾Ğ²Ğ»ĞµĞ½Ğ¸Ğµ XKeen UI</h2><button class="icon-button" id="app-releases-close" type="button" aria-label="Ğ—Ğ°ĞºÑ€Ñ‹Ñ‚ÑŒ">Ã—</button></div><div class="core-release-dialog-source"><span>rangerxxyy/XKeen-UI</span><span class="core-release-github">GitHub</span></div><p class="modal-note" id="app-releases-status" aria-live="polite">Ğ—Ğ°Ğ³Ñ€ÑƒĞ¶Ğ°ĞµĞ¼ Ğ¿Ğ¾ÑĞ»ĞµĞ´Ğ½Ğ¸Ğµ ÑÑ‚Ğ°Ğ±Ğ¸Ğ»ÑŒĞ½Ñ‹Ğµ ÑĞ±Ğ¾Ñ€ĞºĞ¸â€¦</p><div id="app-release-list" class="app-release-list" aria-label="Ğ¡Ñ‚Ğ°Ğ±Ğ¸Ğ»ÑŒĞ½Ñ‹Ğµ Ñ€ĞµĞ»Ğ¸Ğ·Ñ‹ XKeen UI"></div>${renderAppReleaseActions()}</div>`;
+  document.body.append(dialog);
+  bindDialogMotion(dialog);
+  dialog.showModal();
+  dialog.addEventListener('close', () => dialog.remove(), { once: true });
+  dialog.querySelector<HTMLButtonElement>('#app-releases-close')?.addEventListener('click', () => closeDialogWithMotion(dialog));
+  const status = dialog.querySelector<HTMLElement>('#app-releases-status')!;
+  const list = dialog.querySelector<HTMLElement>('#app-release-list')!;
+  const install = dialog.querySelector<HTMLButtonElement>('#app-release-install')!;
+  const choose = () => {
+    appRelease = appReleases.find((release) => release.tag_name === list.querySelector<HTMLElement>('.app-release-card.is-selected')?.dataset.releaseTag) ?? null;
+    const installed = state.status?.appVersion ?? APP_VERSION;
+    const downgrade = appRelease ? isInstalledNewerOrEqual(installed, appRelease.tag_name) && !isInstalledNewerOrEqual(appRelease.tag_name, installed) : false;
+    install.disabled = !appRelease || state.status?.mode !== 'router' || appUpdateInstalling || downgrade;
+    install.textContent = downgrade ? 'Ğ’Ñ‹Ğ±Ñ€Ğ°Ğ½Ğ° Ğ²ĞµÑ€ÑĞ¸Ñ ÑÑ‚Ğ°Ñ€ĞµĞµ ÑƒÑÑ‚Ğ°Ğ½Ğ¾Ğ²Ğ»ĞµĞ½Ğ½Ğ¾Ğ¹'
+      : appRelease && !isInstalledNewerOrEqual(installed, appRelease.tag_name) ? 'Ğ£ÑÑ‚Ğ°Ğ½Ğ¾Ğ²Ğ¸Ñ‚ÑŒ' : 'ĞŸĞµÑ€ĞµÑƒÑÑ‚Ğ°Ğ½Ğ¾Ğ²Ğ¸Ñ‚ÑŒ';
+  };
+  list.addEventListener('click', (event) => {
+    const card = (event.target as HTMLElement).closest<HTMLButtonElement>('.app-release-card');
+    if (!card) return;
+    list.querySelectorAll('.app-release-card').forEach((item) => item.classList.toggle('is-selected', item === card));
+    list.querySelectorAll('.app-release-card').forEach((item) => item.setAttribute('aria-pressed', String(item === card)));
+    choose();
+  });
+  install.addEventListener('click', async () => {
+    if (appRelease && await confirmInApp('Ğ£ÑÑ‚Ğ°Ğ½Ğ¾Ğ²Ğ¸Ñ‚ÑŒ XKeen UI?', `Ğ’ĞµÑ€ÑĞ¸Ñ ${appRelease.tag_name}. ĞŸĞ°Ğ½ĞµĞ»ÑŒ Ğ¿ĞµÑ€ĞµĞ·Ğ°Ğ¿ÑƒÑÑ‚Ğ¸Ñ‚ÑÑ Ğ¿Ğ¾ÑĞ»Ğµ ÑƒÑÑ‚Ğ°Ğ½Ğ¾Ğ²ĞºĞ¸.`, 'Ğ£ÑÑ‚Ğ°Ğ½Ğ¾Ğ²Ğ¸Ñ‚ÑŒ')) {
+      install.disabled = true;
+      install.textContent = 'Ğ£ÑÑ‚Ğ°Ğ½Ğ°Ğ²Ğ»Ğ¸Ğ²Ğ°ĞµĞ¼â€¦';
+      void installAppUpdate();
+    }
+  });
+  try {
+    appReleases = await listAppReleases();
+    if (!appReleases.length) throw new Error('Ğ¡Ñ‚Ğ°Ğ±Ğ¸Ğ»ÑŒĞ½Ñ‹Ğµ ARM64-Ñ€ĞµĞ»Ğ¸Ğ·Ñ‹ Ğ½Ğµ Ğ½Ğ°Ğ¹Ğ´ĞµĞ½Ñ‹.');
+    const installed = `v${(state.status?.appVersion ?? APP_VERSION).replace(/^v/i, '')}`;
+    list.innerHTML = appReleases.map((release, index) => {
+      const title = release.name?.trim() || release.tag_name;
+      const date = release.published_at ? new Date(release.published_at).toLocaleDateString('ru-RU') : 'Ğ´Ğ°Ñ‚Ğ° Ğ½Ğµ ÑƒĞºĞ°Ğ·Ğ°Ğ½Ğ°';
+      const notes = (release.body ?? '').trim().slice(0, 1800);
+      return `<button type="button" class="app-release-card${index === 0 ? ' is-selected' : ''}" data-release-tag="${escapeHtml(release.tag_name)}" aria-pressed="${index === 0}"><span class="app-release-card-heading"><strong>${escapeHtml(title)}</strong><span class="app-release-radio" aria-hidden="true"></span></span><span class="app-release-date">${escapeHtml(release.tag_name === installed ? `${date} Â· ÑƒÑÑ‚Ğ°Ğ½Ğ¾Ğ²Ğ»ĞµĞ½Ğ°` : date)}</span>${notes ? `<span class="app-release-notes">${formatAppReleaseNotes(notes)}</span>` : ''}</button>`;
+    }).join('');
+    status.textContent = `Ğ’Ñ‹Ğ±ĞµÑ€Ğ¸Ñ‚Ğµ Ğ²ĞµÑ€ÑĞ¸Ñ Â· ÑƒÑÑ‚Ğ°Ğ½Ğ¾Ğ²Ğ»ĞµĞ½Ğ° ${installed}`;
+    appRelease = appReleases[0] ?? null;
+    choose();
+  } catch (error) {
+    status.textContent = error instanceof Error ? error.message : 'ĞĞµ ÑƒĞ´Ğ°Ğ»Ğ¾ÑÑŒ Ğ·Ğ°Ğ³Ñ€ÑƒĞ·Ğ¸Ñ‚ÑŒ Ñ€ĞµĞ»Ğ¸Ğ·Ñ‹.';
+  }
+}
+
+function isInstalledNewerOrEqual(installed: string, selected: string): boolean {
+  const parts = (value: string) => value.replace(/^v/, '').split('.').map(Number);
+  const current = parts(installed);
+  const target = parts(selected);
+  for (let i = 0; i < 3; i += 1) {
+    if ((current[i] ?? 0) !== (target[i] ?? 0)) return (current[i] ?? 0) > (target[i] ?? 0);
+  }
+  return true;
+}
+
+function openSettings(): void {
+  const modal = document.createElement('dialog');
+  modal.className = 'modal settings-dialog';
+  modal.innerHTML = `<div class="modal-panel settings-panel"><div class="modal-heading"><span class="modal-icon">âš™</span><h2>ĞĞ°ÑÑ‚Ñ€Ğ¾Ğ¹ĞºĞ¸</h2><button class="icon-button" id="settings-close" type="button" aria-label="Ğ—Ğ°ĞºÑ€Ñ‹Ñ‚ÑŒ">Ã—</button></div><div class="modal-tabs" role="tablist" aria-label="Ğ Ğ°Ğ·Ğ´ĞµĞ»Ñ‹ Ğ½Ğ°ÑÑ‚Ñ€Ğ¾ĞµĞº">${SETTINGS_TABS.map(({ id, label }, index) => `<button class="settings-tab${index === 0 ? ' selected' : ''}" id="settings-${id}" type="button" role="tab" aria-controls="settings-content" aria-selected="${index === 0}">${label}</button>`).join('')}</div><div id="settings-content" role="tabpanel"></div></div>`;
+  document.body.append(modal);
+  bindDialogMotion(modal);
+  modal.showModal();
+  modal.querySelector<HTMLButtonElement>('#settings-close')?.addEventListener('click', () => closeDialogWithMotion(modal));
+  const content = modal.querySelector<HTMLElement>('#settings-content');
+  let githubProxies: string[] = [];
+  let settingsLoaders: SettingsLoader[] = [];
+  const renderProxyRows = () => {
+    const list = modal.querySelector<HTMLElement>('#github-proxy-list');
+    if (!list) return;
+    list.innerHTML = githubProxies.length ? githubProxies.map((proxy, index) => `<div class="github-proxy-row"><input type="url" data-proxy-index="${index}" value="${escapeHtml(proxy)}" aria-label="GitHub-Ğ¿Ñ€Ğ¾ĞºÑĞ¸ ${index + 1}"><button class="editor-button github-proxy-delete" type="button" data-proxy-delete="${index}">Ğ£Ğ´Ğ°Ğ»Ğ¸Ñ‚ÑŒ</button></div>`).join('') : '<p class="settings-inline-note">Ğ¡Ğ¿Ğ¸ÑĞ¾Ğº Ğ¿ÑƒÑÑ‚. ĞĞ±Ğ½Ğ¾Ğ²Ğ»ĞµĞ½Ğ¸Ğµ Ğ±ÑƒĞ´ĞµÑ‚ Ğ·Ğ°Ğ³Ñ€ÑƒĞ¶Ğ°Ñ‚ÑŒÑÑ Ğ½Ğ°Ğ¿Ñ€ÑĞ¼ÑƒÑ.</p>';
+    list.querySelectorAll<HTMLInputElement>('[data-proxy-index]').forEach((input) => input.addEventListener('input', () => {
+      const index = Number(input.dataset.proxyIndex);
+      if (Number.isInteger(index) && index >= 0 && index < githubProxies.length) githubProxies[index] = input.value;
+    }));
+    list.querySelectorAll<HTMLButtonElement>('[data-proxy-delete]').forEach((button) => button.addEventListener('click', () => {
+      const index = Number(button.dataset.proxyDelete);
+      if (Number.isInteger(index) && index >= 0 && index < githubProxies.length) {
+        githubProxies.splice(index, 1);
+        renderProxyRows();
+      }
+    }));
+  };
+  const renderSettingsTab = (tab: SettingsTabId) => {
+    settingsLoaders.forEach((loader) => loader.dispose());
+    settingsLoaders = [];
+    modal.querySelectorAll<HTMLButtonElement>('.settings-tab').forEach((button) => {
+      const selected = button.id === `settings-${tab}`;
+      button.classList.toggle('selected', selected);
+      button.setAttribute('aria-selected', String(selected));
+    });
+    if (!content) return;
+    content.setAttribute('aria-labelledby', `settings-${tab}`);
+    if (tab === 'general') {
+      content.innerHTML = `<section class="settings-section"><h3>Ğ’ĞĞ•Ğ¨ĞĞ˜Ğ™ Ğ’Ğ˜Ğ” Ğ˜ Ğ–Ğ£Ğ ĞĞĞ›</h3><label class="setting-row setting-control-row"><span><strong>Ğ¢ĞµĞ¼Ğ°</strong><small>Ğ¡Ñ‚Ğ°Ğ½Ğ´Ğ°Ñ€Ñ‚Ğ½Ğ°Ñ Ñ‚ĞµĞ¼Ğ° â€” Ñ‚Ñ‘Ğ¼Ğ½Ğ°Ñ. Ğ’Ñ‹Ğ±Ğ¾Ñ€ ÑĞ¾Ñ…Ñ€Ğ°Ğ½ÑĞµÑ‚ÑÑ Ğ² ÑÑ‚Ğ¾Ğ¼ Ğ±Ñ€Ğ°ÑƒĞ·ĞµÑ€Ğµ.</small></span><select class="setting-control" data-pref="theme"><option value="light" ${uiPreferences.theme === 'light' ? 'selected' : ''}>Ğ¡Ğ²ĞµÑ‚Ğ»Ğ°Ñ</option><option value="dark" ${uiPreferences.theme === 'dark' ? 'selected' : ''}>Ğ¢Ñ‘Ğ¼Ğ½Ğ°Ñ</option></select></label><label class="setting-row setting-control-row"><span><strong>Ğ§Ğ°ÑĞ¾Ğ²Ğ¾Ğ¹ Ğ¿Ğ¾ÑÑ Ğ¶ÑƒÑ€Ğ½Ğ°Ğ»Ğ°</strong><small>ĞŸĞ¾ĞºĞ°Ğ·Ñ‹Ğ²Ğ°ĞµÑ‚ Ğ²Ñ€ĞµĞ¼Ñ Ğ² Ğ²Ñ‹Ğ±Ñ€Ğ°Ğ½Ğ½Ğ¾Ğ¼ Ñ‡Ğ°ÑĞ¾Ğ²Ğ¾Ğ¼ Ğ¿Ğ¾ÑÑĞµ. Ğ—Ğ°Ğ¿Ğ¸ÑĞ¸ Ğ±ĞµĞ· Ñ‡Ğ°ÑĞ¾Ğ²Ğ¾Ğ³Ğ¾ Ğ¿Ğ¾ÑÑĞ° Ğ¾ÑÑ‚Ğ°ÑÑ‚ÑÑ ĞºĞ°Ğº ĞµÑÑ‚ÑŒ.</small></span><select class="setting-control" data-pref="journalTimeZone"><option value="local" ${uiPreferences.journalTimeZone === 'local' ? 'selected' : ''}>Ğ¡Ğ¸ÑÑ‚ĞµĞ¼Ğ½Ñ‹Ğ¹</option>${Array.from({ length: 27 }, (_, index) => index - 12).map((offset) => { const value = `UTC${offset >= 0 ? '+' : ''}${offset}`; return `<option value="${value}" ${uiPreferences.journalTimeZone === value ? 'selected' : ''}>${value}</option>`; }).join('')}</select></label></section><section class="settings-section"><h3>Ğ¡ĞĞ•Ğ”Ğ˜ĞĞ•ĞĞ˜Ğ¯</h3>${switchRow('closeConnectionsAfterApply', 'Ğ—Ğ°ĞºÑ€Ñ‹Ğ²Ğ°Ñ‚ÑŒ ÑĞ¾ĞµĞ´Ğ¸Ğ½ĞµĞ½Ğ¸Ñ Ğ¿Ğ¾ÑĞ»Ğµ Ğ¿Ñ€Ğ¸Ğ¼ĞµĞ½ĞµĞ½Ğ¸Ñ', 'Ğ—Ğ°ĞºÑ€Ñ‹Ğ²Ğ°ĞµÑ‚ Ğ°ĞºÑ‚Ğ¸Ğ²Ğ½Ñ‹Ğµ Ğ¿Ğ¾Ğ´ĞºĞ»ÑÑ‡ĞµĞ½Ğ¸Ñ Ğ¿Ğ¾ÑĞ»Ğµ ÑƒÑĞ¿ĞµÑˆĞ½Ğ¾Ğ³Ğ¾ Ğ¿Ñ€Ğ¸Ğ¼ĞµĞ½ĞµĞ½Ğ¸Ñ ĞºĞ¾Ğ½Ñ„Ğ¸Ğ³ÑƒÑ€Ğ°Ñ†Ğ¸Ğ¸ Mihomo.')}</section><section class="settings-section"><h3>DNS</h3><label class="setting-row setting-control-row"><span><strong>ĞĞ²Ñ‚Ğ¾Ğ²ĞºĞ»ÑÑ‡ĞµĞ½Ğ¸Ğµ ÑƒĞ¿Ñ€Ğ°Ğ²Ğ»ĞµĞ½Ğ¸Ñ DNS</strong><small>ĞŸÑ€Ğ¸ Ğ·Ğ°Ğ¿ÑƒÑĞºĞµ XKeen Ğ·Ğ°Ğ¿Ñ€Ğ¾ÑĞ¸Ñ‚ÑŒ Ğ¿Ğ¾Ğ´Ñ‚Ğ²ĞµÑ€Ğ¶Ğ´ĞµĞ½Ğ¸Ğµ Ğ¸ Ğ¿ĞµÑ€ĞµĞ´Ğ°Ñ‚ÑŒ DNS Ñ‡ĞµÑ€ĞµĞ· Mihomo</small></span><select class="setting-control" data-pref="dnsAutostart"><option value="off" ${uiPreferences.dnsAutostart === 'off' ? 'selected' : ''}>Ğ’Ñ‹ĞºĞ»ÑÑ‡ĞµĞ½Ğ¾</option><option value="confirm" ${uiPreferences.dnsAutostart === 'confirm' ? 'selected' : ''}>Ğ’ĞºĞ»ÑÑ‡Ğ°Ñ‚ÑŒ Ñ Ğ¿Ğ¾Ğ´Ñ‚Ğ²ĞµÑ€Ğ¶Ğ´ĞµĞ½Ğ¸ĞµĞ¼</option></select></label></section>`;
+      bindPreferenceInputs(content);
+      return;
+    }
+    if (tab === 'mihomo') {
+      content.innerHTML = `<section class="settings-section"><h3>Ğ¡Ğ•Ğ›Ğ•ĞšĞ¢ĞĞ Ğ«</h3>${switchRow('hideUnavailableProxies', 'Ğ¡ĞºÑ€Ñ‹Ğ²Ğ°Ñ‚ÑŒ Ğ½ĞµĞ´Ğ¾ÑÑ‚ÑƒĞ¿Ğ½Ñ‹Ğµ Ğ¿Ğ¾Ğ´ĞºĞ»ÑÑ‡ĞµĞ½Ğ¸Ñ', 'Ğ¡ĞºÑ€Ñ‹Ğ²Ğ°ĞµÑ‚ ÑƒĞ·Ğ»Ñ‹ Ğ¸Ğ· ÑĞ¿Ğ¸ÑĞºĞ° Ğ¿Ğ¾ÑĞ»Ğµ ÑƒĞºĞ°Ğ·Ğ°Ğ½Ğ½Ğ¾Ğ³Ğ¾ Ñ‡Ğ¸ÑĞ»Ğ° Ğ½ĞµÑƒĞ´Ğ°Ñ‡Ğ½Ñ‹Ñ… Ğ¿Ñ€Ğ¾Ğ²ĞµÑ€Ğ¾Ğº. ĞšĞ¾Ğ½Ñ„Ğ¸Ğ³ÑƒÑ€Ğ°Ñ†Ğ¸Ñ Ğ½Ğµ Ğ¼ĞµĞ½ÑĞµÑ‚ÑÑ.')}${numberRow('unavailableThreshold', 'ĞŸĞ¾Ñ€Ğ¾Ğ³ Ñ‚Ğ°Ğ¹Ğ¼Ğ°ÑƒÑ‚Ğ¾Ğ²', 'Ğ§Ğ¸ÑĞ»Ğ¾ Ğ½ĞµÑƒĞ´Ğ°Ñ‡Ğ½Ñ‹Ñ… Ğ¿Ñ€Ğ¾Ğ²ĞµÑ€Ğ¾Ğº Ğ¿Ğ¾Ğ´Ñ€ÑĞ´ Ğ´Ğ»Ñ ÑĞºÑ€Ñ‹Ñ‚Ğ¸Ñ ÑƒĞ·Ğ»Ğ° (1â€“10).', 1, 10)}<div class="setting-row setting-control-row"><span><strong>Ğ¡Ğ¾Ñ€Ñ‚Ğ¸Ñ€Ğ¾Ğ²ĞºĞ°</strong><small>ĞœĞµĞ½ÑĞµÑ‚ Ñ‚Ğ¾Ğ»ÑŒĞºĞ¾ Ğ¿Ğ¾Ñ€ÑĞ´Ğ¾Ğº ÑƒĞ·Ğ»Ğ¾Ğ² Ğ² Ğ¿Ğ°Ğ½ĞµĞ»Ğ¸. ĞĞ²Ñ‚Ğ¾Ğ²Ñ‹Ğ±Ğ¾Ñ€ Ğ² Ğ³Ñ€ÑƒĞ¿Ğ¿Ğµ fallback Ğ¾ÑÑ‚Ğ°Ñ‘Ñ‚ÑÑ Ğ¿Ñ€ĞµĞ¶Ğ½Ğ¸Ğ¼.</small></span>${renderSelectorSortControl(uiPreferences.selectorSort)}</div></section><section class="settings-section"><h3>ĞŸĞ ĞĞ’Ğ•Ğ ĞšĞ PING</h3><div class="setting-row setting-control-row"><span><strong>URL ping</strong><small>Ğ’Ğ²ĞµĞ´Ğ¸Ñ‚Ğµ Ğ°Ğ´Ñ€ĞµÑ Ğ±ĞµĞ· http:// Ğ¸Ğ»Ğ¸ https://. Mihomo Ğ¿Ñ€Ğ¾Ğ²ĞµÑ€Ğ¸Ñ‚ ĞµĞ³Ğ¾ Ñ‡ĞµÑ€ĞµĞ· Ğ²Ñ‹Ğ±Ñ€Ğ°Ğ½Ğ½Ñ‹Ğ¹ ÑƒĞ·ĞµĞ».</small></span><div class="setting-inline-controls"><select class="setting-control setting-scheme" data-pref="pingScheme" aria-label="ĞŸÑ€Ğ¾Ñ‚Ğ¾ĞºĞ¾Ğ» ping"><option value="https" ${uiPreferences.pingScheme === 'https' ? 'selected' : ''}>https</option><option value="http" ${uiPreferences.pingScheme === 'http' ? 'selected' : ''}>http</option></select>${renderPingUrlControl(uiPreferences.pingUrl)}</div></div>${numberRow('pingTimeoutMs', 'Ğ¢Ğ°Ğ¹Ğ¼Ğ°ÑƒÑ‚', 'Ğ¡ĞºĞ¾Ğ»ÑŒĞºĞ¾ Ğ¶Ğ´Ğ°Ñ‚ÑŒ Ğ¾Ñ‚Ğ²ĞµÑ‚ Ğ¿Ñ€Ğ¸ Ñ€ÑƒÑ‡Ğ½Ğ¾Ğ¹ Ğ¿Ñ€Ğ¾Ğ²ĞµÑ€ĞºĞµ. ĞĞ°Ğ¿Ñ€Ğ¸Ğ¼ĞµÑ€, 5000 Ğ¼Ñ â€” 5 ÑĞµĞºÑƒĞ½Ğ´.', 500, 30000, 'Ğ¼Ñ')}</section><section class="settings-section"><h3>Ğ¡ĞĞ•Ğ”Ğ˜ĞĞ•ĞĞ˜Ğ¯</h3>${switchRow('showConnectionSource', 'ĞŸĞ¾ĞºĞ°Ğ·Ñ‹Ğ²Ğ°Ñ‚ÑŒ Ğ¸Ğ¼Ñ Ğ¸ÑÑ‚Ğ¾Ñ‡Ğ½Ğ¸ĞºĞ°', 'ĞŸĞ¾ĞºĞ°Ğ·Ñ‹Ğ²Ğ°ĞµÑ‚ Ğ¸Ğ¼Ñ ÑƒÑÑ‚Ñ€Ğ¾Ğ¹ÑÑ‚Ğ²Ğ° Ğ¸Ğ· KeeneticOS Ğ²Ğ¼ĞµÑÑ‚Ğ¾ IP-Ğ°Ğ´Ñ€ĞµÑĞ°. Ğ¢Ñ€ĞµĞ±ÑƒĞµÑ‚ÑÑ Ğ´Ğ¾ÑÑ‚ÑƒĞ¿ Ğº ÑĞ¿Ğ¸ÑĞºÑƒ ÑƒÑÑ‚Ñ€Ğ¾Ğ¹ÑÑ‚Ğ² RCI; ĞµÑĞ»Ğ¸ Ğ¸Ğ¼Ñ Ğ½Ğµ Ğ½Ğ°Ğ¹Ğ´ĞµĞ½Ğ¾, Ğ¾ÑÑ‚Ğ°Ñ‘Ñ‚ÑÑ IP.')}</section>`;
+      bindPreferenceInputs(content);
+      bindSelectorSortControl(content);
+      bindPingUrlControl(content);
+      return;
+    }
+    if (tab === 'sources') {
+      content.innerHTML = `<section class="settings-section"><h3>ĞĞ’Ğ¢ĞĞŸĞ ĞĞ’Ğ•Ğ ĞšĞ</h3>${switchRow('autoCheckPanel', 'ĞĞ²Ñ‚Ğ¾Ğ¿Ñ€Ğ¾Ğ²ĞµÑ€ĞºĞ° Ğ¿Ğ°Ğ½ĞµĞ»Ğ¸', 'ĞŸÑ€Ğ¾Ğ²ĞµÑ€ÑĞµÑ‚ Ğ½Ğ°Ğ»Ğ¸Ñ‡Ğ¸Ğµ Ğ½Ğ¾Ğ²Ğ¾Ğ¹ Ğ²ĞµÑ€ÑĞ¸Ğ¸ Ñ€Ğ°Ğ· Ğ² 4 Ñ‡Ğ°ÑĞ°, Ğ¿Ğ¾ĞºĞ° ÑÑ‚Ğ° Ğ²ĞºĞ»Ğ°Ğ´ĞºĞ° Ğ¾Ñ‚ĞºÑ€Ñ‹Ñ‚Ğ°.')}${switchRow('autoCheckCore', 'ĞĞ²Ñ‚Ğ¾Ğ¿Ñ€Ğ¾Ğ²ĞµÑ€ĞºĞ° ÑĞ´ĞµÑ€', 'ĞŸÑ€Ğ¾Ğ²ĞµÑ€ÑĞµÑ‚ Ñ€ĞµĞ»Ğ¸Ğ·Ñ‹ ÑƒÑÑ‚Ğ°Ğ½Ğ¾Ğ²Ğ»ĞµĞ½Ğ½Ñ‹Ñ… ÑĞ´ĞµÑ€ Ñ€Ğ°Ğ· Ğ² 4 Ñ‡Ğ°ÑĞ°, Ğ¿Ğ¾ĞºĞ° ÑÑ‚Ğ° Ğ²ĞºĞ»Ğ°Ğ´ĞºĞ° Ğ¾Ñ‚ĞºÑ€Ñ‹Ñ‚Ğ°.')}${switchRow('keepCoreBackup', 'Ğ ĞµĞ·ĞµÑ€Ğ²Ğ½Ğ°Ñ ĞºĞ¾Ğ¿Ğ¸Ñ ÑĞ´Ñ€Ğ°', 'Ğ¥Ñ€Ğ°Ğ½Ğ¸Ñ‚ÑŒ Ğ¿Ñ€ĞµĞ¶Ğ½Ğ¸Ğ¹ Ğ±Ğ¸Ğ½Ğ°Ñ€Ğ½Ğ¸Ğº Ğ´Ğ»Ñ Ğ¿Ğ¾ÑĞ»ĞµĞ´ÑƒÑÑ‰ĞµĞ³Ğ¾ Ğ¾Ñ‚ĞºĞ°Ñ‚Ğ°. ĞĞ° Ğ²Ñ€ĞµĞ¼Ñ Ğ¾Ğ±Ğ½Ğ¾Ğ²Ğ»ĞµĞ½Ğ¸Ñ Ğ²Ñ€ĞµĞ¼ĞµĞ½Ğ½Ğ°Ñ ĞºĞ¾Ğ¿Ğ¸Ñ Ğ´Ğ»Ñ Ğ·Ğ°Ñ‰Ğ¸Ñ‚Ñ‹ Ğ²ÑÑ‘ Ñ€Ğ°Ğ²Ğ½Ğ¾ ÑĞ¾Ğ·Ğ´Ğ°Ñ‘Ñ‚ÑÑ.')}</section><section class="settings-section"><h3>Ğ˜Ğ¡Ğ¢ĞĞ§ĞĞ˜ĞšĞ˜ ĞĞ‘ĞĞĞ’Ğ›Ğ•ĞĞ˜Ğ™</h3>
+        <label class="source-field"><span><strong>Ğ˜ÑÑ‚Ğ¾Ñ‡Ğ½Ğ¸Ğº Xray</strong><small>Ğ¤Ğ¾Ñ€Ğ¼Ğ°Ñ‚: github.com/Ğ²Ğ»Ğ°Ğ´ĞµĞ»ĞµÑ†/Ñ€ĞµĞ¿Ğ¾Ğ·Ğ¸Ñ‚Ğ¾Ñ€Ğ¸Ğ¹</small></span><input id="source-xray" type="url" autocomplete="url" placeholder="https://github.com/XTLS/Xray-core"></label>
+        <label class="source-field"><span><strong>Ğ˜ÑÑ‚Ğ¾Ñ‡Ğ½Ğ¸Ğº Ñ€ĞµĞ»Ğ¸Ğ·Ğ¾Ğ² Mihomo</strong><small>ĞœĞ¾Ğ¶Ğ½Ğ¾ ÑƒĞºĞ°Ğ·Ğ°Ñ‚ÑŒ Ñ€ĞµĞ¿Ğ¾Ğ·Ğ¸Ñ‚Ğ¾Ñ€Ğ¸Ğ¹ ÑƒÑÑ‚Ğ°Ğ½Ğ¾Ğ²Ğ»ĞµĞ½Ğ½Ğ¾Ğ³Ğ¾ Ñ„Ğ¾Ñ€ĞºĞ° Ğ¸Ğ»Ğ¸ Ğ´Ñ€ÑƒĞ³Ğ¾Ğ¹ GitHub-Ñ€ĞµĞ¿Ğ¾Ğ·Ğ¸Ñ‚Ğ¾Ñ€Ğ¸Ğ¹</small></span><select id="source-mihomo-preset"><option value="official">ĞÑ€Ğ¸Ğ³Ğ¸Ğ½Ğ°Ğ»ÑŒĞ½Ñ‹Ğ¹ Mihomo Â· MetaCubeX</option><option value="prizrak">Prizrak-Core</option><option value="custom">Ğ”Ñ€ÑƒĞ³Ğ¾Ğ¹ Ñ„Ğ¾Ñ€Ğº</option></select></label>
+        <label class="source-field"><span><strong>Ğ ĞµĞ¿Ğ¾Ğ·Ğ¸Ñ‚Ğ¾Ñ€Ğ¸Ğ¹</strong><small>ĞŸÑ€Ğ¾Ğ²ĞµÑ€ĞºĞ° Ñ€ĞµĞ»Ğ¸Ğ·Ğ¾Ğ² Ğ¸ÑĞ¿Ğ¾Ğ»ÑŒĞ·ÑƒĞµÑ‚ ÑÑ‚Ğ¾ Ğ·Ğ½Ğ°Ñ‡ĞµĞ½Ğ¸Ğµ; ÑĞ¾Ñ…Ñ€Ğ°Ğ½ĞµĞ½Ğ¸Ğµ Ğ½Ğµ Ğ·Ğ°Ğ¼ĞµĞ½ÑĞµÑ‚ ÑƒÑÑ‚Ğ°Ğ½Ğ¾Ğ²Ğ»ĞµĞ½Ğ½Ğ¾Ğµ ÑĞ´Ñ€Ğ¾</small></span><input id="source-mihomo" type="url" autocomplete="url" placeholder="https://github.com/MetaCubeX/mihomo"></label>
+        <div class="source-save-row"><span class="sources-feedback" id="sources-feedback" aria-live="polite">Ğ—Ğ°Ğ³Ñ€ÑƒĞ¶Ğ°ĞµĞ¼ ÑĞ¾Ñ…Ñ€Ğ°Ğ½Ñ‘Ğ½Ğ½Ñ‹Ğµ Ğ·Ğ½Ğ°Ñ‡ĞµĞ½Ğ¸Ñâ€¦</span><button class="editor-button editor-button-primary" type="button" id="save-core-sources">Ğ¡Ğ¾Ñ…Ñ€Ğ°Ğ½Ğ¸Ñ‚ÑŒ Ğ¸ÑÑ‚Ğ¾Ñ‡Ğ½Ğ¸ĞºĞ¸</button></div></section><section class="settings-section github-proxy-settings"><h3>GITHUB PROXY</h3><p class="settings-inline-note">ĞŸÑ€Ğ¾ĞºÑĞ¸ Ğ¸ÑĞ¿Ğ¾Ğ»ÑŒĞ·ÑƒÑÑ‚ÑÑ Ğ¿Ğ¾ Ğ¿Ğ¾Ñ€ÑĞ´ĞºÑƒ ÑĞ²ĞµÑ€Ñ…Ñƒ Ğ²Ğ½Ğ¸Ğ· Ğ¿Ñ€Ğ¸ Ğ½ĞµĞ´Ğ¾ÑÑ‚ÑƒĞ¿Ğ½Ğ¾ÑÑ‚Ğ¸ GitHub. ĞÑÑ‚Ğ°Ğ²ÑŒÑ‚Ğµ ÑĞ¿Ğ¸ÑĞ¾Ğº Ğ¿ÑƒÑÑ‚Ñ‹Ğ¼, Ñ‡Ñ‚Ğ¾Ğ±Ñ‹ Ğ·Ğ°Ğ³Ñ€ÑƒĞ¶Ğ°Ñ‚ÑŒ Ğ¾Ğ±Ğ½Ğ¾Ğ²Ğ»ĞµĞ½Ğ¸Ğµ Ğ½Ğ°Ğ¿Ñ€ÑĞ¼ÑƒÑ.</p><div id="github-proxy-list"><p class="settings-inline-note">Ğ—Ğ°Ğ³Ñ€ÑƒĞ¶Ğ°ĞµĞ¼ ÑĞ¾Ñ…Ñ€Ğ°Ğ½Ñ‘Ğ½Ğ½Ñ‹Ğ¹ ÑĞ¿Ğ¸ÑĞ¾Ğºâ€¦</p></div><div class="github-proxy-add-row"><input id="github-proxy-new" type="url" placeholder="https://proxy.example" autocomplete="url"><button class="editor-button" type="button" id="github-proxy-add">Ğ”Ğ¾Ğ±Ğ°Ğ²Ğ¸Ñ‚ÑŒ</button></div><div class="source-save-row"><span class="sources-feedback" id="github-proxy-feedback" aria-live="polite">Ğ¡Ğ¿Ğ¸ÑĞ¾Ğº Ñ…Ñ€Ğ°Ğ½Ğ¸Ñ‚ÑÑ Ğ½Ğ° Ñ€Ğ¾ÑƒÑ‚ĞµÑ€Ğµ.</span><button class="editor-button editor-button-primary" type="button" id="github-proxy-save">Ğ¡Ğ¾Ñ…Ñ€Ğ°Ğ½Ğ¸Ñ‚ÑŒ Ğ¿Ñ€Ğ¾ĞºÑĞ¸</button></div></section>`;
       const xrayInput = content.querySelector<HTMLInputElement>('#source-xray');
       const mihomoInput = content.querySelector<HTMLInputElement>('#source-mihomo');
       const mihomoPreset = content.querySelector<HTMLSelectElement>('#source-mihomo-preset');

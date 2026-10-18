@@ -1,324 +1,712 @@
-YªçŠx-®éÜj×¢ëiºÚ+Š§j[h‘éÜ¢éí×Ÿ{Ñ:-jZ.¶›­–)Ş³V–×÷'B²6ö×'FÖVçBÂVF—F÷%7FFRÒg&öÒt6öFVÖ—'&÷"÷7FFRs°¦–×÷'B²VF—F÷%f–WrÂ†–v†Æ–v‡D7F—fTÆ–æRÂ¶W–ÖÂÆ–æTçVÖ&W'2Òg&öÒt6öFVÖ—'&÷"÷f–Wrs°¦–×÷'B²FVfVÇD¶W–ÖÂ†—7F÷'’Â†—7F÷'”¶W–ÖÒg&öÒt6öFVÖ—'&÷"ö6öÖÖæG2s°¦–×÷'B²†–v†Æ–v‡E7G–ÆRÂ7–çF„†–v†Æ–v‡F–ærÒg&öÒt6öFVÖ—'&÷"öÆæwVvRs°¦–×÷'B²Fw2Òg&öÒtÆW¦W"ö†–v†Æ–v‡Bs°¦–×÷'B²–ÖÂÒg&öÒt6öFVÖ—'&÷"öÆær×–ÖÂs°¦–×÷'B²§6öâÒg&öÒt6öFVÖ—'&÷"öÆærÖ§6öâs°¦–×÷'B²'6R2'6T§6öæ2Â&–çE'6TW'&÷$6öFRÂG—R'6TW'&÷"Òg&öÒv§6öæ2×'6W"s°¦–×÷'B²—4ÖÂ—56WÂ'6TFö7VÖVçBÒg&öÒw–ÖÂs°¦–×÷'B²6†ö÷6U&VfW&Væ6UFV×ÆFRÂvWDFVfVÇEFV×ÆFRÒg&öÒrâ÷FV×ÆFW2s°¦–×÷'B²vWE‡&•FV×ÆFUF&vWBÒg&öÒrâ÷FV×ÆFR×F&vWBs°¦–×÷'B²Ç”7F—fTÖ–†öÖô6öæf–rÂÇ•‡&”6öæf–tf–ÆRÂvWD7F—fTÖ–†öÖô6öæf–rÂvWE&÷WFW$6öæf–tf–ÆRÂvWE‡&”6öæf–tf–ÆRÂÆ—7DÖ–†öÖô6öæf–t&6·W2ÂÆöuV”W'&÷"Â&W7F÷&TÖ–†öÖô6öæf–t&6·WÂ6fT7F—fTÖ–†öÖô6öæf–rÂ6fU&÷WFW$6öæf–tf–ÆRÂ6fU‡&”6öæf–tf–ÆRÂG—R&÷WFW$6öæf–tf–ÆRÂG—R‡&”6öæf–tf–ÆRÒg&öÒrâö’s°¦–×÷'B²6öæf—&Ô–äÒg&öÒrâö6öæf—&ÒÖF–Æörs°¦–×÷'B²6åW'6—7D6öæf–rÂ'Vä6öæf–tÇ’Òg&öÒrâö6öæf–rÖ7F–öç2s°¦–×÷'B²vVæW&FT6öæf–tf÷$6÷&RÒg&öÒrâö÷WF&÷VæB×'6W"s°¦–×÷'B²VæDÖ–†öÖõ&÷‡’Òg&öÒrâ÷&÷‡’Ö–×÷'Bs°¦–×÷'B²7&VFTÖ–†öÖõ&÷f–FW%–ÖÂÂ–ç6W'DÖ–†öÖõ&÷f–FW"ÂæW‡DÖ–†öÖõ&÷f–FW$æÖRÂG—RÖ–†öÖõ&÷f–FW%÷6—F–öâÂG—RÖ–†öÖõ&÷f–FW%6WGF–æw2Òg&öÒrâöÖ–†öÖò×&÷f–FW"s°¦–×÷'B²f÷&ÖD&6·WFFRÂf÷&ÖD&6·W6—¦RÒg&öÒrâö6öæf–rÖ&6·W2s° ¦6öç7BG&gD¶W’Òw†¶VVâ×V“¦G&gC¢s°¦6öç7B7F—fTf–ÆT¶W’Òw†¶VVâ×V“¦G&gBÖ7F—fRÖf–ÆRs°¦6öç7BG&gDf–ÆW2Ò°¢²–C¢v6öæf–rrÂÆ&VÃ¢v6öæf–rrÂf–ÆVæÖS¢v6öæf–rç–ÖÂrÂf÷&ÖC¢w–ÖÂrÒÀ¢²–C¢v—öW†6ÇVFRrÂÆ&VÃ¢v—öW†6ÇVFRrÂf–ÆVæÖS¢v—öW†6ÇVFRæÇ7BrÂf÷&ÖC¢wFW‡BrÒÀ¢²–C¢w÷'EöW†6ÇVFRrÂÆ&VÃ¢w÷'EöW†6ÇVFRrÂf–ÆVæÖS¢w÷'EöW†6ÇVFRæÇ7BrÂf÷&ÖC¢wFW‡BrÒÀ¢²–C¢w÷'E÷&÷‡––ærrÂÆ&VÃ¢w÷'E÷&÷‡––ærrÂf–ÆVæÖS¢w÷'E÷&÷‡––æræÇ7BrÂf÷&ÖC¢wFW‡BrÒÀ¢²–C¢w†¶VVârÂÆ&VÃ¢w†¶VVârÂf–ÆVæÖS¢w†¶VVâæ§6öârÂf÷&ÖC¢v§6öârÒÀ¢²–C¢w‡&•öÆörrÂÆ&VÃ¢vÆörrÂf–ÆVæÖS¢söÆöræ§6öârÂf÷&ÖC¢v§6öârÒÀ¢²–C¢w‡&•ö–æ&÷VæG2rÂÆ&VÃ¢v–æ&÷VæG2rÂf–ÆVæÖS¢s5ö–æ&÷VæG2æ§6öârÂf÷&ÖC¢v§6öârÒÀ¢²–C¢w‡&•ö§6öârÂÆ&VÃ¢v6öæf–rrÂf–ÆVæÖS¢sEö÷WF&÷VæG2æ§6öârÂf÷&ÖC¢v§6öârÒÀ¢²–C¢w‡&•÷&÷WF–ærrÂÆ&VÃ¢w&÷WF–ærrÂf–ÆVæÖS¢sU÷&÷WF–æræ§6öârÂf÷&ÖC¢v§6öæ2rÒÀ¢²–C¢w‡&•÷öÆ–7’rÂÆ&VÃ¢wöÆ–7’rÂf–ÆVæÖS¢se÷öÆ–7’æ§6öârÂf÷&ÖC¢v§6öârÒÀ¥Ò26öç7C°¦ÆWBVF—F÷#¢VF—F÷%f–WrÂçVÆÂÒçVÆÃ°¦ÆWBVF—F÷$&–æF–æw3¢&÷'D6öçG&öÆÆW"ÂçVÆÂÒçVÆÃ°¦ÆWBVF—F÷$VF—F–ærÒfÇ6S°¦ÆWBVF—F÷%&VDöæÇ’ÒæWr6ö×'FÖVçB‚“°¦ÆWBVF—F÷$VF—F&ÆRÒæWr6ö×'FÖVçB‚“°¦ÆWB7F—fTf–ÆRÒ6W76–öå7F÷&vRævWD—FVÒ†7F—fTf–ÆT¶W’’óòv6öæf–rs°¦–b†7F—fTf–ÆRÓÓÒw‡&•ö§6öæ2r’7F—fTf–ÆRÒw‡&•÷&÷WF–ærs°¦ÆWB7F—fT6öæf–u6æ6†÷C¢7G&–ærÂçVÆÂÒçVÆÃ°¦6öç7BÆ—7E6æ6†÷G2ÒæWrÖÅ&÷WFW$6öæf–tf–ÆRÂ7G&–æsâ‚“°¦6öç7B‡&•6æ6†÷G2ÒæWrÖÅ‡&”6öæf–tf–ÆRÂ7G&–æsâ‚“°¦ÆWB6öæf–t7F–öä'W7’ÒfÇ6S°¦ÆWB7W'&VçDFö7VÖVçEfÆ–BÒfÇ6S°¦ÆWBÆ7DÆövvVEfÆ–FF–öäW'&÷#¢7G&–ærÂçVÆÂÒçVÆÃ° ¦gVæ7F–öâ—5&÷WFW$6öæf–tf–ÆR†f–ÆS¢7G&–ær“¢f–ÆR—2&÷WFW$6öæf–tf–ÆR°¢&WGW&âf–ÆRÓÓÒv—öW†6ÇVFRrÇÂf–ÆRÓÓÒw÷'EöW†6ÇVFRrÇÂf–ÆRÓÓÒw÷'E÷&÷‡––ærrÇÂf–ÆRÓÓÒw†¶VVâs°§Ğ ¦gVæ7F–öâ—5‡&”6öæf–tf–ÆR†f–ÆS¢7G&–ær“¢f–ÆR—2‡&”6öæf–tf–ÆR°¢&WGW&âf–ÆRÓÓÒw‡&•öÆörrÇÂf–ÆRÓÓÒw‡&•ö–æ&÷VæG2rÇÂf–ÆRÓÓÒw‡&•ö§6öârÇÂf–ÆRÓÓÒw‡&•÷&÷WF–ærrÇÂf–ÆRÓÓÒw‡&•÷öÆ–7’s°§Ğ ¦gVæ7F–öâ‡&””f–ÆR†f–ÆS¢7G&–ær“¢‡&”6öæf–tf–ÆR°¢6öç7Bf–ÆW3¢&V6÷&CÇ7G&–ærÂ‡&”6öæf–tf–ÆSâÒ°¢‡&•öÆös¢w‡&•öÆörrÂ‡&•ö–æ&÷VæG3¢w‡&•ö–æ&÷VæG2rÂ‡&•ö§6öã¢w‡&•ö÷WF&÷VæG2rÀ¢‡&•÷&÷WF–æs¢w‡&•÷&÷WF–ærrÂ‡&•÷öÆ–7“¢w‡&•÷öÆ–7’rÀ¢Ó°¢&WGW&âf–ÆW5¶f–ÆUÒóòw‡&•ö÷WF&÷VæG2s°§Ğ ¦gVæ7F–öâ7W'&VçE6æ6†÷B‚“¢7G&–ærÂçVÆÂ°¢&WGW&â7W'&VçDf–ÆR‚’æ–BÓÓÒv6öæf–rrò7F—fT6öæf–u6æ6†÷@¢¢—5&÷WFW$6öæf–tf–ÆR†7W'&VçDf–ÆR‚’æ–B’òÆ—7E6æ6†÷G2ævWB†7W'&VçDf–ÆR‚’æ–B2&÷WFW$6öæf–tf–ÆR’óòçVÆÀ¢¢—5‡&”6öæf–tf–ÆR†7W'&VçDf–ÆR‚’æ–B’ò‡&•6æ6†÷G2ævWB‡‡&””f–ÆR†7W'&VçDf–ÆR‚’æ–B’’óòçVÆÂ¢çVÆÃ°§Ğ ¦gVæ7F–öâ7W'&VçDf–ÆR‚’°¢&WGW&âG&gDf–ÆW2æf–æB‚†f–ÆR’Óâf–ÆRæ–BÓÓÒ7F—fTf–ÆR’óòG&gDf–ÆW5³Ó°§Ğ ¦gVæ7F–öâ7–æ46öæf–t7F–öç2†6öçFVçC¢7G&–ærÂfÆ–BÒ7W'&VçDFö7VÖVçEfÆ–B“¢fö–B°¢6öç7BVæ&ÆVBÒ6åW'6—7D6öæf–r†6öçFVçBÂ7W'&VçE6æ6†÷B‚’ÂfÆ–BÂ6öæf–t7F–öä'W7’“°¢6öç7BÇ”'WGFöâÒFö7VÖVçBçVW'•6VÆV7F÷#Ä…DÔÄ'WGFöäVÆVÖVçCâ‚r66öæf–rÖÇ’Ö7F—fRr“°¢–b†Ç”'WGFöâ’Ç”'WGFöâæF—6&ÆVBÒVæ&ÆVC°¢6öç7B6fT'WGFöâÒFö7VÖVçBçVW'•6VÆV7F÷#Ä…DÔÄ'WGFöäVÆVÖVçCâ‚r66öæf–r×6fRÖ7F—fRr“°¢–b‡6fT'WGFöâ’6fT'WGFöâæF—6&ÆVBÒVæ&ÆVC°§Ğ ¦gVæ7F–öâ6WDVF—F÷$–FVçF—G’‡&÷WFW$ÖöFS¢&ööÆVâÂ7F—fT6÷&S¢vÖ–†öÖòrÂw‡&’rÂçVÆÂ“¢fö–B°¢6öç7Bf–ÆRÒ7W'&VçDf–ÆR‚“°¢Fö7VÖVçBçVW'•6VÆV7F÷$ÆÃÄ…DÔÄ'WGFöäVÆVÖVçCâ‚u¶FFÖ6öæf–rÖf–ÆUÒr’æf÷$V6‚‚†'WGFöâ’Óâ°¢6öç7B6VÆV7FVBÒ'WGFöâæFF6WBæ6öæf–tf–ÆRÓÓÒf–ÆRæ–C°¢'WGFöâæ6Æ74Æ—7BçFövvÆR‚w6VÆV7FVBrÂ6VÆV7FVB“°¢'WGFöâç6WDGG&–'WFR‚v&–×&W76VBrÂ7G&–ær‡6VÆV7FVB’“°¢Ò“°¢Fö7VÖVçBçVW'•6VÆV7F÷$ÆÃÄ…DÔÄVÆVÖVçCâ‚u¶FF×&÷WFW"Öf–ÆUÒr’æf÷$V6‚‚†VÆVÖVçB’Óâ°¢VÆVÖVçBæ†–FFVâÒf–ÆRæ–BÓÒv6öæf–rrbb—5&÷WFW$6öæf–tf–ÆR†f–ÆRæ–B’bb—5‡&”6öæf–tf–ÆR†f–ÆRæ–B“°¢Ò“°¢6öç7BÇ”'WGFöâÒFö7VÖVçBçVW'•6VÆV7F÷#Ä…DÔÄ'WGFöäVÆVÖVçCâ‚r66öæf–rÖÇ’Ö7F—fRr“°¢–b†Ç”'WGFöâ’Ç”'WGFöâæ†–FFVâÒf–ÆRæ–BÓÒv6öæf–rrbb—5‡&”6öæf–tf–ÆR†f–ÆRæ–B“°¢6öç7B6fT'WGFöâÒFö7VÖVçBçVW'•6VÆV7F÷#Ä…DÔÄ'WGFöäVÆVÖVçCâ‚r66öæf–r×6fRÖ7F—fRr“°¢–b‡6fT'WGFöâ’6fT'WGFöâæ†–FFVâÒ&÷WFW$ÖöFS°¢Fö7VÖVçBçVW'•6VÆV7F÷$ÆÃÄ…DÔÄVÆVÖVçCâ‚u¶FF×7G'V7GW&VBÖöæÇ•Òr’æf÷$V6‚‚†VÆVÖVçB’Óâ°¢VÆVÖVçBæ†–FFVâÒf–ÆRæf÷&ÖBÓÓÒwFW‡Bs°¢Ò“°¢6öç7BFV×ÆFT'WGFöâÒFö7VÖVçBçVW'•6VÆV7F÷#Ä…DÔÄVÆVÖVçCâ‚r7–ÖÂ×FV×ÆFRr“°¢–b‡FV×ÆFT'WGFöâ’FV×ÆFT'WGFöâæ†–FFVâÒf–ÆRæ–BÓÓÒw†¶VVârÇÂf–ÆRæf÷&ÖBÓÓÒwFW‡Bs°¢6öç7BFE&÷‡”'WGFöâÒFö7VÖVçBçVW'•6VÆV7F÷#Ä…DÔÄVÆVÖVçCâ‚r7–ÖÂÖFB×&÷‡’r“°¢–b†FE&÷‡”'WGFöâ’FE&÷‡”'WGFöâæ†–FFVâÒf–ÆRæ–BÓÒv6öæf–rrÇÂ7F—fT6÷&RÓÒvÖ–†öÖòs°¢6öç7B&6·W4'WGFöâÒFö7VÖVçBçVW'•6VÆV7F÷#Ä…DÔÄVÆVÖVçCâ‚r7–ÖÂÖ&6·W2r“°¢–b†&6·W4'WGFöâ’&6·W4'WGFöâæ†–FFVâÒ&÷WFW$ÖöFRÇÂf–ÆRæ–BÓÒv6öæf–rrÇÂ7F—fT6÷&RÓÒvÖ–†öÖòs°§Ğ ¦gVæ7F–öâ&–æD6öæf–t&6·W2‡6–væÃ¢&÷'E6–væÂ“¢fö–B°¢Fö7VÖVçBçVW'•6VÆV7F÷#Ä…DÔÄ'WGFöäVÆVÖVçCâ‚r7–ÖÂÖ&6·W2r“òæFDWfVçDÆ—7FVæW"‚v6Æ–6²rÂ7–æ2†WfVçB’Óâ°¢†WfVçBæ7W'&VçEF&vWB2…DÔÄ'WGFöäVÆVÖVçB’æ6Æ÷6W7B‚vFWF–Ç2r“òç&VÖ÷fTGG&–'WFR‚v÷Vâr“°¢6öç7BF–ÆörÒFö7VÖVçBæ7&VFTVÆVÖVçB‚vF–Æörr“°¢F–Æöræ6Æ74æÖRÒvÖöFÂ6öæf–rÖ&6·W2ÖF–Æörs°¢F–Æörç6WDGG&–'WFR‚v&–ÖÆ&VÆÆVF'’rÂv6öæf–rÖ&6·W2×F—FÆRr“°¢F–Æöræ–ææW$…DÔÂÒÇ6V7F–öâ6Æ73Ò&ÖöFÂ×æVÂ#ãÆ†VFW"6Æ73Ò&ÖöFÂÖ†VF–ær#ãÇ7â6Æ73Ò&ÖöFÂÖ–6öâ"&–Ö†–FFVãÒ'G'VR#î){sÂ÷7ããÆƒ"–CÒ&6öæf–rÖ&6·W2×F—FÆR#í
-]}]-İ½R­íı‚Ö–†öÖóÂöƒ#ãÆ'WGFöâ6Æ73Ò&–6öâÖ'WGFöâ"G—SÒ&'WGFöâ"FFÖ6Æ÷6RÖ&6·W2&–ÖÆ&VÃÒ-	}­½-Â#ì9sÂö'WGFöããÂö†VFW#ãÇ6Æ73Ò&ÖöFÂÖæ÷FR#í	-½]-Rí]İİİ½’6öæf–rç–ÖÂâ	ı]]B-í-İí-½]İ]Âıİ]½Âıí-]"­íİM==mâÂí]İ"-]­==â-]â‚ı]]}ı=-"Ö–†öÖòãÂ÷ãÆF—b6Æ73Ò&6öæf–rÖ&6·W2ÖÆ—7B"&–ÖÆ—fSÒ'öÆ—FR#ãÇ6Æ73Ò&6öæf–rÖ&6·W2ÖV×G’#í	}==m]Âıí®(
-cÂ÷ãÂöF—cãÂ÷6V7F–öãæ°¢Fö7VÖVçBæ&öG’æVæB†F–Æör“°¢6öç7B6Æ÷6RÒ‚’Óâ²F–Æöræ6Æ÷6R‚“²F–Æörç&VÖ÷fR‚“²Ó°¢F–ÆörçVW'•6VÆV7F÷"‚u¶FFÖ6Æ÷6RÖ&6·W5Òr“òæFDWfVçDÆ—7FVæW"‚v6Æ–6²rÂ6Æ÷6RÂ²6–væÂÒ“°¢F–ÆöræFDWfVçDÆ—7FVæW"‚v6Æ–6²rÂ†6Æ–6´WfVçB’Óâ²–b†6Æ–6´WfVçBçF&vWBÓÓÒF–Æör’6Æ÷6R‚“²ÒÂ²6–væÂÒ“°¢F–Æörç6†÷tÖöFÂ‚“°¢6öç7BÆ—7BÒF–ÆörçVW'•6VÆV7F÷#Ä…DÔÄVÆVÖVçCâ‚ræ6öæf–rÖ&6·W2ÖÆ—7Br“°¢G'’°¢6öç7B&6·W2Òv—BÆ—7DÖ–†öÖô6öæf–t&6·W2‡6–væÂ“°¢–b‚Æ—7BÇÂF–Æöræ—46öææV7FVB’&WGW&ã°¢Æ—7Bç&WÆ6T6†–ÆG&Vâ‚“°¢–b‚&6·W2æÆVæwF‚’°¢6öç7BV×G’ÒFö7VÖVçBæ7&VFTVÆVÖVçB‚wr“²V×G’æ6Æ74æÖRÒv6öæf–rÖ&6·W2ÖV×G’s²V×G’çFW‡D6öçFVçBÒ}
-í]İİİ½R]}]-İ½R­íı’ıí­İ]"âs²Æ—7BæVæB†V×G’“²&WGW&ã°¢Ğ¢f÷"†6öç7B&6·Wöb&6·W2’°¢6öç7B&÷rÒFö7VÖVçBæ7&VFTVÆVÖVçB‚v'F–6ÆRr“²&÷ræ6Æ74æÖRÒv6öæf–rÖ&6·W×&÷rs°¢6öç7BFWF–Ç2ÒFö7VÖVçBæ7&VFTVÆVÖVçB‚vF—br“²FWF–Ç2æ6Æ74æÖRÒv6öæf–rÖ&6·WÖFWF–Ç2s°¢6öç7BæÖRÒFö7VÖVçBæ7&VFTVÆVÖVçB‚w7G&öærr“²æÖRçFW‡D6öçFVçBÒf÷&ÖD&6·WFFR†&6·WæÖöF–f–VB“°¢6öç7BÖWFÒFö7VÖVçBæ7&VFTVÆVÖVçB‚w7âr“²ÖWFçFW‡D6öçFVçBÒG¶f÷&ÖD&6·W6—¦R†&6·Wç6—¦R—Ò+rG¶&6·Wæ–GÖ°¢FWF–Ç2æVæB†æÖRÂÖWF“°¢6öç7B&W7F÷&RÒFö7VÖVçBæ7&VFTVÆVÖVçB‚v'WGFöâr“²&W7F÷&RçG—RÒv'WGFöâs²&W7F÷&Ræ6Æ74æÖRÒvVF—F÷"Ö'WGFöâVF—F÷"Ö'WGFöâ×&–Ö'’s²&W7F÷&RçFW‡D6öçFVçBÒ}	-í-İí--Âs°¢&W7F÷&RæFDWfVçDÆ—7FVæW"‚v6Æ–6²rÂ7–æ2‚’Óâ°¢–b‚†v—B6öæf—&Ô–ä‚}	-í-İí--Â­íİM==mãòrÂ}
--]­=’6öæf–rç–ÖÂ=M]"í]İÒ"]}]-İ=â­íıâÂ}-]Â-½İİ½’M²ıíM"ıí-]­2Ö–†öÖò‚=M]"ıÍ]İÒı]]}ı=­íÂıMârÂ}	-í-İí--Âr’’’&WGW&ã°¢&W7F÷&RæF—6&ÆVBÒG'VS²&W7F÷&RçFW‡D6öçFVçBÒ}	ıí-]­(
-bs°¢G'’°¢6öç7B7W'&VçBÒv—BvWD7F—fTÖ–†öÖô6öæf–r‡6–væÂ“°¢6öç7B&W7VÇBÒv—B'Vä6öæf–tÇ’‚vÖ–†öÖòrÂ‚’Óâ&W7F÷&TÖ–†öÖô6öæf–t&6·W†&6·Wæ–BÂ7W'&VçBæ6öçFVçBÂ6–væÂ’“°¢6öç7B&W7F÷&VBÒv—BvWD7F—fTÖ–†öÖô6öæf–r‡6–væÂ“°¢7F—fT6öæf–u6æ6†÷BÒ&W7F÷&VBæ6öçFVçC°¢–b†VF—F÷"bb7W'&VçDf–ÆR‚’æ–BÓÓÒv6öæf–rr’°¢Væ&ÆTVF—F÷$VF—F–ær‚“°¢VF—F÷"æF—7F6‚‡²6†ævW3¢²g&öÓ¢ÂFó¢VF—F÷"ç7FFRæFö2æÆVæwF‚Â–ç6W'C¢&W7F÷&VBæ6öçFVçBÒÒ“°¢VF—F÷"æfö7W2‚“°¢Ğ¢6WEfÆ–FF–öâ‡&W7VÇBç&W7F'FV@¢ò}
-]}]-İò­íıòıí-]]İÖ–†öÖòÂ-í-İí-½]İ‚ıMâı]]}ı=]İâp¢¢}
-]}]-İò­íıòıí-]]İÖ–†öÖò‚-í-İí-½]İ²ıMâ]}İR}ı=]İârÂG'VR“°¢6Æ÷6R‚“°¢Ò6F6‚†6W6R’°¢&W7F÷&RæF—6&ÆVBÒfÇ6S²&W7F÷&RçFW‡D6öçFVçBÒ}	ıí--í-Âs°¢6öç7BÖW76vRÒ6W6R–ç7Fæ6VöbW'&÷"ò6W6RæÖW76vR¢}	İR=M½íÂ-í-İí--Â]}]-İ=â­íıââs°¢6WEfÆ–FF–öâ†	-í-İí-½]İRİR-½ıí½İ]İã¢G¶ÖW76vWÖÂfÇ6R“°¢Ğ¢ÒÂ²6–væÂÒ“°¢&÷ræVæB†FWF–Ç2Â&W7F÷&R“²Æ—7BæVæB‡&÷r“°¢Ğ¢Ò6F6‚†6W6R’°¢–b†Æ—7B’²Æ—7Bç&WÆ6T6†–ÆG&Vâ‚“²6öç7BW'&÷"ÒFö7VÖVçBæ7&VFTVÆVÖVçB‚wr“²W'&÷"æ6Æ74æÖRÒv6öæf–rÖ&6·W2ÖV×G’—2ÖW'&÷"s²W'&÷"çFW‡D6öçFVçBÒ6W6R–ç7Fæ6VöbW'&÷"ò6W6RæÖW76vR¢}	İR=M½íÂ}==}-Â]}]-İ½R­íı‚âs²Æ—7BæVæB†W'&÷"“²Ğ¢Ğ¢ÒÂ²6–væÂÒ“°§Ğ ¦gVæ7F–öâ&–æDFE&÷‡”F–Æör‡6–væÃ¢&÷'E6–væÂ“¢fö–B°¢Fö7VÖVçBçVW'•6VÆV7F÷#Ä…DÔÄ'WGFöäVÆVÖVçCâ‚r7–ÖÂÖFB×&÷‡’r“òæFDWfVçDÆ—7FVæW"‚v6Æ–6²rÂ†WfVçB’Óâ°¢†WfVçBæ7W'&VçEF&vWB2…DÔÄ'WGFöäVÆVÖVçB’æ6Æ÷6W7B‚vFWF–Ç2r“òç&VÖ÷fTGG&–'WFR‚v÷Vâr“°¢6öç7BF–ÆörÒFö7VÖVçBæ7&VFTVÆVÖVçB‚vF–Æörr“°¢F–Æöræ6Æ74æÖRÒvÖöFÂ&÷‡’Ö–×÷'BÖF–Æörs°¢F–Æöræ–ææW$…DÔÂÒÆf÷&Ò6Æ73Ò&ÖöFÂ×æVÂ"ÖWF†öCÒ&F–Æör"–CÒ'&÷‡’Ö–×÷'BÖf÷&Ò#à¢ÆF—b6Æ73Ò&ÖöFÂÖ†VF–ær#ãÇ7â6Æ73Ò&ÖöFÂÖ–6öâ"&–Ö†–FFVãÒ'G'VR#î(isÂ÷7ããÆƒ#í	Mí--ÂıíM­½í}]İSÂöƒ#ãÆ'WGFöâ6Æ73Ò&–6öâÖ'WGFöâ"G—SÒ&'WGFöâ"FFÖ6Æ÷6R×&÷‡’Ö–×÷'B&–ÖÆ&VÃÒ-	}­½-Â#ì9sÂö'WGFöããÂöF—cà¢Ç6Æ73Ò&ÖöFÂÖæ÷FR#í	---Í-R½½­2İí-M]½Íİ½’=}]²½‚U$ÂıíMı­‚Ö–†öÖòãÂ÷à¢Ç6V7F–öâ6Æ73Ò'&÷‡’×&÷f–FW"ÖVF—F÷""†–FFVãà¢ÆF—b6Æ73Ò'&÷‡’Ö–×÷'B×F'2"&öÆSÒ'F&Æ—7B"&–ÖÆ&VÃÒ-	ı]MıíÍí-ıí-M]#à¢Æ'WGFöâG—SÒ&'WGFöâ"6Æ73Ò&—2Ö7F—fR"&öÆSÒ'F""&–×6VÆV7FVCÒ'G'VR"FF×&÷f–FW"×F#Ò'6WGF–æw2#í	İ-í­ƒÂö'WGFöãà¢Æ'WGFöâG—SÒ&'WGFöâ"&öÆSÒ'F""&–×6VÆV7FVCÒ&fÇ6R"FF×&÷f–FW"×F#Ò'–ÖÂ#å”ÔÃÂö'WGFöãà¢Æ'WGFöâG—SÒ&'WGFöâ"6Æ73Ò'&÷‡’×&÷f–FW"Ö6÷’"FFÖ6÷’×&÷f–FW"×–ÖÂ&–ÖÆ&VÃÒ-
-­íıí--Â”ÔÂ"F—FÆSÒ-
-­íıí--Â”ÔÂ#î)j#Âö'WGFöãà¢ÂöF—cà¢ÆF—b6Æ73Ò'&÷‡’×&÷f–FW"×6WGF–æw2"FF×&÷f–FW"×æVÃÒ'6WGF–æw2#à¢Æf–VÆG6WB6Æ73Ò'&÷‡’×&÷f–FW"Öw&÷W#ãÆÆVvVæCí	íİí-İíSÂöÆVvVæCãÆF—b6Æ73Ò'&÷‡’×&÷f–FW"Öw&–B#à¢ÆÆ&VÂ6Æ73Ò'&÷‡’×&÷f–FW"Öf–VÆB#ãÇ7ãí	İ}-İRıí-M]Â÷7ããÆ–çWBæÖSÒ'&÷f–FW$æÖR"fÇVSÒ'7V'67&—F–öåó"WFö6ö×ÆWFSÒ&öfb#ãÂöÆ&VÃà¢ÆÆ&VÂ6Æ73Ò'&÷‡’×&÷f–FW"Öf–VÆB#ãÇ7ãí	İ-]-²--ííİí-½]İóÂ÷7ããÇ7â6Æ73Ò'&÷‡’×&÷f–FW"×Væ—B#ãÆ–çWBæÖSÒ&–çFW'fÂ"G—SÒ&çVÖ&W""Ö–ãÒ#c"7FWÒ#"fÇVSÒ#C3##ãÇ6ÖÆÃí]£Â÷6ÖÆÃãÂ÷7ããÂöÆ&VÃà¢ÆÆ&VÂ6Æ73Ò'&÷‡’×&÷f–FW"Öf–VÆB&÷‡’×&÷f–FW"×v–FR#ãÇ7ãåU$ÂıíMı­ƒÂ÷7ããÆ–çWBæÖSÒ'7V'67&—F–öåW&Â"G—SÒ'W&Â"WFö6ö×ÆWFSÒ'W&Â"&WV—&VCãÂöÆ&VÃà¢Ç6Æ73Ò'&÷‡’×&÷f–FW"Ö†–çB&÷‡’×&÷f–FW"×v–FR#äÖ–†öÖò=M]"íİí-½ı-Âİ-í"-í}İ¢ıâ}MİİíÍ2İ-]-½2ãÂ÷à¢ÂöF—cãÂöf–VÆG6WCà¢Æf–VÆG6WB6Æ73Ò'&÷‡’×&÷f–FW"Öw&÷W#ãÆÆVvVæCí	Mí--Â"==ıı²ıí­ƒÂöÆVvVæCãÇ6Æ73Ò'&÷‡’×&÷f–FW"Ö†–çB#í	-½]-R==ıı²Â"­í-í½RÖ–†öÖòMí½m]Òıí­}½--Â=}½²İ-í’ıíMı­‚ãÂ÷ãÆF—b6Æ73Ò'&÷‡’×&÷f–FW"Öw&÷W2"FF×&÷f–FW"Öw&÷W3ãÇ7â6Æ73Ò'&÷‡’×&÷f–FW"Ö†–çB#í
-İ}½-½]-R­í]­-İ=â­íİM==mâ&÷‡’Öw&÷W2ãÂ÷7ããÂöF—cãÂöf–VÆG6WCà¢Æf–VÆG6WB6Æ73Ò'&÷‡’×&÷f–FW"Öw&÷W#ãÆÆVvVæCãÆÆ&VÂ6Æ73Ò'&÷‡’×&÷f–FW"×FövvÆR#ãÆ–çWBæÖSÒ&†VÇF„6†V6´Væ&ÆVB"G—SÒ&6†V6¶&÷‚"6†V6¶VCãÇ7ãí	ıí-]­í-íıííİí-ƒÂ÷7ããÂöÆ&VÃãÂöÆVvVæCãÆF—b6Æ73Ò'&÷‡’×&÷f–FW"Öw&–B"FF×&÷f–FW"×6V7F–öãÒ&†VÇF‚#à¢ÆÆ&VÂ6Æ73Ò'&÷‡’×&÷f–FW"Öf–VÆB&÷‡’×&÷f–FW"×v–FR#ãÇ7ãåU$Âıí-]­ƒÂ÷7ããÆ–çWBæÖSÒ&†VÇF„6†V6µW&Â"G—SÒ'W&Â"fÇVSÒ&‡GG3¢ò÷wwræw7FF–2æ6öÒövVæW&FUó#B#ãÂöÆ&VÃà¢ÆÆ&VÂ6Æ73Ò'&÷‡’×&÷f–FW"Öf–VÆB#ãÇ7ãí	İ-]-²ıí-]í£Â÷7ããÇ7â6Æ73Ò'&÷‡’×&÷f–FW"×Væ—B#ãÆ–çWBæÖSÒ&†VÇF„6†V6´–çFW'fÂ"G—SÒ&çVÖ&W""Ö–ãÒ#"fÇVSÒ#3#ãÇ6ÖÆÃí]£Â÷6ÖÆÃãÂ÷7ããÂöÆ&VÃà¢ÆÆ&VÂ6Æ73Ò'&÷‡’×&÷f–FW"Öf–VÆB#ãÇ7ãí	ímM]Í½’…EEİ­íBí--]-Â÷7ããÆ–çWBæÖSÒ&W‡V7FVE7FGW2"G—SÒ&çVÖ&W""Ö–ãÒ#"ÖƒÒ#S“’"fÇVSÒ##B#ãÂöÆ&VÃà¢ÂöF—cãÂöf–VÆG6WCà¢Æf–VÆG6WB6Æ73Ò'&÷‡’×&÷f–FW"Öw&÷W#ãÆÆVvVæCãÆÆ&VÂ6Æ73Ò'&÷‡’×&÷f–FW"×FövvÆR#ãÆ–çWBæÖSÒ&†VFW'4Væ&ÆVB"G—SÒ&6†V6¶&÷‚"6†V6¶VCãÇ7ãí	}=í½í-­ƒÂ÷7ããÂöÆ&VÃãÂöÆVvVæCãÆF—b6Æ73Ò'&÷‡’×&÷f–FW"Öw&–B"FF×&÷f–FW"×6V7F–öãÒ&†VFW'2#à¢ÆÆ&VÂ6Æ73Ò'&÷‡’×&÷f–FW"Öf–VÆB#ãÇ7ãåW6W"ÔvVçCÂ÷7ããÆ–çWBæÖSÒ'W6W$vVçB"fÇVSÒ$6Æ6„ÖWFóã’ã3²Ö–†öÖòóã’ã3#ãÂöÆ&VÃà¢ÆÆ&VÂ6Æ73Ò'&÷‡’×&÷f–FW"Öf–VÆB#ãÇ7ãç‚Ö‡v–CÂ÷7ããÆ–çWBæÖSÒ&‡v–B"WFö6ö×ÆWFSÒ&öfb#ãÂöÆ&VÃà¢ÂöF—cãÂöf–VÆG6WCà¢Æf–VÆG6WB6Æ73Ò'&÷‡’×&÷f–FW"Öw&÷W#ãÆÆVvVæCãÆÆ&VÂ6Æ73Ò'&÷‡’×&÷f–FW"×FövvÆR#ãÆ–çWBæÖSÒ&f–ÇFW'4Væ&ÆVB"G—SÒ&6†V6¶&÷‚#ãÇ7ãí
-M½Í-ıíM­½í}]İ“Â÷7ããÂöÆ&VÃãÂöÆVvVæCãÆF—b6Æ73Ò'&÷‡’×&÷f–FW"Öw&–B"FF×&÷f–FW"×6V7F–öãÒ&f–ÇFW'2"†–FFVãà¢ÆÆ&VÂ6Æ73Ò'&÷‡’×&÷f–FW"Öf–VÆB&÷‡’×&÷f–FW"×v–FR#ãÇ7ãí	ıâİ}-İâ-­½í}-Â“Â÷7ããÆ–çWBæÖSÒ&f–ÇFW""Æ6V†öÆFW#Ò&×’ÖvööB×&÷‡’#ãÂöÆ&VÃà¢ÆÆ&VÂ6Æ73Ò'&÷‡’×&÷f–FW"Öf–VÆB&÷‡’×&÷f–FW"×v–FR#ãÇ7ãí	ıâİ}-İâ­½í}-Â“Â÷7ããÆ–çWBæÖSÒ&W†6ÇVFTf–ÇFW""Æ6V†öÆFW#Ò&×’Ö&B×&÷‡’#ãÂöÆ&VÃà¢ÆÆ&VÂ6Æ73Ò'&÷‡’×&÷f–FW"Öf–VÆB&÷‡’×&÷f–FW"×v–FR#ãÇ7ãí	ıâ-ı2­½í}-Â“Â÷7ããÆ–çWBæÖSÒ&W†6ÇVFUG—R"Æ6V†öÆFW#Ò'G&ö¦çÇfÖW72#ãÂöÆ&VÃà¢ÂöF—cãÂöf–VÆG6WCà¢ÆÆ&VÂ6Æ73Ò'&÷‡’×&÷f–FW"×VG#ãÆ–çWBæÖSÒ'VG"G—SÒ&6†V6¶&÷‚"6†V6¶VCãÇ7ãí	-­½í}-ÂTEÂ÷7ããÂöÆ&VÃà¢ÂöF—cà¢Ç&R6Æ73Ò'&÷‡’×&÷f–FW"×–ÖÂ"FF×&÷f–FW"×æVÃÒ'–ÖÂ"†–FFVããÂ÷&Sà¢ÆF—b6Æ73Ò'&÷‡’×&÷f–FW"Ö7F–öç2#à¢Æ'WGFöâG—SÒ&'WGFöâ"6Æ73Ò&VF—F÷"Ö'WGFöâ"FF×&÷f–FW"Ö–ç6W'CÒ'7F'B#îûÈ²	"İ}½ãÂö'WGFöãà¢Æ'WGFöâG—SÒ&'WGFöâ"6Æ73Ò&VF—F÷"Ö'WGFöâ"FF×&÷f–FW"Ö–ç6W'CÒ&VæB#îûÈ²	"­íİ]cÂö'WGFöãà¢Æ'WGFöâG—SÒ&'WGFöâ"6Æ73Ò&VF—F÷"Ö'WGFöâ"FF×&÷f–FW"Ö÷Vâ×&WÆ6Sî*x’	}Í]İ-ÃÂö'WGFöãà¢ÆF—b6Æ73Ò'&÷‡’×&÷f–FW"×&WÆ6R"†–FFVããÇ6VÆV7BæÖSÒ'&WÆ6UF&vWB"&–ÖÆ&VÃÒ-	ıí-M]M½ò}Í]İ²#ãÆ÷F–öâfÇVSÒ"#í	-½]-Rıí-M]Âö÷F–öããÂ÷6VÆV7CãÆ'WGFöâG—SÒ&'WGFöâ"6Æ73Ò&VF—F÷"Ö'WGFöâ"FF×&÷f–FW"Ö–ç6W'CÒ'&WÆ6R#í	ıíM--]M-ÃÂö'WGFöããÂöF—cà¢ÂöF—cà¢Â÷6V7F–öãà¢ÆÆ&VÂ6Æ73Ò'&÷‡’Ö–×÷'BÖf–VÆB#ãÇ7ãí
-½½­İıíM­½í}]İSÂ÷7ããÆ–çWBæÖSÒ'W&’"G—SÒ'FW‡B"WFö6ö×ÆWFSÒ&öfb"WFö6—FÆ—¦SÒ&æöæR"7VÆÆ6†V6³Ò&fÇ6R"Æ6V†öÆFW#Ò'fÆW73¢òş(
-b½‚‡GG3¢òş(
-b"&WV—&VCãÂöÆ&VÃà¢Ç6Æ73Ò'&÷‡’Ö–×÷'BÖW'&÷""&öÆSÒ&ÆW'B"†–FFVããÂ÷à¢ÆF—b6Æ73Ò'&÷‡’Ö–×÷'BÖfö÷FW"#ãÆ'WGFöâ6Æ73Ò&VF—F÷"Ö'WGFöâ"G—SÒ&'WGFöâ"FFÖ6Æ÷6R×&÷‡’Ö–×÷'Cí	í-Í]İÂö'WGFöããÆ'WGFöâ6Æ73Ò&VF—F÷"Ö'WGFöâVF—F÷"Ö'WGFöâ×&–Ö'’"G—SÒ&'WGFöâ"FFÖvVæW&FR×&÷f–FW#í
-=]İ]í--ÃÂö'WGFöããÂöF—cà¢Âöf÷&Óæ°¢Fö7VÖVçBæ&öG’æVæB†F–Æör“°¢6öç7Bf÷&ÒÒF–ÆörçVW'•6VÆV7F÷#Ä…DÔÄf÷&ÔVÆVÖVçCâ‚r7&÷‡’Ö–×÷'BÖf÷&Òr“°¢6öç7B–çWBÒf÷&ÓòçVW'•6VÆV7F÷#Ä…DÔÄ–çWDVÆVÖVçCâ‚u¶æÖSÒ'W&’%Òr“°¢6öç7BW'&÷"Òf÷&ÓòçVW'•6VÆV7F÷#Ä…DÔÄVÆVÖVçCâ‚rç&÷‡’Ö–×÷'BÖW'&÷"r“°¢6öç7B&÷f–FW$VF—F÷"Òf÷&ÓòçVW'•6VÆV7F÷#Ä…DÔÄVÆVÖVçCâ‚rç&÷‡’×&÷f–FW"ÖVF—F÷"r“°¢6öç7B–ÖÅ&Wf–WrÒf÷&ÓòçVW'•6VÆV7F÷#Ä…DÔÄVÆVÖVçCâ‚rç&÷‡’×&÷f–FW"×–ÖÂr“°¢6öç7B&÷f–FW%6WGF–æw2Òf÷&ÓòçVW'•6VÆV7F÷#Ä…DÔÄVÆVÖVçCâ‚rç&÷‡’×&÷f–FW"×6WGF–æw2r“°¢6öç7B&÷f–FW$w&÷W2Òf÷&ÓòçVW'•6VÆV7F÷#Ä…DÔÄVÆVÖVçCâ‚u¶FF×&÷f–FW"Öw&÷W5Òr“°¢6öç7BvVæW&FT'WGFöâÒf÷&ÓòçVW'•6VÆV7F÷#Ä…DÔÄ'WGFöäVÆVÖVçCâ‚u¶FFÖvVæW&FR×&÷f–FW%Òr“°¢6öç7B6Æ÷6RÒ‚’Óâ²–b†F–Æöræ÷Vâ’F–Æöræ6Æ÷6R‚“²VÇ6RF–Æörç&VÖ÷fR‚“²Ó°¢6–væÂæFDWfVçDÆ—7FVæW"‚v&÷'BrÂ6Æ÷6RÂ²öæ6S¢G'VRÒ“°¢F–ÆörçVW'•6VÆV7F÷$ÆÃÄ…DÔÄ'WGFöäVÆVÖVçCâ‚u¶FFÖ6Æ÷6R×&÷‡’Ö–×÷'EÒr’æf÷$V6‚‚†'WGFöâ’Óâ'WGFöâæFDWfVçDÆ—7FVæW"‚v6Æ–6²rÂ6Æ÷6RÂ²6–væÂÒ’“°¢F–ÆöræFDWfVçDÆ—7FVæW"‚v6Æ÷6RrÂ‚’ÓâF–Æörç&VÖ÷fR‚’Â²öæ6S¢G'VRÂ6–væÂÒ“° ¢6öç7B6WGF–ærÒÅBW‡FVæG2VÆVÖVçCâ†æÖS¢7G&–ær’Óâf÷&ÓòæVÆVÖVçG2ææÖVD—FVÒ†æÖR’2BÂçVÆÃ°¢6öç7B6WGF–æw5fÇVRÒ‚“¢Ö–†öÖõ&÷f–FW%6WGF–æw2Óâ‡°¢æÖS¢6WGF–æsÄ…DÔÄ–çWDVÆVÖVçCâ‚w&÷f–FW$æÖRr“òçfÇVRóòrrÀ¢W&Ã¢6WGF–æsÄ…DÔÄ–çWDVÆVÖVçCâ‚w7V'67&—F–öåW&Âr“òçfÇVRóòrrÀ¢–çFW'fÃ¢çVÖ&W"‡6WGF–æsÄ…DÔÄ–çWDVÆVÖVçCâ‚v–çFW'fÂr“òçfÇVR’À¢†VÇF„6†V6´Væ&ÆVC¢6WGF–æsÄ…DÔÄ–çWDVÆVÖVçCâ‚v†VÇF„6†V6´Væ&ÆVBr“òæ6†V6¶VBóòfÇ6RÀ¢†VÇF„6†V6µW&Ã¢6WGF–æsÄ…DÔÄ–çWDVÆVÖVçCâ‚v†VÇF„6†V6µW&Âr“òçfÇVRóòrrÀ¢†VÇF„6†V6´–çFW'fÃ¢çVÖ&W"‡6WGF–æsÄ…DÔÄ–çWDVÆVÖVçCâ‚v†VÇF„6†V6´–çFW'fÂr“òçfÇVR’À¢W‡V7FVE7FGW3¢çVÖ&W"‡6WGF–æsÄ…DÔÄ–çWDVÆVÖVçCâ‚vW‡V7FVE7FGW2r“òçfÇVR’À¢†VFW'4Væ&ÆVC¢6WGF–æsÄ…DÔÄ–çWDVÆVÖVçCâ‚v†VFW'4Væ&ÆVBr“òæ6†V6¶VBóòfÇ6RÀ¢W6W$vVçC¢6WGF–æsÄ…DÔÄ–çWDVÆVÖVçCâ‚wW6W$vVçBr“òçfÇVRóòrrÀ¢‡v–C¢6WGF–æsÄ…DÔÄ–çWDVÆVÖVçCâ‚v‡v–Br“òçfÇVRóòrrÀ¢VG¢6WGF–æsÄ…DÔÄ–çWDVÆVÖVçCâ‚wVGr“òæ6†V6¶VBóòfÇ6RÀ¢f–ÇFW'4Væ&ÆVC¢6WGF–æsÄ…DÔÄ–çWDVÆVÖVçCâ‚vf–ÇFW'4Væ&ÆVBr“òæ6†V6¶VBóòfÇ6RÀ¢f–ÇFW#¢6WGF–æsÄ…DÔÄ–çWDVÆVÖVçCâ‚vf–ÇFW"r“òçfÇVRóòrrÀ¢W†6ÇVFTf–ÇFW#¢6WGF–æsÄ…DÔÄ–çWDVÆVÖVçCâ‚vW†6ÇVFTf–ÇFW"r“òçfÇVRóòrrÀ¢W†6ÇVFUG—S¢6WGF–æsÄ…DÔÄ–çWDVÆVÖVçCâ‚vW†6ÇVFUG—Rr“òçfÇVRóòrrÀ¢Ò“°¢6öç7B&Vg&W6…&Wf–WrÒ‚’Óâ°¢–b‚–ÖÅ&Wf–Wr’&WGW&ã°¢G'’°¢–ÖÅ&Wf–WrçFW‡D6öçFVçBÒ7&VFTÖ–†öÖõ&÷f–FW%–ÖÂ‡6WGF–æw5fÇVR‚’“°¢–b†W'&÷"’W'&÷"æ†–FFVâÒG'VS°¢Ò6F6‚†6W6R’°¢–ÖÅ&Wf–WrçFW‡D6öçFVçBÒrs°¢–b†W'&÷"’²W'&÷"æ†–FFVâÒfÇ6S²W'&÷"çFW‡D6öçFVçBÒ6W6R–ç7Fæ6VöbW'&÷"ò6W6RæÖW76vR¢}	ıí-]Í-RıÍ]-²ıí-M]âs²Ğ¢Ğ¢Ó°¢f÷&ÓòçVW'•6VÆV7F÷#Ä…DÔÄ'WGFöäVÆVÖVçCâ‚u¶FFÖ6÷’×&÷f–FW"×–ÖÅÒr“òæFDWfVçDÆ—7FVæW"‚v6Æ–6²rÂ7–æ2‚’Óâ°¢G'’°¢v—Bæf–vF÷"æ6Æ—&ö&Bçw&—FUFW‡B†7&VFTÖ–†öÖõ&÷f–FW%–ÖÂ‡6WGF–æw5fÇVR‚’’“°¢6öç7B6÷’Òf÷&ÒçVW'•6VÆV7F÷#Ä…DÔÄ'WGFöäVÆVÖVçCâ‚u¶FF}ïKh‘éì¶»§q«^vˆBˆKÈÚYÛ˜[JNÂˆ›Ü›OËœ]Y\TÙ[XİÜ[S]Û‘[[Y[Š	ÖÙ]K\›İšY\‹Z[œÙ\IÊK™›Ü‘XXÚ
+import { Compartment, EditorState } from '@codemirror/state';
+import { EditorView, highlightActiveLine, keymap, lineNumbers } from '@codemirror/view';
+import { defaultKeymap, history, historyKeymap } from '@codemirror/commands';
+import { HighlightStyle, syntaxHighlighting } from '@codemirror/language';
+import { tags } from '@lezer/highlight';
+import { yaml } from '@codemirror/lang-yaml';
+import { json } from '@codemirror/lang-json';
+import { parse as parseJsonc, printParseErrorCode, type ParseError } from 'jsonc-parser';
+import { isMap, isSeq, parseDocument } from 'yaml';
+import { chooseReferenceTemplate, getDefaultTemplate } from './templates';
+import { getXrayTemplateTarget } from './template-target';
+import { applyActiveMihomoConfig, applyXrayConfigFile, getActiveMihomoConfig, getRouterConfigFile, getXrayConfigFile, listMihomoConfigBackups, logUiError, restoreMihomoConfigBackup, saveActiveMihomoConfig, saveRouterConfigFile, saveXrayConfigFile, type RouterConfigFile, type XrayConfigFile } from './api';
+import { confirmInApp } from './confirm-dialog';
+import { canPersistConfig, runConfigApply } from './config-actions';
+import { generateConfigForCore } from './outbound-parser';
+import { appendMihomoProxy } from './proxy-import';
+import { createMihomoProviderYaml, insertMihomoProvider, nextMihomoProviderName, type MihomoProviderPosition, type MihomoProviderSettings } from './mihomo-provider';
+import { formatBackupDate, formatBackupSize } from './config-backups';
 
-]ÛŠHOˆ]Û‹˜Y]™[\İ[™\Š	ØÛXÚÉË\Ş[˜È
+const draftKey = 'xkeen-ui:draft:';
+const activeFileKey = 'xkeen-ui:draft-active-file';
+const draftFiles = [
+  { id: 'config', label: 'config', filename: 'config.yaml', format: 'yaml' },
+  { id: 'ip_exclude', label: 'ip_exclude', filename: 'ip_exclude.lst', format: 'text' },
+  { id: 'port_exclude', label: 'port_exclude', filename: 'port_exclude.lst', format: 'text' },
+  { id: 'port_proxying', label: 'port_proxying', filename: 'port_proxying.lst', format: 'text' },
+  { id: 'xkeen', label: 'xkeen', filename: 'xkeen.json', format: 'json' },
+  { id: 'xray_log', label: 'log', filename: '01_log.json', format: 'json' },
+  { id: 'xray_inbounds', label: 'inbounds', filename: '03_inbounds.json', format: 'json' },
+  { id: 'xray_json', label: 'config', filename: '04_outbounds.json', format: 'json' },
+  { id: 'xray_routing', label: 'routing', filename: '05_routing.json', format: 'jsonc' },
+  { id: 'xray_policy', label: 'policy', filename: '06_policy.json', format: 'json' },
+] as const;
+let editor: EditorView | null = null;
+let editorBindings: AbortController | null = null;
+let editorEditing = false;
+let editorReadOnly = new Compartment();
+let editorEditable = new Compartment();
+let activeFile = sessionStorage.getItem(activeFileKey) ?? 'config';
+if (activeFile === 'xray_jsonc') activeFile = 'xray_routing';
+let activeConfigSnapshot: string | null = null;
+const listSnapshots = new Map<RouterConfigFile, string>();
+const xraySnapshots = new Map<XrayConfigFile, string>();
+let configActionBusy = false;
+let currentDocumentValid = false;
+let lastLoggedValidationError: string | null = null;
 
-HOˆÂˆYˆ
-YY]ÜŠH™]\›ÂˆÛÛœİÜÚ][ÛˆH]Û‹™]\Ù]œ›İšY\’[œÙ\\ÈZZÛ[Ô›İšY\”ÜÚ][ÛÂˆÛÛœİ™\XÙU\™Ù]HÙ][™ÏSÙ[Xİ[[Y[Š	Ü™\XÙU\™Ù]	ÊOË˜[YNÂˆYˆ
-ÜÚ][ÛˆOOH	Ü™\XÙIÈ	‰ˆ\™\XÙU\™Ù]
-HÂˆYˆ
-\œ›ÜŠHÈ\œ›Ü‹šY[ˆH˜[ÙNÈ\œ›Ü‹^ÛÛ[H	ô$´bô,t-t`4.4`´-H4/ô`4/´,´,4.t-4-t`4,4-4.ôcÈ4-ô,4/4-t/tbË‰ÎÈBˆ™]\›ÂˆBˆYˆ
-ÜÚ][ÛˆOOH	Ü™\XÙIÈ	‰ˆJ]ØZ]ÛÛ™š\›R[\
-	ô%ô,4/4-t/t.4`´c4/ô`4/´,´,4.t-4-t`4,ÉË4'ô,4`4,4/4-t`´`4bÈ4/ô`4/´,´,4.t-4-t`4,0ªÉÜ™\XÙU\™Ù]p®È4,ˆ4.ô/´.´,4.ôc4/t/´/4aô-t`4/t/´,´.4.´-H4,t`ô-4`ô`ˆ4-ô,4/4-t/t-t/tbË˜	ô%ô,4/4-t/t.4`´c	ÊJJH™]\›ÂˆHÂˆÛÛœİİ\œ™[HY]Ü‹œİ]K™ØËÔİš[™Ê
-NÂˆÛÛœİÛÛ[HÜ™X]SZZÛ[Ô›İšY\–X[[
-Ù][™ÜÕ˜[YJ
-JNÂˆÛÛœİ\™Ù]Ü›İ\ÈHË‹‹Š›İšY\‘Ü›İ\ÏËœ]Y\TÙ[XİÜ[S[œ][[Y[Š	ÖÙ]K\›İšY\‹YÜ›İ\N˜ÚXÚÙY	ÊHÏÈ×JWK›X\
+function isRouterConfigFile(file: string): file is RouterConfigFile {
+  return file === 'ip_exclude' || file === 'port_exclude' || file === 'port_proxying' || file === 'xkeen';
+}
 
-ÚXÚØ›Ş
-HOˆÚXÚØ›Ş˜[YJNÂˆYˆ
-]\™Ù]Ü›İ\Ë›[™İ
-H›İÈ™]È\œ›ÜŠ	ô$´bô,t-t`4.4`´-H4at/´`´cÈ4,tbÈ4/´-4/t`È4,ô`4`ô/ô/ô`Ë4,ˆ4.´/´`´/´`4/´.H4/t`ô-´/t/ˆ4/ô/´.´,4-ô,4`´c4`ô-ô.ôbÈ4/ô/´-4/ô.4`t.´.‰ÊNÂˆÛÛœİ\]YH[œÙ\ZZÛ[Ô›İšY\Šİ\œ™[ÛÛ[ÜÚ][Û‹™\XÙU\™Ù]\™Ù]Ü›İ\ÊNÂˆ[˜X›QY]Ü‘Y][™Ê
-NÂˆY]Ü‹™\Ü]Ú
-ÈÚ[™Ù\ÎˆÈœ›ÛNˆÎˆY]Ü‹œİ]K™ØË›[™İ[œÙ\ˆ\]YHJNÂˆY]Ü‹™›Øİ\Ê
-NÂˆÙ]˜[Y][ÛŠ4'ô`4/´,´,4.t-4-t`4/ô/´-4/ô.4`t.´.	ÜÜÚ][ÛˆOOH	Ü™\XÙIÈÈ	ô-ô,4/4-t/tdt/IÈˆ	ô-4/´,t,4,´.ô-t/IßH4,ˆ4.ô/´.´,4.ôc4/tbô.H4aô-t`4/t/´,´.4.‹ˆ4'ô`4/´,´-t`4c4`´-H4.´/´/ta4.4,ô`ô`4,4a´.4cˆ4/ô-t`4-t-4/ô`4.4/4-t/t-t/t.4-t/˜YJNÂˆÛÜÙJ
-NÂˆHØ]Ú
-Ø]\ÙJHÂˆYˆ
-\œ›ÜŠHÈ\œ›Ü‹šY[ˆH˜[ÙNÈ\œ›Ü‹^ÛÛ[HØ]\ÙH[œİ[˜Ù[Ùˆ\œ›ÜˆÈØ]\ÙK›Y\ÜØYÙHˆ	ô't-H4`ô-4,4.ô/´`tc4/´,t/t/´,´.4`´c4aô-t`4/t/´,´.4.‹‰ÎÈBˆBˆKÈÚYÛ˜[JJNÂˆ›Ü›OËœ]Y\TÙ[XİÜS]Û‘[[Y[Š	ÖÙ]K\›İšY\‹[Ü[‹\™\XÙWIÊOË˜Y]™[\İ[™\Š	ØÛXÚÉË
+function isXrayConfigFile(file: string): file is XrayConfigFile {
+  return file === 'xray_log' || file === 'xray_inbounds' || file === 'xray_json' || file === 'xray_routing' || file === 'xray_policy';
+}
 
-HOˆÂˆÛÛœİ[™[H›Ü›Kœ]Y\TÙ[XİÜS[[Y[Š	Ëœ›ŞK\›İšY\‹\™\XÙIÊNÂˆYˆ
-[™[
-H[™[šY[ˆH˜[ÙNÂˆÙ][™ÏSÙ[Xİ[[Y[Š	Ü™\XÙU\™Ù]	ÊOË™›Øİ\Ê
-NÂˆKÈÚYÛ˜[JNÂˆX[ÙË˜Y]™[\İ[™\Š	ØÛXÚÉË
-ÛXÚÑ]™[
-HOˆÈYˆ
-ÛXÚÑ]™[\™Ù]OOHX[ÙÊHÛÜÙJ
-NÈKÈÚYÛ˜[JNÂˆX[ÙËœÚİÓ[Ù[
+function xrayApiFile(file: string): XrayConfigFile {
+  const files: Record<string, XrayConfigFile> = {
+    xray_log: 'xray_log', xray_inbounds: 'xray_inbounds', xray_json: 'xray_outbounds',
+    xray_routing: 'xray_routing', xray_policy: 'xray_policy',
+  };
+  return files[file] ?? 'xray_outbounds';
+}
 
-NÂˆ[œ]Ë™›Øİ\Ê
-NÂˆKÈÚYÛ˜[JNÂŸB‚˜ÛÛœİY]Ü•[YHHY]Ü•šY]Ë[YJÂˆ	É‰ÎˆÈZYÚˆ	ÌL	IËÛÛÜˆ	İ˜\ŠKYY]Ü‹]^ÙLYNY
-IË˜XÚÙÜ›İ[™ÛÛÜˆ	İ˜\ŠKYY]Ü‹X™ËÌLXŠIË›ÛÚ^™Nˆ	ÌM	Ë›ÛÙZYÚˆ	ÍL	ÈKˆ	Ë˜ÛK\ØÜ›Û\‰ÎˆÈİ™\™›İÎˆ	Ø]]ÉË›Û˜[Z[Nˆ	È’™]œ˜Z[œÈ[Û›È˜\šXX›H‹’™]œ˜Z[œÈ[Û›È‹ZK[[Û›ÜÜXÙKÑ“[Û›ËT™Yİ[\‹ÛÛœÛÛ\Ë[Û›ÜÜXÙIË[™RZYÚˆ	ÌK‰ÈKˆ	Ë˜ÛKXÛÛ[	ÎˆÈY[™Îˆ	ÌM	ËØ\™]ÛÛÜˆ	İ˜\ŠKYY]Ü‹XØ\™]ÍXÎY™ŠIÈKˆ	Ë˜ÛKYİ]\œÉÎˆÈÛÛÜˆ	İ˜\ŠKYY]Ü‹Yİ]\‹]^ÍM˜N
-IË˜XÚÙÜ›İ[™ÛÛÜˆ	İ˜\ŠKYY]Ü‹Yİ]\‹X™ËÌLLLŒ
-IË›Ü™\”šYÚˆ	Ì\ÛÛY˜\ŠKYY]Ü‹X›Ü™\‹ÌYL˜
-IÈKˆ	Ë˜ÛKXXİ]™S[™IÎˆÈ˜XÚÙÜ›İ[™ÛÛÜˆ	İ˜\ŠKYY]Ü‹XXİ]™K[[™KÌLLYLÌJIÈKˆ	Ë˜ÛKXXİ]™S[™Qİ]\‰ÎˆÈÛÛÜˆ	İ˜\ŠKYY]Ü‹XXİ]™KYİ]\‹ÎXXÊIË˜XÚÙÜ›İ[™ÛÛÜˆ	İ˜\ŠKYY]Ü‹XXİ]™K[[™KÌLLYLÌJIÈKˆ	É‹˜ÛKY›Øİ\ÙY˜ÛKXİ\œÛÜ‰ÎˆÈ›Ü™\“YÛÛÜˆ	İ˜\ŠKYY]Ü‹XØ\™]ÍXÎY™ŠIÈKˆ	É‹˜ÛKY›Øİ\ÙY˜ÛK\Ù[Xİ[Û˜XÚÙÜ›İ[™˜ÛK\Ù[Xİ[Û˜XÚÙÜ›İ[™	ÎˆÈ˜XÚÙÜ›İ[™ÛÛÜˆ	İ˜\ŠKYY]Ü‹\Ù[Xİ[Û‹ÌÍÍJHZ[\Ü[	ÈKŸJNÂ‚˜ÛÛœİY]Ü’YÚYÚHYÚYÚİ[K™Yš[™JÂˆÈYÎˆYÜËœ›Ü\S˜[YKÛÛÜˆ	İ˜\ŠKYY]Ü‹\›Ü\KÍŒ˜N™ŠIË›ÛÙZYÚˆ	ÍŒ	ÈKˆÈYÎˆİYÜËœİš[™ËYÜËœÜXÚX[
-YÜËœİš[™ÊWKÛÛÜˆ	İ˜\ŠKYY]Ü‹\İš[™ËÎXÙMÎ
-IÈKˆÈYÎˆİYÜË›[X™\‹YÜËš[YÙ\‹YÜË™›Ø]KÛÛÜˆ	İ˜\ŠKYY]Ü‹[[X™\‹Ù™XMJIÈKˆÈYÎˆİYÜË˜›ÛÛYÜË›[YÜË˜]ÛWKÛÛÜˆ	İ˜\ŠKYY]Ü‹X]ÛKÙN™™ŠIÈKˆÈYÎˆYÜË˜ÛÛ[Y[ÛÛÜˆ	İ˜\ŠKYY]Ü‹XÛÛ[Y[ÍÍÍØØMÊIË›Ûİ[Nˆ	Ú][XÉÈKˆÈYÎˆİYÜËœ[˜İX][Û‹YÜË˜œ˜XÚÙ]KÛÛÜˆ	İ˜\ŠKYY]Ü‹\[˜İX][Û‹ØN˜Y
-IÈKˆÈYÎˆİYÜËšÙ^]ÛÜ™YÜË›Ü\˜]Ü—KÛÛÜˆ	İ˜\ŠKYY]Ü‹ZÙ^]ÛÜ™ÍÎYN
-IÈK—JNÂ‚™[˜İ[ÛˆY]Ü‘[[Y[
+function currentSnapshot(): string | null {
+  return currentFile().id === 'config' ? activeConfigSnapshot
+    : isRouterConfigFile(currentFile().id) ? listSnapshots.get(currentFile().id as RouterConfigFile) ?? null
+      : isXrayConfigFile(currentFile().id) ? xraySnapshots.get(xrayApiFile(currentFile().id)) ?? null : null;
+}
 
-NˆS[[Y[[Âˆ™]\›ˆØİ[Y[œ]Y\TÙ[XİÜS[[Y[Š	ÈŞX[[YY]Ü‰ÊNÂŸB‚™[˜İ[Ûˆ[˜X›QY]Ü‘Y][™Ê
-Nˆ›ÚYÂˆYˆ
-YY]ÜˆY]Ü‘Y][™ÊH™]\›ÂˆY]Ü‘Y][™ÈHYNÂˆY]Ü‹™\Ü]Ú
-ÈY™™XİÎˆÙY]Ü”™XYÛ›Kœ™XÛÛ™šYİ\™JY]Ü”İ]Kœ™XYÛ›K›ÙŠ˜[ÙJJKY]Ü‘Y]X›Kœ™XÛÛ™šYİ\™JY]Ü•šY]Ë™Y]X›K›ÙŠYJJWHJNÂˆØİ[Y[œ]Y\TÙ[XİÜS[[Y[Š	ÈÙY]Ü‹]šY]ËZ[	ÊOËœÙ]]šX]J	ÚY[‰Ë	ÉÊNÂˆY]Ü‹™›Øİ\Ê
-NÂŸB‚™[˜İ[ÛˆÙ]˜[Y][ÛŠY\ÜØYÙNˆİš[™Ë˜[Yˆ›ÛÛX[ˆ[
-Nˆ›ÚYÂˆÛÛœİİ]\ÈHØİ[Y[œ]Y\TÙ[XİÜS[[Y[Š	ÈŞX[[]˜[Y][Û‰ÊNÂˆYˆ
-\İ]\ÊH™]\›Âˆİ]\Ë˜Û\ÜÓ˜[YHHY]Ü‹]˜[Y][Û‰İ˜[YOOH[È	ÉÈˆ˜[YÈ	È\Ë]˜[Y	Èˆ	È\ËZ[˜[Y	ßXÂˆİ]\Ë^ÛÛ[HY\ÜØYÙNÂˆYˆ
-˜[YOOH˜[ÙJHÂˆÛÛœİÛİ\˜ÙHHY\ÜØYÙKœİ\ÕÚ]
-	ô'´b4.4,t.´,PSS	ÊHÈ	ŞX[[	Èˆ	ØÛÛ™šYÉÎÂˆÛÛœİÙ^HH	ÜÛİ\˜Ù_WL	ÛY\ÜØYÙ_XÂˆYˆ
-Ù^HOOH\İÙÙÙY˜[Y][Û‘\œ›ÜŠHÂˆ\İÙÙÙY˜[Y][Û‘\œ›ÜˆHÙ^NÂˆ›ÚYÙÕZQ\œ›ÜŠÛİ\˜ÙKY\ÜØYÙJK˜Ø]Ú
+function currentFile() {
+  return draftFiles.find((file) => file.id === activeFile) ?? draftFiles[0];
+}
 
+function syncConfigActions(content: string, valid = currentDocumentValid): void {
+  const enabled = canPersistConfig(content, currentSnapshot(), valid, configActionBusy);
+  const applyButton = document.querySelector<HTMLButtonElement>('#config-apply-active');
+  if (applyButton) applyButton.disabled = !enabled;
+  const saveButton = document.querySelector<HTMLButtonElement>('#config-save-active');
+  if (saveButton) saveButton.disabled = !enabled;
+}
 
-HOˆ[™Yš[™Y
-NÂˆBˆH[ÙHYˆ
-˜[YOOHYJH\İÙÙÙY˜[Y][Û‘\œ›ÜˆH[ÂŸB‚™[˜İ[Ûˆ˜[Y]VX[[
-^ˆİš[™ÊNˆ›ÛÛX[ˆÂˆYˆ
-]^š[J
-JHÂˆÙ]˜[Y][ÛŠ	ô)ô-t`4/t/´,´.4.ˆ4/ô`ô`t`‹ˆ4'4/´-´/t/ˆ4,´`t`´,4,´.4`´c4b4,4,t.ô/´/H4.4.ô.4/t,4aô,4`´c4,´,´/´-‰Ë[
-NÂˆ™]\›ˆ˜[ÙNÂˆBˆÛÛœİØİ[Y[H\œÙQØİ[Y[
-^È[š\]YRÙ^\ÎˆYK™\œÚ[Ûˆ	ÌKŒ‰ÈJNÂˆÛÛœİš\œİ\œ›ÜˆHØİ[Y[™\œ›ÜœÖÌNÂˆYˆ
-š\œİ\œ›ÜŠHÂˆÛÛœİÜÚ][ÛˆHš\œİ\œ›Ü‹›[™TÜÏË–ÌNÂˆÛÛœİÚ\™HHÜÚ][ÛˆÈ0­È4`t`´`4/´.´,	ÜÜÚ][Û‹›[™_K4`t`´/´.ô,t-taˆ	ÜÜÚ][Û‹˜ÛÛXˆ	ÉÎÂˆÙ]˜[Y][ÛŠ4'´b4.4,t.´,PSS	İÚ\™_Nˆ	Ùš\œİ\œ›Ü‹›Y\ÜØYÙ_X˜[ÙJNÂˆ™]\›ˆ˜[ÙNÂˆBˆÛÛœİ›Ûİ˜[YNˆ[šÛ›İÛˆHØİ[Y[Ò”Ê
-NÂˆYˆ
-\›Ûİ˜[YH\[Ùˆ›Ûİ˜[YHOOH	ÛØš™Xİ	È\œ˜^Kš\Ğ\œ˜^J›Ûİ˜[YJJHÂˆÙ]˜[Y][ÛŠ	ÖPSS4`t.4/t`´,4.´`t.4aô-t`t.´.4.´/´`4`4-t.´`´-t/K4/t/ˆ4.´/´`4/t-t/4-4/´.´`ô/4-t/t`´,4/´-´.4-4,4-t`´`tcÈ4/´,tb´-t.´`ˆZZÛ[Ë‰Ë˜[ÙJNÂˆ™]\›ˆ˜[ÙNÂˆBˆÙ]˜[Y][ÛŠ	ø§$ÈPSS4,´,4.ô.4-4-t/H0­È4/ô`4/´,´-t`4.´,ZZÛ[È4/ô`4.4`t/´at`4,4/t-t/t.4.	ËYJNÂˆ™]\›ˆYNÂŸB‚™[˜İ[Ûˆ˜[Y]TİXİ\™YØİ[Y[
-^ˆİš[™ÊNˆ›ÛÛX[ˆÂˆÛÛœİ›Ü›X]Hİ\œ™[š[J
-K™›Ü›X]ÂˆYˆ
-›Ü›X]OOH	ŞX[[	ÊH™]\›ˆ˜[Y]VX[[
-^
-NÂˆYˆ
-›Ü›X]OOH	İ^	ÊHÂˆÙ]˜[Y][ÛŠ	ô%4.ôcÈ4ct`´/´,ô/ˆ4`t/ô.4`t.´,4`t.4/t`´,4.´`t.4aô-t`t.´.4.H4,´,4.ô.4-4,4`´/´`4/t-H4-ô,4-4,4/K‰Ë[
-NÂˆ™]\›ˆ˜[ÙNÂˆBˆYˆ
-]^š[J
-JHÂˆÙ]˜[Y][ÛŠ	ô)ô-t`4/t/´,´.4.ˆ4/ô`ô`t`‹‰Ë[
-NÂˆ™]\›ˆ˜[ÙNÂˆBˆÛÛœİ\œ›ÜœÎˆ\œÙQ\œ›Ü–×HH×NÂˆÛÛœİ˜[YNˆ[šÛ›İÛˆH\œÙRœÛÛ˜Ê^\œ›ÜœËÂˆ[İÕ˜Z[[™ĞÛÛ[XNˆ›Ü›X]OOH	ÚœÛÛ˜ÉËˆ\Ø[İĞÛÛ[Y[Îˆ›Ü›X]OOH	ÚœÛÛ‰ËˆJNÂˆYˆ
-\œ›ÜœË›[™İ	‰ˆ\œ›ÜœÖÌJHÂˆÛÛœİ\œ›ÜˆH\œ›ÜœÖÌNÂˆÛÛœİ[™HH^œÛXÙJ\œ›Ü‹›Ù™œÙ]
-KœÜ]
-	×‰ÊK›[™İÂˆÙ]˜[Y][ÛŠ4'´b4.4,t.´,	Ù›Ü›X]Õ\\Ø\ÙJ
-_H0­È4`t`´`4/´.´,	Û[™_Nˆ	Üš[\œÙQ\œ›ÜÛÙJ\œ›Ü‹™\œ›ÜŠ_X˜[ÙJNÂˆ™]\›ˆ˜[ÙNÂˆBˆYˆ
-]˜[YH\[Ùˆ˜[YHOOH	ÛØš™Xİ	È\œ˜^Kš\Ğ\œ˜^J˜[YJJHÂˆÙ]˜[Y][ÛŠ	Ù›Ü›X]Õ\\Ø\ÙJ
-_H4`t.4/t`´,4.´`t.4aô-t`t.´.4.´/´`4`4-t.´`´-t/K4/t/ˆ4/´-´.4-4,4-t`´`tcÈ4.´/´`4/t-t,´/´.H4/´,tb´-t.´`‹˜˜[ÙJNÂˆ™]\›ˆ˜[ÙNÂˆBˆÙ]˜[Y][ÛŠ8§$È	Ù›Ü›X]Õ\\Ø\ÙJ
-_H4,´,4.ô.4-4-t/H0­È4/ô`4/´,´-t`4.´,˜^H4/ô`4.4/ô`4.4/4-t/t-t/t.4.YJNÂˆ™]\›ˆYNÂŸB‚™^Ü[˜İ[Ûˆ[›[İ[X[[Y]ÜŠ
-Nˆ›ÚYÂˆY]Üš[™[™ÜÏË˜X›Ü
+function setEditorIdentity(routerMode: boolean, activeCore: 'mihomo' | 'xray' | null): void {
+  const file = currentFile();
+  document.querySelectorAll<HTMLButtonElement>('[data-config-file]').forEach((button) => {
+    const selected = button.dataset.configFile === file.id;
+    button.classList.toggle('selected', selected);
+    button.setAttribute('aria-pressed', String(selected));
+  });
+  document.querySelectorAll<HTMLElement>('[data-router-file]').forEach((element) => {
+    element.hidden = file.id !== 'config' && !isRouterConfigFile(file.id) && !isXrayConfigFile(file.id);
+  });
+  const applyButton = document.querySelector<HTMLButtonElement>('#config-apply-active');
+  if (applyButton) applyButton.hidden = file.id !== 'config' && !isXrayConfigFile(file.id);
+  const saveButton = document.querySelector<HTMLButtonElement>('#config-save-active');
+  if (saveButton) saveButton.hidden = !routerMode;
+  document.querySelectorAll<HTMLElement>('[data-structured-only]').forEach((element) => {
+    element.hidden = file.format === 'text';
+  });
+  const templateButton = document.querySelector<HTMLElement>('#yaml-template');
+  if (templateButton) templateButton.hidden = file.id === 'xkeen' || file.format === 'text';
+  const addProxyButton = document.querySelector<HTMLElement>('#yaml-add-proxy');
+  if (addProxyButton) addProxyButton.hidden = file.id !== 'config' || activeCore !== 'mihomo';
+  const backupsButton = document.querySelector<HTMLElement>('#yaml-backups');
+  if (backupsButton) backupsButton.hidden = !routerMode || file.id !== 'config' || activeCore !== 'mihomo';
+}
 
-NÂˆY]Üš[™[™ÜÈH[ÂˆY]ÜË™\İ›ŞJ
-NÂˆY]ÜˆH[ÂŸB‚™^Ü[˜İ[Ûˆ[İ[X[[Y]ÜŠ›İ]\“[ÙHH˜[ÙKXİ]™PÛÜ™Nˆ	ÛZZÛ[ÉÈ	Ş˜^IÈ[H	ÛZZÛ[ÉÊNˆ›ÚYÂˆÛÛœİ\™[HY]Ü‘[[Y[
+function bindConfigBackups(signal: AbortSignal): void {
+  document.querySelector<HTMLButtonElement>('#yaml-backups')?.addEventListener('click', async (event) => {
+    (event.currentTarget as HTMLButtonElement).closest('details')?.removeAttribute('open');
+    const dialog = document.createElement('dialog');
+    dialog.className = 'modal config-backups-dialog';
+    dialog.setAttribute('aria-labelledby', 'config-backups-title');
+    dialog.innerHTML = `<section class="modal-panel"><header class="modal-heading"><span class="modal-icon" aria-hidden="true">â—·</span><h2 id="config-backups-title">Ğ ĞµĞ·ĞµÑ€Ğ²Ğ½Ñ‹Ğµ ĞºĞ¾Ğ¿Ğ¸Ğ¸ Mihomo</h2><button class="icon-button" type="button" data-close-backups aria-label="Ğ—Ğ°ĞºÑ€Ñ‹Ñ‚ÑŒ">Ã—</button></header><p class="modal-note">Ğ’Ñ‹Ğ±ĞµÑ€Ğ¸Ñ‚Ğµ ÑĞ¾Ñ…Ñ€Ğ°Ğ½Ñ‘Ğ½Ğ½Ñ‹Ğ¹ config.yaml. ĞŸĞµÑ€ĞµĞ´ Ğ²Ğ¾ÑÑÑ‚Ğ°Ğ½Ğ¾Ğ²Ğ»ĞµĞ½Ğ¸ĞµĞ¼ Ğ¿Ğ°Ğ½ĞµĞ»ÑŒ Ğ¿Ñ€Ğ¾Ğ²ĞµÑ€Ğ¸Ñ‚ ĞºĞ¾Ğ½Ñ„Ğ¸Ğ³ÑƒÑ€Ğ°Ñ†Ğ¸Ñ, ÑĞ¾Ñ…Ñ€Ğ°Ğ½Ğ¸Ñ‚ Ñ‚ĞµĞºÑƒÑ‰ÑƒÑ Ğ²ĞµÑ€ÑĞ¸Ñ Ğ¸ Ğ¿ĞµÑ€ĞµĞ·Ğ°Ğ¿ÑƒÑÑ‚Ğ¸Ñ‚ Mihomo.</p><div class="config-backups-list" aria-live="polite"><p class="config-backups-empty">Ğ—Ğ°Ğ³Ñ€ÑƒĞ¶Ğ°ĞµĞ¼ ÑĞ¿Ğ¸ÑĞ¾Ğºâ€¦</p></div></section>`;
+    document.body.append(dialog);
+    const close = () => { dialog.close(); dialog.remove(); };
+    dialog.querySelector('[data-close-backups]')?.addEventListener('click', close, { signal });
+    dialog.addEventListener('click', (clickEvent) => { if (clickEvent.target === dialog) close(); }, { signal });
+    dialog.showModal();
+    const list = dialog.querySelector<HTMLElement>('.config-backups-list');
+    try {
+      const backups = await listMihomoConfigBackups(signal);
+      if (!list || !dialog.isConnected) return;
+      list.replaceChildren();
+      if (!backups.length) {
+        const empty = document.createElement('p'); empty.className = 'config-backups-empty'; empty.textContent = 'Ğ¡Ğ¾Ñ…Ñ€Ğ°Ğ½Ñ‘Ğ½Ğ½Ñ‹Ñ… Ñ€ĞµĞ·ĞµÑ€Ğ²Ğ½Ñ‹Ñ… ĞºĞ¾Ğ¿Ğ¸Ğ¹ Ğ¿Ğ¾ĞºĞ° Ğ½ĞµÑ‚.'; list.append(empty); return;
+      }
+      for (const backup of backups) {
+        const row = document.createElement('article'); row.className = 'config-backup-row';
+        const details = document.createElement('div'); details.className = 'config-backup-details';
+        const name = document.createElement('strong'); name.textContent = formatBackupDate(backup.modified);
+        const meta = document.createElement('span'); meta.textContent = `${formatBackupSize(backup.size)} Â· ${backup.id}`;
+        details.append(name, meta);
+        const restore = document.createElement('button'); restore.type = 'button'; restore.className = 'editor-button editor-button-primary'; restore.textContent = 'Ğ’Ğ¾ÑÑÑ‚Ğ°Ğ½Ğ¾Ğ²Ğ¸Ñ‚ÑŒ';
+        restore.addEventListener('click', async () => {
+          if (!(await confirmInApp('Ğ’Ğ¾ÑÑÑ‚Ğ°Ğ½Ğ¾Ğ²Ğ¸Ñ‚ÑŒ ĞºĞ¾Ğ½Ñ„Ğ¸Ğ³ÑƒÑ€Ğ°Ñ†Ğ¸Ñ?', 'Ğ¢ĞµĞºÑƒÑ‰Ğ¸Ğ¹ config.yaml Ğ±ÑƒĞ´ĞµÑ‚ ÑĞ¾Ñ…Ñ€Ğ°Ğ½Ñ‘Ğ½ Ğ² Ñ€ĞµĞ·ĞµÑ€Ğ²Ğ½ÑƒÑ ĞºĞ¾Ğ¿Ğ¸Ñ, Ğ·Ğ°Ñ‚ĞµĞ¼ Ğ²Ñ‹Ğ±Ñ€Ğ°Ğ½Ğ½Ñ‹Ğ¹ Ñ„Ğ°Ğ¹Ğ» Ğ¿Ñ€Ğ¾Ğ¹Ğ´Ñ‘Ñ‚ Ğ¿Ñ€Ğ¾Ğ²ĞµÑ€ĞºÑƒ Mihomo Ğ¸ Ğ±ÑƒĞ´ĞµÑ‚ Ğ¿Ñ€Ğ¸Ğ¼ĞµĞ½Ñ‘Ğ½ Ñ Ğ¿ĞµÑ€ĞµĞ·Ğ°Ğ¿ÑƒÑĞºĞ¾Ğ¼ ÑĞ´Ñ€Ğ°.', 'Ğ’Ğ¾ÑÑÑ‚Ğ°Ğ½Ğ¾Ğ²Ğ¸Ñ‚ÑŒ'))) return;
+          restore.disabled = true; restore.textContent = 'ĞŸÑ€Ğ¾Ğ²ĞµÑ€ĞºĞ°â€¦';
+          try {
+            const current = await getActiveMihomoConfig(signal);
+            const result = await runConfigApply('mihomo', () => restoreMihomoConfigBackup(backup.id, current.content, signal));
+            const restored = await getActiveMihomoConfig(signal);
+            activeConfigSnapshot = restored.content;
+            if (editor && currentFile().id === 'config') {
+              enableEditorEditing();
+              editor.dispatch({ changes: { from: 0, to: editor.state.doc.length, insert: restored.content } });
+              editor.focus();
+            }
+            setValidation(result.restarted
+              ? 'Ğ ĞµĞ·ĞµÑ€Ğ²Ğ½Ğ°Ñ ĞºĞ¾Ğ¿Ğ¸Ñ Ğ¿Ñ€Ğ¾Ğ²ĞµÑ€ĞµĞ½Ğ° Mihomo, Ğ²Ğ¾ÑÑÑ‚Ğ°Ğ½Ğ¾Ğ²Ğ»ĞµĞ½Ğ° Ğ¸ ÑĞ´Ñ€Ğ¾ Ğ¿ĞµÑ€ĞµĞ·Ğ°Ğ¿ÑƒÑ‰ĞµĞ½Ğ¾'
+              : 'Ğ ĞµĞ·ĞµÑ€Ğ²Ğ½Ğ°Ñ ĞºĞ¾Ğ¿Ğ¸Ñ Ğ¿Ñ€Ğ¾Ğ²ĞµÑ€ĞµĞ½Ğ° Mihomo Ğ¸ Ğ²Ğ¾ÑÑÑ‚Ğ°Ğ½Ğ¾Ğ²Ğ»ĞµĞ½Ğ°; ÑĞ´Ñ€Ğ¾ ÑĞµĞ¹Ñ‡Ğ°Ñ Ğ½Ğµ Ğ·Ğ°Ğ¿ÑƒÑ‰ĞµĞ½Ğ¾', true);
+            close();
+          } catch (cause) {
+            restore.disabled = false; restore.textContent = 'ĞŸĞ¾Ğ²Ñ‚Ğ¾Ñ€Ğ¸Ñ‚ÑŒ';
+            const message = cause instanceof Error ? cause.message : 'ĞĞµ ÑƒĞ´Ğ°Ğ»Ğ¾ÑÑŒ Ğ²Ğ¾ÑÑÑ‚Ğ°Ğ½Ğ¾Ğ²Ğ¸Ñ‚ÑŒ Ñ€ĞµĞ·ĞµÑ€Ğ²Ğ½ÑƒÑ ĞºĞ¾Ğ¿Ğ¸Ñ.';
+            setValidation(`Ğ’Ğ¾ÑÑÑ‚Ğ°Ğ½Ğ¾Ğ²Ğ»ĞµĞ½Ğ¸Ğµ Ğ½Ğµ Ğ²Ñ‹Ğ¿Ğ¾Ğ»Ğ½ĞµĞ½Ğ¾: ${message}`, false);
+          }
+        }, { signal });
+        row.append(details, restore); list.append(row);
+      }
+    } catch (cause) {
+      if (list) { list.replaceChildren(); const error = document.createElement('p'); error.className = 'config-backups-empty is-error'; error.textContent = cause instanceof Error ? cause.message : 'ĞĞµ ÑƒĞ´Ğ°Ğ»Ğ¾ÑÑŒ Ğ·Ğ°Ğ³Ñ€ÑƒĞ·Ğ¸Ñ‚ÑŒ Ñ€ĞµĞ·ĞµÑ€Ğ²Ğ½Ñ‹Ğµ ĞºĞ¾Ğ¿Ğ¸Ğ¸.'; list.append(error); }
+    }
+  }, { signal });
+}
 
-NÂˆYˆ
-\\™[
-H™]\›ÂˆYˆ
-Xİ]™PÛÜ™HOOH	Ş˜^IÈ	‰ˆXİ]™Qš[HOOH	ØÛÛ™šYÉÊHXİ]™Qš[HH	Ş˜^WÚœÛÛ‰ÎÂˆYˆ
-Xİ]™PÛÜ™HOOH	Ş˜^IÈ	‰ˆXİ]™Qš[Kœİ\ÕÚ]
-	Ş˜^WÉÊJHXİ]™Qš[HH	ØÛÛ™šYÉÎÂˆ[›[İ[X[[Y]ÜŠ
-NÂˆY]Üš[™[™ÜÈH™]ÈX›ÜÛÛ›Û\Š
-NÂˆÛÛœİÈÚYÛ˜[HHY]Üš[™[™ÜÎÂˆÛÛœİ\P]ÛˆHØİ[Y[œ]Y\TÙ[XİÜS]Û‘[[Y[Š	ÈØÛÛ™šYËX\KXXİ]™IÊNÂˆYˆ
-\P]ÛŠH\P]Û‹™\ØX›YHİ\œ™[Û˜\Úİ
+function bindAddProxyDialog(signal: AbortSignal): void {
+  document.querySelector<HTMLButtonElement>('#yaml-add-proxy')?.addEventListener('click', (event) => {
+    (event.currentTarget as HTMLButtonElement).closest('details')?.removeAttribute('open');
+    const dialog = document.createElement('dialog');
+    dialog.className = 'modal proxy-import-dialog';
+    dialog.innerHTML = `<form class="modal-panel" method="dialog" id="proxy-import-form">
+      <div class="modal-heading"><span class="modal-icon" aria-hidden="true">â†—</span><h2>Ğ”Ğ¾Ğ±Ğ°Ğ²Ğ¸Ñ‚ÑŒ Ğ¿Ğ¾Ğ´ĞºĞ»ÑÑ‡ĞµĞ½Ğ¸Ğµ</h2><button class="icon-button" type="button" data-close-proxy-import aria-label="Ğ—Ğ°ĞºÑ€Ñ‹Ñ‚ÑŒ">Ã—</button></div>
+      <p class="modal-note">Ğ’ÑÑ‚Ğ°Ğ²ÑŒÑ‚Ğµ ÑÑÑ‹Ğ»ĞºÑƒ Ğ½Ğ° Ğ¾Ñ‚Ğ´ĞµĞ»ÑŒĞ½Ñ‹Ğ¹ ÑƒĞ·ĞµĞ» Ğ¸Ğ»Ğ¸ URL Ğ¿Ğ¾Ğ´Ğ¿Ğ¸ÑĞºĞ¸ Mihomo.</p>
+      <section class="proxy-provider-editor" hidden>
+        <div class="proxy-import-tabs" role="tablist" aria-label="ĞŸÑ€ĞµĞ´Ğ¿Ñ€Ğ¾ÑĞ¼Ğ¾Ñ‚Ñ€ Ğ¿Ñ€Ğ¾Ğ²Ğ°Ğ¹Ğ´ĞµÑ€Ğ°">
+          <button type="button" class="is-active" role="tab" aria-selected="true" data-provider-tab="settings">ĞĞ°ÑÑ‚Ñ€Ğ¾Ğ¹ĞºĞ¸</button>
+          <button type="button" role="tab" aria-selected="false" data-provider-tab="yaml">YAML</button>
+          <button type="button" class="proxy-provider-copy" data-copy-provider-yaml aria-label="Ğ¡ĞºĞ¾Ğ¿Ğ¸Ñ€Ğ¾Ğ²Ğ°Ñ‚ÑŒ YAML" title="Ğ¡ĞºĞ¾Ğ¿Ğ¸Ñ€Ğ¾Ğ²Ğ°Ñ‚ÑŒ YAML">â–¢</button>
+        </div>
+        <div class="proxy-provider-settings" data-provider-panel="settings">
+          <fieldset class="proxy-provider-group"><legend>ĞÑĞ½Ğ¾Ğ²Ğ½Ğ¾Ğµ</legend><div class="proxy-provider-grid">
+            <label class="proxy-provider-field"><span>ĞĞ°Ğ·Ğ²Ğ°Ğ½Ğ¸Ğµ Ğ¿Ñ€Ğ¾Ğ²Ğ°Ğ¹Ğ´ĞµÑ€Ğ°</span><input name="providerName" value="subscription_1" autocomplete="off"></label>
+            <label class="proxy-provider-field"><span>Ğ˜Ğ½Ñ‚ĞµÑ€Ğ²Ğ°Ğ» Ğ°Ğ²Ñ‚Ğ¾Ğ¾Ğ±Ğ½Ğ¾Ğ²Ğ»ĞµĞ½Ğ¸Ñ</span><span class="proxy-provider-unit"><input name="interval" type="number" min="60" step="1" value="43200"><small>ÑĞµĞº</small></span></label>
+            <label class="proxy-provider-field proxy-provider-wide"><span>URL Ğ¿Ğ¾Ğ´Ğ¿Ğ¸ÑĞºĞ¸</span><input name="subscriptionUrl" type="url" autocomplete="url" required></label>
+            <p class="proxy-provider-hint proxy-provider-wide">Mihomo Ğ±ÑƒĞ´ĞµÑ‚ Ğ¾Ğ±Ğ½Ğ¾Ğ²Ğ»ÑÑ‚ÑŒ ÑÑ‚Ğ¾Ñ‚ Ğ¸ÑÑ‚Ğ¾Ñ‡Ğ½Ğ¸Ğº Ğ¿Ğ¾ Ğ·Ğ°Ğ´Ğ°Ğ½Ğ½Ğ¾Ğ¼Ñƒ Ğ¸Ğ½Ñ‚ĞµÑ€Ğ²Ğ°Ğ»Ñƒ.</p>
+          </div></fieldset>
+          <fieldset class="proxy-provider-group"><legend>Ğ”Ğ¾Ğ±Ğ°Ğ²Ğ¸Ñ‚ÑŒ Ğ² Ğ³Ñ€ÑƒĞ¿Ğ¿Ñ‹ Ğ¿Ñ€Ğ¾ĞºÑĞ¸</legend><p class="proxy-provider-hint">Ğ’Ñ‹Ğ±ĞµÑ€Ğ¸Ñ‚Ğµ Ğ³Ñ€ÑƒĞ¿Ğ¿Ñ‹, Ğ² ĞºĞ¾Ñ‚Ğ¾Ñ€Ñ‹Ñ… Mihomo Ğ´Ğ¾Ğ»Ğ¶ĞµĞ½ Ğ¿Ğ¾ĞºĞ°Ğ·Ñ‹Ğ²Ğ°Ñ‚ÑŒ ÑƒĞ·Ğ»Ñ‹ ÑÑ‚Ğ¾Ğ¹ Ğ¿Ğ¾Ğ´Ğ¿Ğ¸ÑĞºĞ¸.</p><div class="proxy-provider-groups" data-provider-groups><span class="proxy-provider-hint">Ğ¡Ğ½Ğ°Ñ‡Ğ°Ğ»Ğ° Ğ²Ñ‹Ğ±ĞµÑ€Ğ¸Ñ‚Ğµ ĞºĞ¾Ñ€Ñ€ĞµĞºÑ‚Ğ½ÑƒÑ ĞºĞ¾Ğ½Ñ„Ğ¸Ğ³ÑƒÑ€Ğ°Ñ†Ğ¸Ñ Ñ proxy-groups.</span></div></fieldset>
+          <fieldset class="proxy-provider-group"><legend><label class="proxy-provider-toggle"><input name="healthCheckEnabled" type="checkbox" checked><span>ĞŸÑ€Ğ¾Ğ²ĞµÑ€ĞºĞ° Ñ€Ğ°Ğ±Ğ¾Ñ‚Ğ¾ÑĞ¿Ğ¾ÑĞ¾Ğ±Ğ½Ğ¾ÑÑ‚Ğ¸</span></label></legend><div class="proxy-provider-grid" data-provider-section="health">
+            <label class="proxy-provider-field proxy-provider-wide"><span>URL Ğ¿Ñ€Ğ¾Ğ²ĞµÑ€ĞºĞ¸</span><input name="healthCheckUrl" type="url" value="https://www.gstatic.com/generate_204"></label>
+            <label class="proxy-provider-field"><span>Ğ˜Ğ½Ñ‚ĞµÑ€Ğ²Ğ°Ğ» Ğ¿Ñ€Ğ¾Ğ²ĞµÑ€Ğ¾Ğº</span><span class="proxy-provider-unit"><input name="healthCheckInterval" type="number" min="1" value="300"><small>ÑĞµĞº</small></span></label>
+            <label class="proxy-provider-field"><span>ĞĞ¶Ğ¸Ğ´Ğ°ĞµĞ¼Ñ‹Ğ¹ HTTP-ĞºĞ¾Ğ´ Ğ¾Ñ‚Ğ²ĞµÑ‚Ğ°</span><input name="expectedStatus" type="number" min="100" max="599" value="204"></label>
+          </div></fieldset>
+          <fieldset class="proxy-provider-group"><legend><label class="proxy-provider-toggle"><input name="headersEnabled" type="checkbox" checked><span>Ğ—Ğ°Ğ³Ğ¾Ğ»Ğ¾Ğ²ĞºĞ¸</span></label></legend><div class="proxy-provider-grid" data-provider-section="headers">
+            <label class="proxy-provider-field"><span>User-Agent</span><input name="userAgent" value="ClashMeta/1.19.30; mihomo/1.19.30"></label>
+            <label class="proxy-provider-field"><span>x-hwid</span><input name="hwid" autocomplete="off"></label>
+          </div></fieldset>
+          <fieldset class="proxy-provider-group"><legend><label class="proxy-provider-toggle"><input name="filtersEnabled" type="checkbox"><span>Ğ¤Ğ¸Ğ»ÑŒÑ‚Ñ€ Ğ¿Ğ¾Ğ´ĞºĞ»ÑÑ‡ĞµĞ½Ğ¸Ğ¹</span></label></legend><div class="proxy-provider-grid" data-provider-section="filters" hidden>
+            <label class="proxy-provider-field proxy-provider-wide"><span>ĞŸĞ¾ Ğ½Ğ°Ğ·Ğ²Ğ°Ğ½Ğ¸Ñ (Ğ²ĞºĞ»ÑÑ‡Ğ¸Ñ‚ÑŒ)</span><input name="filter" placeholder="my-good-proxy"></label>
+            <label class="proxy-provider-field proxy-provider-wide"><span>ĞŸĞ¾ Ğ½Ğ°Ğ·Ğ²Ğ°Ğ½Ğ¸Ñ (Ğ¸ÑĞºĞ»ÑÑ‡Ğ¸Ñ‚ÑŒ)</span><input name="excludeFilter" placeholder="my-bad-proxy"></label>
+            <label class="proxy-provider-field proxy-provider-wide"><span>ĞŸĞ¾ Ñ‚Ğ¸Ğ¿Ñƒ (Ğ¸ÑĞºĞ»ÑÑ‡Ğ¸Ñ‚ÑŒ)</span><input name="excludeType" placeholder="trojan|vmess"></label>
+          </div></fieldset>
+          <label class="proxy-provider-udp"><input name="udp" type="checkbox" checked><span>Ğ’ĞºĞ»ÑÑ‡Ğ¸Ñ‚ÑŒ UDP</span></label>
+        </div>
+        <pre class="proxy-provider-yaml" data-provider-panel="yaml" hidden></pre>
+        <div class="proxy-provider-actions">
+          <button type="button" class="editor-button" data-provider-insert="start">ï¼‹ Ğ’ Ğ½Ğ°Ñ‡Ğ°Ğ»Ğ¾</button>
+          <button type="button" class="editor-button" data-provider-insert="end">ï¼‹ Ğ’ ĞºĞ¾Ğ½ĞµÑ†</button>
+          <button type="button" class="editor-button" data-provider-open-replace>â§‰ Ğ—Ğ°Ğ¼ĞµĞ½Ğ¸Ñ‚ÑŒ</button>
+          <div class="proxy-provider-replace" hidden><select name="replaceTarget" aria-label="ĞŸÑ€Ğ¾Ğ²Ğ°Ğ¹Ğ´ĞµÑ€ Ğ´Ğ»Ñ Ğ·Ğ°Ğ¼ĞµĞ½Ñ‹"><option value="">Ğ’Ñ‹Ğ±ĞµÑ€Ğ¸Ñ‚Ğµ Ğ¿Ñ€Ğ¾Ğ²Ğ°Ğ¹Ğ´ĞµÑ€Ğ°</option></select><button type="button" class="editor-button" data-provider-insert="replace">ĞŸĞ¾Ğ´Ñ‚Ğ²ĞµÑ€Ğ´Ğ¸Ñ‚ÑŒ</button></div>
+        </div>
+      </section>
+      <label class="proxy-import-field"><span>Ğ¡ÑÑ‹Ğ»ĞºĞ° Ğ½Ğ° Ğ¿Ğ¾Ğ´ĞºĞ»ÑÑ‡ĞµĞ½Ğ¸Ğµ</span><input name="uri" type="text" autocomplete="off" autocapitalize="none" spellcheck="false" placeholder="vless://â€¦ Ğ¸Ğ»Ğ¸ https://â€¦" required></label>
+      <p class="proxy-import-error" role="alert" hidden></p>
+      <div class="proxy-import-footer"><button class="editor-button" type="button" data-close-proxy-import>ĞÑ‚Ğ¼ĞµĞ½Ğ°</button><button class="editor-button editor-button-primary" type="button" data-generate-provider>Ğ¡Ğ³ĞµĞ½ĞµÑ€Ğ¸Ñ€Ğ¾Ğ²Ğ°Ñ‚ÑŒ</button></div>
+    </form>`;
+    document.body.append(dialog);
+    const form = dialog.querySelector<HTMLFormElement>('#proxy-import-form');
+    const input = form?.querySelector<HTMLInputElement>('[name="uri"]');
+    const error = form?.querySelector<HTMLElement>('.proxy-import-error');
+    const providerEditor = form?.querySelector<HTMLElement>('.proxy-provider-editor');
+    const yamlPreview = form?.querySelector<HTMLElement>('.proxy-provider-yaml');
+    const providerSettings = form?.querySelector<HTMLElement>('.proxy-provider-settings');
+    const providerGroups = form?.querySelector<HTMLElement>('[data-provider-groups]');
+    const generateButton = form?.querySelector<HTMLButtonElement>('[data-generate-provider]');
+    const close = () => { if (dialog.open) dialog.close(); else dialog.remove(); };
+    signal.addEventListener('abort', close, { once: true });
+    dialog.querySelectorAll<HTMLButtonElement>('[data-close-proxy-import]').forEach((button) => button.addEventListener('click', close, { signal }));
+    dialog.addEventListener('close', () => dialog.remove(), { once: true, signal });
 
-HOOH[ÂˆÛÛœİØ]™P]ÛˆHØİ[Y[œ]Y\TÙ[XİÜS]Û‘[[Y[Š	ÈØÛÛ™šYË\Ø]™KXXİ]™IÊNÂˆYˆ
-Ø]™P]ÛŠHØ]™P]Û‹™\ØX›YHİ\œ™[Û˜\Úİ
+    const setting = <T extends Element>(name: string) => form?.elements.namedItem(name) as T | null;
+    const settingsValue = (): MihomoProviderSettings => ({
+      name: setting<HTMLInputElement>('providerName')?.value ?? '',
+      url: setting<HTMLInputElement>('subscriptionUrl')?.value ?? '',
+      interval: Number(setting<HTMLInputElement>('interval')?.value),
+      healthCheckEnabled: setting<HTMLInputElement>('healthCheckEnabled')?.checked ?? false,
+      healthCheckUrl: setting<HTMLInputElement>('healthCheckUrl')?.value ?? '',
+      healthCheckInterval: Number(setting<HTMLInputElement>('healthCheckInterval')?.value),
+      expectedStatus: Number(setting<HTMLInputElement>('expectedStatus')?.value),
+      headersEnabled: setting<HTMLInputElement>('headersEnabled')?.checked ?? false,
+      userAgent: setting<HTMLInputElement>('userAgent')?.value ?? '',
+      hwid: setting<HTMLInputElement>('hwid')?.value ?? '',
+      udp: setting<HTMLInputElement>('udp')?.checked ?? false,
+      filtersEnabled: setting<HTMLInputElement>('filtersEnabled')?.checked ?? false,
+      filter: setting<HTMLInputElement>('filter')?.value ?? '',
+      excludeFilter: setting<HTMLInputElement>('excludeFilter')?.value ?? '',
+      excludeType: setting<HTMLInputElement>('excludeType')?.value ?? '',
+    });
+    const refreshPreview = () => {
+      if (!yamlPreview) return;
+      try {
+        yamlPreview.textContent = createMihomoProviderYaml(settingsValue());
+        if (error) error.hidden = true;
+      } catch (cause) {
+        yamlPreview.textContent = '';
+        if (error) { error.hidden = false; error.textContent = cause instanceof Error ? cause.message : 'ĞŸÑ€Ğ¾Ğ²ĞµÑ€ÑŒÑ‚Ğµ Ğ¿Ğ°Ñ€Ğ°Ğ¼ĞµÑ‚Ñ€Ñ‹ Ğ¿Ñ€Ğ¾Ğ²Ğ°Ğ¹Ğ´ĞµÑ€Ğ°.'; }
+      }
+    };
+    form?.querySelector<HTMLButtonElement>('[data-copy-provider-yaml]')?.addEventListener('click', async () => {
+      try {
+        await navigator.clipboard.writeText(createMihomoProviderYaml(settingsValue()));
+        const copy = form.querySelector<HTMLButtonElement>('[data-copy-provider-yaml]');
+        if (copy) { copy.textContent = 'âœ“'; copy.setAttribute('aria-label', 'YAML ÑĞºĞ¾Ğ¿Ğ¸Ñ€Ğ¾Ğ²Ğ°Ğ½'); }
+      } catch {
+        if (error) { error.hidden = false; error.textContent = 'Ğ‘Ñ€Ğ°ÑƒĞ·ĞµÑ€ Ğ½Ğµ Ñ€Ğ°Ğ·Ñ€ĞµÑˆĞ¸Ğ» ĞºĞ¾Ğ¿Ğ¸Ñ€Ğ¾Ğ²Ğ°Ğ½Ğ¸Ğµ YAML.'; }
+      }
+    }, { signal });
+    form?.querySelectorAll<HTMLInputElement>('.proxy-provider-settings input').forEach((control) => control.addEventListener('input', refreshPreview, { signal }));
+    form?.querySelectorAll<HTMLInputElement>('[data-provider-section] input[type="checkbox"]').forEach((toggle) => toggle.addEventListener('change', () => {
+      const section = toggle.closest('fieldset')?.querySelector<HTMLElement>('[data-provider-section]');
+      if (section) section.hidden = !toggle.checked;
+      refreshPreview();
+    }, { signal }));
+    form?.querySelectorAll<HTMLButtonElement>('[data-provider-tab]').forEach((tab) => tab.addEventListener('click', () => {
+      const active = tab.dataset.providerTab;
+      form.querySelectorAll<HTMLButtonElement>('[data-provider-tab]').forEach((item) => {
+        const selected = item === tab;
+        item.classList.toggle('is-active', selected);
+        item.setAttribute('aria-selected', String(selected));
+      });
+      if (providerSettings) providerSettings.hidden = active !== 'settings';
+      if (yamlPreview) yamlPreview.hidden = active !== 'yaml';
+    }, { signal }));
+    generateButton?.addEventListener('click', () => {
+      const uri = input?.value.trim() ?? '';
+      if (!editor || !uri) return;
+      try {
+        const current = editor.state.doc.toString();
+        const generated = generateConfigForCore(uri, 'mihomo', current);
+        if (generated.type === 'proxy-provider') {
+          const name = nextMihomoProviderName(current);
+          const nameInput = setting<HTMLInputElement>('providerName');
+          if (nameInput) nameInput.value = name;
+          const urlInput = setting<HTMLInputElement>('subscriptionUrl');
+          if (urlInput) urlInput.value = uri;
+          const hwidInput = setting<HTMLInputElement>('hwid');
+          if (hwidInput && !hwidInput.value) hwidInput.value = Array.from(crypto.getRandomValues(new Uint8Array(6)), (byte) => byte.toString(16).padStart(2, '0').toUpperCase()).join('');
+          if (providerEditor) providerEditor.hidden = false;
+          const providers = parseDocument(current, { uniqueKeys: true, version: '1.2' }).get('proxy-providers', true);
+          const target = setting<HTMLSelectElement>('replaceTarget');
+          if (target) {
+            target.innerHTML = '<option value="">Ğ’Ñ‹Ğ±ĞµÑ€Ğ¸Ñ‚Ğµ Ğ¿Ñ€Ğ¾Ğ²Ğ°Ğ¹Ğ´ĞµÑ€Ğ°</option>';
+            if (isMap(providers)) providers.items.forEach((pair) => {
+              const option = document.createElement('option');
+              const key = (pair as { key?: { toJSON?: () => unknown } }).key;
+              option.value = String(key?.toJSON?.() ?? key ?? '');
+              option.textContent = option.value;
+              target.append(option);
+            });
+          }
+          const replaceButton = form?.querySelector<HTMLButtonElement>('[data-provider-open-replace]');
+          if (replaceButton) {
+            replaceButton.disabled = !isMap(providers) || providers.items.length === 0;
+            replaceButton.title = replaceButton.disabled ? 'Ğ’ ĞºĞ¾Ğ½Ñ„Ğ¸Ğ³ÑƒÑ€Ğ°Ñ†Ğ¸Ğ¸ Ğ¿Ğ¾ĞºĞ° Ğ½ĞµÑ‚ Ğ¿Ñ€Ğ¾Ğ²Ğ°Ğ¹Ğ´ĞµÑ€Ğ¾Ğ² Ğ´Ğ»Ñ Ğ·Ğ°Ğ¼ĞµĞ½Ñ‹' : 'Ğ—Ğ°Ğ¼ĞµĞ½Ğ¸Ñ‚ÑŒ ÑÑƒÑ‰ĞµÑÑ‚Ğ²ÑƒÑÑ‰Ğ¸Ğ¹ Ğ¿Ñ€Ğ¾Ğ²Ğ°Ğ¹Ğ´ĞµÑ€';
+          }
+          if (providerGroups) {
+            providerGroups.replaceChildren();
+            const groupDocument = parseDocument(current, { uniqueKeys: true, version: '1.2' });
+            const groups = groupDocument.get('proxy-groups', true);
+            if (!groupDocument.errors.length && isSeq(groups)) {
+              for (const group of groups.items) {
+                if (!isMap(group)) continue;
+                const groupName = String(group.get('name', true)?.toJSON() ?? '');
+                if (!groupName) continue;
+                const label = document.createElement('label');
+                label.className = 'proxy-provider-group-option';
+                const checkbox = document.createElement('input');
+                checkbox.type = 'checkbox';
+                checkbox.dataset.providerGroup = groupName;
+                checkbox.value = groupName;
+                const name = document.createElement('span');
+                name.textContent = groupName;
+                label.append(checkbox, name);
+                providerGroups.append(label);
+              }
+            }
+            if (!providerGroups.childElementCount) {
+              const empty = document.createElement('span');
+              empty.className = 'proxy-provider-hint';
+              empty.textContent = 'Ğ’ ĞºĞ¾Ğ½Ñ„Ğ¸Ğ³ÑƒÑ€Ğ°Ñ†Ğ¸Ğ¸ Ğ½Ğµ Ğ½Ğ°Ğ¹Ğ´ĞµĞ½Ñ‹ Ğ³Ñ€ÑƒĞ¿Ğ¿Ñ‹ Ğ¿Ñ€Ğ¾ĞºÑĞ¸. Ğ¡Ğ¾Ğ·Ğ´Ğ°Ğ¹Ñ‚Ğµ proxy-groups Ğ¸ Ğ¿Ğ¾Ğ²Ñ‚Ğ¾Ñ€Ğ¸Ñ‚Ğµ Ğ¸Ğ¼Ğ¿Ğ¾Ñ€Ñ‚.';
+              providerGroups.append(empty);
+            }
+          }
+          refreshPreview();
+          providerEditor?.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+          return;
+        }
+        if (generated.type !== 'proxy') throw new Error('Ğ”Ğ»Ñ ÑÑ‚Ğ¾Ğ³Ğ¾ Ñ‚Ğ¸Ğ¿Ğ° ÑÑÑ‹Ğ»ĞºĞ¸ Ğ½ĞµÑ‚ Ğ³ĞµĞ½ĞµÑ€Ğ°Ñ‚Ğ¾Ñ€Ğ° Mihomo.');
+        const updated = appendMihomoProxy(current, generated.content);
+        enableEditorEditing();
+        editor.dispatch({ changes: { from: 0, to: editor.state.doc.length, insert: updated } });
+        editor.focus();
+        setValidation('ĞŸÑ€Ğ¾ĞºÑĞ¸ Ğ´Ğ¾Ğ±Ğ°Ğ²Ğ»ĞµĞ½ Ğ² Ğ»Ğ¾ĞºĞ°Ğ»ÑŒĞ½Ñ‹Ğ¹ Ñ‡ĞµÑ€Ğ½Ğ¾Ğ²Ğ¸Ğº. ĞŸÑ€Ğ¾Ğ²ĞµÑ€ÑŒÑ‚Ğµ ĞºĞ¾Ğ½Ñ„Ğ¸Ğ³ÑƒÑ€Ğ°Ñ†Ğ¸Ñ Ğ¿ĞµÑ€ĞµĞ´ Ğ¿Ñ€Ğ¸Ğ¼ĞµĞ½ĞµĞ½Ğ¸ĞµĞ¼.', true);
+        close();
+      } catch (cause) {
+        if (error) { error.hidden = false; error.textContent = cause instanceof Error ? cause.message : 'ĞĞµ ÑƒĞ´Ğ°Ğ»Ğ¾ÑÑŒ Ğ¾Ğ±Ñ€Ğ°Ğ±Ğ¾Ñ‚Ğ°Ñ‚ÑŒ ÑÑ‚Ñƒ ÑÑÑ‹Ğ»ĞºÑƒ.'; }
+      }
+    }, { signal });
+    form?.querySelectorAll<HTMLButtonElement>('[data-provider-insert]').forEach((button) => button.addEventListener('click', async () => {
+      if (!editor) return;
+      const position = button.dataset.providerInsert as MihomoProviderPosition;
+      const replaceTarget = setting<HTMLSelectElement>('replaceTarget')?.value;
+      if (position === 'replace' && !replaceTarget) {
+        if (error) { error.hidden = false; error.textContent = 'Ğ’Ñ‹Ğ±ĞµÑ€Ğ¸Ñ‚Ğµ Ğ¿Ñ€Ğ¾Ğ²Ğ°Ğ¹Ğ´ĞµÑ€Ğ° Ğ´Ğ»Ñ Ğ·Ğ°Ğ¼ĞµĞ½Ñ‹.'; }
+        return;
+      }
+      if (position === 'replace' && !(await confirmInApp('Ğ—Ğ°Ğ¼ĞµĞ½Ğ¸Ñ‚ÑŒ Ğ¿Ñ€Ğ¾Ğ²Ğ°Ğ¹Ğ´ĞµÑ€Ğ°?', `ĞŸĞ°Ñ€Ğ°Ğ¼ĞµÑ‚Ñ€Ñ‹ Ğ¿Ñ€Ğ¾Ğ²Ğ°Ğ¹Ğ´ĞµÑ€Ğ° Â«${replaceTarget}Â» Ğ² Ğ»Ğ¾ĞºĞ°Ğ»ÑŒĞ½Ğ¾Ğ¼ Ñ‡ĞµÑ€Ğ½Ğ¾Ğ²Ğ¸ĞºĞµ Ğ±ÑƒĞ´ÑƒÑ‚ Ğ·Ğ°Ğ¼ĞµĞ½ĞµĞ½Ñ‹.`, 'Ğ—Ğ°Ğ¼ĞµĞ½Ğ¸Ñ‚ÑŒ'))) return;
+      try {
+        const current = editor.state.doc.toString();
+        const content = createMihomoProviderYaml(settingsValue());
+        const targetGroups = [...(providerGroups?.querySelectorAll<HTMLInputElement>('[data-provider-group]:checked') ?? [])].map((checkbox) => checkbox.value);
+        if (!targetGroups.length) throw new Error('Ğ’Ñ‹Ğ±ĞµÑ€Ğ¸Ñ‚Ğµ Ñ…Ğ¾Ñ‚Ñ Ğ±Ñ‹ Ğ¾Ğ´Ğ½Ñƒ Ğ³Ñ€ÑƒĞ¿Ğ¿Ñƒ, Ğ² ĞºĞ¾Ñ‚Ğ¾Ñ€Ğ¾Ğ¹ Ğ½ÑƒĞ¶Ğ½Ğ¾ Ğ¿Ğ¾ĞºĞ°Ğ·Ğ°Ñ‚ÑŒ ÑƒĞ·Ğ»Ñ‹ Ğ¿Ğ¾Ğ´Ğ¿Ğ¸ÑĞºĞ¸.');
+        const updated = insertMihomoProvider(current, content, position, replaceTarget, targetGroups);
+        enableEditorEditing();
+        editor.dispatch({ changes: { from: 0, to: editor.state.doc.length, insert: updated } });
+        editor.focus();
+        setValidation(`ĞŸÑ€Ğ¾Ğ²Ğ°Ğ¹Ğ´ĞµÑ€ Ğ¿Ğ¾Ğ´Ğ¿Ğ¸ÑĞºĞ¸ ${position === 'replace' ? 'Ğ·Ğ°Ğ¼ĞµĞ½Ñ‘Ğ½' : 'Ğ´Ğ¾Ğ±Ğ°Ğ²Ğ»ĞµĞ½'} Ğ² Ğ»Ğ¾ĞºĞ°Ğ»ÑŒĞ½Ñ‹Ğ¹ Ñ‡ĞµÑ€Ğ½Ğ¾Ğ²Ğ¸Ğº. ĞŸÑ€Ğ¾Ğ²ĞµÑ€ÑŒÑ‚Ğµ ĞºĞ¾Ğ½Ñ„Ğ¸Ğ³ÑƒÑ€Ğ°Ñ†Ğ¸Ñ Ğ¿ĞµÑ€ĞµĞ´ Ğ¿Ñ€Ğ¸Ğ¼ĞµĞ½ĞµĞ½Ğ¸ĞµĞ¼.`, true);
+        close();
+      } catch (cause) {
+        if (error) { error.hidden = false; error.textContent = cause instanceof Error ? cause.message : 'ĞĞµ ÑƒĞ´Ğ°Ğ»Ğ¾ÑÑŒ Ğ¾Ğ±Ğ½Ğ¾Ğ²Ğ¸Ñ‚ÑŒ Ñ‡ĞµÑ€Ğ½Ğ¾Ğ²Ğ¸Ğº.'; }
+      }
+    }, { signal }));
+    form?.querySelector<HTMLButtonElement>('[data-provider-open-replace]')?.addEventListener('click', () => {
+      const panel = form.querySelector<HTMLElement>('.proxy-provider-replace');
+      if (panel) panel.hidden = false;
+      setting<HTMLSelectElement>('replaceTarget')?.focus();
+    }, { signal });
+    dialog.addEventListener('click', (clickEvent) => { if (clickEvent.target === dialog) close(); }, { signal });
+    dialog.showModal();
+    input?.focus();
+  }, { signal });
+}
 
-HOOH[Â‚ˆÙ]Y]Ü’Y[]J›İ]\“[ÙKXİ]™PÛÜ™JNÂˆY]Ü‘Y][™ÈH˜[ÙNÂˆY]Ü”™XYÛ›HH™]ÈÛÛ\\Y[
+const editorTheme = EditorView.theme({
+  '&': { height: '100%', color: 'var(--editor-text, #e1e9f8)', backgroundColor: 'var(--editor-bg, #080e1b)', fontSize: '14px', fontWeight: '500' },
+  '.cm-scroller': { overflow: 'auto', fontFamily: '"JetBrains Mono Variable", "JetBrains Mono", ui-monospace, SFMono-Regular, Consolas, monospace', lineHeight: '1.6' },
+  '.cm-content': { padding: '14px 0', caretColor: 'var(--editor-caret, #65c9ff)' },
+  '.cm-gutters': { color: 'var(--editor-gutter-text, #566a88)', backgroundColor: 'var(--editor-gutter-bg, #0a1120)', borderRight: '1px solid var(--editor-border, #1e2b40)' },
+  '.cm-activeLine': { backgroundColor: 'var(--editor-active-line, #111e31)' },
+  '.cm-activeLineGutter': { color: 'var(--editor-active-gutter, #9ab4d7)', backgroundColor: 'var(--editor-active-line, #111e31)' },
+  '&.cm-focused .cm-cursor': { borderLeftColor: 'var(--editor-caret, #65c9ff)' },
+  '&.cm-focused .cm-selectionBackground, .cm-selectionBackground': { backgroundColor: 'var(--editor-selection, #244775) !important' },
+});
 
-NÂˆY]Ü‘Y]X›HH™]ÈÛÛ\\Y[
+const editorHighlight = HighlightStyle.define([
+  { tag: tags.propertyName, color: 'var(--editor-property, #62a8ff)', fontWeight: '600' },
+  { tag: [tags.string, tags.special(tags.string)], color: 'var(--editor-string, #9cda78)' },
+  { tag: [tags.number, tags.integer, tags.float], color: 'var(--editor-number, #ff9b55)' },
+  { tag: [tags.bool, tags.null, tags.atom], color: 'var(--editor-atom, #d58bff)' },
+  { tag: tags.comment, color: 'var(--editor-comment, #777ca7)', fontStyle: 'italic' },
+  { tag: [tags.punctuation, tags.bracket], color: 'var(--editor-punctuation, #a8bad4)' },
+  { tag: [tags.keyword, tags.operator], color: 'var(--editor-keyword, #68c9e8)' },
+]);
 
-NÂˆØİ[Y[œ]Y\TÙ[XİÜS[[Y[Š	ÈÙY]Ü‹]šY]ËZ[	ÊOËœ™[[İ™P]šX]J	ÚY[‰ÊNÂˆ\™[˜Y]™[\İ[™\Š	ØÛXÚÉË
-]™[
-HOˆÂˆYˆ
+function editorElement(): HTMLElement | null {
+  return document.querySelector<HTMLElement>('#yaml-editor');
+}
 
-]™[\™Ù]\ÈS[[Y[
-K˜ÛÜÙ\İ
-	Ë˜ÛKXÛÛ[	ÊJH[˜X›QY]Ü‘Y][™Ê
-NÂˆKÈÚYÛ˜[JNÂˆš[™Y›ŞQX[ÙÊÚYÛ˜[
-NÂˆš[™ÛÛ™šYĞ˜XÚİ\ÊÚYÛ˜[
-NÂˆÛÛœİš[HHİ\œ™[š[J
-NÂˆÛÛœİİÜ™Y˜YHÙ\ÜÚ[Û”İÜ˜YÙK™Ù]][J	Ù˜YÙ^_IÙš[KšYX
-NÂˆÛÛœİİ\Ú]›İ]\‘š[HH›İ]\“[ÙH	‰ˆ
-š[KšYOOH	ØÛÛ™šYÉÈ\Ô›İ]\ÛÛ™šYÑš[Jš[KšY
-H\Ö˜^PÛÛ™šYÑš[Jš[KšY
-JNÂˆËÈHØ]™Yœ›İÜÙ\ˆ˜Yœ›ÛH[ˆX\›Y\ˆš\Ú]]\İ›İYHHXİX[›İ]\ˆš[K‚ˆËÈ™\Ù\™H[‹\Ù\ÜÚ[ÛˆY]ÈÛ›HY\ˆ\ÈY]Üˆ\È™XYH›İ]\ˆÛ˜\Úİ‚ˆÛÛœİ\Ô›İ]\”Û˜\ÚİHİ\œ™[Û˜\Úİ
+function enableEditorEditing(): void {
+  if (!editor || editorEditing) return;
+  editorEditing = true;
+  editor.dispatch({ effects: [editorReadOnly.reconfigure(EditorState.readOnly.of(false)), editorEditable.reconfigure(EditorView.editable.of(true))] });
+  document.querySelector<HTMLElement>('#editor-view-hint')?.setAttribute('hidden', '');
+  editor.focus();
+}
 
-HOOH[ÂˆÛÛœİ[\]HH\İ\Ú]›İ]\‘š[H	‰ˆ
-š[KšYOOH	ØÛÛ™šYÉÈš[KšYOOH	Ş˜^WÜ›İ][™ÉÊBˆÈÙ]Y˜][[\]Jš[KšYOOH	ØÛÛ™šYÉÈÈ	ÛZZÛ[ÉÈˆ	Ş˜^IÊK˜ÛÛ[ˆ	ÉÎÂˆÛÛœİ[š]X[Hİ\Ú]›İ]\‘š[H	‰ˆZ\Ô›İ]\”Û˜\ÚİÈ	ÉÈˆİÜ™Y˜YÏÈ[\]NÂˆYˆ
-İÜ™Y˜YOOH[	‰ˆ[š]X[
-HÙ\ÜÚ[Û”İÜ˜YÙKœÙ]][J	Ù˜YÙ^_IÙš[KšYX[š]X[
-NÂˆÛÛœİ\]S\İ[™\ˆHY]Ü•šY]Ë\]S\İ[™\‹›ÙŠ
-\]JHOˆÂˆYˆ
-]\]K™ØĞÚ[™ÙY
-H™]\›ÂˆÛÛœİ^H\]Kœİ]K™ØËÔİš[™Ê
-NÂˆÙ\ÜÚ[Û”İÜ˜YÙKœÙ]][J	Ù˜YÙ^_IÙš[KšYX^
-NÂˆİ\œ™[Øİ[Y[˜[YHš[K™›Ü›X]OOH	İ^	ÈÈYHˆ˜[Y]TİXİ\™YØİ[Y[
-^
-NÂˆŞ[˜ĞÛÛ™šYĞXİ[ÛœÊ^
-NÂˆJNÂˆY]ÜˆH™]ÈY]Ü•šY]ÊÂˆ\™[ˆİ]NˆY]Ü”İ]K˜Ü™X]JÂˆØÎˆ[š]X[ˆ^[œÚ[ÛœÎˆÂˆ\İÜJ
-KˆÙ^[X\›ÙŠË‹‹™Y˜][Ù^[X\‹‹š\İÜRÙ^[X\JKˆ[™S[X™\œÊ
-KˆYÚYÚXİ]™S[™J
-Kˆ‹‹Šš[K™›Ü›X]OOH	ŞX[[	ÈÈŞX[[
+function setValidation(message: string, valid: boolean | null): void {
+  const status = document.querySelector<HTMLElement>('#yaml-validation');
+  if (!status) return;
+  status.className = `editor-validation${valid === null ? '' : valid ? ' is-valid' : ' is-invalid'}`;
+  status.textContent = message;
+  if (valid === false) {
+    const source = message.startsWith('ĞÑˆĞ¸Ğ±ĞºĞ° YAML') ? 'yaml' : 'config';
+    const key = `${source}\u0000${message}`;
+    if (key !== lastLoggedValidationError) {
+      lastLoggedValidationError = key;
+      void logUiError(source, message).catch(() => undefined);
+    }
+  } else if (valid === true) lastLoggedValidationError = null;
+}
 
-WHˆš[K™›Ü›X]OOH	İ^	ÈÈ×HˆÚœÛÛŠ
-WJKˆŞ[^YÚYÚ[™ÊY]Ü’YÚYÚ
-KˆY]Ü”™XYÛ›K›ÙŠY]Ü”İ]Kœ™XYÛ›K›ÙŠYJJKˆY]Ü‘Y]X›K›ÙŠY]Ü•šY]Ë™Y]X›K›ÙŠ˜[ÙJJKˆY]Ü•[YKˆ\]S\İ[™\‹ˆKˆJKˆJNÂˆYˆ
-[š]X[š[J
-JHİ\œ™[Øİ[Y[˜[YHš[K™›Ü›X]OOH	İ^	ÈÈYHˆ˜[Y]TİXİ\™YØİ[Y[
-[š]X[
-NÂˆ[ÙHÂˆİ\œ™[Øİ[Y[˜[YHš[K™›Ü›X]OOH	İ^	ÎÂˆÙ]˜[Y][ÛŠš[K™›Ü›X]OOH	ŞX[[	ÈÈ	ô't,4aô/t.4`´-H4`4-t-4,4.´`´.4`4/´,´,4/t.4-HPSSt.´/´/ta4.4,ô`ô`4,4a´.4.	Èˆ	ô&ô/´.´,4.ôc4/tbô.H4a4,4.t.È4/ô`ô`t`‹‰Ë[
-NÂˆBˆŞ[˜ĞÛÛ™šYĞXİ[ÛœÊ[š]X[
-NÂ‚ˆØİ[Y[œ]Y\TÙ[XİÜ[S]Û‘[[Y[Š	ÖÙ]KXÛÛ™šYËYš[WIÊK™›Ü‘XXÚ
+function validateYaml(text: string): boolean {
+  if (!text.trim()) {
+    setValidation('Ğ§ĞµÑ€Ğ½Ğ¾Ğ²Ğ¸Ğº Ğ¿ÑƒÑÑ‚. ĞœĞ¾Ğ¶Ğ½Ğ¾ Ğ²ÑÑ‚Ğ°Ğ²Ğ¸Ñ‚ÑŒ ÑˆĞ°Ğ±Ğ»Ğ¾Ğ½ Ğ¸Ğ»Ğ¸ Ğ½Ğ°Ñ‡Ğ°Ñ‚ÑŒ Ğ²Ğ²Ğ¾Ğ´.', null);
+    return false;
+  }
+  const document = parseDocument(text, { uniqueKeys: true, version: '1.2' });
+  const firstError = document.errors[0];
+  if (firstError) {
+    const position = firstError.linePos?.[0];
+    const where = position ? ` Â· ÑÑ‚Ñ€Ğ¾ĞºĞ° ${position.line}, ÑÑ‚Ğ¾Ğ»Ğ±ĞµÑ† ${position.col}` : '';
+    setValidation(`ĞÑˆĞ¸Ğ±ĞºĞ° YAML${where}: ${firstError.message}`, false);
+    return false;
+  }
+  const rootValue: unknown = document.toJS();
+  if (!rootValue || typeof rootValue !== 'object' || Array.isArray(rootValue)) {
+    setValidation('YAML ÑĞ¸Ğ½Ñ‚Ğ°ĞºÑĞ¸Ñ‡ĞµÑĞºĞ¸ ĞºĞ¾Ñ€Ñ€ĞµĞºÑ‚ĞµĞ½, Ğ½Ğ¾ ĞºĞ¾Ñ€Ğ½ĞµĞ¼ Ğ´Ğ¾ĞºÑƒĞ¼ĞµĞ½Ñ‚Ğ° Ğ¾Ğ¶Ğ¸Ğ´Ğ°ĞµÑ‚ÑÑ Ğ¾Ğ±ÑŠĞµĞºÑ‚ Mihomo.', false);
+    return false;
+  }
+  setValidation('âœ“ YAML Ğ²Ğ°Ğ»Ğ¸Ğ´ĞµĞ½ Â· Ğ¿Ñ€Ğ¾Ğ²ĞµÑ€ĞºĞ° Mihomo Ğ¿Ñ€Ğ¸ ÑĞ¾Ñ…Ñ€Ğ°Ğ½ĞµĞ½Ğ¸Ğ¸', true);
+  return true;
+}
 
-]ÛŠHOˆÂˆ]Û‹˜Y]™[\İ[™\Š	ØÛXÚÉË
+function validateStructuredDocument(text: string): boolean {
+  const format = currentFile().format;
+  if (format === 'yaml') return validateYaml(text);
+  if (format === 'text') {
+    setValidation('Ğ”Ğ»Ñ ÑÑ‚Ğ¾Ğ³Ğ¾ ÑĞ¿Ğ¸ÑĞºĞ° ÑĞ¸Ğ½Ñ‚Ğ°ĞºÑĞ¸Ñ‡ĞµÑĞºĞ¸Ğ¹ Ğ²Ğ°Ğ»Ğ¸Ğ´Ğ°Ñ‚Ğ¾Ñ€ Ğ½Ğµ Ğ·Ğ°Ğ´Ğ°Ğ½.', null);
+    return false;
+  }
+  if (!text.trim()) {
+    setValidation('Ğ§ĞµÑ€Ğ½Ğ¾Ğ²Ğ¸Ğº Ğ¿ÑƒÑÑ‚.', null);
+    return false;
+  }
+  const errors: ParseError[] = [];
+  const value: unknown = parseJsonc(text, errors, {
+    allowTrailingComma: format === 'jsonc',
+    disallowComments: format === 'json',
+  });
+  if (errors.length && errors[0]) {
+    const error = errors[0];
+    const line = text.slice(0, error.offset).split('\n').length;
+    setValidation(`ĞÑˆĞ¸Ğ±ĞºĞ° ${format.toUpperCase()} Â· ÑÑ‚Ñ€Ğ¾ĞºĞ° ${line}: ${printParseErrorCode(error.error)}`, false);
+    return false;
+  }
+  if (!value || typeof value !== 'object' || Array.isArray(value)) {
+    setValidation(`${format.toUpperCase()} ÑĞ¸Ğ½Ñ‚Ğ°ĞºÑĞ¸Ñ‡ĞµÑĞºĞ¸ ĞºĞ¾Ñ€Ñ€ĞµĞºÑ‚ĞµĞ½, Ğ½Ğ¾ Ğ¾Ğ¶Ğ¸Ğ´Ğ°ĞµÑ‚ÑÑ ĞºĞ¾Ñ€Ğ½ĞµĞ²Ğ¾Ğ¹ Ğ¾Ğ±ÑŠĞµĞºÑ‚.`, false);
+    return false;
+  }
+  setValidation(`âœ“ ${format.toUpperCase()} Ğ²Ğ°Ğ»Ğ¸Ğ´ĞµĞ½ Â· Ğ¿Ñ€Ğ¾Ğ²ĞµÑ€ĞºĞ° Xray Ğ¿Ñ€Ğ¸ Ğ¿Ñ€Ğ¸Ğ¼ĞµĞ½ĞµĞ½Ğ¸Ğ¸`, true);
+  return true;
+}
 
-HOˆÂˆÛÛœİ™^š[HH]Û‹™]\Ù]˜ÛÛ™šYÑš[NÂˆYˆ
-[™^š[HY˜Yš[\ËœÛÛYJ
-Ø[™Y]JHOˆØ[™Y]KšYOOH™^š[JJH™]\›ÂˆXİ]™Qš[HH™^š[NÂˆÙ\ÜÚ[Û”İÜ˜YÙKœÙ]][JXİ]™Qš[RÙ^KXİ]™Qš[JNÂˆ[İ[X[[Y]ÜŠ›İ]\“[ÙKXİ]™PÛÜ™JNÂˆÛÛœİXİ]™QY]ÜˆHØİ[Y[œ]Y\TÙ[XİÜS[[Y[Š	ÈŞX[[YY]Üˆ˜ÛKXÛÛ[	ÊNÂˆXİ]™QY]ÜË™›Øİ\Ê
-NÂˆKÈÚYÛ˜[JNÂˆJNÂ‚ˆØİ[Y[œ]Y\TÙ[XİÜS]Û‘[[Y[Š	ÈŞX[[][\]IÊOË˜Y]™[\İ[™\Š	ØÛXÚÉË\Ş[˜È
-]™[
-HOˆÂˆ
-]™[˜İ\œ™[\™Ù]\ÈS]Û‘[[Y[
-K˜ÛÜÙ\İ
-	Ù]Z[ÉÊOËœ™[[İ™P]šX]J	ÛÜ[‰ÊNÂˆÛÛœİš[HHİ\œ™[š[J
-NÂˆYˆ
-YY]Üˆ
-š[K™›Ü›X]OOH	ŞX[[	È	‰ˆš[K™›Ü›X]OOH	ÚœÛÛ‰È	‰ˆš[K™›Ü›X]OOH	ÚœÛÛ˜ÉÊJH™]\›ÂˆÛÛœİ™\]Y\İYY]ÜˆHY]ÜÂˆ›ÚYÚÛÜÙT™Y™\™[˜ÙU[\]Jš[K™›Ü›X]OOH	ŞX[[	ÈÈ	ÛZZÛ[ÉÈˆ	Ş˜^IÊK[Š\Ş[˜È
-[\]JHOˆÂˆYˆ
-][\]HYY]ÜŠH™]\›ÂˆÛÛœİ\™Ù]YHš[K™›Ü›X]OOH	ŞX[[	ÈÈ	ØÛÛ™šYÉÈˆÙ]˜^U[\]U\™Ù]
-[\]K›˜[YJNÂˆYˆ
-]\™Ù]Y
-H›İÈ™]È\œ›ÜŠ	ô't-H4`ô-4,4.ô/´`tc4/´/ô`4-t-4-t.ô.4`´c4a4,4.t.È4-4.ôcÈ4b4,4,t.ô/´/t,˜^IÊNÂˆÛÛœİ\™Ù]H˜Yš[\Ë™š[™
+export function unmountYamlEditor(): void {
+  editorBindings?.abort();
+  editorBindings = null;
+  editor?.destroy();
+  editor = null;
+}
 
-Ø[™Y]JHOˆØ[™Y]KšYOOH\™Ù]Y
-NÂˆYˆ
-]\™Ù]
-H›İÈ™]È\œ›ÜŠ	ô)4,4.t.È4-4.ôcÈ4b4,4,t.ô/´/t,4/t-H4/t,4.t-4-t/H4,ˆ4`4-t-4,4.´`´/´`4-IÊNÂˆ]\™Ù]ÛÛ[H\™Ù]YOOHš[KšYÈY]Ü‹œİ]K™ØËÔİš[™Ê
-HˆÙ\ÜÚ[Û”İÜ˜YÙK™Ù]][J	Ù˜YÙ^_Iİ\™Ù]YX
-HÏÈ	ÉÎÂˆYˆ
-›İ]\“[ÙH	‰ˆ\Ö˜^PÛÛ™šYÑš[J\™Ù]Y
-JHÂˆÛÛœİXİ]™HH]ØZ]Ù]˜^PÛÛ™šYÑš[J˜^P\Qš[J\™Ù]Y
-KÚYÛ˜[
-NÂˆ˜^TÛ˜\ÚİËœÙ]
-˜^P\Qš[J\™Ù]Y
-KXİ]™K˜ÛÛ[
-NÂˆYˆ
-\™Ù]YOOHš[KšY	‰ˆ\Ù\ÜÚ[Û”İÜ˜YÙK™Ù]][J	Ù˜YÙ^_Iİ\™Ù]YX
-JH\™Ù]ÛÛ[HXİ]™K˜ÛÛ[ÂˆBˆYˆ
-Y]ÜˆOOH™\]Y\İYY]ÜŠH™]\›ÂˆYˆ
-\™Ù]ÛÛ[š[J
-H	‰ˆJ]ØZ]ÛÛ™š\›R[\
-	ô%ô,4/4-t/t.4`´c4`´-t.´`ôbt.4.H4aô-t`4/t/´,´.4.ÉË4*4,4,t.ô/´/H0ªÉİ[\]K›˜[Y_p®È4-ô,4,ô`4`ô-ô.4`´`tcÈ4,ˆ	İ\™Ù]™š[[˜[Y_Kˆ4(´-t.´`ôbt.4.H4`´-t.´`t`ˆ4/´`t`´,4/t-t`´`tcÈ4`´/´.ôc4.´/ˆ4,ˆ4.4`t`´/´`4.4.4/´`´/4-t/tbÈ4-4/ˆ4-ô,4.´`4bô`´.4cÈ4,´.´.ô,4-4.´.˜	ô&4/4/ô/´`4`´.4`4/´,´,4`´c	ÊJJH™]\›ÂˆYˆ
-\™Ù]YOOHš[KšY
-HÂˆXİ]™Qš[HH\™Ù]YÂˆÙ\ÜÚ[Û”İÜ˜YÙKœÙ]][JXİ]™Qš[RÙ^K\™Ù]Y
-NÂˆÙ]Y]Ü’Y[]J›İ]\“[ÙKXİ]™PÛÜ™JNÂˆBˆ[˜X›QY]Ü‘Y][™Ê
-NÂˆY]Ü‹™\Ü]Ú
-ÈÚ[™Ù\ÎˆÈœ›ÛNˆÎˆY]Ü‹œİ]K™ØË›[™İ[œÙ\ˆ[\]K˜ÛÛ[HJNÂˆY]Ü‹™›Øİ\Ê
-NÂˆ˜[Y]TİXİ\™YØİ[Y[
-[\]K˜ÛÛ[
-NÂˆÛÛœİİ]\ÈHØİ[Y[œ]Y\TÙ[XİÜS[[Y[Š	ÈŞX[[]˜[Y][Û‰ÊNÂˆYˆ
-İ]\ÊHİ]\Ë^ÛÛ[H4*4,4,t.ô/´/H0ªÉİ[\]K›˜[Y_p®È4-ô,4,ô`4`ô-´-t/H4,ˆ4.ô/´.´,4.ôc4/tbô.H4aô-t`4/t/´,´.4.È4/ô-t`4-t-4.4`t/ô/´.ôc4-ô/´,´,4/t.4-t/4/ô`4/´,´-t`4c4`´-H4-t,ô/ˆ4`t/´,´/4-t`t`´.4/4/´`t`´c˜ÂˆJK˜Ø]Ú
+export function mountYamlEditor(routerMode = false, activeCore: 'mihomo' | 'xray' | null = 'mihomo'): void {
+  const parent = editorElement();
+  if (!parent) return;
+  if (activeCore === 'xray' && activeFile === 'config') activeFile = 'xray_json';
+  if (activeCore !== 'xray' && activeFile.startsWith('xray_')) activeFile = 'config';
+  unmountYamlEditor();
+  editorBindings = new AbortController();
+  const { signal } = editorBindings;
+  const applyButton = document.querySelector<HTMLButtonElement>('#config-apply-active');
+  if (applyButton) applyButton.disabled = currentSnapshot() === null;
+  const saveButton = document.querySelector<HTMLButtonElement>('#config-save-active');
+  if (saveButton) saveButton.disabled = currentSnapshot() === null;
 
-\œ›Üˆ[šÛ›İÛŠHOˆÂˆÙ]˜[Y][ÛŠ\œ›Üˆ[œİ[˜Ù[Ùˆ\œ›ÜˆÈ4't-H4`ô-4,4.ô/´`tc4/´`´.´`4bô`´c4.´,4`´,4.ô/´,Îˆ	Ù\œ›Ü‹›Y\ÜØYÙ_Xˆ	ô't-H4`ô-4,4.ô/´`tc4/´`´.´`4bô`´c4.´,4`´,4.ô/´,È4b4,4,t.ô/´/t/´,‹‰Ë˜[ÙJNÂˆJNÂˆKÈÚYÛ˜[JNÂˆØİ[Y[œ]Y\TÙ[XİÜS]Û‘[[Y[Š	ÈØÛÛ™šYËX\KXXİ]™IÊOË˜Y]™[\İ[™\Š	ØÛXÚÉË\Ş[˜È
-]™[
-HOˆÂˆÛÛœİ]ÛˆH]™[˜İ\œ™[\™Ù]\ÈS]Û‘[[Y[ÂˆÛÛœİš[RYHİ\œ™[š[J
-KšYÂˆYˆ
-YY]Üˆ
-š[RYOOH	ØÛÛ™šYÉÈ	‰ˆZ\Ö˜^PÛÛ™šYÑš[Jš[RY
-JH]Û‹™\ØX›Y
-H™]\›ÂˆÛÛœİ™\]Y\İYY]ÜˆHY]ÜÂˆÛÛœİÛÛ[HY]Ü‹œİ]K™ØËÔİš[™Ê
-NÂˆÛÛœİ^XİYÛÛ[Hİ\œ™[Û˜\Úİ
+  setEditorIdentity(routerMode, activeCore);
+  editorEditing = false;
+  editorReadOnly = new Compartment();
+  editorEditable = new Compartment();
+  document.querySelector<HTMLElement>('#editor-view-hint')?.removeAttribute('hidden');
+  parent.addEventListener('click', (event) => {
+    if ((event.target as HTMLElement).closest('.cm-content')) enableEditorEditing();
+  }, { signal });
+  bindAddProxyDialog(signal);
+  bindConfigBackups(signal);
+  const file = currentFile();
+  const storedDraft = sessionStorage.getItem(`${draftKey}${file.id}`);
+  const startWithRouterFile = routerMode && (file.id === 'config' || isRouterConfigFile(file.id) || isXrayConfigFile(file.id));
+  // A saved browser draft from an earlier visit must not hide the actual router file.
+  // Preserve in-session edits only after this editor has read a router snapshot.
+  const hasRouterSnapshot = currentSnapshot() !== null;
+  const template = !startWithRouterFile && (file.id === 'config' || file.id === 'xray_routing')
+    ? getDefaultTemplate(file.id === 'config' ? 'mihomo' : 'xray').content : '';
+  const initial = startWithRouterFile && !hasRouterSnapshot ? '' : storedDraft ?? template;
+  if (storedDraft === null && initial) sessionStorage.setItem(`${draftKey}${file.id}`, initial);
+  const updateListener = EditorView.updateListener.of((update) => {
+    if (!update.docChanged) return;
+    const text = update.state.doc.toString();
+    sessionStorage.setItem(`${draftKey}${file.id}`, text);
+    currentDocumentValid = file.format === 'text' ? true : validateStructuredDocument(text);
+    syncConfigActions(text);
+  });
+  editor = new EditorView({
+    parent,
+    state: EditorState.create({
+      doc: initial,
+      extensions: [
+        history(),
+        keymap.of([...defaultKeymap, ...historyKeymap]),
+        lineNumbers(),
+        highlightActiveLine(),
+        ...(file.format === 'yaml' ? [yaml()] : file.format === 'text' ? [] : [json()]),
+        syntaxHighlighting(editorHighlight),
+        editorReadOnly.of(EditorState.readOnly.of(true)),
+        editorEditable.of(EditorView.editable.of(false)),
+        editorTheme,
+        updateListener,
+      ],
+    }),
+  });
+  if (initial.trim()) currentDocumentValid = file.format === 'text' ? true : validateStructuredDocument(initial);
+  else {
+    currentDocumentValid = file.format === 'text';
+    setValidation(file.format === 'yaml' ? 'ĞĞ°Ñ‡Ğ½Ğ¸Ñ‚Ğµ Ñ€ĞµĞ´Ğ°ĞºÑ‚Ğ¸Ñ€Ğ¾Ğ²Ğ°Ğ½Ğ¸Ğµ YAML-ĞºĞ¾Ğ½Ñ„Ğ¸Ğ³ÑƒÑ€Ğ°Ñ†Ğ¸Ğ¸' : 'Ğ›Ğ¾ĞºĞ°Ğ»ÑŒĞ½Ñ‹Ğ¹ Ñ„Ğ°Ğ¹Ğ» Ğ¿ÑƒÑÑ‚.', null);
+  }
+  syncConfigActions(initial);
 
-NÂˆYˆ
-^XİYÛÛ[OOH[
-HÂˆÙ]˜[Y][ÛŠ	ô)4,4.t.È4-tbtdH4-ô,4,ô`4`ô-´,4-t`´`tcÈ4`H4`4/´`ô`´-t`4,ˆ4'ô/´,´`´/´`4.4`´-H4-4-t.t`t`´,´.4-H4aô-t`4-t-È4`t-t.´`ô/t-4`Ë‰Ë˜[ÙJNÂˆ™]\›ÂˆBˆYˆ
-]˜[Y]TİXİ\™YØİ[Y[
-ÛÛ[
-JH™]\›Âˆİ\œ™[Øİ[Y[˜[YHYNÂˆÛÛ™šYĞXİ[Û\ŞHHYNÂˆŞ[˜ĞÛÛ™šYĞXİ[ÛœÊÛÛ[
-NÂˆ]Û‹™\ØX›YHYNÂˆÛÛœİØ]™P]ÛˆHØİ[Y[œ]Y\TÙ[XİÜS]Û‘[[Y[Š	ÈØÛÛ™šYË\Ø]™KXXİ]™IÊNÂˆYˆ
-Ø]™P]ÛŠHØ]™P]Û‹™\ØX›YHYNÂˆ]Û‹^ÛÛ[H	ô'ô`4/´,´-t`4.´,4.4/ô-t`4-t-ô,4/ô`ô`t.¸ )‰ÎÂˆHÂˆÛÛœİ\Qš[HH˜^P\Qš[Jš[RY
-NÂˆÛÛœİ›Ü›X[^™YHš[RYOOH	Ş˜^WÜ›İ][™ÉÈÈ”ÓÓ‹œİš[™ÚYJ\œÙRœÛÛ˜ÊÛÛ[×JK[ŠHˆÛÛ[Âˆ]ØZ][ÛÛ™šYĞ\Jš[RYOOH	ØÛÛ™šYÉÈÈ	ÛZZÛ[ÉÈˆ	Ş˜^IË
+  document.querySelectorAll<HTMLButtonElement>('[data-config-file]').forEach((button) => {
+    button.addEventListener('click', () => {
+      const nextFile = button.dataset.configFile;
+      if (!nextFile || !draftFiles.some((candidate) => candidate.id === nextFile)) return;
+      activeFile = nextFile;
+      sessionStorage.setItem(activeFileKey, activeFile);
+      mountYamlEditor(routerMode, activeCore);
+      const activeEditor = document.querySelector<HTMLElement>('#yaml-editor .cm-content');
+      activeEditor?.focus();
+    }, { signal });
+  });
 
-HOˆš[RYOOH	ØÛÛ™šYÉÂˆÈ\PXİ]™SZZÛ[ĞÛÛ™šYÊ›Ü›X[^™Y^XİYÛÛ[ÚYÛ˜[
-Bˆˆ\V˜^PÛÛ™šYÑš[J\Qš[K›Ü›X[^™Y^XİYÛÛ[ÚYÛ˜[
-JNÂˆYˆ
-Y]ÜˆOOH™\]Y\İYY]Üˆİ\œ™[š[J
-KšYOOHš[RY
-H™]\›ÂˆÛÛœİ˜Y[˜Ú[™ÙYHY]Ü‹œİ]K™ØËÔİš[™Ê
-HOOHÛÛ[ÂˆYˆ
-˜Y[˜Ú[™ÙY	‰ˆ›Ü›X[^™YOOHÛÛ[
-HY]Ü‹™\Ü]Ú
-ÈÚ[™Ù\ÎˆÈœ›ÛNˆÎˆY]Ü‹œİ]K™ØË›[™İ[œÙ\ˆ›Ü›X[^™YHJNÂˆYˆ
-š[RYOOH	ØÛÛ™šYÉÊHXİ]™PÛÛ™šYÔÛ˜\ÚİH›Ü›X[^™YÂˆ[ÙH˜^TÛ˜\ÚİËœÙ]
-\Qš[K›Ü›X[^™Y
-NÂˆYˆ
-˜Y[˜Ú[™ÙY
-HÙ]˜[Y][ÛŠš[RYOOH	ØÛÛ™šYÉÈÈ	ÖPSS4/ô/´.ô/t/´`t`´c4cˆ4,´,4.ô.4-4-t/IÈˆ	Ùš[RYOOH	Ş˜^WÜ›İ][™ÉÈÈ	Ò”ÓÓÉÈˆ	Ò”ÓÓ‰ßH4/ô/´.ô/t/´`t`´c4cˆ4,´,4.ô.4-4-t/XYJNÂˆ[ÙHİ\œ™[Øİ[Y[˜[YH˜[Y]TİXİ\™YØİ[Y[
-Y]Ü‹œİ]K™ØËÔİš[™Ê
-JNÂˆHØ]Ú
-\œ›ÜŠHÂˆYˆ
-\œ›Üˆ[œİ[˜Ù[Ùˆ\œ›Üˆ	‰ˆ\œ›Ü‹›Y\ÜØYÙKš[˜ÛY\Ê	ÒIÊJHÂˆYˆ
-š[RYOOH	ØÛÛ™šYÉÊHXİ]™PÛÛ™šYÔÛ˜\ÚİH[Âˆ[ÙH˜^TÛ˜\ÚİË™[]J˜^P\Qš[Jš[RY
-JNÂˆBˆÙ]˜[Y][ÛŠ\œ›Üˆ[œİ[˜Ù[Ùˆ\œ›ÜˆÈ4'ô`4.4/4-t/t-t/t.4-H4/t-H4,´bô/ô/´.ô/t-t/t/ˆ	Ù\œ›Ü‹›Y\ÜØYÙ_Xˆ	ô'ô`4.4/4-t/t-t/t.4-H4.´/´/ta4.4,ô`ô`4,4a´.4.4-ô,4,´-t`4b4.4.ô/´`tc4/´b4.4,t.´/´.K‰Ë˜[ÙJNÂˆHš[˜[HÂˆÛÛ™šYĞXİ[Û\ŞHH˜[ÙNÂˆŞ[˜ĞÛÛ™šYĞXİ[ÛœÊY]ÜËœİ]K™ØËÔİš[™Ê
-HÏÈ	ÉËİ\œ™[Øİ[Y[˜[Y
-NÂˆ]Û‹^ÛÛ[H	ô'ô`4.4/4-t/t.4`´c4.4/ô-t`4-t-ô,4/ô`ô`t`´.4`´c	ÎÂˆBˆKÈÚYÛ˜[JNÂ‚ˆØİ[Y[œ]Y\TÙ[XİÜS]Û‘[[Y[Š	ÈØÛÛ™šYË\Ø]™KXXİ]™IÊOË˜Y]™[\İ[™\Š	ØÛXÚÉË\Ş[˜È
-]™[
-HOˆÂˆÛÛœİ]ÛˆH]™[˜İ\œ™[\™Ù]\ÈS]Û‘[[Y[ÂˆÛÛœİš[RYHİ\œ™[š[J
-KšYÂˆYˆ
-YY]Üˆ
-Z\Ô›İ]\ÛÛ™šYÑš[Jš[RY
-H	‰ˆš[RYOOH	ØÛÛ™šYÉÈ	‰ˆZ\Ö˜^PÛÛ™šYÑš[Jš[RY
-JH]Û‹™\ØX›Y
-H™]\›ÂˆÛÛœİ™\]Y\İYY]ÜˆHY]ÜÂˆÛÛœİ^XİYÛÛ[Hİ\œ™[Û˜\Úİ
+  document.querySelector<HTMLButtonElement>('#yaml-template')?.addEventListener('click', async (event) => {
+    (event.currentTarget as HTMLButtonElement).closest('details')?.removeAttribute('open');
+    const file = currentFile();
+    if (!editor || (file.format !== 'yaml' && file.format !== 'json' && file.format !== 'jsonc')) return;
+    const requestedEditor = editor;
+    void chooseReferenceTemplate(file.format === 'yaml' ? 'mihomo' : 'xray').then(async (template) => {
+      if (!template || !editor) return;
+      const targetId = file.format === 'yaml' ? 'config' : getXrayTemplateTarget(template.name);
+      if (!targetId) throw new Error('ĞĞµ ÑƒĞ´Ğ°Ğ»Ğ¾ÑÑŒ Ğ¾Ğ¿Ñ€ĞµĞ´ĞµĞ»Ğ¸Ñ‚ÑŒ Ñ„Ğ°Ğ¹Ğ» Ğ´Ğ»Ñ ÑˆĞ°Ğ±Ğ»Ğ¾Ğ½Ğ° Xray');
+      const target = draftFiles.find((candidate) => candidate.id === targetId);
+      if (!target) throw new Error('Ğ¤Ğ°Ğ¹Ğ» Ğ´Ğ»Ñ ÑˆĞ°Ğ±Ğ»Ğ¾Ğ½Ğ° Ğ½Ğµ Ğ½Ğ°Ğ¹Ğ´ĞµĞ½ Ğ² Ñ€ĞµĞ´Ğ°ĞºÑ‚Ğ¾Ñ€Ğµ');
+      let targetContent = targetId === file.id ? editor.state.doc.toString() : sessionStorage.getItem(`${draftKey}${targetId}`) ?? '';
+      if (routerMode && isXrayConfigFile(targetId)) {
+        const active = await getXrayConfigFile(xrayApiFile(targetId), signal);
+        xraySnapshots.set(xrayApiFile(targetId), active.content);
+        if (targetId !== file.id && !sessionStorage.getItem(`${draftKey}${targetId}`)) targetContent = active.content;
+      }
+      if (editor !== requestedEditor) return;
+      if (targetContent.trim() && !(await confirmInApp('Ğ—Ğ°Ğ¼ĞµĞ½Ğ¸Ñ‚ÑŒ Ñ‚ĞµĞºÑƒÑ‰Ğ¸Ğ¹ Ñ‡ĞµÑ€Ğ½Ğ¾Ğ²Ğ¸Ğº?', `Ğ¨Ğ°Ğ±Ğ»Ğ¾Ğ½ Â«${template.name}Â» Ğ·Ğ°Ğ³Ñ€ÑƒĞ·Ğ¸Ñ‚ÑÑ Ğ² ${target.filename}. Ğ¢ĞµĞºÑƒÑ‰Ğ¸Ğ¹ Ñ‚ĞµĞºÑÑ‚ Ğ¾ÑÑ‚Ğ°Ğ½ĞµÑ‚ÑÑ Ñ‚Ğ¾Ğ»ÑŒĞºĞ¾ Ğ² Ğ¸ÑÑ‚Ğ¾Ñ€Ğ¸Ğ¸ Ğ¾Ñ‚Ğ¼ĞµĞ½Ñ‹ Ğ´Ğ¾ Ğ·Ğ°ĞºÑ€Ñ‹Ñ‚Ğ¸Ñ Ğ²ĞºĞ»Ğ°Ğ´ĞºĞ¸.`, 'Ğ˜Ğ¼Ğ¿Ğ¾Ñ€Ñ‚Ğ¸Ñ€Ğ¾Ğ²Ğ°Ñ‚ÑŒ'))) return;
+      if (targetId !== file.id) {
+        activeFile = targetId;
+        sessionStorage.setItem(activeFileKey, targetId);
+        setEditorIdentity(routerMode, activeCore);
+      }
+      enableEditorEditing();
+      editor.dispatch({ changes: { from: 0, to: editor.state.doc.length, insert: template.content } });
+      editor.focus();
+      validateStructuredDocument(template.content);
+      const status = document.querySelector<HTMLElement>('#yaml-validation');
+      if (status) status.textContent = `Ğ¨Ğ°Ğ±Ğ»Ğ¾Ğ½ Â«${template.name}Â» Ğ·Ğ°Ğ³Ñ€ÑƒĞ¶ĞµĞ½ Ğ² Ğ»Ğ¾ĞºĞ°Ğ»ÑŒĞ½Ñ‹Ğ¹ Ñ‡ĞµÑ€Ğ½Ğ¾Ğ²Ğ¸Ğº; Ğ¿ĞµÑ€ĞµĞ´ Ğ¸ÑĞ¿Ğ¾Ğ»ÑŒĞ·Ğ¾Ğ²Ğ°Ğ½Ğ¸ĞµĞ¼ Ğ¿Ñ€Ğ¾Ğ²ĞµÑ€ÑŒÑ‚Ğµ ĞµĞ³Ğ¾ ÑĞ¾Ğ²Ğ¼ĞµÑÑ‚Ğ¸Ğ¼Ğ¾ÑÑ‚ÑŒ.`;
+    }).catch((error: unknown) => {
+      setValidation(error instanceof Error ? `ĞĞµ ÑƒĞ´Ğ°Ğ»Ğ¾ÑÑŒ Ğ¾Ñ‚ĞºÑ€Ñ‹Ñ‚ÑŒ ĞºĞ°Ñ‚Ğ°Ğ»Ğ¾Ğ³: ${error.message}` : 'ĞĞµ ÑƒĞ´Ğ°Ğ»Ğ¾ÑÑŒ Ğ¾Ñ‚ĞºÑ€Ñ‹Ñ‚ÑŒ ĞºĞ°Ñ‚Ğ°Ğ»Ğ¾Ğ³ ÑˆĞ°Ğ±Ğ»Ğ¾Ğ½Ğ¾Ğ².', false);
+    });
+  }, { signal });
+  document.querySelector<HTMLButtonElement>('#config-apply-active')?.addEventListener('click', async (event) => {
+    const button = event.currentTarget as HTMLButtonElement;
+    const fileId = currentFile().id;
+    if (!editor || (fileId !== 'config' && !isXrayConfigFile(fileId)) || button.disabled) return;
+    const requestedEditor = editor;
+    const content = editor.state.doc.toString();
+    const expectedContent = currentSnapshot();
+    if (expectedContent === null) {
+      setValidation('Ğ¤Ğ°Ğ¹Ğ» ĞµÑ‰Ñ‘ Ğ·Ğ°Ğ³Ñ€ÑƒĞ¶Ğ°ĞµÑ‚ÑÑ Ñ Ñ€Ğ¾ÑƒÑ‚ĞµÑ€Ğ°. ĞŸĞ¾Ğ²Ñ‚Ğ¾Ñ€Ğ¸Ñ‚Ğµ Ğ´ĞµĞ¹ÑÑ‚Ğ²Ğ¸Ğµ Ñ‡ĞµÑ€ĞµĞ· ÑĞµĞºÑƒĞ½Ğ´Ñƒ.', false);
+      return;
+    }
+    if (!validateStructuredDocument(content)) return;
+    currentDocumentValid = true;
+    configActionBusy = true;
+    syncConfigActions(content);
+    button.disabled = true;
+    const saveButton = document.querySelector<HTMLButtonElement>('#config-save-active');
+    if (saveButton) saveButton.disabled = true;
+    button.textContent = 'ĞŸÑ€Ğ¾Ğ²ĞµÑ€ĞºĞ° Ğ¸ Ğ¿ĞµÑ€ĞµĞ·Ğ°Ğ¿ÑƒÑĞºâ€¦';
+    try {
+      const apiFile = xrayApiFile(fileId);
+      const normalized = fileId === 'xray_routing' ? JSON.stringify(parseJsonc(content, []), null, 2) : content;
+      await runConfigApply(fileId === 'config' ? 'mihomo' : 'xray', () => fileId === 'config'
+        ? applyActiveMihomoConfig(normalized, expectedContent, signal)
+        : applyXrayConfigFile(apiFile, normalized, expectedContent, signal));
+      if (editor !== requestedEditor || currentFile().id !== fileId) return;
+      const draftUnchanged = editor.state.doc.toString() === content;
+      if (draftUnchanged && normalized !== content) editor.dispatch({ changes: { from: 0, to: editor.state.doc.length, insert: normalized } });
+      if (fileId === 'config') activeConfigSnapshot = normalized;
+      else xraySnapshots.set(apiFile, normalized);
+      if (draftUnchanged) setValidation(fileId === 'config' ? 'YAML Ğ¿Ğ¾Ğ»Ğ½Ğ¾ÑÑ‚ÑŒÑ Ğ²Ğ°Ğ»Ğ¸Ğ´ĞµĞ½' : `${fileId === 'xray_routing' ? 'JSONC' : 'JSON'} Ğ¿Ğ¾Ğ»Ğ½Ğ¾ÑÑ‚ÑŒÑ Ğ²Ğ°Ğ»Ğ¸Ğ´ĞµĞ½`, true);
+      else currentDocumentValid = validateStructuredDocument(editor.state.doc.toString());
+    } catch (error) {
+      if (error instanceof Error && error.message.includes('HTTP 409')) {
+        if (fileId === 'config') activeConfigSnapshot = null;
+        else xraySnapshots.delete(xrayApiFile(fileId));
+      }
+      setValidation(error instanceof Error ? `ĞŸÑ€Ğ¸Ğ¼ĞµĞ½ĞµĞ½Ğ¸Ğµ Ğ½Ğµ Ğ²Ñ‹Ğ¿Ğ¾Ğ»Ğ½ĞµĞ½Ğ¾: ${error.message}` : 'ĞŸÑ€Ğ¸Ğ¼ĞµĞ½ĞµĞ½Ğ¸Ğµ ĞºĞ¾Ğ½Ñ„Ğ¸Ğ³ÑƒÑ€Ğ°Ñ†Ğ¸Ğ¸ Ğ·Ğ°Ğ²ĞµÑ€ÑˆĞ¸Ğ»Ğ¾ÑÑŒ Ğ¾ÑˆĞ¸Ğ±ĞºĞ¾Ğ¹.', false);
+    } finally {
+      configActionBusy = false;
+      syncConfigActions(editor?.state.doc.toString() ?? '', currentDocumentValid);
+      button.textContent = 'ĞŸÑ€Ğ¸Ğ¼ĞµĞ½Ğ¸Ñ‚ÑŒ Ğ¸ Ğ¿ĞµÑ€ĞµĞ·Ğ°Ğ¿ÑƒÑÑ‚Ğ¸Ñ‚ÑŒ';
+    }
+  }, { signal });
 
-NÂˆYˆ
-^XİYÛÛ[OOH[
-HÈÙ]˜[Y][ÛŠ	ô)4,4.t.È4-tbtdH4-ô,4,ô`4`ô-´,4-t`´`tcÈ4`H4`4/´`ô`´-t`4,ˆ4'ô/´,´`´/´`4.4`´-H4-4-t.t`t`´,´.4-H4aô-t`4-t-È4`t-t.´`ô/t-4`Ë‰Ë˜[ÙJNÈ™]\›ÈBˆÛÛœİ˜]ĞÛÛ[HY]Ü‹œİ]K™ØËÔİš[™Ê
-NÂˆÛÛœİ\ÔİXİ\™YHZ\Ô›İ]\ÛÛ™šYÑš[Jš[RY
-Hš[RYOOH	ŞÙY[‰ÎÂˆYˆ
-\ÔİXİ\™Y	‰ˆ]˜[Y]TİXİ\™YØİ[Y[
-˜]ĞÛÛ[
-JH™]\›Âˆİ\œ™[Øİ[Y[˜[YHYNÂˆÛÛœİ\Qš[HH\Ö˜^PÛÛ™šYÑš[Jš[RY
-HÈ˜^P\Qš[Jš[RY
-Hˆ[ÂˆÛÛœİÛÛ[Hš[RYOOH	Ş˜^WÜ›İ][™ÉÈÈ”ÓÓ‹œİš[™ÚYJ\œÙRœÛÛ˜Ê˜]ĞÛÛ[×JK[ŠHˆ˜]ĞÛÛ[ÂˆÛÛ™šYĞXİ[Û\ŞHHYNÂˆŞ[˜ĞÛÛ™šYĞXİ[ÛœÊ˜]ĞÛÛ[
-NÂˆ]Û‹™\ØX›YHYNÂˆÛÛœİ\P]ÛˆHØİ[Y[œ]Y\TÙ[XİÜS]Û‘[[Y[Š	ÈØÛÛ™šYËX\KXXİ]™IÊNÂˆYˆ
-\P]ÛŠH\P]Û‹™\ØX›YHYNÂˆ]Û‹^ÛÛ[H	ô(t/´at`4,4/tcô-t/8 )‰ÎÂˆHÂˆÛÛœİ™\İ[Hš[RYOOH	ØÛÛ™šYÉÂˆÈ]ØZ]Ø]™PXİ]™SZZÛ[ĞÛÛ™šYÊÛÛ[^XİYÛÛ[ÚYÛ˜[
-Bˆˆ\Qš[HÈ]ØZ]Ø]™V˜^PÛÛ™šYÑš[J\Qš[KÛÛ[^XİYÛÛ[
-Bˆˆ]ØZ]Ø]™T›İ]\ÛÛ™šYÑš[Jš[RY\È›İ]\ÛÛ™šYÑš[KÛÛ[^XİYÛÛ[
-NÂˆYˆ
-Y]ÜˆOOH™\]Y\İYY]Üˆİ\œ™[š[J
-KšYOOHš[RY
-H™]\›ÂˆYˆ
-ÛÛ[OOH˜]ĞÛÛ[
-HY]Ü‹™\Ü]Ú
-ÈÚ[™Ù\ÎˆÈœ›ÛNˆÎˆY]Ü‹œİ]K™ØË›[™İ[œÙ\ˆÛÛ[HJNÂˆYˆ
-š[RYOOH	ØÛÛ™šYÉÊHXİ]™PÛÛ™šYÔÛ˜\ÚİHÛÛ[Âˆ[ÙHYˆ
-\Qš[JH˜^TÛ˜\ÚİËœÙ]
-\Qš[KÛÛ[
-NÂˆ[ÙH\İÛ˜\ÚİËœÙ]
-š[RY\È›İ]\ÛÛ™šYÑš[KÛÛ[
-NÂˆÙ]˜[Y][ÛŠ8§$È4(t/´at`4,4/t-t/t/‹ˆ	Ü™\İ[œ]Kˆ4(4-t-ô-t`4,´/t,4cÈ4.´/´/ô.4cÎˆ	Ü™\İ[˜˜XÚİ\XYJNÂˆHØ]Ú
-\œ›ÜŠHÂˆÙ]˜[Y][ÛŠ\œ›Üˆ[œİ[˜Ù[Ùˆ\œ›ÜˆÈ4(t/´at`4,4/t-t/t.4-H4/t-H4,´bô/ô/´.ô/t-t/t/ˆ	Ù\œ›Ü‹›Y\ÜØYÙ_Xˆ	ô(t/´at`4,4/t-t/t.4-H4-ô,4,´-t`4b4.4.ô/´`tc4/´b4.4,t.´/´.K‰Ë˜[ÙJNÂˆHš[˜[HÂˆÛÛ™šYĞXİ[Û\ŞHH˜[ÙNÂˆŞ[˜ĞÛÛ™šYĞXİ[ÛœÊY]ÜËœİ]K™ØËÔİš[™Ê
-HÏÈ	ÉËİ\œ™[Øİ[Y[˜[Y
-NÂˆ]Û‹^ÛÛ[H	ô(t/´at`4,4/t.4`´c	ÎÂˆBˆKÈÚYÛ˜[JNÂ‚ˆYˆ
-İ\Ú]›İ]\‘š[H	‰ˆZ\Ô›İ]\”Û˜\Úİ
-HÂˆÛÛœİ™\]Y\İYY]ÜˆHY]ÜÂˆÙ]˜[Y][ÛŠ4(taô.4`´bô,´,4-t/	Ùš[K™š[[˜[Y_H4`H4`4/´`ô`´-t`4,8 )˜[
-NÂˆÛÛœİØYYHš[KšYOOH	ØÛÛ™šYÉÈÈÙ]Xİ]™SZZÛ[ĞÛÛ™šYÊÚYÛ˜[
-Bˆˆ\Ö˜^PÛÛ™šYÑš[Jš[KšY
-HÈÙ]˜^PÛÛ™šYÑš[J˜^P\Qš[Jš[KšY
-KÚYÛ˜[
-BˆˆÙ]›İ]\ÛÛ™šYÑš[Jš[KšY\È›İ]\ÛÛ™šYÑš[KÚYÛ˜[
-NÂˆ›ÚYØYY[Š
-Xİ]™JHOˆÂˆYˆ
-Y]ÜˆOOH™\]Y\İYY]ÜˆYY]ÜˆY]Ü‹œİ]K™ØË›[™İ
-H™]\›ÂˆY]Ü‹™\Ü]Ú
-ÈÚ[™Ù\ÎˆÈœ›ÛNˆÎˆ[œÙ\ˆXİ]™K˜ÛÛ[HJNÂˆYˆ
-š[KšYOOH	ØÛÛ™šYÉÊHXİ]™PÛÛ™šYÔÛ˜\ÚİHXİ]™K˜ÛÛ[Âˆ[ÙHYˆ
-\Ö˜^PÛÛ™šYÑš[Jš[KšY
-JH˜^TÛ˜\ÚİËœÙ]
-˜^P\Qš[Jš[KšY
-KXİ]™K˜ÛÛ[
-NÂˆ[ÙH\İÛ˜\ÚİËœÙ]
-š[KšY\È›İ]\ÛÛ™šYÑš[KXİ]™K˜ÛÛ[
-NÂˆİ\œ™[Øİ[Y[˜[YHš[K™›Ü›X]OOH	İ^	ÈÈYHˆ˜[Y]TİXİ\™YØİ[Y[
-Xİ]™K˜ÛÛ[
-NÂˆŞ[˜ĞÛÛ™šYĞXİ[ÛœÊXİ]™K˜ÛÛ[
-NÂˆJK˜Ø]Ú
+  document.querySelector<HTMLButtonElement>('#config-save-active')?.addEventListener('click', async (event) => {
+    const button = event.currentTarget as HTMLButtonElement;
+    const fileId = currentFile().id;
+    if (!editor || (!isRouterConfigFile(fileId) && fileId !== 'config' && !isXrayConfigFile(fileId)) || button.disabled) return;
+    const requestedEditor = editor;
+    const expectedContent = currentSnapshot();
+    if (expectedContent === null) { setValidation('Ğ¤Ğ°Ğ¹Ğ» ĞµÑ‰Ñ‘ Ğ·Ğ°Ğ³Ñ€ÑƒĞ¶Ğ°ĞµÑ‚ÑÑ Ñ Ñ€Ğ¾ÑƒÑ‚ĞµÑ€Ğ°. ĞŸĞ¾Ğ²Ñ‚Ğ¾Ñ€Ğ¸Ñ‚Ğµ Ğ´ĞµĞ¹ÑÑ‚Ğ²Ğ¸Ğµ Ñ‡ĞµÑ€ĞµĞ· ÑĞµĞºÑƒĞ½Ğ´Ñƒ.', false); return; }
+    const rawContent = editor.state.doc.toString();
+    const isStructured = !isRouterConfigFile(fileId) || fileId === 'xkeen';
+    if (isStructured && !validateStructuredDocument(rawContent)) return;
+    currentDocumentValid = true;
+    const apiFile = isXrayConfigFile(fileId) ? xrayApiFile(fileId) : null;
+    const content = fileId === 'xray_routing' ? JSON.stringify(parseJsonc(rawContent, []), null, 2) : rawContent;
+    configActionBusy = true;
+    syncConfigActions(rawContent);
+    button.disabled = true;
+    const applyButton = document.querySelector<HTMLButtonElement>('#config-apply-active');
+    if (applyButton) applyButton.disabled = true;
+    button.textContent = 'Ğ¡Ğ¾Ñ…Ñ€Ğ°Ğ½ÑĞµĞ¼â€¦';
+    try {
+      const result = fileId === 'config'
+        ? await saveActiveMihomoConfig(content, expectedContent, signal)
+        : apiFile ? await saveXrayConfigFile(apiFile, content, expectedContent)
+          : await saveRouterConfigFile(fileId as RouterConfigFile, content, expectedContent);
+      if (editor !== requestedEditor || currentFile().id !== fileId) return;
+      if (content !== rawContent) editor.dispatch({ changes: { from: 0, to: editor.state.doc.length, insert: content } });
+      if (fileId === 'config') activeConfigSnapshot = content;
+      else if (apiFile) xraySnapshots.set(apiFile, content);
+      else listSnapshots.set(fileId as RouterConfigFile, content);
+      setValidation(`âœ“ Ğ¡Ğ¾Ñ…Ñ€Ğ°Ğ½ĞµĞ½Ğ¾. ${result.path}. Ğ ĞµĞ·ĞµÑ€Ğ²Ğ½Ğ°Ñ ĞºĞ¾Ğ¿Ğ¸Ñ: ${result.backup}`, true);
+    } catch (error) {
+      setValidation(error instanceof Error ? `Ğ¡Ğ¾Ñ…Ñ€Ğ°Ğ½ĞµĞ½Ğ¸Ğµ Ğ½Ğµ Ğ²Ñ‹Ğ¿Ğ¾Ğ»Ğ½ĞµĞ½Ğ¾: ${error.message}` : 'Ğ¡Ğ¾Ñ…Ñ€Ğ°Ğ½ĞµĞ½Ğ¸Ğµ Ğ·Ğ°Ğ²ĞµÑ€ÑˆĞ¸Ğ»Ğ¾ÑÑŒ Ğ¾ÑˆĞ¸Ğ±ĞºĞ¾Ğ¹.', false);
+    } finally {
+      configActionBusy = false;
+      syncConfigActions(editor?.state.doc.toString() ?? '', currentDocumentValid);
+      button.textContent = 'Ğ¡Ğ¾Ñ…Ñ€Ğ°Ğ½Ğ¸Ñ‚ÑŒ';
+    }
+  }, { signal });
 
-\œ›Üˆ[šÛ›İÛŠHOˆÂˆYˆ
-\ÚYÛ˜[˜X›ÜY
-HÙ]˜[Y][ÛŠ\œ›Üˆ[œİ[˜Ù[Ùˆ\œ›ÜˆÈ4't-H4`ô-4,4.ô/´`tc4`taô.4`´,4`´c	Ùš[K™š[[˜[Y_Nˆ	Ù\œ›Ü‹›Y\ÜØYÙ_Xˆ4't-H4`ô-4,4.ô/´`tc4`taô.4`´,4`´c	Ùš[K™š[[˜[Y_K˜˜[ÙJNÂˆJNÂˆBŸB
+  if (startWithRouterFile && !hasRouterSnapshot) {
+    const requestedEditor = editor;
+    setValidation(`Ğ¡Ñ‡Ğ¸Ñ‚Ñ‹Ğ²Ğ°ĞµĞ¼ ${file.filename} Ñ Ñ€Ğ¾ÑƒÑ‚ĞµÑ€Ğ°â€¦`, null);
+    const loaded = file.id === 'config' ? getActiveMihomoConfig(signal)
+      : isXrayConfigFile(file.id) ? getXrayConfigFile(xrayApiFile(file.id), signal)
+        : getRouterConfigFile(file.id as RouterConfigFile, signal);
+    void loaded.then((active) => {
+      if (editor !== requestedEditor || !editor || editor.state.doc.length) return;
+      editor.dispatch({ changes: { from: 0, to: 0, insert: active.content } });
+      if (file.id === 'config') activeConfigSnapshot = active.content;
+      else if (isXrayConfigFile(file.id)) xraySnapshots.set(xrayApiFile(file.id), active.content);
+      else listSnapshots.set(file.id as RouterConfigFile, active.content);
+      currentDocumentValid = file.format === 'text' ? true : validateStructuredDocument(active.content);
+      syncConfigActions(active.content);
+    }).catch((error: unknown) => {
+      if (!signal.aborted) setValidation(error instanceof Error ? `ĞĞµ ÑƒĞ´Ğ°Ğ»Ğ¾ÑÑŒ ÑÑ‡Ğ¸Ñ‚Ğ°Ñ‚ÑŒ ${file.filename}: ${error.message}` : `ĞĞµ ÑƒĞ´Ğ°Ğ»Ğ¾ÑÑŒ ÑÑ‡Ğ¸Ñ‚Ğ°Ñ‚ÑŒ ${file.filename}.`, false);
+    });
+  }
+}

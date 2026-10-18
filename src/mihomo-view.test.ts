@@ -183,7 +183,9 @@ describe('renderConnections', () => {
     };
     const html = renderConnections(data, false, null);
     expect(html).toContain('class="connection-app-icon is-web"');
-    expect(html).toContain('CDN › DIRECT');
+    expect(html).toContain('aria-label="Маршрут: CDN → DIRECT"');
+    expect(html).toContain('class="connection-route-node is-entry"');
+    expect(html).toContain('class="connection-route-arrow"');
     expect(html).toContain('th.bing.com:443');
     expect(html).toContain('substrate.office.com:443');
     expect(html).toContain('DIRECT');
@@ -200,8 +202,10 @@ describe('renderConnections', () => {
     };
     const html = renderConnections(data, false, null);
     expect(html).toContain('class="connection-app-icon is-telegram"');
-    expect(html).toContain('<svg viewBox="0 0 16 16" aria-hidden="true"');
-    expect(html).toContain('>Telegram <span aria-hidden="true">›</span> <span class="country-flag flag-se"');
+    expect(html).toContain('<span class="connection-app-icon is-telegram" aria-hidden="true"><svg viewBox="0 0 24 24">');
+    expect(html).toContain('aria-label="Маршрут: Telegram → 🇸🇪 ⚡ Sweden"');
+    expect(html).toContain('<span class="connection-route-node is-entry" title="Начало маршрута: Telegram"><span class="connection-route-label">Telegram</span></span>');
+    expect(html).toContain('<span class="country-flag flag-se"');
     expect(html).not.toContain('imageTelegramsvg');
     expect(html).not.toContain('>›</span> <span aria-hidden="true">›</span>');
   });

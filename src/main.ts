@@ -22,6 +22,7 @@ import { deduplicateRepeatedUiErrors, formatJournalMessage, formatJournalTimesta
 import { getJournalScrollTop, getNewJournalLines, hasJournalLinesChanged } from './journal-scroll';
 import { hideClearedJournalLines, rememberClearedJournal } from './journal-clear';
 import { journalExpandIcon, journalExpandLabel } from './journal-ui';
+import { renderAppReleaseActions, renderAppVersionChip } from './app-release-ui';
 import { SETTINGS_TABS, type SettingsTabId } from './settings-tabs';
 import { bindSelectorSortControl, renderSelectorSortControl } from './selector-sort-control';
 import { bindPingUrlControl, renderPingUrlControl } from './ping-url-control';
@@ -155,7 +156,7 @@ function renderHeader(): string {
   return `<header class="topbar">
     <div class="top-status-cluster ${serviceBusy ? 'is-xkeen-busy' : ''}"><div class="top-status" aria-label="Состояние XKeen" aria-live="polite"><span id="status-led" class="connection-led ${state.connected ? 'is-online' : 'is-offline'}"></span><span><strong id="service-label">${escapeHtml(serviceText)}</strong><small id="service-summary">${state.connected ? resourceMetrics : 'Ожидание соединения с backend'}</small></span></div><div class="header-service-controls" aria-label="Управление XKeen" aria-busy="${serviceBusy}">${controls}</div></div>
     <a class="brand" href="#selectors" aria-label="XKeen UI, селекторы"><span>XKeen <b>UI</b></span></a>
-    <div class="top-actions"><button class="version-chip core-chip core-version-button" id="core-version" type="button" title="Выбрать релиз Mihomo" aria-label="Выбрать релиз Mihomo"><span class="chip-icon">◈</span> Mihomo <b id="core-version-label">${coreLabel}</b><span class="chip-chevron" aria-hidden="true">⌄</span></button><button class="version-chip app-version-button" id="app-version" type="button" title="Выбрать релиз XKeen UI" aria-label="Выбрать релиз XKeen UI"><span class="chip-icon">⬡</span> XKeen UI <b id="app-version-label">v${status?.appVersion ?? APP_VERSION}</b><span class="chip-chevron" aria-hidden="true">⌄</span></button><button class="icon-button" id="settings" title="Настройки" aria-label="Настройки">⚙</button></div>
+    <div class="top-actions"><button class="version-chip core-chip core-version-button" id="core-version" type="button" title="Выбрать релиз Mihomo" aria-label="Выбрать релиз Mihomo"><span class="chip-icon">◈</span> Mihomo <b id="core-version-label">${coreLabel}</b><span class="chip-chevron" aria-hidden="true">⌄</span></button>${renderAppVersionChip(status?.appVersion ?? APP_VERSION)}<button class="icon-button" id="settings" title="Настройки" aria-label="Настройки">⚙</button></div>
   </header>`;
 }
 
@@ -1002,7 +1003,7 @@ function updateChrome(): void {
 async function openAppReleases(): Promise<void> {
   const dialog = document.createElement('dialog');
   dialog.className = 'modal app-release-dialog';
-  dialog.innerHTML = `<div class="modal-panel app-releases-panel"><div class="modal-heading"><span class="modal-icon">⬡</span><h2>Обновление XKeen UI</h2><button class="icon-button" id="app-releases-close" type="button" aria-label="Закрыть">×</button></div><div class="core-release-dialog-source"><span>rangerxxyy/XKeen-UI</span><span class="core-release-github">GitHub</span></div><p class="modal-note" id="app-releases-status" aria-live="polite">Загружаем последние стабильные сборки…</p><div id="app-release-list" class="app-release-list" aria-label="Стабильные релизы XKeen UI"></div><div class="app-release-actions"><a id="app-release-link" class="editor-button" target="_blank" rel="noopener noreferrer" hidden>Открыть релиз ↗</a><button id="app-release-install" class="editor-button editor-button-primary" type="button" disabled>Установить</button></div></div>`;
+  dialog.innerHTML = `<div class="modal-panel app-releases-panel"><div class="modal-heading"><span class="modal-icon">⬡</span><h2>Обновление XKeen UI</h2><button class="icon-button" id="app-releases-close" type="button" aria-label="Закрыть">×</button></div><div class="core-release-dialog-source"><span>rangerxxyy/XKeen-UI</span><span class="core-release-github">GitHub</span></div><p class="modal-note" id="app-releases-status" aria-live="polite">Загружаем последние стабильные сборки…</p><div id="app-release-list" class="app-release-list" aria-label="Стабильные релизы XKeen UI"></div>${renderAppReleaseActions()}</div>`;
   document.body.append(dialog);
   bindDialogMotion(dialog);
   dialog.showModal();
@@ -1010,14 +1011,11 @@ async function openAppReleases(): Promise<void> {
   dialog.querySelector<HTMLButtonElement>('#app-releases-close')?.addEventListener('click', () => closeDialogWithMotion(dialog));
   const status = dialog.querySelector<HTMLElement>('#app-releases-status')!;
   const list = dialog.querySelector<HTMLElement>('#app-release-list')!;
-  const link = dialog.querySelector<HTMLAnchorElement>('#app-release-link')!;
   const install = dialog.querySelector<HTMLButtonElement>('#app-release-install')!;
   const choose = () => {
     appRelease = appReleases.find((release) => release.tag_name === list.querySelector<HTMLElement>('.app-release-card.is-selected')?.dataset.releaseTag) ?? null;
     const installed = state.status?.appVersion ?? APP_VERSION;
     const downgrade = appRelease ? isInstalledNewerOrEqual(installed, appRelease.tag_name) && !isInstalledNewerOrEqual(appRelease.tag_name, installed) : false;
-    link.href = appRelease?.html_url ?? '#';
-    link.hidden = !appRelease;
     install.disabled = !appRelease || state.status?.mode !== 'router' || appUpdateInstalling || downgrade;
     install.textContent = downgrade ? 'Выбрана версия старее установленной'
       : appRelease && !isInstalledNewerOrEqual(installed, appRelease.tag_name) ? 'Установить' : 'Переустановить';

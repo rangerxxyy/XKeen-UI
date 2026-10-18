@@ -50,6 +50,34 @@
 .app-shell .journal-line code { color:#f0f4fb; font-family:"JetBrains Mono Variable","JetBrains Mono",monospace; font-size:13px; font-weight:500; line-height:1.7; letter-spacing:0; text-rendering:optimizeLegibility; -webkit-font-smoothing:antialiased; }
 .app-shell .journal-timestamp { color:#c3cee0; font-size:11px; font-weight:550; font-variant-numeric:tabular-nums; }
 .app-shell .journal-level-badge { min-width:54px; padding:4px 8px; font-size:10px; font-weight:750; }
+.app-shell .app-version-button { min-width:82px; justify-content:center; gap:8px; padding-inline:12px; border-color:#4c4668; color:#e6e3f2; font:650 12px/1 var(--font-ui); font-variant-numeric:tabular-nums; letter-spacing:.01em; text-rendering:optimizeLegibility; -webkit-font-smoothing:antialiased; }
+.app-shell .app-version-button b { color:#f5f3fc; font-weight:700; }
+.app-shell .app-version-button .chip-icon { display:grid; width:16px; height:16px; place-items:center; color:#b6a7e7; }
+.app-shell .app-version-button .chip-icon svg { display:block; width:16px; height:16px; stroke:currentColor; stroke-width:1.8; stroke-linecap:round; stroke-linejoin:round; }
+.app-shell .app-version-button:hover { border-color:#a78bfa; background:#201c31; }
+.app-shell .connection-app-icon { display:inline-grid; flex:0 0 21px; width:21px; height:21px; margin:0; place-items:center; border:1px solid color-mix(in srgb,currentColor 40%,transparent); border-radius:6px; background:color-mix(in srgb,currentColor 12%,transparent); vertical-align:middle; }
+.app-shell .connection-app-icon svg { display:block; width:15px; height:15px; fill:currentColor; stroke:currentColor; stroke-width:1.4; stroke-linecap:round; stroke-linejoin:round; }
+.app-shell .connection-app-icon.is-telegram { color:#52c3ef; background:#122d3b; }
+.app-shell .connection-app-icon.is-youtube { color:#ff6972; background:#3a1c26; }
+.app-shell .connection-app-icon.is-github { color:#e4c3f0; background:#2d2338; }
+.app-shell .connection-app-icon.is-google { color:#86b6ff; background:#1a2940; }
+.app-shell .connection-app-icon.is-meta { color:#7dbbff; background:#17293d; }
+.app-shell .connection-app-icon.is-ai { color:#7de4d0; background:#153331; }
+.app-shell .connection-app-icon.is-web { color:#8ebcff; background:#172842; }
+.app-shell .connection-chain { display:inline-flex; align-items:center; gap:4px; max-width:100%; min-width:0; overflow:hidden; vertical-align:middle; color:#eef4fc; font-size:12px; font-weight:600; white-space:nowrap; }
+.app-shell .connection-route-node { display:inline-flex; align-items:center; gap:4px; max-width:145px; min-width:0; overflow:hidden; padding:2px 6px; border:1px solid #35445b; border-radius:6px; color:#dfe9f8; background:#111b2a; text-overflow:ellipsis; }
+.app-shell .connection-route-label { display:block; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.app-shell .connection-route-node.is-entry { border-color:#3d5574; background:#152238; }
+.app-shell .connection-route-node.is-exit { border-color:#665397; color:#e4d9ff; background:#211c32; }
+.app-shell .connection-route-arrow { flex:0 0 auto; color:#9baec6; font-size:14px; font-weight:700; line-height:1; }
+.app-shell .connection-route-node .country-flag { flex:0 0 16px; width:16px; height:12px; box-shadow:0 0 0 1px #ffffff26; }
+.app-shell .connection-route-node .country-flag + * { min-width:0; overflow:hidden; text-overflow:ellipsis; }
+.app-shell .connection-chain.is-unknown { color:#9ba8b9; font-weight:500; font-style:italic; }
+.app-releases-panel { font-family:var(--font-ui); text-rendering:optimizeLegibility; -webkit-font-smoothing:antialiased; }
+.app-releases-panel .app-release-card-heading { font-size:14px; font-weight:650; letter-spacing:.005em; }
+.app-releases-panel .app-release-date { font-size:12px; font-variant-numeric:tabular-nums; }
+.app-releases-panel .app-release-notes { font-size:12px; line-height:1.6; }
+.app-releases-panel .app-release-actions > #app-release-install { flex:1 1 auto; width:100%; }
 .app-shell .journal-line-new { animation:journal-row-appear 180ms ease-out both; }
 @keyframes journal-row-appear { from { opacity:0; transform:translateY(3px); } to { opacity:1; transform:translateY(0); } }
 @media(max-width:600px) {
@@ -158,16 +186,17 @@
 
 /* Keep connection routes on one line and let the table fit its panel. */
 .app-shell .connection-table { width:100%; min-width:0; table-layout:fixed; }
-.app-shell .connection-table th:nth-child(1) { width:30%; }
-.app-shell .connection-table th:nth-child(2) { width:27%; }
+.app-shell .connection-table th:nth-child(1) { width:35%; }
+.app-shell .connection-table th:nth-child(2) { width:25%; }
 .app-shell .connection-table th:nth-child(3) { width:6%; }
-.app-shell .connection-table th:nth-child(4) { width:11%; }
+.app-shell .connection-table th:nth-child(4) { width:10%; }
 .app-shell .connection-table th:nth-child(5) { width:15%; }
-.app-shell .connection-table th:nth-child(6) { width:9%; }
-.app-shell .connection-table th:nth-child(7) { width:2%; }
+.app-shell .connection-table th:nth-child(6) { width:8%; }
+.app-shell .connection-table th:nth-child(7) { width:1%; }
 .app-shell .connection-table td .connection-route-inner { display:flex; align-items:center; gap:6px; min-width:0; white-space:nowrap; }
 .app-shell .connection-table td .connection-route-inner .connection-chain { display:block; flex:0 1 auto; min-width:0; max-width:100%; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
 .app-shell .connection-table td .connection-route-inner .connection-app-icon { display:inline-flex; flex:0 0 16px; margin:0; }
+.app-shell .connection-table td .connection-route-inner .connection-app-icon { flex-basis:21px; }
 .app-shell .connection-table td.connection-host { padding-right:7px; padding-left:7px; }
 @media(max-width:680px) {
   .app-shell .connection-table { min-width:690px; }
@@ -185,6 +214,12 @@
 @media(max-width:600px) {
   .app-shell .journal-line { grid-template-columns:max-content max-content minmax(0,1fr); gap:6px; padding-inline:7px; }
   .app-shell .journal-timestamp { font-size:10px; }
+  .app-shell .connection-route-node { max-width:100px; }
+  .app-shell .app-version-button { min-width:72px; padding-inline:9px; font-size:11px; }
+  .app-shell .app-version-button { width:auto; height:31px; overflow:visible; gap:6px; padding:0 8px!important; font-size:11px!important; }
+  .app-shell .app-version-button b { display:inline; font-size:11px; }
+  .app-shell .app-version-button .chip-icon { width:14px; height:14px; }
+  .app-shell .app-version-button .chip-icon svg { width:14px; height:14px; }
 }
 
 /* Give DNS status and utility menus the same calm violet hierarchy as the rest of the panel. */

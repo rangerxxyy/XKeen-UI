@@ -140,7 +140,7 @@ export function renderSelectors(groups: MihomoSelector[], loading: boolean, erro
 function connectionRow(connection: MihomoConnection, showSourceName = false, sourceNames: Record<string, string> = {}): string {
   const host = getConnectionHost(connection);
   const displayedChains = displayedConnectionChains(connection);
-  const route = displayedChains.length ? displayedChains.join(' › ') : 'Маршрут неизвестен';
+  const route = displayedChains.length ? displayedChains.join(' → ') : 'Маршрут неизвестен';
   const categories = displayedChains.map((chain) => chain.toLowerCase());
   const network = connection.network.toUpperCase() || '—';
   const startedAt = Date.parse(connection.start);
@@ -157,12 +157,19 @@ function connectionRow(connection: MihomoConnection, showSourceName = false, sou
           : categories.some((name) => name.includes('cdn')) ? 'web'
             : categories.some((name) => name.includes('meta')) ? 'meta'
               : categories.some((name) => /^ai(?:\b|[-_])/i.test(name)) ? 'ai' : '';
-  const appGlyph = appIcon === 'youtube' ? '▶' : appIcon === 'github' ? '●' : appIcon === 'google' ? 'G' : appIcon === 'meta' ? '∞' : appIcon === 'ai' ? '✦' : '◎';
-  const routeGlyph = appIcon === 'telegram'
-    ? '<svg viewBox="0 0 16 16" aria-hidden="true"><path d="M14.48 2.02 1.94 6.86c-.79.31-.75 1.43.06 1.66l3.22.94 1.2 3.67c.24.74 1.18.94 1.69.35l1.82-2.02 3.31 2.42c.6.44 1.45.1 1.58-.63l2.02-10.1c.17-.83-.56-1.44-1.36-1.13ZM6.1 9.13l6.13-4.05-4.8 4.8-.26 2.05-.99-2.8-.08-.02Z"/></svg>'
-    : appGlyph;
-  const routeIcon = appIcon ? `<span class="connection-app-icon is-${appIcon}" aria-hidden="true">${routeGlyph}</span>` : '';
-  const chain = `<span class="connection-chain" title="${escapeHtml(route)}">${displayedChains.length ? displayedChains.map(renderProxyName).join(' <span aria-hidden="true">›</span> ') : escapeHtml(route)}</span>`;
+  const appIconSvg: Record<string, string> = {
+    telegram: '<path d="m21.5 3.2-3.2 16.1c-.2 1.1-.9 1.4-1.8.9l-5-3.7-2.4 2.3c-.3.3-.6.6-1.2.6l.4-5.1 9.3-8.4c.4-.4-.1-.6-.6-.2L5.5 13l-5-1.6c-1.1-.4-1.1-1.1.2-1.6L20 2.3c.9-.3 1.7.2 1.5.9Z"/>',
+    youtube: '<path d="M22 8.2a3 3 0 0 0-2.1-2.1C18 5.6 12 5.6 12 5.6s-6 0-7.9.5A3 3 0 0 0 2 8.2a31 31 0 0 0-.5 3.8 31 31 0 0 0 .5 3.8 3 3 0 0 0 2.1 2.1c1.9.5 7.9.5 7.9.5s6 0 7.9-.5a3 3 0 0 0 2.1-2.1 31 31 0 0 0 .5-3.8 31 31 0 0 0-.5-3.8ZM10 15.2V8.8l5.5 3.2-5.5 3.2Z"/>',
+    github: '<path d="M9 19c-4.3 1.4-4.3-2.3-6-2.8m12 5.6v-3.1a2.7 2.7 0 0 0-.8-2.1c2.7-.3 5.5-1.3 5.5-6A4.7 4.7 0 0 0 18.4 7a4.3 4.3 0 0 0-.1-3.2s-1-.3-3.3 1.2a11.3 11.3 0 0 0-6 0C6.7 3.5 5.7 3.8 5.7 3.8A4.3 4.3 0 0 0 5.6 7a4.7 4.7 0 0 0-1.3 3.5c0 4.7 2.8 5.7 5.5 6A2.7 2.7 0 0 0 9 18.6v3.2"/>',
+    google: '<path d="M21 12.2c0-.7-.1-1.4-.2-2H12v3.8h5.1a4.4 4.4 0 0 1-1.9 2.9v2.4h3.1c1.8-1.7 2.7-4.2 2.7-7.1Z"/><path d="M12 21c2.5 0 4.6-.8 6.1-2.2L15 16.4c-.8.5-1.8.8-3 .8a5.2 5.2 0 0 1-4.9-3.6H4v2.5A9.2 9.2 0 0 0 12 21Z"/><path d="M7.1 13.6a5.4 5.4 0 0 1 0-3.3V7.8H4a9.2 9.2 0 0 0 0 8.3l3.1-2.5Z"/><path d="M12 6.7c1.4 0 2.6.5 3.6 1.4l2.7-2.7A9 9 0 0 0 4 7.8l3.1 2.5A5.2 5.2 0 0 1 12 6.7Z"/>',
+    meta: '<path d="M3.5 15.3c0 1.8.8 2.8 2.1 2.8 1.1 0 2-.8 3.6-3.2l1.2-1.8c1.9-2.9 3-4.2 4.6-4.2 2.5 0 4.3 2.8 4.3 6.1 0 2.5-.9 4-2.4 4-1.2 0-2.1-.9-3.3-2.8l-2.2-3.5C9.2 8.7 7.8 7 5.6 7 2.5 7 1 10.8 1 14c0 3.4 1.5 5.8 4.2 5.8 2.1 0 3.7-1.6 5.1-3.8l2.1-3.3c1.5-2.4 2.6-3.6 4-3.6 1.6 0 2.6 1.5 2.6 3.5"/>',
+    ai: '<path d="m12 2 1.9 6.1L20 10l-6.1 1.9L12 18l-1.9-6.1L4 10l6.1-1.9L12 2Z"/><path d="m19 14 .9 2.1L22 17l-2.1.9L19 20l-.9-2.1L16 17l2.1-.9L19 14Z"/>',
+    web: '<circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3a15 15 0 0 1 0 18M12 3a15 15 0 0 0 0 18"/>',
+  };
+  const routeIcon = appIcon ? `<span class="connection-app-icon is-${appIcon}" aria-hidden="true"><svg viewBox="0 0 24 24">${appIconSvg[appIcon] ?? appIconSvg.web}</svg></span>` : '';
+  const chain = displayedChains.length
+    ? `<span class="connection-chain" role="group" aria-label="Маршрут: ${escapeHtml(route)}" title="${escapeHtml(route)}">${displayedChains.map((hop, index) => `<span class="connection-route-node${index === 0 ? ' is-entry' : ''}${index === displayedChains.length - 1 ? ' is-exit' : ''}" title="${index === 0 ? 'Начало маршрута' : index === displayedChains.length - 1 ? 'Выход из маршрута' : 'Узел маршрута'}: ${escapeHtml(hop)}"><span class="connection-route-label">${renderProxyName(hop)}</span></span>${index < displayedChains.length - 1 ? '<span class="connection-route-arrow" aria-hidden="true">→</span>' : ''}`).join('')}</span>`
+    : `<span class="connection-chain is-unknown" title="Маршрут неизвестен">Маршрут неизвестен</span>`;
   return `<tr data-connection-id="${escapeHtml(connection.id)}" data-search="${escapeHtml(search)}">
     <td class="connection-route-cell${routeIcon ? ' has-app-icon' : ''}"><span class="connection-route-inner">${routeIcon}${chain}</span></td>
     <td class="connection-host" title="${escapeHtml(host)}"><button class="connection-inspect" type="button" data-inspect-connection="${escapeHtml(connection.id)}" aria-label="Подробности соединения ${escapeHtml(host)}">${escapeHtml(host)}</button></td>

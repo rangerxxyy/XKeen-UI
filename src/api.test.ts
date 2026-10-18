@@ -1,7 +1,30 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { applyActiveMihomoConfig, applyXrayConfigFile, getMihomoSelectors, getRouterConfigFile, getRouterDeviceList, getSystemLog, getXrayConfigFile, installCoreRelease, logUiError, pingMihomoGroup, pingMihomoProxy, requestAppUpdate, saveActiveMihomoConfig, saveRouterConfigFile, saveXrayConfigFile, validateMihomoConfig } from './api';
+import { applyActiveMihomoConfig, applyXrayConfigFile, getMihomoSelectors, getRouterConfigFile, getRouterDeviceList, getSystemLog, getXrayConfigFile, installCoreRelease, listMihomoConfigBackups, logUiError, pingMihomoGroup, pingMihomoProxy, requestAppUpdate, restoreMihomoConfigBackup, saveActiveMihomoConfig, saveRouterConfigFile, saveXrayConfigFile, validateMihomoConfig } from './api';
 
 afterEach(() => vi.unstubAllGlobals());
+
+describe('Mihomo config backups API', () => {
+  it('accepts a bounded list of safe backup basenames', async () => {
+    const fetchMock = vi.fn(async () => new Response(JSON.stringify({ backups: [{ id: '.mihomo-config-1-2.yaml', size: 12, modified: 123 }] }), { headers: { 'Content-Type': 'application/json' } }));
+    vi.stubGlobal('fetch', fetchMock);
+    await expect(listMihomoConfigBackups()).resolves.toEqual([{ id: '.mihomo-config-1-2.yaml', size: 12, modified: 123 }]);
+  });
+
+  it('rejects unsafe names and never sends a path supplied as the backup id', async () => {
+    vi.stubGlobal('fetch', vi.fn(async () => new Response(JSON.stringify({ backups: [{ id: '../config.yaml', size: 12, modified: 123 }] }), { headers: { 'Content-Type': 'application/json' } })));
+    await expect(listMihomoConfigBackups()).rejects.toThrow('некорректный список');
+    const fetchMock = vi.fn(); vi.stubGlobal('fetch', fetchMock);
+    await expect(restoreMihomoConfigBackup('../config.yaml', 'current')).rejects.toThrow('идентификатор');
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
+
+  it('restores only by validated backup id and compares against the current active config', async () => {
+    const fetchMock = vi.fn(async () => new Response(JSON.stringify({ status: 'applied', path: '/opt/etc/mihomo/config.yaml', backup: '/opt/sbin/core-backup/.mihomo-config-3-4.yaml', restarted: true, detail: 'ok' }), { headers: { 'Content-Type': 'application/json' } }));
+    vi.stubGlobal('fetch', fetchMock);
+    await expect(restoreMihomoConfigBackup('.mihomo-config-1-2.yaml', 'current yaml')).resolves.toMatchObject({ status: 'applied', restarted: true });
+    expect(fetchMock).toHaveBeenCalledWith('/api/v1/config/backups/restore', expect.objectContaining({ method: 'POST', body: JSON.stringify({ backupId: '.mihomo-config-1-2.yaml', expectedContent: 'current yaml' }) }));
+  });
+});
 
 describe('getRouterDeviceList', () => {
   it('loads KeeneticOS device names through the same-origin backend endpoint', async () => {

@@ -42,7 +42,14 @@ describe('formatJournalTimestamp', () => {
   it('formats the Unix timestamps written by the router lifecycle and UI error logger', () => {
     const timestamp = Math.floor(Date.parse('2026-10-16T17:30:00Z') / 1000);
     expect(formatJournalTimestamp(`unix=${timestamp} level=ERROR component=xkeen-ui source=yaml message=Invalid YAML`, 'Europe/Moscow'))
-      .toEqual({ timestamp: '16.10.2026, 20:30:00', message: 'component=xkeen-ui source=yaml message=Invalid YAML' });
+      .toEqual({ timestamp: '16.10.2026, 20:30:00', message: 'ERROR Invalid YAML' });
+  });
+
+  it('keeps meaningful lifecycle text while hiding internal event metadata', () => {
+    expect(formatJournalTimestamp(
+      'unix=1792319887 level=ERROR component=xkeen action=restart running_before=true running_after=false message=Не удалось перезапустить службу',
+      'UTC',
+    )).toEqual({ timestamp: '18.10.2026, 10:38:07', message: 'ERROR Не удалось перезапустить службу' });
   });
 
   it('leaves lines without an explicit ISO timestamp unchanged', () => {

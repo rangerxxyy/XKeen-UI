@@ -1319,6 +1319,10 @@ async fn run_panel() -> Result<(), Box<dyn std::error::Error>> {
         .route("/api/v1/logs", get(logs::read_logs))
         .route("/api/v1/config/active", get(active_config))
         .route(
+            "/api/v1/config/backups",
+            get(config_files::list_mihomo_backups),
+        )
+        .route(
             "/api/v1/config/files/{file}",
             get(config_files::read_user_file),
         )
@@ -1384,6 +1388,10 @@ async fn run_panel() -> Result<(), Box<dyn std::error::Error>> {
         .route(
             "/api/v1/config/active/save",
             axum::routing::put(config_files::save_active),
+        )
+        .route(
+            "/api/v1/config/backups/restore",
+            axum::routing::post(config_files::restore_mihomo_backup),
         )
         .route(
             "/api/v1/config/validate",

@@ -45,14 +45,28 @@ export function formatJournalTimestamp(line: string, timeZone: string): { timest
     const message = rawMessage.replace(/\\"/g, '"').replace(/\\n/g, ' ');
     return { timestamp, message: `${level.toUpperCase()} ${message}` };
   }
-  const match = line.match(/^\[?(\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d{1,9})?(?:Z|[+-]\d{2}:\d{2}))\]?\s+(.*)$/)
-    ?? line.match(/^unix=(\d{10})(?:\s+level=\w+)?\s+(.*)$/);
+  const unixMatch = line.match(/^unix=(\d{10})(?:\s+level=(DEBUG|INFO|WARN(?:ING)?|ERROR|FATAL))?\s+([\s\S]*)$/i);
+  if (unixMatch) {
+    const rawTimestamp = unixMatch[1] ?? '';
+    const date = new Date(Number(rawTimestamp) * 1000);
+    if (!Number.isFinite(date.getTime())) return null;
+    const rawMessage = unixMatch[3] ?? '';
+    // Router-owned UI entries use key/value metadata; show their message while
+    // keeping the severity in its own badge instead of leaking logger fields.
+    const message = rawMessage.match(/(?:^|\s)(?:message|msg)=([\s\S]*)$/)?.[1] ?? rawMessage;
+    const level = unixMatch[2]?.toUpperCase();
+    const timestamp = formatReadableTimestamp(date, timeZone);
+    return timestamp ? { timestamp, message: [level, message].filter(Boolean).join(' ') } : null;
+  }
+  const match = line.match(/^\[?(\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d{1,9})?(?:Z|[+-]\d{2}:\d{2}))\]?\s+(.*)$/);
   if (!match) return null;
-  const rawTimestamp = match[1] ?? '';
-  const date = rawTimestamp.length === 10 && /^\d{10}$/.test(rawTimestamp)
-    ? new Date(Number(rawTimestamp) * 1000)
-    : new Date(rawTimestamp);
+  const date = new Date(match[1] ?? '');
   if (!Number.isFinite(date.getTime())) return null;
+  const timestamp = formatReadableTimestamp(date, timeZone);
+  return timestamp ? { timestamp, message: match[2] ?? '' } : null;
+}
+
+function formatReadableTimestamp(date: Date, timeZone: string): string | null {
   try {
     const options: Intl.DateTimeFormatOptions = { dateStyle: 'short', timeStyle: 'medium', hourCycle: 'h23' };
     let formattedDate = date;
@@ -70,7 +84,7 @@ export function formatJournalTimestamp(line: string, timeZone: string): { timest
       formattedDate = new Date(date.getTime() + hours * 60 * 60 * 1000);
       options.timeZone = 'UTC';
     }
-    return { timestamp: new Intl.DateTimeFormat('ru-RU', options).format(formattedDate), message: match[2] ?? '' };
+    return new Intl.DateTimeFormat('ru-RU', options).format(formattedDate);
   } catch {
     return null;
   }

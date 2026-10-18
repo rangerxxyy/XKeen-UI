@@ -75,6 +75,17 @@ describe('DNS workspaces', () => {
     expect(updated).toContain('proxies: []');
   });
 
+  it('reads fake-ip filter mode from the live YAML and leaves it untouched when saving resolver fields', () => {
+    const original = 'dns:\n  enhanced-mode: fake-ip\n  fake-ip-filter-mode: blacklist\n  fake-ip-filter:\n    - "+.lan"\n';
+    const current = readMihomoDnsSettings(original);
+    expect(current).toMatchObject({ enhancedMode: 'fake-ip', fakeIpFilterMode: 'blacklist' });
+
+    const updated = patchMihomoDnsSettings(original, { ...current, nameserver: '1.1.1.1' });
+    expect(updated).toContain('fake-ip-filter-mode: blacklist');
+    expect(updated).toContain('"+.lan"');
+    expect(readMihomoDnsSettings('dns:\n  enhanced-mode: fake-ip\n').fakeIpFilterMode).toBe('blacklist');
+  });
+
   it('rejects malformed nameserver policy YAML before applying it', () => {
     expect(() => patchMihomoDnsSettings('dns: {}\n', { enhancedMode: 'redir-host', bootstrap: '', nameserver: '', nameserverPolicy: '[bad', proxyServerNameserver: '', fallback: '' })).toThrow('Nameserver Policy должен быть YAML-словарём');
     expect(() => patchMihomoDnsSettings('dns: {}\n', { enhancedMode: 'redir-host', bootstrap: '', nameserver: '', nameserverPolicy: 'null', proxyServerNameserver: '', fallback: '' })).toThrow('Nameserver Policy должен быть YAML-словарём');
@@ -90,5 +101,27 @@ describe('DNS workspaces', () => {
     expect(view).toContain('Используются для обычных запросов устройств.');
     expect(view).toContain('Назначают отдельные резолверы доменам или правилам.');
     expect(view).toContain('Проверка DNS');
+  });
+
+  it('warns when fake-ip is used with a blacklist filter mode', () => {
+    const view = renderDns(null, false, null, '', 'A', undefined, {
+      values: { enhancedMode: 'fake-ip', fakeIpFilterMode: 'blacklist', bootstrap: '', nameserver: '', nameserverPolicy: '', proxyServerNameserver: '', fallback: '' },
+      loading: false, error: null, busy: false,
+    });
+
+    expect(view).toContain('dns-fake-ip-warning');
+    expect(view).toContain('fake-ip');
+    expect(view).toContain('blacklist');
+    expect(view).toContain('whitelist');
+  });
+
+  it('does not warn when fake-ip filtering uses whitelist or rule mode', () => {
+    for (const fakeIpFilterMode of ['whitelist', 'rule']) {
+      const view = renderDns(null, false, null, '', 'A', undefined, {
+        values: { enhancedMode: 'fake-ip', fakeIpFilterMode, bootstrap: '', nameserver: '', nameserverPolicy: '', proxyServerNameserver: '', fallback: '' },
+        loading: false, error: null, busy: false,
+      });
+      expect(view).not.toContain('dns-fake-ip-warning');
+    }
   });
 });

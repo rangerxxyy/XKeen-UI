@@ -33,6 +33,25 @@
 @starting-style { .selector-sort-menu:not([hidden]),.ping-url-menu:not([hidden]) { opacity:0; transform:translateY(-3px) scale(.985); } }
 :root[data-theme="light"] .styled-select-menu { border-color:#cbd5e1; background:linear-gradient(155deg,#fff,#f5f8fc); box-shadow:0 12px 28px #24364a24; }
 :root[data-theme="light"] .styled-select-option[aria-selected="true"] { color:#1b365f; background:#edf3fa; }
+
+/* Journal controls stay readable on desktop and collapse to compact icon actions on phones. */
+.app-shell .journal-tools { flex-wrap:wrap; }
+.app-shell .journal-filter { flex:1 1 170px; min-width:130px; }
+.app-shell .journal-action-button { min-height:34px; display:inline-flex; align-items:center; justify-content:center; gap:7px; padding:0 10px; border:1px solid #35334f; border-radius:8px; color:#d8d5e8; background:#101020; font:600 12px/1 var(--font-ui); white-space:nowrap; cursor:pointer; transition:color .16s,border-color .16s,background-color .16s,transform .16s; }
+.app-shell .journal-action-button:hover:not(:disabled) { border-color:#7868ad; color:#f1edff; background:#211d37; }
+.app-shell .journal-action-button:focus-visible { outline:2px solid #aa92ff; outline-offset:2px; }
+.app-shell .journal-action-button[aria-pressed="true"] { border-color:#7260a5; color:#e4d9ff; background:#211b36; }
+.app-shell .journal-action-button:active:not(:disabled) { transform:scale(.97); }
+.app-shell .journal-action-button:disabled { opacity:.48; cursor:not-allowed; }
+.app-shell .journal-tools .journal-icon-button:focus-visible { outline:2px solid #aa92ff; outline-offset:2px; }
+@media(max-width:600px) {
+  .app-shell .journal-tools { display:flex; width:100%; gap:6px; }
+  .app-shell .journal-filter { flex:1 1 100%; width:100%; }
+  .app-shell .journal-tools select { flex:1 1 auto; min-width:0; width:auto; }
+  .app-shell .journal-action-button { width:34px; min-width:34px; padding:0; }
+  .app-shell .journal-action-label { display:none; }
+}
+@media(prefers-reduced-motion:reduce) { .app-shell .journal-action-button { transition:none; } }
 .top-status-cluster.is-xkeen-busy { position:relative; isolation:isolate; }
 .top-status-cluster.is-xkeen-busy::after { content:''; position:absolute; inset:-5px -9px; z-index:-1; border-radius:12px; background:linear-gradient(110deg,transparent,color-mix(in srgb,var(--cyan,#5796ff) 14%,transparent),transparent); background-size:200% 100%; animation:service-sweep 1.6s ease-in-out infinite; }
 .is-xkeen-busy .connection-led { animation:service-breathe 1s ease-in-out infinite; }

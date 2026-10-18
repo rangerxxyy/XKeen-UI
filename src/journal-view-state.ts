@@ -4,7 +4,25 @@ export function stripLogSourceLabel(line: string): string {
   return line.replace(/\s+\[(?:XKeen|Xray|XKeen UI)\]\s*$/, '');
 }
 
+export function splitJournalLevel(message: string, sourceLine = message): { level: string | null; message: string } {
+  const prefix = message.match(/^(DEBUG|INFO|WARN(?:ING)?|ERROR|FATAL)\s+/i);
+  if (prefix) return { level: (prefix[1] ?? '').toUpperCase(), message: message.slice(prefix[0].length) };
+  const metadata = sourceLine.match(/\blevel=(DEBUG|INFO|WARN(?:ING)?|ERROR|FATAL)\b/i);
+  return { level: metadata?.[1]?.toUpperCase() ?? null, message };
+}
+
 export function formatJournalTimestamp(line: string, timeZone: string): { timestamp: string; message: string } | null {
+  const xkeen = line.match(/^(\d{4}\/\d{2}\/\d{2} \d{2}:\d{2}:\d{2}(?:\.\d{1,9})?)\s+(DEBUG|INFO|WARN|WARNING|ERROR|FATAL)\s+([\s\S]*)$/i);
+  if (xkeen) {
+    const rawTimestamp = xkeen[1] ?? '';
+    const date = new Date(rawTimestamp.replace(/\//g, '-').replace(' ', 'T'));
+    if (!Number.isFinite(date.getTime())) return null;
+    const fraction = rawTimestamp.match(/\.(\d{1,9})$/)?.[1] ?? '';
+    return {
+      timestamp: formatPreciseTimestamp(date, timeZone, fraction),
+      message: `${(xkeen[2] ?? 'INFO').toUpperCase()} ${xkeen[3] ?? ''}`,
+    };
+  }
   const xray = line.match(/^time="(\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d{1,9})?(?:Z|[+-]\d{2}:\d{2}))"\s+level=(\w+)\s+msg="([\s\S]*)"(?:\s+\[Xray\])?$/);
   if (xray) {
     const rawTimestamp = xray[1] ?? '';

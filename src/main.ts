@@ -19,7 +19,7 @@ import { confirmInApp } from './confirm-dialog';
 import { bindDialogMotion, closeDialogWithMotion } from './dialog-motion';
 import { lifecycleFeedback } from './service-feedback';
 import { readUiPreferences, validPingUrl, writeUiPreferences, type UiPreferences } from './preferences';
-import { formatJournalTimestamp, getJournalViewState, stripLogSourceLabel } from './journal-view-state';
+import { formatJournalTimestamp, getJournalViewState, splitJournalLevel, stripLogSourceLabel } from './journal-view-state';
 import { getJournalScrollTop } from './journal-scroll';
 import { SETTINGS_TABS, type SettingsTabId } from './settings-tabs';
 import { bindSelectorSortControl, renderSelectorSortControl } from './selector-sort-control';
@@ -243,23 +243,29 @@ function drawJournal(): void {
   } : null;
   const list = document.createElement('div');
   list.className = 'journal-lines';
-  for (const [index, line] of lines.entries()) {
+  for (const line of lines) {
     const displayLine = stripLogSourceLabel(line);
     const row = document.createElement('div');
     row.className = 'journal-line';
-    row.dataset.level = /\b(error|fatal|panic)\b/i.test(displayLine) ? 'error' : /\b(warn|warning)\b/i.test(displayLine) ? 'warning' : 'info';
-    const number = document.createElement('span');
-    number.className = 'journal-line-number';
-    number.textContent = String(index + 1).padStart(3, '0');
     const parsed = formatJournalTimestamp(displayLine, uiPreferences.journalTimeZone);
+    const severity = splitJournalLevel(parsed?.message ?? displayLine, displayLine);
+    row.dataset.level = severity.level === 'ERROR' || severity.level === 'FATAL' ? 'error'
+      : severity.level === 'WARN' || severity.level === 'WARNING' ? 'warning'
+        : severity.level === 'DEBUG' ? 'debug' : 'info';
     const timestamp = document.createElement('time');
     timestamp.className = 'journal-timestamp';
     timestamp.hidden = !parsed;
     timestamp.textContent = parsed?.timestamp ?? '';
     if (parsed) timestamp.dateTime = displayLine.match(/^(?:time=")?\[?(\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d{1,9})?(?:Z|[+-]\d{2}:\d{2}))/)?.[1] ?? '';
+    if (severity.level) {
+      const badge = document.createElement('span');
+      badge.className = 'journal-level-badge';
+      badge.textContent = severity.level;
+      row.append(timestamp, badge);
+    } else row.append(timestamp);
     const message = document.createElement('code');
-    message.textContent = parsed?.message ?? displayLine;
-    row.append(number, timestamp, message);
+    message.textContent = severity.message;
+    row.append(message);
     list.append(row);
   }
   body.replaceChildren();

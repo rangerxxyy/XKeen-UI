@@ -555,6 +555,16 @@ body { font-size: 14px; }
 .config-file-tab:hover { transform:translateY(-1px); }
 .config-file-tab.selected { border-color:#354964; border-bottom-color:#101827; color:#f0f5fc; background:linear-gradient(180deg,#18263a,#101827); box-shadow:inset 0 2px #6da4ff; }
 .config-file-nav { scrollbar-width:thin; }
+.journal-line { grid-template-columns:max-content max-content minmax(0,1fr); gap:10px; }
+.journal-level-badge { min-width:46px; align-self:start; justify-self:start; padding:3px 7px; border:1px solid #294b75; border-radius:999px; color:#b8d8ff; background:#132846; font:700 10px/1.15 var(--font-ui); letter-spacing:.035em; text-align:center; }
+.journal-line[data-level="warning"] .journal-level-badge { border-color:#665324; color:#f2d88f; background:#302814; }
+.journal-line[data-level="error"] .journal-level-badge { border-color:#6c3441; color:#ffb2ba; background:#351d27; }
+.journal-line[data-level="debug"] .journal-level-badge { border-color:#3b4759; color:#b4c0d1; background:#202b3a; }
+.journal-line code { min-width:0; overflow-wrap:anywhere; }
+:root[data-theme="light"] .journal-level-badge { border-color:#bfd6f6; color:#245184; background:#e8f2ff; }
+:root[data-theme="light"] .journal-line[data-level="warning"] .journal-level-badge { border-color:#ead79a; color:#735713; background:#fff6d9; }
+:root[data-theme="light"] .journal-line[data-level="error"] .journal-level-badge { border-color:#f0c0c5; color:#9d2d3b; background:#fff0f1; }
+:root[data-theme="light"] .journal-line[data-level="debug"] .journal-level-badge { border-color:#d3dbe5; color:#506075; background:#f0f3f7; }
 .config-file-context { min-height:38px; display:flex; align-items:center; justify-content:space-between; gap:12px; padding:6px 13px; border-bottom:1px solid #26364d; background:linear-gradient(90deg,#121d2d,#101827); }
 .config-file-context>div { display:flex; align-items:center; gap:10px; min-width:0; }
 .config-file-context strong { overflow:hidden; color:#edf4fc; font:650 12px/1.4 "JetBrains Mono Variable",monospace; text-overflow:ellipsis; white-space:nowrap; }

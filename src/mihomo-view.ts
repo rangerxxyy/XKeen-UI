@@ -168,7 +168,7 @@ function connectionRow(connection: MihomoConnection, showSourceName = false, sou
   };
   const routeIcon = appIcon ? `<span class="connection-app-icon is-${appIcon}" aria-hidden="true"><svg viewBox="0 0 24 24">${appIconSvg[appIcon] ?? appIconSvg.web}</svg></span>` : '';
   const chain = displayedChains.length
-    ? `<span class="connection-chain" role="group" aria-label="Маршрут: ${escapeHtml(route)}" title="${escapeHtml(route)}">${displayedChains.map((hop, index) => `<span class="connection-route-node${index === 0 ? ' is-entry' : ''}${index === displayedChains.length - 1 ? ' is-exit' : ''}" title="${index === 0 ? 'Начало маршрута' : index === displayedChains.length - 1 ? 'Выход из маршрута' : 'Узел маршрута'}: ${escapeHtml(hop)}"><span class="connection-route-label">${renderProxyName(hop)}</span></span>${index < displayedChains.length - 1 ? '<span class="connection-route-arrow" aria-hidden="true">→</span>' : ''}`).join('')}</span>`
+    ? `<span class="connection-chain" role="group" aria-label="Маршрут: ${escapeHtml(route)}" title="${escapeHtml(route)}">${displayedChains.map((hop, index) => `${index ? '<span class="connection-route-arrow" aria-hidden="true">→</span>' : ''}<span class="connection-route-hop" title="${escapeHtml(hop)}">${renderProxyName(hop)}</span>`).join('')}</span>`
     : `<span class="connection-chain is-unknown" title="Маршрут неизвестен">Маршрут неизвестен</span>`;
   return `<tr data-connection-id="${escapeHtml(connection.id)}" data-search="${escapeHtml(search)}">
     <td class="connection-route-cell${routeIcon ? ' has-app-icon' : ''}"><span class="connection-route-inner">${routeIcon}${chain}</span></td>

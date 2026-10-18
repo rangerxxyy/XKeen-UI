@@ -13,6 +13,7 @@ import { applyActiveMihomoConfig, closeAllMihomoConnections, closeMihomoConnecti
 import { applyPingResults, orderSelectorsByConfig, renderConnections, renderPingStatusIcon, renderSelectors } from './mihomo-view';
 import { patchDnsManagement, patchMihomoDnsSettings, readMihomoDnsSettings, renderDns, type MihomoDnsSettings } from './dns-view';
 import { fetchCoreReleases, isStableCompatibleRelease, openCoreReleaseDialog } from './core-releases';
+import { openCoreManagerDialog } from './core-manager';
 import { isNewerVersion, listAppReleases, type AppRelease } from './app-update';
 import { confirmInApp } from './confirm-dialog';
 import { bindDialogMotion, closeDialogWithMotion } from './dialog-motion';
@@ -22,7 +23,7 @@ import { deduplicateRepeatedUiErrors, formatJournalMessage, formatJournalTimesta
 import { getJournalScrollTop, getNewJournalLines, hasJournalLinesChanged } from './journal-scroll';
 import { hideClearedJournalLines, rememberClearedJournal } from './journal-clear';
 import { journalExpandIcon, journalExpandLabel } from './journal-ui';
-import { renderAppReleaseActions, renderAppVersionChip } from './app-release-ui';
+import { renderAppReleaseActions, renderAppUpdateNotice, renderAppVersionChip } from './app-release-ui';
 import { SETTINGS_TABS, type SettingsTabId } from './settings-tabs';
 import { bindSelectorSortControl, renderSelectorSortControl } from './selector-sort-control';
 import { bindPingUrlControl, renderPingUrlControl } from './ping-url-control';
@@ -97,6 +98,8 @@ let logRefreshTimer: number | undefined;
 let logRefreshAfterCurrent = false;
 let appRelease: AppRelease | null = null;
 let appReleases: AppRelease[] = [];
+let appUpdateAvailable: AppRelease | null = null;
+let appUpdateNoticeDismissed = false;
 let appUpdateMessage = 'Подготовка обновления…';
 let appUpdateInstalling = false;
 let uiPreferences: UiPreferences = readUiPreferences();
@@ -156,7 +159,7 @@ function renderHeader(): string {
   return `<header class="topbar">
     <div class="top-status-cluster ${serviceBusy ? 'is-xkeen-busy' : ''}"><div class="top-status" aria-label="Состояние XKeen" aria-live="polite"><span id="status-led" class="connection-led ${state.connected ? 'is-online' : 'is-offline'}"></span><span><strong id="service-label">${escapeHtml(serviceText)}</strong><small id="service-summary">${state.connected ? resourceMetrics : 'Ожидание соединения с backend'}</small></span></div><div class="header-service-controls" aria-label="Управление XKeen" aria-busy="${serviceBusy}">${controls}</div></div>
     <a class="brand" href="#selectors" aria-label="XKeen UI, селекторы"><span>XKeen <b>UI</b></span></a>
-    <div class="top-actions"><button class="version-chip core-chip core-version-button" id="core-version" type="button" title="Выбрать релиз Mihomo" aria-label="Выбрать релиз Mihomo"><span class="chip-icon">◈</span> Mihomo <b id="core-version-label">${coreLabel}</b><span class="chip-chevron" aria-hidden="true">⌄</span></button>${renderAppVersionChip(status?.appVersion ?? APP_VERSION)}<button class="icon-button" id="settings" title="Настройки" aria-label="Настройки">⚙</button></div>
+    <div class="top-actions"><button class="version-chip core-chip core-version-button" id="core-version" type="button" title="Управление ядрами" aria-label="Управление ядрами"><span class="chip-icon">◈</span> Mihomo <b id="core-version-label">${coreLabel}</b><span class="chip-chevron" aria-hidden="true">⌄</span></button>${renderAppVersionChip(status?.appVersion ?? APP_VERSION, Boolean(appUpdateAvailable))}<button class="icon-button" id="settings" title="Настройки" aria-label="Настройки">⚙</button></div>
   </header>`;
 }
 
@@ -431,6 +434,7 @@ function render(): void {
         : renderComingSoon(activePage);
   app.innerHTML = `<div class="app-shell">${renderHeader()}${renderNavigation()}<div class="workspace-scroll"><main class="main-content${animatePageEntry ? ' page-enter' : ''}">${pageContent}</main>${renderJournal()}</div><div class="toast-region" aria-live="polite"></div></div>`;
   animatePageEntry = false;
+  updateAppUpdateNotice();
   app.querySelector<HTMLElement>('.workspace-scroll')!.scrollTop = scrollTop;
   for (const selector of ['.selector-list', '.connection-table-wrap', '.journal-lines']) {
     app.querySelectorAll<HTMLElement>(selector).forEach((element, index) => {
@@ -461,9 +465,23 @@ function render(): void {
   document.querySelectorAll<HTMLButtonElement>('#retry').forEach((button) => button.addEventListener('click', () => void refresh()));
   document.querySelector<HTMLButtonElement>('#settings')?.addEventListener('click', openSettings);
   document.querySelector<HTMLButtonElement>('#app-version')?.addEventListener('click', () => void openAppReleases());
-  document.querySelector<HTMLButtonElement>('#core-version')?.addEventListener('click', () => void openCoreReleaseDialog(
-    'mihomo', async () => (await getCoreSources()).mihomo, mihomoVersion, () => uiPreferences.keepCoreBackup,
-  ));
+  document.querySelector<HTMLButtonElement>('#core-version')?.addEventListener('click', () => {
+    const serviceFor = (name: string) => state.status?.services.find((service) => service.name.toLowerCase() === name);
+    const managerState = (core: 'mihomo' | 'xray') => {
+      const service = serviceFor(core);
+      const configured = xkeenStatus?.installed === true && xkeenStatus.core === core;
+      return {
+        installed: Boolean((core === 'mihomo' ? mihomoVersion : service?.version) || service?.state === 'running' || configured),
+        active: service?.state === 'running' || (configured && xkeenStatus?.running === true),
+        version: core === 'mihomo' ? mihomoVersion ?? service?.version ?? null : service?.version ?? null,
+      };
+    };
+    const open = () => openCoreManagerDialog({ mihomo: managerState('mihomo'), xray: managerState('xray') }, (core) => {
+      const version = managerState(core).version;
+      void openCoreReleaseDialog(core, async () => (await getCoreSources())[core], version, () => uiPreferences.keepCoreBackup);
+    });
+    open();
+  });
   bindXkeenControls(app);
   bindDnsManagementControls(app);
   document.querySelector<HTMLFormElement>('#dns-query-form')?.addEventListener('submit', (event) => {
@@ -567,6 +585,23 @@ function showToast(message: string, kind: 'success' | 'error' | 'info'): void {
   toast.textContent = message;
   region.append(toast);
   window.setTimeout(() => toast.remove(), 3500);
+}
+
+function updateAppUpdateNotice(): void {
+  const region = document.querySelector<HTMLElement>('.toast-region');
+  if (!region) return;
+  region.querySelector('.update-toast')?.remove();
+  if (!appUpdateAvailable || appUpdateNoticeDismissed) return;
+  const template = document.createElement('template');
+  template.innerHTML = renderAppUpdateNotice(appUpdateAvailable.tag_name, appUpdateAvailable.html_url);
+  const notice = template.content.firstElementChild;
+  if (!notice) return;
+  region.append(notice);
+  notice.querySelector<HTMLButtonElement>('[data-open-app-update]')?.addEventListener('click', () => void openAppReleases());
+  notice.querySelector<HTMLButtonElement>('[data-dismiss-app-update]')?.addEventListener('click', () => {
+    appUpdateNoticeDismissed = true;
+    notice.remove();
+  });
 }
 
 async function runDnsQuery(): Promise<void> {
@@ -986,6 +1021,13 @@ function updateChrome(): void {
       if (currentSummary && nextSummary && currentSummary.innerHTML !== nextSummary.innerHTML) currentSummary.innerHTML = nextSummary.innerHTML;
       setText('#core-version-label');
       setText('#app-version-label');
+      const currentAppVersion = header.querySelector<HTMLButtonElement>('#app-version');
+      const nextAppVersion = nextHeader.querySelector<HTMLButtonElement>('#app-version');
+      if (currentAppVersion && nextAppVersion) {
+        currentAppVersion.classList.toggle('is-update-available', nextAppVersion.classList.contains('is-update-available'));
+        currentAppVersion.title = nextAppVersion.title;
+        currentAppVersion.setAttribute('aria-label', nextAppVersion.getAttribute('aria-label') ?? 'Обновить XKeen UI');
+      }
       header.querySelector('.top-status-cluster')?.classList.toggle('is-xkeen-busy', xkeenControlBusy || configApplyBusy);
       const currentControls = header.querySelector<HTMLElement>('.header-service-controls');
       const nextControls = nextHeader.querySelector<HTMLElement>('.header-service-controls');
@@ -1372,9 +1414,14 @@ async function checkUpdatesInBackground(): Promise<void> {
     try {
       const latest = (await listAppReleases())[0];
       const installed = state.status?.appVersion ?? APP_VERSION;
-      if (latest && isNewerVersion(latest.tag_name, installed) && !updateNotices.has(`app:${latest.tag_name}`)) {
-        updateNotices.add(`app:${latest.tag_name}`);
-        showToast(`Доступно обновление XKeen UI ${latest.tag_name}`, 'info');
+      if (latest && isNewerVersion(latest.tag_name, installed)) {
+        appUpdateAvailable = latest;
+        if (!updateNotices.has(`app:${latest.tag_name}`)) {
+          updateNotices.add(`app:${latest.tag_name}`);
+          appUpdateNoticeDismissed = false;
+          updateChrome();
+          updateAppUpdateNotice();
+        }
       }
     } catch {
       // Background checks stay quiet when a release service is temporarily unavailable.

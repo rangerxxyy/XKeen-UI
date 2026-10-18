@@ -408,6 +408,33 @@ body { background: #090a14; }
 .app-release-actions .editor-button-primary { flex:1; min-height:38px; }
 .core-version-button { cursor:pointer; font:inherit; }
 .core-release-dialog { max-width:min(760px,calc(100vw - 26px)); }
+.core-manager-dialog { max-width:min(440px,calc(100vw - 26px)); }
+.core-manager-panel { width:100%; padding:18px 20px; }
+.core-manager-rows { margin-top:12px; }
+.core-manager-row { display:flex; align-items:center; justify-content:space-between; gap:14px; padding:14px 0; border-bottom:1px solid var(--stroke-soft); }
+.core-manager-row:last-child { border-bottom:0; padding-bottom:2px; }
+.core-manager-info { min-width:0; }
+.core-manager-title { display:flex; align-items:center; flex-wrap:wrap; gap:9px; }
+.core-manager-title strong { font-size:13px; }
+.core-manager-info small { display:block; margin-top:3px; color:#8999b1; font-size:11px; }
+.core-manager-status { display:inline-flex; align-items:center; border-radius:7px; padding:3px 8px; font-size:10px; font-weight:650; }
+.core-manager-status.is-active { color:#00d69b; background:#063b35; }
+.core-manager-status.is-installed { color:#a99be8; background:#292445; }
+.core-manager-status.is-missing { color:#ff6976; background:#3b202d; }
+.core-manager-row .button { min-width:90px; flex:0 0 auto; }
+.core-manager-row .button-primary { color:#f7f4ff; background:#514b8e; border-color:#7770bd; }
+.core-manager-row .button-primary:hover { background:#6259a8; border-color:#938be0; }
+.update-toast { display:grid; grid-template-columns:minmax(0,1fr) auto; align-items:center; gap:12px; padding:12px 13px; border-color:#2c3d54; background:#111b2a; pointer-events:auto; }
+.update-toast-copy { display:flex; min-width:0; align-items:flex-start; gap:10px; padding:0; border:0; color:inherit; background:transparent; text-align:left; cursor:pointer; }
+.update-toast-icon { display:grid; width:19px; height:19px; flex:0 0 19px; place-items:center; border:1px solid #697a91; border-radius:50%; color:#e5edf8; font-size:12px; font-weight:700; }
+.update-toast-text { display:grid; min-width:0; gap:4px; }
+.update-toast-text strong { color:#f0f4fa; font-size:12px; font-weight:650; }
+.update-toast-text>span { color:#aebbd0; font-size:11px; line-height:1.4; }
+.update-toast-actions { display:flex; align-items:center; gap:5px; }
+.update-toast-link,.update-toast-dismiss { display:grid; width:27px; height:27px; place-items:center; border:0; border-radius:6px; color:#9aa8bc; background:transparent; cursor:pointer; }
+.update-toast-link:hover,.update-toast-dismiss:hover { color:#f2f6fb; background:#253249; }
+.update-toast-link svg { width:16px; height:16px; fill:currentColor; }
+.update-toast-dismiss { font-size:20px; line-height:1; }
 .core-release-dialog-panel { width:100%; }
 .core-release-dialog-source { display:flex; align-items:center; justify-content:flex-end; gap:8px; margin-top:8px; color:#a6b4ca; font-size:10px; }
 .core-release-github { padding:3px 8px; border-radius:999px; background:#063b31; color:#00dfa0; font-weight:650; }

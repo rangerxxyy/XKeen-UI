@@ -165,7 +165,7 @@ function bindAddProxyDialog(signal: AbortSignal): void {
     dialog.className = 'modal proxy-import-dialog';
     dialog.innerHTML = `<form class="modal-panel" method="dialog" id="proxy-import-form">
       <div class="modal-heading"><span class="modal-icon" aria-hidden="true">↗</span><h2>Добавить подключение</h2><button class="icon-button" type="button" data-close-proxy-import aria-label="Закрыть">×</button></div>
-      <p class="modal-note">Вставьте ссылку на отдельный узел или URL подписки Mihomo. Изменения попадут только в локальный черновик.</p>
+      <p class="modal-note">Вставьте ссылку на отдельный узел или URL подписки Mihomo.</p>
       <section class="proxy-provider-editor" hidden>
         <div class="proxy-import-tabs" role="tablist" aria-label="Предпросмотр провайдера">
           <button type="button" class="is-active" role="tab" aria-selected="true" data-provider-tab="settings">Настройки</button>

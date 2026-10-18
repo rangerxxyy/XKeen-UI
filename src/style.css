@@ -614,8 +614,6 @@ body { font-size: 14px; }
   .template-option { padding:11px; }
   .template-option-copy strong { font-size:12px; }
 }
-.connection-app-icon { width:17px; height:17px; margin-right:6px; vertical-align:middle; line-height:1; transform:translateY(-1px); }
-.connection-app-icon.is-youtube { display:inline-grid; width:17px; height:13px; border-radius:4px; font-size:8px; vertical-align:middle; }
 .connection-table td.connection-host,.connection-table td.connection-source { overflow:hidden; text-overflow:ellipsis; }
 
 /* DNS forms use a steady label/field rhythm with clear card separation. */
@@ -855,12 +853,6 @@ body { color:var(--text); -webkit-font-smoothing:antialiased; }
 .connection-table tbody tr:hover { background:#121d2c; }
 .connection-table tbody tr[hidden] { display:none; }
 .connection-table td.connection-route-cell { display:table-cell; white-space:nowrap; }
-.connection-app-icon { display:inline-grid; width:17px; height:17px; margin-right:6px; vertical-align:-4px; place-items:center; border:1px solid transparent; border-radius:50%; color:#43c8f2; font-size:13px; font-weight:750; line-height:1; }
-.connection-app-icon.is-web { border-color:#008ec0; font-size:14px; }
-.connection-app-icon.is-youtube { border-radius:5px; color:#fff; background:#e92835; font-size:9px; }
-.connection-app-icon.is-github { color:#e8b2f5; background:#533064; font-size:10px; }
-.connection-app-icon.is-google { color:#4285f4; font-size:16px; }
-.connection-app-icon.is-microsoft { color:#65d3ff; font-size:14px; }
 .connection-chain { display:inline-block; max-width:calc(100% - 28px); overflow:hidden; vertical-align:middle; color:#eef4fc; font-size:11px; font-weight:570; text-overflow:ellipsis; white-space:nowrap; }
 .connection-route-cell:not(.has-app-icon) .connection-chain { max-width:100%; }
 .connection-chain::first-letter { color:#d2d9e5; }
@@ -1056,8 +1048,6 @@ dialog.template-dialog.is-closing { animation: modal-panel-out var(--dialog-exit
 :root { --surface:#101827; --surface-raised:#121c2c; --surface-hover:#1a2a41; --stroke:#2a374a; --stroke-soft:#202c3d; --text:#eef3fa; --muted:#a5b2c3; --subtle:#7f8da0; --blue:#4f8df7; --cyan:#5796ff; --mint:#00cc8a; }
 .connection-table td.connection-route-cell > .connection-chain { display:inline-block; max-width:calc(100% - 28px); overflow:hidden; vertical-align:middle; text-overflow:ellipsis; white-space:nowrap; }
 .connection-table td.connection-route-cell:not(.has-app-icon) > .connection-chain { max-width:100%; }
-.connection-app-icon { vertical-align:middle; transform:translateY(-1px); }
-.connection-app-icon.is-youtube { display:inline-grid; width:17px; height:13px; border-radius:4px; font-size:8px; vertical-align:middle; }
 .dns-workspace { border-color:#2a374a; border-radius:14px; background:#101827; }
 .dns-workspace-heading { min-height:54px; padding:14px 18px; border-bottom-color:#202c3d; }
 .dns-workspace-heading h2 { margin:0; color:#f1f5fb; font-size:16px; font-weight:650; }

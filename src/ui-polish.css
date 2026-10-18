@@ -488,3 +488,12 @@
 .app-shell .dns-handoff-pane .dns-runtime-list { margin:2px 16px 10px; border:0; border-radius:0; background:transparent; }
 .app-shell .dns-handoff-pane .dns-runtime-list>div { min-height:38px; padding:7px 4px; background:transparent; }
 .app-shell .dns-handoff-pane .dns-management-row { margin:0 16px 12px; }
+
+/* Keep configuration actions visible without scrolling a second log panel. */
+.app-shell .workspace-frame:has(.config-layout) + .journal-panel { display:none; }
+
+/* Match the larger, clearer connection rows shown by the reference panel. */
+.app-shell .connection-table th { font-size:13px; }
+.app-shell .connection-table td,
+.app-shell .connection-table .connection-chain,
+.app-shell .connection-table td.connection-host { font-size:13px; }

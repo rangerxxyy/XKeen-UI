@@ -104,7 +104,7 @@ describe('renderSelectors', () => {
     expect(html).toContain('class="ping-status-icon"');
     expect(html).toContain('Узел не отвечает. Нажмите, чтобы проверить ping');
     expect(renderPingStatusIcon(false)).toContain('M5 2.5h6l2 2v7l-5 2-5-2v-7z');
-    expect(renderPingStatusIcon(false)).toContain('M8 5v4m-1.5-2h3');
+    expect(renderPingStatusIcon(false)).toContain('m6.3 5.8 3.4 3.4m0-3.4L6.3 9.2');
   });
 
   it('keeps protocol and transport labels together for VLESS XUDP and Hysteria2 UDP nodes', () => {

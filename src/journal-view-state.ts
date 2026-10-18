@@ -1,5 +1,4 @@
 export type JournalViewState = 'loading' | 'error' | 'cleared' | 'data' | 'empty';
-export type JournalLevelFilter = 'all' | 'error' | 'warning' | 'info';
 
 export function deduplicateRepeatedUiErrors(lines: string[]): string[] {
   const seenPollErrors = new Set<string>();
@@ -9,14 +8,6 @@ export function deduplicateRepeatedUiErrors(lines: string[]): string[] {
     seenPollErrors.add(line);
     return true;
   });
-}
-
-export function matchesJournalLevel(filter: JournalLevelFilter, level: string | null): boolean {
-  if (filter === 'all') return true;
-  const normalized = level?.toUpperCase();
-  if (filter === 'error') return normalized === 'ERROR' || normalized === 'FATAL';
-  if (filter === 'warning') return normalized === 'WARN' || normalized === 'WARNING';
-  return normalized === 'INFO' || normalized === 'DEBUG';
 }
 
 export function stripLogSourceLabel(line: string): string {

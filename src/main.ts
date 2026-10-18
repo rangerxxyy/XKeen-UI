@@ -19,7 +19,7 @@ import { confirmInApp } from './confirm-dialog';
 import { bindDialogMotion, closeDialogWithMotion } from './dialog-motion';
 import { lifecycleFeedback } from './service-feedback';
 import { readUiPreferences, validPingUrl, writeUiPreferences, type UiPreferences } from './preferences';
-import { deduplicateRepeatedUiErrors, formatJournalTimestamp, getJournalViewState, matchesJournalLevel, splitJournalLevel, stripLogSourceLabel, type JournalLevelFilter } from './journal-view-state';
+import { deduplicateRepeatedUiErrors, formatJournalTimestamp, getJournalViewState, splitJournalLevel, stripLogSourceLabel } from './journal-view-state';
 import { getJournalScrollTop } from './journal-scroll';
 import { SETTINGS_TABS, type SettingsTabId } from './settings-tabs';
 import { bindSelectorSortControl, renderSelectorSortControl } from './selector-sort-control';
@@ -79,8 +79,8 @@ let xkeenControlBusy = false;
 let configApplyBusy = false;
 let xkeenControlAction: 'start' | 'stop' | 'restart' | null = null;
 const logFiles = [
-  { id: 'xray-access', label: 'Журнал доступа Xray' },
-  { id: 'xkeen-ui', label: 'Журнал ошибок XKeen' },
+  { id: 'xkeen-ui', label: 'error.log' },
+  { id: 'xray-access', label: 'access.log' },
 ];
 let selectedLog = 'xkeen-ui';
 let logData: SystemLog | null = null;
@@ -89,7 +89,6 @@ let logLoading = false;
 let logCleared = false;
 let logExpanded = false;
 let logFilter = '';
-let logLevelFilter: JournalLevelFilter = 'all';
 let logController: AbortController | undefined;
 let logRefreshTimer: number | undefined;
 let logRefreshAfterCurrent = false;
@@ -202,7 +201,6 @@ function renderComingSoon(page: Page): string {
 function renderConfiguration(): string {
   return `<section class="editor-workspace config-layout" aria-label="Редактор конфигурации">
     <div class="config-editor-main">
-      <div class="config-file-context"><div><strong id="editor-filename">config.yaml</strong><span id="editor-language">YAML · Mihomo</span><small id="editor-file-description">Основные правила и параметры Mihomo</small></div><span id="editor-file-hint">Локальный черновик</span></div>
       <div class="code-editor-shell"><div class="code-editor" id="yaml-editor" aria-label="Текст конфигурации"></div></div>
       <div class="editor-statusbar"><span id="yaml-validation" class="editor-validation" aria-live="polite">Проверка конфигурации…</span><div class="editor-actions"><button class="editor-button" id="config-save-active" type="button" data-router-file disabled title="Сохранить файл на роутере без применения">Сохранить</button><button class="editor-button editor-button-primary" id="config-apply-active" type="button" data-router-file disabled title="Проверить, сохранить и перезапустить активное ядро">Применить</button><details class="editor-utilities"><summary class="editor-button"><span class="utilities-trigger-icon" aria-hidden="true">•••</span><span>Утилиты</span><span class="utilities-chevron" aria-hidden="true"></span></summary><div class="editor-utilities-menu" role="menu" aria-label="Утилиты конфигурации"><button type="button" role="menuitem" id="yaml-add-proxy" data-mihomo-only><span class="utility-icon" aria-hidden="true">↗</span><span>Добавить прокси</span></button><button type="button" role="menuitem" id="yaml-template" data-structured-only><span class="utility-icon" aria-hidden="true">▤</span><span>Шаблон конфигурации</span></button><button type="button" role="menuitem" id="yaml-validate" data-structured-only><span class="utility-icon" aria-hidden="true">✓</span><span>Проверить конфигурацию</span></button><button type="button" role="menuitem" id="yaml-format" data-structured-only><span class="utility-icon" aria-hidden="true">⌘</span><span>Форматировать</span></button><button type="button" role="menuitem" id="yaml-download"><span class="utility-icon" aria-hidden="true">↓</span><span>Скачать черновик</span></button></div></details></div></div>
     </div>
@@ -210,7 +208,7 @@ function renderConfiguration(): string {
 }
 
 function renderJournal(): string {
-  return `<section class="journal-panel ${logExpanded ? 'is-expanded' : ''}" aria-label="Журнал событий"><header class="journal-heading"><div class="journal-title"><h2>Журнал</h2><span id="journal-live" class="journal-live" ${xkeenControlBusy || configApplyBusy ? '' : 'hidden'}><i aria-hidden="true"></i> XKeen запускается</span></div><div class="journal-tools"><label class="journal-filter"><span aria-hidden="true">⌕</span><input id="journal-filter" type="search" placeholder="Фильтр" aria-label="Фильтр журнала" value="${escapeHtml(logFilter)}"></label><select id="journal-file" aria-label="Файл журнала">${logFiles.map((file) => `<option value="${file.id}" ${selectedLog === file.id ? 'selected' : ''}>${file.label}</option>`).join('')}</select><select id="journal-level-filter" aria-label="Фильтр по уровню сообщений"><option value="all" ${logLevelFilter === 'all' ? 'selected' : ''}>Все уровни</option><option value="error" ${logLevelFilter === 'error' ? 'selected' : ''}>Ошибки</option><option value="warning" ${logLevelFilter === 'warning' ? 'selected' : ''}>Предупреждения</option><option value="info" ${logLevelFilter === 'info' ? 'selected' : ''}>Информация</option></select><button class="journal-icon-button" id="journal-clear" type="button" title="Очистить отображение" aria-label="Очистить отображение">♲</button><button class="journal-icon-button" id="journal-expand" type="button" title="Развернуть журнал" aria-label="Развернуть журнал" aria-pressed="${logExpanded}">${logExpanded ? '⤢' : '⛶'}</button></div></header><div class="journal-body" id="journal-body" aria-live="polite"></div></section>`;
+  return `<section class="journal-panel ${logExpanded ? 'is-expanded' : ''}" aria-label="Журнал событий"><header class="journal-heading"><div class="journal-title"><h2>Журнал</h2><span id="journal-live" class="journal-live" ${xkeenControlBusy || configApplyBusy ? '' : 'hidden'}><i aria-hidden="true"></i> XKeen запускается</span></div><div class="journal-tools"><label class="journal-filter"><span aria-hidden="true">⌕</span><input id="journal-filter" type="search" placeholder="Фильтр" aria-label="Фильтр журнала" value="${escapeHtml(logFilter)}"></label><select id="journal-file" aria-label="Файл журнала">${logFiles.map((file) => `<option value="${file.id}" ${selectedLog === file.id ? 'selected' : ''}>${file.label}</option>`).join('')}</select><button class="journal-icon-button" id="journal-clear" type="button" title="Очистить отображение" aria-label="Очистить отображение">♲</button><button class="journal-icon-button" id="journal-expand" type="button" title="Развернуть журнал" aria-label="Развернуть журнал" aria-pressed="${logExpanded}">${logExpanded ? '⤢' : '⛶'}</button></div></header><div class="journal-body" id="journal-body" aria-live="polite"></div></section>`;
 }
 
 function setJournalRealtime(active: boolean): void {
@@ -240,11 +238,7 @@ function drawJournal(): void {
   }
   const filter = logFilter.trim().toLocaleLowerCase();
   const lines = deduplicateRepeatedUiErrors(logData?.lines ?? []).filter((line) => {
-    if (filter && !line.toLocaleLowerCase().includes(filter)) return false;
-    const displayLine = stripLogSourceLabel(line);
-    const parsed = formatJournalTimestamp(displayLine, uiPreferences.journalTimeZone);
-    const severity = splitJournalLevel(parsed?.message ?? displayLine, displayLine);
-    return matchesJournalLevel(logLevelFilter, severity.level);
+    return !filter || line.toLocaleLowerCase().includes(filter);
   });
   const previousList = body.querySelector<HTMLElement>('.journal-lines');
   const previousScroll = previousList ? {
@@ -293,7 +287,7 @@ function drawJournal(): void {
     icon.className = 'journal-empty-icon';
     icon.textContent = '▤';
     const title = document.createElement('strong');
-    title.textContent = filter || logLevelFilter !== 'all' ? 'Совпадений нет' : 'В выбранном журнале пока нет записей';
+    title.textContent = filter ? 'Совпадений нет' : 'В выбранном журнале пока нет записей';
     const file = document.createElement('p');
     file.textContent = logData?.file ?? 'Ожидается ответ backend';
     empty.append(icon, title, file);
@@ -341,10 +335,6 @@ function bindJournal(): void {
   });
   document.querySelector<HTMLInputElement>('#journal-filter')?.addEventListener('input', (event) => {
     logFilter = (event.currentTarget as HTMLInputElement).value;
-    drawJournal();
-  });
-  document.querySelector<HTMLSelectElement>('#journal-level-filter')?.addEventListener('change', (event) => {
-    logLevelFilter = (event.currentTarget as HTMLSelectElement).value as JournalLevelFilter;
     drawJournal();
   });
   document.querySelector<HTMLButtonElement>('#journal-clear')?.addEventListener('click', () => {

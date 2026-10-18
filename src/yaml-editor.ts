@@ -69,21 +69,6 @@ function syncConfigActions(content: string, valid = currentDocumentValid): void 
 
 function setEditorIdentity(routerMode: boolean, activeCore: 'mihomo' | 'xray' | null): void {
   const file = currentFile();
-  const filename = document.querySelector<HTMLElement>('#editor-filename');
-  const language = document.querySelector<HTMLElement>('#editor-language');
-  const description = document.querySelector<HTMLElement>('#editor-file-description');
-  const hint = document.querySelector<HTMLElement>('#editor-file-hint');
-  if (filename) filename.textContent = file.filename;
-  if (language) language.textContent = file.format === 'yaml' ? 'YAML · Mihomo' : file.format === 'text' ? 'TEXT · XKeen' : `${file.format.toUpperCase()} · ${file.id === 'xkeen' ? 'XKeen' : 'Xray'}`;
-  const fileDescriptions: Record<string, string> = {
-    config: 'Основные правила и параметры Mihomo', xray_json: 'Основные настройки ядра Xray', xray_routing: 'Правила маршрутизации и выбора outbound в Xray',
-    ip_exclude: 'IP-адреса и подсети, которые XKeen пропускает мимо прокси',
-    port_exclude: 'Порты, исключённые из обработки XKeen',
-    port_proxying: 'Порты, трафик которых направляется через прокси',
-    xkeen: 'Параметры запуска XKeen и системной маршрутизации',
-  };
-  if (description) description.textContent = fileDescriptions[file.id] ?? 'Файл конфигурации XKeen';
-  if (hint) hint.textContent = 'Локальный черновик';
   document.querySelectorAll<HTMLButtonElement>('[data-config-file]').forEach((button) => {
     const selected = button.dataset.configFile === file.id;
     button.classList.toggle('selected', selected);
@@ -544,7 +529,7 @@ export function mountYamlEditor(routerMode = false, activeCore: 'mihomo' | 'xray
     try {
       const apiFile = xrayApiFile(fileId);
       const normalized = fileId === 'xray_routing' ? JSON.stringify(parseJsonc(content, []), null, 2) : content;
-      const result = await runConfigApply(fileId === 'config' ? 'mihomo' : 'xray', () => fileId === 'config'
+      await runConfigApply(fileId === 'config' ? 'mihomo' : 'xray', () => fileId === 'config'
         ? applyActiveMihomoConfig(normalized, expectedContent, signal)
         : applyXrayConfigFile(apiFile, normalized, expectedContent, signal));
       if (editor !== requestedEditor || currentFile().id !== fileId) return;
@@ -552,8 +537,6 @@ export function mountYamlEditor(routerMode = false, activeCore: 'mihomo' | 'xray
       if (draftUnchanged && normalized !== content) editor.dispatch({ changes: { from: 0, to: editor.state.doc.length, insert: normalized } });
       if (fileId === 'config') activeConfigSnapshot = normalized;
       else xraySnapshots.set(apiFile, normalized);
-      const hint = document.querySelector<HTMLElement>('#editor-file-hint');
-      if (hint) hint.textContent = `Файл на роутере · ${result.path}`;
       if (draftUnchanged) setValidation(fileId === 'config' ? 'YAML полностью валиден' : `${fileId === 'xray_routing' ? 'JSONC' : 'JSON'} полностью валиден`, true);
       else currentDocumentValid = validateStructuredDocument(editor.state.doc.toString());
     } catch (error) {
@@ -598,8 +581,6 @@ export function mountYamlEditor(routerMode = false, activeCore: 'mihomo' | 'xray
       if (fileId === 'config') activeConfigSnapshot = content;
       else if (apiFile) xraySnapshots.set(apiFile, content);
       else listSnapshots.set(fileId as RouterConfigFile, content);
-      const hint = document.querySelector<HTMLElement>('#editor-file-hint');
-      if (hint) hint.textContent = `Файл на роутере · ${result.path}`;
       setValidation(`✓ Сохранено. ${result.path}. Резервная копия: ${result.backup}`, true);
     } catch (error) {
       setValidation(error instanceof Error ? `Сохранение не выполнено: ${error.message}` : 'Сохранение завершилось ошибкой.', false);

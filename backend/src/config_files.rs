@@ -50,21 +50,34 @@ struct ConfigBackupEntry {
 
 pub async fn list_mihomo_backups(State(state): State<AppState>) -> Response {
     if !state.router_mode {
-        return error(StatusCode::SERVICE_UNAVAILABLE, "Резервные копии доступны только на роутере");
+        return error(
+            StatusCode::SERVICE_UNAVAILABLE,
+            "Резервные копии доступны только на роутере",
+        );
     }
     let mut directory = match tokio::fs::read_dir(BACKUP_DIR).await {
         Ok(value) => value,
         Err(err) if err.kind() == io::ErrorKind::NotFound => {
             return Json(serde_json::json!({"backups": []})).into_response()
         }
-        Err(_) => return error(StatusCode::INTERNAL_SERVER_ERROR, "Не удалось прочитать каталог резервных копий"),
+        Err(_) => {
+            return error(
+                StatusCode::INTERNAL_SERVER_ERROR,
+                "Не удалось прочитать каталог резервных копий",
+            )
+        }
     };
     let mut backups = Vec::new();
     for _ in 0..MAX_BACKUP_SCAN {
         let entry = match directory.next_entry().await {
             Ok(Some(entry)) => entry,
             Ok(None) => break,
-            Err(_) => return error(StatusCode::INTERNAL_SERVER_ERROR, "Не удалось прочитать каталог резервных копий"),
+            Err(_) => {
+                return error(
+                    StatusCode::INTERNAL_SERVER_ERROR,
+                    "Не удалось прочитать каталог резервных копий",
+                )
+            }
         };
         let id = entry.file_name().to_string_lossy().into_owned();
         if !is_mihomo_backup_id(&id) {
@@ -93,7 +106,7 @@ pub async fn list_mihomo_backups(State(state): State<AppState>) -> Response {
     }
     backups.sort_by(|a, b| b.modified.cmp(&a.modified).then_with(|| b.id.cmp(&a.id)));
     backups.truncate(MAX_BACKUPS);
-    Json(serde_json::json!({"backups": backups})).into_response()
+    Json(serde_json::json!({ "backups": backups })).into_response()
 }
 
 #[derive(Deserialize)]
@@ -135,14 +148,31 @@ pub async fn restore_mihomo_backup(
         {
             meta
         }
-        Ok(_) => return error(StatusCode::BAD_REQUEST, "Резервная копия не является обычным YAML-файлом"),
-        Err(err) if err.kind() == io::ErrorKind::NotFound => return error(StatusCode::NOT_FOUND, "Резервная копия не найдена"),
-        Err(_) => return error(StatusCode::INTERNAL_SERVER_ERROR, "Не удалось проверить резервную копию"),
+        Ok(_) => {
+            return error(
+                StatusCode::BAD_REQUEST,
+                "Резервная копия не является обычным YAML-файлом",
+            )
+        }
+        Err(err) if err.kind() == io::ErrorKind::NotFound => {
+            return error(StatusCode::NOT_FOUND, "Резервная копия не найдена")
+        }
+        Err(_) => {
+            return error(
+                StatusCode::INTERNAL_SERVER_ERROR,
+                "Не удалось проверить резервную копию",
+            )
+        }
     };
     let content = match tokio::fs::read_to_string(&backup).await {
         Ok(content) if !content.trim().is_empty() => content,
         Ok(_) => return error(StatusCode::UNPROCESSABLE_ENTITY, "Резервная копия пуста"),
-        Err(_) => return error(StatusCode::UNPROCESSABLE_ENTITY, "Резервная копия не является корректным UTF-8"),
+        Err(_) => {
+            return error(
+                StatusCode::UNPROCESSABLE_ENTITY,
+                "Резервная копия не является корректным UTF-8",
+            )
+        }
     };
     if let Err(message) = crate::dns_control::ensure_dns_config_safe(&content).await {
         return error(StatusCode::CONFLICT, &message);

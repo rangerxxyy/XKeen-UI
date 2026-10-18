@@ -125,14 +125,16 @@ function bindConfigBackups(signal: AbortSignal): void {
           restore.disabled = true; restore.textContent = 'Проверка…';
           try {
             const current = await getActiveMihomoConfig(signal);
-            await runConfigApply('mihomo', () => restoreMihomoConfigBackup(backup.id, current.content, signal));
+            const result = await runConfigApply('mihomo', () => restoreMihomoConfigBackup(backup.id, current.content, signal));
             const restored = await getActiveMihomoConfig(signal);
             activeConfigSnapshot = restored.content;
             if (editor && currentFile().id === 'config') {
               editor.dispatch({ changes: { from: 0, to: editor.state.doc.length, insert: restored.content } });
               editor.focus();
             }
-            setValidation('Резервная копия проверена Mihomo и восстановлена', true);
+            setValidation(result.restarted
+              ? 'Резервная копия проверена Mihomo, восстановлена и ядро перезапущено'
+              : 'Резервная копия проверена Mihomo и восстановлена; ядро сейчас не запущено', true);
             close();
           } catch (cause) {
             restore.disabled = false; restore.textContent = 'Повторить';

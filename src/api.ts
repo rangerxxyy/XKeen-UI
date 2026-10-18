@@ -295,12 +295,12 @@ export async function restoreMihomoConfigBackup(backupId: string, expectedConten
     body: JSON.stringify({ backupId, expectedContent }), signal,
   });
   const payload = await readJson(response, 'Восстановление конфигурации Mihomo');
-  if (!isRecord(payload) || payload.status !== 'applied' || payload.path !== '/opt/etc/mihomo/config.yaml' ||
+  if (!isRecord(payload) || !['saved', 'applied'].includes(String(payload.status)) || payload.path !== '/opt/etc/mihomo/config.yaml' ||
       typeof payload.backup !== 'string' || typeof payload.restarted !== 'boolean' || typeof payload.detail !== 'string') {
     throw new Error('Backend вернул некорректный результат восстановления конфигурации');
   }
   if (typeof window !== 'undefined') window.dispatchEvent(new CustomEvent('xkeen-config-applied'));
-  return { status: 'applied', path: payload.path, backup: payload.backup, restarted: payload.restarted, detail: payload.detail };
+  return { status: payload.status as ApplyMihomoConfigResult['status'], path: payload.path, backup: payload.backup, restarted: payload.restarted, detail: payload.detail };
 }
 
 export async function getActiveMihomoConfig(signal?: AbortSignal): Promise<ActiveConfig> {

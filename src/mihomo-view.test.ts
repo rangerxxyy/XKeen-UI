@@ -54,7 +54,8 @@ describe('renderSelectors', () => {
       { name: 'Main', type: 'Selector', icon: null, current: 'Finland · TCP', options: [] },
     ];
     const html = renderSelectors(groups, false, null);
-    expect(html).toContain('Куда:');
+    expect(html).not.toContain('Куда:');
+    expect(html).toContain('class="selector-route-arrow"');
     expect(html).toContain('data-selector-destination="Main → Finland · TCP"');
     expect(html).toContain('title="Маршрут: Main → Finland · TCP"');
   });
@@ -202,14 +203,14 @@ describe('renderConnections', () => {
     expect(html).toContain('aria-label="Маршрут: CDN → DIRECT"');
     expect(html).toContain('class="connection-route-arrow"');
     expect(html).not.toContain('connection-route-node');
-    expect(html).toContain('<span class="connection-route-hop" title="CDN">CDN</span> <span class="connection-route-arrow" aria-hidden="true">→</span> <span class="connection-route-hop" title="DIRECT">DIRECT</span>');
+    expect(html).toContain('<span class="connection-route-hop" title="CDN"><span class="connection-route-label">CDN</span></span><span class="connection-route-arrow" aria-hidden="true">→</span><span class="connection-route-hop" title="DIRECT"><span class="connection-route-label">DIRECT</span></span>');
     expect(html).toContain('th.bing.com:443');
     expect(html).toContain('substrate.office.com:443');
     expect(html).toContain('DIRECT');
     expect(html).not.toContain('connection-app-icon');
   });
 
-  it('keeps country flags in the route and does not infer a duplicate app icon from the chain', () => {
+  it('keeps country flags in the route and separates the recognized service icon from its route', () => {
     const data: MihomoConnections = {
       uploadTotal: 314, downloadTotal: 234,
       connections: [{
@@ -221,8 +222,9 @@ describe('renderConnections', () => {
     const html = renderConnections(data, false, null);
     expect(html).toContain('aria-label="Маршрут: Telegram → 🇸🇪 ⚡ Sweden"');
     expect(html).toContain('<span class="connection-chain" role="group" aria-label="Маршрут: Telegram → 🇸🇪 ⚡ Sweden"');
-    expect(html).toContain('<span class="connection-route-hop" title="Telegram">Telegram</span> <span class="connection-route-arrow" aria-hidden="true">→</span> <span class="connection-route-hop" title="🇸🇪 ⚡ Sweden"><span class="country-flag flag-se"');
-    expect(html).not.toContain('connection-app-icon');
+    expect(html).toContain('class="connection-app-icon is-telegram"');
+    expect(html).toContain('<span class="connection-route-hop" title="Telegram"><span class="connection-route-label">Telegram</span></span><span class="connection-route-arrow" aria-hidden="true">→</span><span class="connection-route-hop" title="🇸🇪 ⚡ Sweden"><span class="connection-route-label"><span class="country-flag flag-se"');
+    expect(html.match(/class="connection-app-icon is-telegram"/g)).toHaveLength(1);
     expect(html).toContain('<span class="country-flag flag-se"');
     expect(html).not.toContain('imageTelegramsvg');
     expect(html).not.toContain('>›</span> <span aria-hidden="true">›</span>');
@@ -249,8 +251,63 @@ describe('renderConnections', () => {
     expect(html).toContain('src="https://icons.example/exit.svg"');
     expect(html).not.toContain('src="https://icons.example/middle.svg"');
     expect(html).toContain('Маршрут: Main → Middle → Exit');
-    expect(html).toContain('>Main</span> <span class="connection-route-arrow"');
-    expect(html).toContain('>Exit</span>');
+    expect(html).toContain('<span class="connection-route-hop" title="Main"><span class="connection-route-label"><img class="connection-proxy-icon" src="https://icons.example/main.svg" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.hidden=true">Main</span></span><span class="connection-route-arrow"');
+    expect(html).toContain('<span class="connection-route-label"><img class="connection-proxy-icon" src="https://icons.example/exit.svg" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.hidden=true">Exit</span>');
+  });
+
+  it('separates a known application icon and label from the proxy route', () => {
+    const data: MihomoConnections = {
+      uploadTotal: 0, downloadTotal: 0,
+      connections: [{
+        id: 'github', host: 'github.com', destination: '', source: 'PC', network: 'tcp', process: '',
+        chains: ['🇸🇪 ⚡ Sweden'], rule: 'MATCH', rulePayload: '', upload: 0, download: 0, start: '',
+      }],
+    };
+    const html = renderConnections(data, false, null);
+
+    expect(html).toContain('class="connection-app-icon is-github"');
+    expect(html).toContain('<span class="connection-route-label">GitHub</span>');
+    expect(html).toContain('<span class="connection-route-arrow" aria-hidden="true">→</span>');
+    expect(html).toContain('<span class="connection-route-label"><span class="country-flag flag-se"');
+  });
+
+  it('recognizes service icons from common hostnames without changing their proxy route', () => {
+    const cases: Array<[string, string, string]> = [
+      ['api.github.com', 'github', 'GitHub'],
+      ['chatgpt.com', 'ai', 'AI'],
+      ['scontent.cdninstagram.com', 'meta', 'Meta'],
+      ['webcast.tiktokv.com', 'tiktok', 'TikTok'],
+      ['accounts.google.com', 'google', 'Google'],
+      ['youtube.googleapis.com', 'youtube', 'YouTube'],
+    ];
+
+    for (const [host, service, label] of cases) {
+      const data: MihomoConnections = {
+        uploadTotal: 0, downloadTotal: 0,
+        connections: [{
+          id: service, host, destination: '', source: 'PC', network: 'tcp', process: '',
+          chains: ['DIRECT'], rule: 'MATCH', rulePayload: '', upload: 0, download: 0, start: '',
+        }],
+      };
+      const html = renderConnections(data, false, null);
+
+      expect(html).toContain(`class="connection-app-icon is-${service}"`);
+      expect(html).toContain(`Маршрут: ${label} → DIRECT`);
+    }
+  });
+
+  it('preserves a real Main hop between a service and the selected proxy', () => {
+    const data: MihomoConnections = {
+      uploadTotal: 0, downloadTotal: 0,
+      connections: [{
+        id: 'github-main', host: 'github.com', destination: '', source: 'PC', network: 'tcp', process: '',
+        chains: ['🇫🇮 ⚡ Finland · TCP', 'Main'], rule: 'MATCH', rulePayload: '', upload: 0, download: 0, start: '',
+      }],
+    };
+    const html = renderConnections(data, false, null);
+
+    expect(html).toContain('Маршрут: GitHub → Main → 🇫🇮 ⚡ Finland · TCP');
+    expect(html).toContain('<span class="connection-route-hop" title="Main"><span class="connection-route-label">Main</span></span>');
   });
 });
 

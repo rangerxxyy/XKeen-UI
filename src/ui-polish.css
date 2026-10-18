@@ -8,6 +8,66 @@
   --stroke:#353052;
 }
 .app-shell { max-width:1280px; padding-inline:12px; }
+.app-shell .workspace-frame { display:flex; flex:0 0 82vh; min-height:420px; flex-direction:column; overflow:hidden; margin-top:12px; border:1px solid #302d49; border-radius:16px; background:linear-gradient(155deg,#111323,#0f1120); box-shadow:0 8px 26px #05061035,inset 0 1px #ffffff08; }
+.app-shell .workspace-frame > .navigation { flex:0 0 auto; min-height:66px; gap:8px; margin:0; padding:10px 14px; overflow-x:auto; border:0; border-bottom:1px solid #29263f; border-radius:15px 15px 0 0; background:linear-gradient(180deg,#131528,#111323); scrollbar-width:thin; }
+.app-shell .workspace-frame > .navigation .nav-item { flex:0 0 auto; height:42px; min-height:42px; gap:9px; padding:0 13px; border:1px solid #34314e; border-radius:10px; color:#b5b5cd; background:#111323; font-size:13px; font-weight:650; letter-spacing:.01em; box-shadow:inset 0 1px #ffffff05; transition:color .16s ease,border-color .16s ease,background .16s ease,box-shadow .16s ease,transform .16s ease; }
+.app-shell .workspace-frame > .navigation .nav-item:hover { transform:translateY(-1px); border-color:#62518c; color:#f0eaff; background:#1a1930; }
+.app-shell .workspace-frame > .navigation .nav-item.active { border-color:#8b70c7; color:#fff; background:linear-gradient(145deg,#302449,#211d36); box-shadow:inset 0 0 0 1px #b49afb20,0 3px 10px #07061255; }
+.app-shell .workspace-frame > .navigation .nav-item.active:after { display:none; }
+.app-shell .workspace-frame > .navigation .nav-icon { width:17px; height:17px; color:#9a91bd; }
+.app-shell .workspace-frame > .navigation .nav-icon { display:inline-grid; flex:0 0 17px; }
+.app-shell .workspace-frame > .navigation .nav-icon svg { display:block; width:17px; height:17px; fill:none; stroke:currentColor; stroke-width:1.7; stroke-linecap:round; stroke-linejoin:round; }
+.app-shell .workspace-frame > .navigation .nav-item.active .nav-icon { color:#c5adff; }
+.app-shell .workspace-frame > .navigation .nav-label { white-space:nowrap; }
+.app-shell .workspace-frame > .main-content { min-height:0; height:auto; flex:1 1 auto; overflow:auto; padding:15px 16px 18px; }
+.app-shell .workspace-frame .config-file-switcher-panel { flex:0 0 auto; margin:0 0 0 auto; }
+.app-shell .connection-route-inner { gap:8px; }
+.app-shell .connection-table td.connection-route-cell > .connection-route-inner > .connection-app-icon { flex:0 0 21px; margin:0 2px 0 0!important; }
+.app-shell .connection-table td.connection-route-cell .connection-chain { display:inline-flex; gap:0; }
+.app-shell .connection-table td.connection-route-cell .connection-route-arrow { flex:0 0 14px; width:14px; height:14px; margin:0 6px; color:#bac4d4; background:#273143; font-size:9px; }
+.app-shell .connection-table td.connection-route-cell .connection-route-label { display:inline-flex; min-width:0; align-items:center; gap:5px; }
+.app-shell .connection-table td.connection-route-cell .connection-proxy-icon { width:15px; height:15px; flex:0 0 15px; object-fit:contain; border-radius:4px; }
+.app-shell .connection-table td.connection-route-cell .connection-route-hop { min-width:0; overflow:hidden; text-overflow:ellipsis; }
+.app-shell .connection-table td.connection-route-cell .connection-app-icon { display:grid; width:21px; height:21px; place-items:center; border:1px solid color-mix(in srgb,currentColor 38%,transparent); border-radius:6px; }
+.app-shell .connection-table td.connection-route-cell .connection-app-icon svg { display:block; width:15px; height:15px; fill:currentColor; stroke:currentColor; stroke-width:1.6; stroke-linecap:round; stroke-linejoin:round; }
+.app-shell .connection-table td.connection-route-cell .connection-app-icon.is-github { color:#e3c2ef; background:#2b2136; }
+.app-shell .connection-table td.connection-route-cell .connection-app-icon.is-telegram { color:#54c2e9; background:#132e3c; }
+.app-shell .connection-table td.connection-route-cell .connection-app-icon.is-meta { color:#68adff; background:#162940; }
+.app-shell .connection-table td.connection-route-cell .connection-app-icon.is-tiktok { color:#f3a6e8; background:#302137; }
+.app-shell .connection-table td.connection-route-cell .connection-app-icon.is-google { color:#83b4ff; background:#1a2940; }
+.app-shell .connection-table td.connection-route-cell .connection-app-icon.is-youtube { color:#ff7b86; background:#3a1b24; }
+.app-shell .connection-table td.connection-route-cell .connection-app-icon.is-ai { color:#76dfcc; background:#15312f; }
+:root:not([data-theme="light"]) .app-shell .connections-panel { background:#0b0e19; }
+:root:not([data-theme="light"]) .app-shell .connections-toolbar { background:#0e1220; }
+:root:not([data-theme="light"]) .app-shell .connection-table-wrap { background:#0a0d17; }
+:root:not([data-theme="light"]) .app-shell .connection-table th { background:#101423; border-bottom-color:#343e52; }
+:root:not([data-theme="light"]) .app-shell .connection-table td { background:#0e1220; border-bottom-color:#2b3447; }
+:root:not([data-theme="light"]) .app-shell .connection-table tbody tr:hover td { background:#151a29; }
+.app-shell .selector-card-meta { min-width:0; gap:8px; }
+.app-shell .selector-card-meta > span:first-child { flex:0 0 auto; }
+.app-shell .selector-destination { max-width:72%; gap:8px; }
+.app-shell .selector-destination .selector-route-arrow { display:grid; flex:0 0 15px; width:15px; height:15px; place-items:center; border-radius:50%; color:#c5adff; background:#2b2540; font-size:9px; font-weight:800; line-height:1; }
+.app-shell .selector-destination strong { display:inline-flex; min-width:0; align-items:center; gap:7px; }
+.app-shell .selector-route-separator { display:inline-flex; color:#c5adff; font-size:12px; font-weight:800; }
+:root[data-theme="light"] .app-shell .workspace-frame { border-color:#d4cde5; background:linear-gradient(155deg,#fff,#f7f6fc); box-shadow:0 8px 24px #34415a12,inset 0 1px #ffffff; }
+:root[data-theme="light"] .app-shell .workspace-frame > .navigation { border-bottom-color:#e1dced; background:linear-gradient(180deg,#faf9fd,#f5f3fa); }
+:root[data-theme="light"] .app-shell .workspace-frame > .navigation .nav-item { border-color:#d9d4e5; color:#5c5b70; background:#fbfaff; box-shadow:inset 0 1px #fff; }
+:root[data-theme="light"] .app-shell .workspace-frame > .navigation .nav-item:hover { border-color:#a899c9; color:#3f315e; background:#f4f0fb; }
+:root[data-theme="light"] .app-shell .workspace-frame > .navigation .nav-item.active { border-color:#8972b9; color:#39295e; background:linear-gradient(145deg,#f0eafb,#e7e0f5); box-shadow:inset 0 0 0 1px #8f72c222,0 3px 9px #55417b16; }
+:root[data-theme="light"] .app-shell .workspace-frame > .navigation .nav-icon { color:#796b99; }
+:root[data-theme="light"] .app-shell .workspace-frame > .navigation .nav-item.active .nav-icon { color:#6949a3; }
+:root[data-theme="light"] .app-shell .selector-destination .selector-route-arrow { color:#654a9b; background:#eee8f8; }
+:root[data-theme="light"] .app-shell .selector-route-separator { color:#7359aa; }
+:root[data-theme="light"] .app-shell .connection-table td.connection-route-cell .connection-route-arrow { color:#4d5b70; background:#e8edf4; }
+@media(prefers-reduced-motion:reduce) { .app-shell .workspace-frame > .navigation .nav-item { transition:none; } }
+@media(max-width:600px) {
+  .app-shell .workspace-frame { flex:0 0 auto; min-height:0; margin-top:10px; overflow:visible; }
+  .app-shell .workspace-frame > .navigation { min-height:59px; padding:8px; gap:6px; }
+  .app-shell .workspace-frame > .navigation .nav-item { height:40px; min-height:40px; gap:7px; padding-inline:10px; font-size:11px; }
+  .app-shell .workspace-frame > .navigation .nav-icon,.app-shell .workspace-frame > .navigation .nav-icon svg { width:15px; height:15px; }
+  .app-shell .workspace-frame > .navigation .nav-icon { flex-basis:15px; }
+  .app-shell .workspace-frame > .main-content { min-height:auto; flex:0 0 auto; overflow:visible; padding:14px 10px; }
+}
 .connection-sort { display:inline-flex; align-items:center; gap:5px; padding:0; border:0; color:inherit; background:transparent; font:inherit; letter-spacing:inherit; text-transform:inherit; cursor:pointer; }
 .connection-sort span { color:#7887a0; font-size:11px; transition:color .14s ease,transform .14s ease; }
 .connection-sort:hover,.connection-sort:focus-visible { color:#d8c8ff; outline:none; }

@@ -141,7 +141,7 @@ function proxyCard(group: MihomoSelector, groups: MihomoSelector[]): string {
   }).join('');
   const groupIcon = group.icon ? `<img class="selector-group-icon" src="${escapeHtml(group.icon)}" alt="" referrerpolicy="no-referrer" onerror="this.hidden=true">` : '';
   return `<section class="selector-card"><header class="selector-card-heading"><div><h2>${groupIcon}${escapeHtml(group.name)}</h2></div><div class="selector-heading-actions"><button class="ping-group" type="button" data-ping-group="${escapeHtml(group.name)}" aria-label="Пинг всех серверов группы ${escapeHtml(group.name)}" title="Пинг всех серверов группы">ϟ</button></div></header>
-    <div class="selector-card-meta"><span>${escapeHtml(groupType)} · ${group.options.length}</span><span class="selector-destination" title="Маршрут: ${escapeHtml(destinationText)}"><small>Куда:</small><strong data-selector-destination="${escapeHtml(destinationText)}">${destination.map(renderProxyName).join('<span class="selector-route-arrow" aria-hidden="true"> → </span>')}</strong></span></div>
+    <div class="selector-card-meta"><span>${escapeHtml(groupType)} · ${group.options.length}</span><span class="selector-destination" title="Маршрут: ${escapeHtml(destinationText)}"><span class="selector-route-arrow" aria-hidden="true">→</span><strong data-selector-destination="${escapeHtml(destinationText)}">${destination.map(renderProxyName).join('<span class="selector-route-separator" aria-hidden="true">→</span>')}</strong></span></div>
     <div class="proxy-options">${options || '<div class="mihomo-inline-empty">В этой группе нет узлов.</div>'}</div>
   </section>`;
 }
@@ -163,10 +163,44 @@ export function collectConnectionProxyIcons(groups: MihomoSelector[]): Record<st
   return icons;
 }
 
+type ConnectionService = { id: string; label: string; aliases: string[]; svg: string };
+
+const connectionServices: ConnectionService[] = [
+  { id: 'github', label: 'GitHub', aliases: ['github', 'githubusercontent'], svg: '<path d="M10 1.2a8.8 8.8 0 0 0-2.8 17.1c.4.1.6-.2.6-.4v-1.6c-2.4.5-2.9-1-2.9-1-.4-.9-1-1.2-1-1.2-.8-.6.1-.6.1-.6.9.1 1.4.9 1.4.9.8 1.4 2.1 1 2.6.8.1-.6.3-1 .6-1.2-1.9-.2-3.9-1-3.9-4.3 0-1 .3-1.7.9-2.3-.1-.2-.4-1.1.1-2.3 0 0 .7-.2 2.4.9a8.4 8.4 0 0 1 4.4 0c1.7-1.1 2.4-.9 2.4-.9.5 1.2.2 2.1.1 2.3.6.6.9 1.3.9 2.3 0 3.3-2 4.1-3.9 4.3.3.3.6.8.6 1.6v2.3c0 .2.2.5.6.4A8.8 8.8 0 0 0 10 1.2Z"/>' },
+  { id: 'telegram', label: 'Telegram', aliases: ['telegram', 't.me'], svg: '<path d="m19.8 3.2-2.9 13.9c-.2 1-.8 1.2-1.6.7l-4.4-3.2-2.1 2c-.2.2-.4.4-.8.4l.3-4.5 8.2-7.4c.4-.3-.1-.5-.6-.2L5.8 11.3l-4.3-1.4c-.9-.3-.9-.9.2-1.3L18.5 2c.8-.3 1.5.2 1.3 1.2Z"/>' },
+  { id: 'meta', label: 'Meta', aliases: ['instagram', 'facebook', 'meta'], svg: '<path d="M2 13.2C3.5 7.5 6 4 8.6 4c2.5 0 4.1 4.1 5.5 7.3 1.4 3.1 2.2 4.7 3.5 4.7 1.1 0 2-1.3 2-3.1C19.6 8 17.4 4 14.4 4 11.8 4 9.7 7.4 8.1 10c-1.9 3.2-3.3 6-5.2 6C1.7 16 1 14.8 1 13.3" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/>' },
+  { id: 'tiktok', label: 'TikTok', aliases: ['tiktok'], svg: '<path d="M12.2 2h3c.2 1.9 1.3 3.4 3.2 4.1v3.1a9 9 0 0 1-3.2-1.1v6.2a5.5 5.5 0 1 1-5.5-5.5c.4 0 .9 0 1.3.2v3.3a2.4 2.4 0 1 0 1.2 2.1V2Z"/>' },
+  { id: 'google', label: 'Google', aliases: ['google', 'gstatic', 'googleapis'], svg: '<path d="M18.8 10.2h-8.1v3.1h4.7a5 5 0 1 1-1.5-5.5l2.2-2.2A8.1 8.1 0 1 0 18.2 12c0-.6-.1-1.2-.2-1.8h.8Z"/>' },
+  { id: 'youtube', label: 'YouTube', aliases: ['youtube', 'ytimg'], svg: '<path d="M19.6 5.1a2.4 2.4 0 0 0-1.7-1.7C16.4 3 10 3 10 3s-6.4 0-7.9.4A2.4 2.4 0 0 0 .4 5.1 25 25 0 0 0 0 10a25 25 0 0 0 .4 4.9 2.4 2.4 0 0 0 1.7 1.7c1.5.4 7.9.4 7.9.4s6.4 0 7.9-.4a2.4 2.4 0 0 0 1.7-1.7A25 25 0 0 0 20 10a25 25 0 0 0-.4-4.9ZM8 13.2V6.8l5.5 3.2L8 13.2Z"/>' },
+  { id: 'ai', label: 'AI', aliases: ['chatgpt', 'openai'], svg: '<path d="M10 1.5 12 7l5.5 2-5.5 2-2 5.5-2-5.5-5.5-2L8 7l2-5.5ZM16.5 13l1.1 3 3 1.1-3 1.1-1.1 3-1.1-3-3-1.1 3-1.1 1.1-3Z"/>' },
+];
+
+function identifyConnectionService(host: string, chains: string[]): ConnectionService | undefined {
+  const normalizedHost = host.toLocaleLowerCase();
+  const hostLabels = normalizedHost.replace(/:\d+$/, '').split(/[.:\[\]]/);
+  const labelMatches = connectionServices.flatMap((service) => service.aliases
+    .map((alias) => ({ service, aliasIndex: hostLabels.indexOf(alias), aliasLength: alias.length }))
+    .filter((match) => match.aliasIndex >= 0))
+    .sort((left, right) => left.aliasIndex - right.aliasIndex || right.aliasLength - left.aliasLength);
+  const substringMatches = connectionServices.flatMap((service) => service.aliases
+    .filter((alias) => normalizedHost.includes(alias))
+    .map((alias) => ({ service, aliasLength: alias.length })))
+    .sort((left, right) => right.aliasLength - left.aliasLength);
+  const fromHost = labelMatches[0]?.service ?? substringMatches[0]?.service;
+  if (fromHost) return fromHost;
+  const firstChain = chains[0]?.toLocaleLowerCase();
+  return connectionServices.find((service) => service.aliases.some((alias) => firstChain === alias || firstChain?.includes(alias)));
+}
+
 function connectionRow(connection: MihomoConnection, showSourceName = false, sourceNames: Record<string, string> = {}, proxyIcons: Record<string, string> = {}): string {
   const host = getConnectionHost(connection);
   const displayedChains = displayedConnectionChains(connection);
-  const route = displayedChains.length ? displayedChains.join(' → ') : 'Маршрут неизвестен';
+  const service = identifyConnectionService(host, displayedChains);
+  const chainsWithoutService = service && displayedChains.some((hop) => hop.toLocaleLowerCase() === service.label.toLocaleLowerCase())
+    ? displayedChains.filter((hop) => hop.toLocaleLowerCase() !== service.label.toLocaleLowerCase())
+    : displayedChains;
+  const routeNodes = service ? [service.label, ...chainsWithoutService] : displayedChains;
+  const route = routeNodes.length ? routeNodes.join(' → ') : 'Маршрут неизвестен';
   const network = connection.network.toUpperCase() || '—';
   const startedAt = Date.parse(connection.start);
   const elapsedSeconds = Number.isFinite(startedAt) ? Math.max(0, Math.floor((Date.now() - startedAt) / 1000)) : null;
@@ -175,15 +209,19 @@ function connectionRow(connection: MihomoConnection, showSourceName = false, sou
   const source = sourceName || connection.source || 'Неизвестное устройство';
   const sourceTitle = sourceName ? `${sourceName} (${connection.source})` : source;
   const search = [host, source, connection.source, route, connection.rule, connection.rulePayload, connection.process].join(' ').toLocaleLowerCase();
-  const chain = displayedChains.length
-    ? `<span class="connection-chain" role="group" aria-label="Маршрут: ${escapeHtml(route)}" title="${escapeHtml(route)}">${displayedChains.map((hop, index) => {
-      const icon = index === 0 || index === displayedChains.length - 1 ? proxyIcons[hop] : undefined;
+  const serviceIcon = service ? `<span class="connection-app-icon is-${service.id}" aria-hidden="true"><svg viewBox="0 0 20 20" focusable="false">${service.svg}</svg></span>` : '';
+  const chain = routeNodes.length
+    ? `<span class="connection-chain" role="group" aria-label="Маршрут: ${escapeHtml(route)}" title="${escapeHtml(route)}">${routeNodes.map((hop, index) => {
+      const serviceLabel = service && index === 0 && hop === service.label;
+      const proxyHop = serviceLabel ? undefined : hop;
+      const proxyIndex = proxyHop ? chainsWithoutService.indexOf(proxyHop) : -1;
+      const icon = proxyHop && (proxyIndex === 0 || proxyIndex === chainsWithoutService.length - 1) ? proxyIcons[proxyHop] : undefined;
       const image = icon ? `<img class="connection-proxy-icon" src="${escapeHtml(icon)}" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.hidden=true">` : '';
-      return `${index ? ' <span class="connection-route-arrow" aria-hidden="true">→</span> ' : ''}<span class="connection-route-hop" title="${escapeHtml(hop)}">${image}${renderProxyName(hop)}</span>`;
+      return `${index ? '<span class="connection-route-arrow" aria-hidden="true">→</span>' : ''}<span class="connection-route-hop" title="${escapeHtml(hop)}"><span class="connection-route-label">${image}${renderProxyName(hop)}</span></span>`;
     }).join('')}</span>`
     : `<span class="connection-chain is-unknown" title="Маршрут неизвестен">Маршрут неизвестен</span>`;
   return `<tr data-connection-id="${escapeHtml(connection.id)}" data-search="${escapeHtml(search)}">
-    <td class="connection-route-cell"><span class="connection-route-inner">${chain}</span></td>
+    <td class="connection-route-cell"><span class="connection-route-inner">${serviceIcon}${chain}</span></td>
     <td class="connection-host" title="${escapeHtml(host)}"><button class="connection-inspect" type="button" data-inspect-connection="${escapeHtml(connection.id)}" aria-label="Подробности соединения ${escapeHtml(host)}">${escapeHtml(host)}</button></td>
     <td class="connection-network" title="Сетевой протокол">${escapeHtml(network)}</td>
     <td class="connection-source" title="${escapeHtml(sourceTitle)}">${escapeHtml(source)}</td>

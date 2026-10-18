@@ -8,7 +8,7 @@ describe('main navigation', () => {
     const otherPageMarkup = renderNavigationView(MAIN_NAVIGATION_PAGES, 'selectors', configTabs);
     const mainNavigation = configMarkup.slice(0, configMarkup.indexOf('</nav>') + '</nav>'.length);
 
-    expect(MAIN_NAVIGATION_PAGES.map((page) => page.id)).toEqual(['selectors', 'connections', 'configuration', 'dns']);
+    expect(MAIN_NAVIGATION_PAGES.map((page) => page.id)).toEqual(['selectors', 'connections', 'dns', 'configuration']);
     expect(mainNavigation).toContain('class="config-file-switcher-panel"');
     expect(mainNavigation.indexOf('data-page="configuration"')).toBeLessThan(mainNavigation.indexOf('class="config-file-switcher-panel"'));
     expect(mainNavigation).toContain('class="config-file-nav"');
@@ -31,5 +31,16 @@ describe('main navigation', () => {
 
     expect(frame).toMatch(/^<section class="workspace-frame"><nav class="navigation"/);
     expect(frame).toContain('<main class="main-content"><div class="selector-list"></div></main></section>');
+  });
+
+  it('keeps the journal after the workspace for every active page, including configuration', () => {
+    const frame = renderWorkspaceFrame(
+      renderNavigationView(MAIN_NAVIGATION_PAGES, 'configuration'),
+      '<section class="config-layout"></section>',
+      'main-content',
+      '<section class="journal-panel">Журнал</section>',
+    );
+
+    expect(frame).toMatch(/<section class="workspace-frame">[\s\S]*<\/section><section class="journal-panel">Журнал<\/section>$/);
   });
 });

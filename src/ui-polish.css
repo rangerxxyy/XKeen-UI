@@ -24,6 +24,10 @@
 .app-shell .workspace-frame .config-file-switcher-panel { flex:0 0 auto; margin:0 0 0 auto; }
 .app-shell .workspace-frame > .main-content:has(.config-layout) { overflow:hidden; }
 .app-shell .workspace-frame .config-layout { height:min(72vh,900px); min-height:min(560px,calc(100vh - 220px)); }
+@media(min-width:601px) {
+  .app-shell .workspace-frame > .main-content:has(.selector-list) { display:flex; flex-direction:column; }
+  .app-shell .workspace-frame > .main-content .selector-list { flex:1 1 auto; min-height:0; max-height:none; }
+}
 .app-shell .connection-route-inner { gap:8px; }
 .app-shell .connection-table td.connection-route-cell > .connection-route-inner > .connection-app-icon { flex:0 0 21px; margin:0 2px 0 0!important; }
 .app-shell .connection-table td.connection-route-cell .connection-chain { display:inline-flex; gap:0; }

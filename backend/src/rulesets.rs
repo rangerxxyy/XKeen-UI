@@ -41,7 +41,9 @@ async fn read_content(name: &str) -> Result<(String, String), String> {
     let path = if let Some(path) = provider.get("path") {
         resolve_provider_path(path)
     } else if let Some(url) = provider.get("url") {
-        format!("{CONFIG_DIR}/rules/{}", md5_of(url).await?)
+        // Mihomo's default is HomeDir/<md5(url)> (not HomeDir/rules/<md5>). The
+        // router starts it with /opt/etc/mihomo as its working/home directory.
+        default_provider_path(&md5_of(url).await?)
     } else {
         return Err(
             "У rule-set нет path или url; встроенные payload не содержат отдельного файла".into(),
@@ -53,13 +55,10 @@ async fn read_content(name: &str) -> Result<(String, String), String> {
     if metadata.len() > MAX_RULESET_BYTES {
         return Err("Rule-set больше лимита просмотра 10 МБ".into());
     }
-    if path.to_ascii_lowercase().ends_with(".mrs") {
+    if is_mrs_provider(name, &provider, &path) {
         return convert_mrs(
             &path,
-            provider
-                .get("behavior")
-                .map(String::as_str)
-                .unwrap_or("domain"),
+            provider_behavior(name, provider.get("behavior").map(String::as_str)),
         )
         .await
         .map(|content| (content, path.clone()));
@@ -193,6 +192,50 @@ async fn md5_of(value: &str) -> Result<String, String> {
         .ok_or_else(|| "md5sum вернул пустой путь rule-set".into())
 }
 
+fn default_provider_path(filename: &str) -> String {
+    format!("{CONFIG_DIR}/{filename}")
+}
+
+fn provider_behavior<'a>(name: &'a str, configured: Option<&'a str>) -> &'a str {
+    configured
+        .or_else(|| name.rsplit_once('@').map(|(_, suffix)| suffix))
+        .unwrap_or("domain")
+}
+
+fn is_mrs_provider(
+    name: &str,
+    provider: &std::collections::HashMap<String, String>,
+    path: &str,
+) -> bool {
+    if provider
+        .get("format")
+        .is_some_and(|format| format.eq_ignore_ascii_case("mrs"))
+        || path.to_ascii_lowercase().ends_with(".mrs")
+        || provider
+            .get("url")
+            .is_some_and(|url| url.split(['?', '#']).next().unwrap_or(url).to_ascii_lowercase().ends_with(".mrs"))
+    {
+        return true;
+    }
+    if provider.get("format").is_some_and(|format| format.eq_ignore_ascii_case("yaml") || format.eq_ignore_ascii_case("text"))
+        || path.to_ascii_lowercase().ends_with(".yaml")
+        || path.to_ascii_lowercase().ends_with(".yml")
+        || path.to_ascii_lowercase().ends_with(".txt")
+        || provider.get("url").is_some_and(|url| {
+            let url = url.split(['?', '#']).next().unwrap_or(url).to_ascii_lowercase();
+            url.ends_with(".yaml") || url.ends_with(".yml") || url.ends_with(".txt") || url.ends_with(".list")
+        })
+    {
+        return false;
+    }
+    // The bundled zxc-rv configuration inherits `format: mrs` from YAML
+    // anchors, so its conventional @domain/@ipcidr names identify that format.
+    provider.get("format").is_none()
+        && name
+            .rsplit_once('@')
+            .is_some_and(|(_, behavior)| behavior.eq_ignore_ascii_case("domain") || behavior.eq_ignore_ascii_case("ipcidr"))
+}
+
 async fn convert_mrs(path: &str, behavior: &str) -> Result<String, String> {
     let nanos = SystemTime::now()
         .duration_since(UNIX_EPOCH)
@@ -287,5 +330,25 @@ mod tests {
             resolve_provider_path("/custom/local.yaml"),
             "/custom/local.yaml"
         );
+    }
+
+    #[test]
+    fn mihomo_default_rule_path_is_in_home_directory() {
+        assert_eq!(default_provider_path("a1b2"), "/opt/etc/mihomo/a1b2");
+    }
+
+    #[test]
+    fn infers_mrs_behavior_from_zxc_provider_suffix() {
+        assert_eq!(provider_behavior("telegram@ipcidr", None), "ipcidr");
+        assert_eq!(provider_behavior("adlist@domain", None), "domain");
+        assert_eq!(provider_behavior("custom", Some("classical")), "classical");
+    }
+
+    #[test]
+    fn recognizes_zxc_mrs_providers_when_path_has_no_extension() {
+        let provider = find_provider("rule-providers:\n  adlist@domain: { <<: *domain, url: https://example.test/adlist.mrs }\n", "adlist@domain").unwrap();
+        assert!(is_mrs_provider("adlist@domain", &provider, "/opt/etc/mihomo/abc"));
+        let provider = find_provider("rule-providers:\n  google@domain: { type: http, url: https://example.test/google.yaml }\n", "google@domain").unwrap();
+        assert!(!is_mrs_provider("google@domain", &provider, "/opt/etc/mihomo/abc"));
     }
 }

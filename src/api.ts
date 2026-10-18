@@ -102,17 +102,24 @@ export interface MihomoProxyProvider {
 }
 
 export async function getMihomoProxyProviders(signal?: AbortSignal): Promise<MihomoProxyProvider[]> {
-  const payload = await getMihomoJson('/api/v1/mihomo/providers/proxies', 'Получение списка подписок', signal);
+  const [payload, config] = await Promise.all([
+    getMihomoJson('/api/v1/mihomo/providers/proxies', 'Получение списка подписок', signal),
+    getActiveMihomoConfig(signal),
+  ]);
   if (!isRecord(payload) || !isRecord(payload.providers)) throw new Error('Mihomo вернул некорректный список подписок');
+  const configured = new Set(readTopLevelYamlMapKeys(config.content, 'proxy-providers'));
   return Object.entries(payload.providers).flatMap(([name, raw]): MihomoProxyProvider[] => {
     if (!isRecord(raw)) return [];
+    // Match the running provider inventory against proxy-providers in the
+    // active YAML, so proxy-groups and ordinary proxies can never appear here.
+    if (!configured.has(name)) return [];
     const type = typeof raw.type === 'string' ? raw.type.toLocaleLowerCase('en') : '';
     const vehicleType = typeof raw.vehicleType === 'string' ? raw.vehicleType : '';
     if (['selector', 'urltest', 'fallback', 'loadbalance', 'direct', 'reject'].includes(type)) return [];
     // Mihomo groups can also be reported with type "Proxy" by wrappers. A
     // real proxy-provider always exposes vehicleType, so use that field as
     // the strict discriminator for the Subscriptions screen.
-    if (!vehicleType) return [];
+    if (!vehicleType || !['http', 'file'].includes(vehicleType.toLocaleLowerCase('en'))) return [];
     const proxies = Array.isArray(raw.proxies) ? raw.proxies.flatMap((proxy): MihomoProxyProviderNode[] => {
       if (!isRecord(proxy) || typeof proxy.name !== 'string') return [];
       return [{ name: proxy.name, type: typeof proxy.type === 'string' ? proxy.type : '—' }];
@@ -131,6 +138,31 @@ export async function getMihomoProxyProviders(signal?: AbortSignal): Promise<Mih
       updatedAt: typeof raw.updatedAt === 'string' || typeof raw.updatedAt === 'number' ? raw.updatedAt : null,
     }];
   }).sort((a, b) => a.name.localeCompare(b.name, 'ru'));
+}
+
+function readTopLevelYamlMapKeys(yaml: string, sectionName: string): string[] {
+  const lines = yaml.replace(/^\uFEFF/, '').split(/\r?\n/);
+  let inSection = false;
+  let entryIndent: number | null = null;
+  const names: string[] = [];
+  for (const line of lines) {
+    const trimmed = line.trim();
+    if (!trimmed || trimmed.startsWith('#')) continue;
+    const indent = line.length - line.trimStart().length;
+    if (indent === 0) {
+      inSection = trimmed === `${sectionName}:` || trimmed.startsWith(`${sectionName}: #`);
+      entryIndent = null;
+      continue;
+    }
+    if (!inSection) continue;
+    if (entryIndent === null) entryIndent = indent;
+    if (indent !== entryIndent) continue;
+    const separator = trimmed.indexOf(':');
+    if (separator < 1) continue;
+    const key = trimmed.slice(0, separator).trim().replace(/^(?:"([^"]+)"|'([^']+)')$/, '$1$2');
+    if (key && key !== '<<') names.push(key);
+  }
+  return names;
 }
 
 export async function refreshMihomoProxyProvider(name: string, signal?: AbortSignal): Promise<void> {

@@ -2,6 +2,13 @@ import { describe, expect, it } from 'vitest';
 import { MAIN_NAVIGATION_PAGES, renderNavigationView, renderProviderNavigationActions, renderWorkspaceFrame } from './navigation-view';
 
 describe('main navigation', () => {
+  it('only shows provider actions on the Selectors page', () => {
+    const actions = renderProviderNavigationActions();
+    expect(renderNavigationView(MAIN_NAVIGATION_PAGES, 'selectors', '', actions)).toContain('id="rulesets-open"');
+    expect(renderNavigationView(MAIN_NAVIGATION_PAGES, 'connections', '', actions)).not.toContain('id="rulesets-open"');
+    expect(renderNavigationView(MAIN_NAVIGATION_PAGES, 'dns', '', actions)).not.toContain('id="subscriptions-open"');
+  });
+
   it('separates the primary config file from the remaining file tabs', () => {
     const configTabs = '<button class="config-file-primary-tab selected">config</button><div class="config-file-nav"><button>ip_exclude</button></div>';
     const configMarkup = renderNavigationView(MAIN_NAVIGATION_PAGES, 'configuration', configTabs);

@@ -655,6 +655,8 @@
 .proxy-import-dialog .proxy-provider-toggle input,.proxy-import-dialog .proxy-provider-udp input { accent-color:#7868df; }
 .proxy-import-dialog .proxy-provider-field input:focus-visible,.proxy-import-dialog .proxy-provider-unit:focus-within,.proxy-import-dialog .proxy-provider-replace select:focus-visible { border-color:#8d7be8; box-shadow:0 0 0 2px #7868df44; }
 
-/* Selector ping values stay readable without dominating compact node cards. */
-.app-shell .proxy-health.proxy-ping-value { min-width:48px; min-height:28px; font-size:16px; line-height:1.1; }
-.app-shell .proxy-health.proxy-ping-value > span { font-size:16px; font-weight:750; }
+/* Keep the ping value at the compact size used by the selector card typography. */
+.app-shell .selector-card .proxy-health.proxy-ping-value { min-width:40px; min-height:24px; gap:4px; padding:1px 3px; font-size:13px; line-height:1; }
+.app-shell .selector-card .proxy-health.proxy-ping-value > span { font-size:13px; font-weight:700; line-height:1; }
+.app-shell .selector-card .proxy-health.proxy-ping-value .ping-status-icon,
+.app-shell .selector-card .proxy-health.proxy-ping-value .ping-status-icon svg { width:13px; height:13px; }

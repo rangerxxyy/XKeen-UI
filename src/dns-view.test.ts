@@ -20,6 +20,9 @@ describe('DNS workspaces', () => {
     expect(view).not.toContain('Router DNS Servers');
     expect(view).toContain('Передача DNS через Mihomo');
     expect(view).toContain('Статические IPv6 DNS и DoH/DoT не меняются и могут обходить его.');
+    expect(view).toContain('dns-management-help');
+    expect(view).not.toContain('dns-handoff-intro');
+    expect(view.indexOf('dns-management-help')).toBeLessThan(view.indexOf('id="dns-management-toggle"'));
   });
 
   it('treats an enabled Mihomo DNS config as separate from router DNS handoff', () => {
@@ -49,8 +52,8 @@ describe('DNS workspaces', () => {
     const state = { dnsOverride: true, mihomoDns: true, portListener: 'mihomo', nameServers: [], detail: 'Состояние получено' };
     const view = renderDns(null, false, null, '', 'A', { status: state, loading: false, error: null, busy: false, confirm: false });
     expect(view).toMatch(/id="dns-management-toggle"[^>]*type="checkbox"[^>]*role="switch"[^>]*checked/);
-    expect(view).toContain('<strong class="state-pill state-running">Активно</strong>');
-    expect(view).toContain('<strong class="state-pill">mihomo</strong>');
+    expect(view).toContain('<strong class="state-pill dns-state-value state-running">Активно</strong>');
+    expect(view).toContain('<strong class="state-pill dns-state-value">mihomo</strong>');
     expect(view).not.toContain('Вернуть DNS KeeneticOS');
   });
 
@@ -120,6 +123,23 @@ describe('DNS workspaces', () => {
     expect(view).toContain('реальные IP в ответах');
     expect(view).toContain('поддельные IP в ответах');
     expect(view).toContain('DNS Diagnostics');
+  });
+
+  it('keeps DNS help icons beside labels and sizes Nameserver for every configured line', () => {
+    const view = renderDns(null, false, null, '', 'A', undefined, {
+      values: {
+        enhancedMode: 'redir-host',
+        bootstrap: '77.88.8.8\ntls://8.8.8.8',
+        nameserver: 'quic://one.example\nhttps://two.example/dns-query\nquic://9.9.9.9\nquic://geohide.ru\ntls://1.1.1.1',
+        nameserverPolicy: '',
+        proxyServerNameserver: '',
+        fallback: '',
+      },
+      loading: false, error: null, busy: false,
+    });
+
+    expect(view).toContain('<span class="dns-field-heading"><span>Nameserver</span><span class="dns-info"');
+    expect(view).toContain('<textarea name="nameserver" rows="5"');
   });
 
   it('provides accessible explanations for every DNS status, handoff, resolver, and diagnostic field', () => {

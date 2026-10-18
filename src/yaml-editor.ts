@@ -5,9 +5,10 @@ import { HighlightStyle, syntaxHighlighting } from '@codemirror/language';
 import { tags } from '@lezer/highlight';
 import { yaml } from '@codemirror/lang-yaml';
 import { json } from '@codemirror/lang-json';
-import { applyEdits, format as formatJsonc, parse as parseJsonc, printParseErrorCode, type ParseError } from 'jsonc-parser';
+import { parse as parseJsonc, printParseErrorCode, type ParseError } from 'jsonc-parser';
 import { isMap, parseDocument } from 'yaml';
 import { chooseReferenceTemplate, getDefaultTemplate } from './templates';
+import { getXrayTemplateTarget } from './template-target';
 import { applyActiveMihomoConfig, applyXrayConfigFile, getActiveMihomoConfig, getRouterConfigFile, getXrayConfigFile, listMihomoConfigBackups, logUiError, restoreMihomoConfigBackup, saveActiveMihomoConfig, saveRouterConfigFile, saveXrayConfigFile, type RouterConfigFile, type XrayConfigFile } from './api';
 import { confirmInApp } from './confirm-dialog';
 import { canPersistConfig, runConfigApply } from './config-actions';
@@ -24,8 +25,11 @@ const draftFiles = [
   { id: 'port_exclude', label: 'port_exclude', filename: 'port_exclude.lst', format: 'text' },
   { id: 'port_proxying', label: 'port_proxying', filename: 'port_proxying.lst', format: 'text' },
   { id: 'xkeen', label: 'xkeen', filename: 'xkeen.json', format: 'json' },
+  { id: 'xray_log', label: 'log', filename: '01_log.json', format: 'json' },
+  { id: 'xray_inbounds', label: 'inbounds', filename: '03_inbounds.json', format: 'json' },
   { id: 'xray_json', label: 'config', filename: '04_outbounds.json', format: 'json' },
   { id: 'xray_routing', label: 'routing', filename: '05_routing.json', format: 'jsonc' },
+  { id: 'xray_policy', label: 'policy', filename: '06_policy.json', format: 'json' },
 ] as const;
 let editor: EditorView | null = null;
 let editorBindings: AbortController | null = null;
@@ -43,11 +47,15 @@ function isRouterConfigFile(file: string): file is RouterConfigFile {
 }
 
 function isXrayConfigFile(file: string): file is XrayConfigFile {
-  return file === 'xray_json' || file === 'xray_routing';
+  return file === 'xray_log' || file === 'xray_inbounds' || file === 'xray_json' || file === 'xray_routing' || file === 'xray_policy';
 }
 
 function xrayApiFile(file: string): XrayConfigFile {
-  return file === 'xray_json' ? 'xray_outbounds' : 'xray_routing';
+  const files: Record<string, XrayConfigFile> = {
+    xray_log: 'xray_log', xray_inbounds: 'xray_inbounds', xray_json: 'xray_outbounds',
+    xray_routing: 'xray_routing', xray_policy: 'xray_policy',
+  };
+  return files[file] ?? 'xray_outbounds';
 }
 
 function currentSnapshot(): string | null {
@@ -435,20 +443,6 @@ function validateStructuredDocument(text: string): boolean {
   return true;
 }
 
-function downloadDraft(text: string): void {
-  const file = currentFile();
-  const mime = file.format === 'yaml' ? 'application/yaml;charset=utf-8'
-    : file.format === 'json' || file.format === 'jsonc' ? 'application/json;charset=utf-8'
-      : 'text/plain;charset=utf-8';
-  const blob = new Blob([text], { type: mime });
-  const url = URL.createObjectURL(blob);
-  const link = document.createElement('a');
-  link.href = url;
-  link.download = file.filename;
-  link.click();
-  window.setTimeout(() => URL.revokeObjectURL(url), 1000);
-}
-
 export function unmountYamlEditor(): void {
   editorBindings?.abort();
   editorBindings = null;
@@ -460,7 +454,7 @@ export function mountYamlEditor(routerMode = false, activeCore: 'mihomo' | 'xray
   const parent = editorElement();
   if (!parent) return;
   if (activeCore === 'xray' && activeFile === 'config') activeFile = 'xray_json';
-  if (activeCore !== 'xray' && (activeFile === 'xray_json' || activeFile === 'xray_routing')) activeFile = 'config';
+  if (activeCore !== 'xray' && activeFile.startsWith('xray_')) activeFile = 'config';
   unmountYamlEditor();
   editorBindings = new AbortController();
   const { signal } = editorBindings;
@@ -524,37 +518,30 @@ export function mountYamlEditor(routerMode = false, activeCore: 'mihomo' | 'xray
     }, { signal });
   });
 
-  document.querySelector<HTMLButtonElement>('#yaml-validate')?.addEventListener('click', (event) => {
-    (event.currentTarget as HTMLButtonElement).closest('details')?.removeAttribute('open');
-    if (editor) validateStructuredDocument(editor.state.doc.toString());
-  }, { signal });
-  document.querySelector<HTMLButtonElement>('#yaml-format')?.addEventListener('click', (event) => {
-    (event.currentTarget as HTMLButtonElement).closest('details')?.removeAttribute('open');
-    if (!editor || currentFile().format === 'text') return;
-    const source = editor.state.doc.toString();
-    if (!validateStructuredDocument(source)) {
-      return;
-    }
-    const file = currentFile();
-    let formatted = source;
-    if (file.format === 'yaml') {
-      const document = parseDocument(source, { uniqueKeys: true, version: '1.2' });
-      if (document.contents) formatted = document.toString({ indent: 2, lineWidth: 0 });
-    } else {
-      const edits = formatJsonc(source, undefined, { insertSpaces: true, tabSize: 2, eol: '\n' });
-      formatted = applyEdits(source, edits);
-    }
-    editor.dispatch({ changes: { from: 0, to: editor.state.doc.length, insert: formatted } });
-    setValidation(`Форматирование ${file.format.toUpperCase()} выполнено; совместимость со схемой не проверялась.`, true);
-  }, { signal });
   document.querySelector<HTMLButtonElement>('#yaml-template')?.addEventListener('click', async (event) => {
     (event.currentTarget as HTMLButtonElement).closest('details')?.removeAttribute('open');
     const file = currentFile();
     if (!editor || (file.format !== 'yaml' && file.format !== 'json' && file.format !== 'jsonc')) return;
-    const current = editor.state.doc.toString();
-    if (current.trim() && !(await confirmInApp('Заменить текущий черновик?', 'Шаблон загрузится в редактор. Текущий текст останется только в истории отмены до закрытия вкладки.', 'Загрузить шаблон'))) return;
-    void chooseReferenceTemplate(file.format === 'yaml' ? 'mihomo' : 'xray').then((template) => {
+    const requestedEditor = editor;
+    void chooseReferenceTemplate(file.format === 'yaml' ? 'mihomo' : 'xray').then(async (template) => {
       if (!template || !editor) return;
+      const targetId = file.format === 'yaml' ? 'config' : getXrayTemplateTarget(template.name);
+      if (!targetId) throw new Error('Не удалось определить файл для шаблона Xray');
+      const target = draftFiles.find((candidate) => candidate.id === targetId);
+      if (!target) throw new Error('Файл для шаблона не найден в редакторе');
+      let targetContent = targetId === file.id ? editor.state.doc.toString() : sessionStorage.getItem(`${draftKey}${targetId}`) ?? '';
+      if (routerMode && isXrayConfigFile(targetId)) {
+        const active = await getXrayConfigFile(xrayApiFile(targetId), signal);
+        xraySnapshots.set(xrayApiFile(targetId), active.content);
+        if (targetId !== file.id && !sessionStorage.getItem(`${draftKey}${targetId}`)) targetContent = active.content;
+      }
+      if (editor !== requestedEditor) return;
+      if (targetContent.trim() && !(await confirmInApp('Заменить текущий черновик?', `Шаблон «${template.name}» загрузится в ${target.filename}. Текущий текст останется только в истории отмены до закрытия вкладки.`, 'Импортировать'))) return;
+      if (targetId !== file.id) {
+        activeFile = targetId;
+        sessionStorage.setItem(activeFileKey, targetId);
+        setEditorIdentity(routerMode, activeCore);
+      }
       editor.dispatch({ changes: { from: 0, to: editor.state.doc.length, insert: template.content } });
       editor.focus();
       validateStructuredDocument(template.content);
@@ -563,10 +550,6 @@ export function mountYamlEditor(routerMode = false, activeCore: 'mihomo' | 'xray
     }).catch((error: unknown) => {
       setValidation(error instanceof Error ? `Не удалось открыть каталог: ${error.message}` : 'Не удалось открыть каталог шаблонов.', false);
     });
-  }, { signal });
-  document.querySelector<HTMLButtonElement>('#yaml-download')?.addEventListener('click', (event) => {
-    (event.currentTarget as HTMLButtonElement).closest('details')?.removeAttribute('open');
-    if (editor) downloadDraft(editor.state.doc.toString());
   }, { signal });
   document.querySelector<HTMLButtonElement>('#config-apply-active')?.addEventListener('click', async (event) => {
     const button = event.currentTarget as HTMLButtonElement;

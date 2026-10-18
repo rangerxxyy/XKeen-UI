@@ -18,9 +18,9 @@ import { confirmInApp } from './confirm-dialog';
 import { bindDialogMotion, closeDialogWithMotion } from './dialog-motion';
 import { lifecycleFeedback } from './service-feedback';
 import { readUiPreferences, validPingUrl, writeUiPreferences, type UiPreferences } from './preferences';
-import { deduplicateRepeatedUiErrors, formatJournalTimestamp, getJournalViewState, renderJournalLoadingSkeleton, splitJournalLevel, stripLogSourceLabel } from './journal-view-state';
-import { getJournalScrollTop } from './journal-scroll';
-import { canCopyJournal, formatJournalCopy, formatJournalDownload, shouldRefreshJournal } from './journal-controls';
+import { deduplicateRepeatedUiErrors, formatJournalMessage, formatJournalTimestamp, getJournalViewState, renderJournalLoadingSkeleton, splitJournalLevel, stripLogSourceLabel } from './journal-view-state';
+import { getJournalScrollTop, getNewJournalLines, hasJournalLinesChanged } from './journal-scroll';
+import { canCopyJournal, formatJournalCopy, formatJournalDownload } from './journal-controls';
 import { SETTINGS_TABS, type SettingsTabId } from './settings-tabs';
 import { bindSelectorSortControl, renderSelectorSortControl } from './selector-sort-control';
 import { bindPingUrlControl, renderPingUrlControl } from './ping-url-control';
@@ -84,12 +84,12 @@ const logFiles = [
 ];
 let selectedLog = 'xkeen-ui';
 let logData: SystemLog | null = null;
+let logNewLines = new Set<string>();
 let logError: string | null = null;
 let logLoading = false;
 let logCleared = false;
 let logExpanded = false;
 let logFilter = '';
-let logPaused = false;
 let logController: AbortController | undefined;
 let logRefreshTimer: number | undefined;
 let logRefreshAfterCurrent = false;
@@ -165,23 +165,21 @@ function renderNavigation(): string {
 
 function renderConfigFileButtons(): string {
   const xray = xkeenStatus?.core === 'xray';
-  const ids = ['config', 'ip_exclude', 'port_exclude', 'port_proxying', 'xkeen', ...(xray ? ['xray_routing'] : [])];
+  const xrayFiles = ['xray_log', 'xray_inbounds', 'xray_json', 'xray_routing', 'xray_policy'];
+  const ids = [...(xray ? xrayFiles : ['config']), 'ip_exclude', 'port_exclude', 'port_proxying', 'xkeen'];
   const defaultFile = xray ? 'xray_json' : 'config';
   const savedFile = sessionStorage.getItem('xkeen-ui:draft-active-file');
   const activeFile = xray
-    ? savedFile === 'xray_routing' || savedFile === 'xray_jsonc' ? 'xray_routing'
-      : savedFile === 'config' || savedFile === 'xray_json' ? 'xray_json'
-        : ids.includes(savedFile ?? '') ? savedFile : defaultFile
-    : ids.includes(savedFile ?? '') && savedFile !== 'xray_json' && savedFile !== 'xray_routing' && savedFile !== 'xray_jsonc'
-      ? savedFile : defaultFile;
-  const labels: Record<string, string> = { config: 'config', xray_json: 'config', ip_exclude: 'ip_exclude', port_exclude: 'port_exclude', port_proxying: 'port_proxying', xkeen: 'xkeen', xray_routing: 'routing' };
+    ? savedFile === 'xray_jsonc' ? 'xray_routing' : xrayFiles.includes(savedFile ?? '') ? savedFile : defaultFile
+    : ids.includes(savedFile ?? '') ? savedFile : defaultFile;
+  const labels: Record<string, string> = { config: 'config', xray_json: 'outbounds', xray_log: 'log', xray_inbounds: 'inbounds', xray_policy: 'policy', ip_exclude: 'ip_exclude', port_exclude: 'port_exclude', port_proxying: 'port_proxying', xkeen: 'xkeen', xray_routing: 'routing' };
   const descriptions: Record<string, string> = {
-    config: 'Основной конфиг Mihomo', xray_json: 'Основной конфиг Xray', xray_routing: 'Правила маршрутизации Xray',
+    config: 'Основной конфиг Mihomo', xray_log: 'Настройки журнала Xray', xray_inbounds: 'Входящие подключения Xray', xray_json: 'Исходящие подключения Xray', xray_routing: 'Правила маршрутизации Xray', xray_policy: 'Политики Xray',
     ip_exclude: 'IP-адреса и подсети вне обработки XKeen', port_exclude: 'Порты, исключённые из обработки XKeen',
     port_proxying: 'Порты, направляемые через прокси', xkeen: 'Параметры запуска и маршрутизации XKeen',
   };
   return `<div class="config-file-nav" aria-label="Файлы конфигурации">${ids.map((id) => {
-    const fileId = id === 'config' && xray ? 'xray_json' : id;
+    const fileId = id;
     const selected = fileId === activeFile;
     return `<button class="config-file-tab ${selected ? 'selected' : ''}" data-config-file="${fileId}" type="button" title="${descriptions[fileId] ?? descriptions[id] ?? id}" aria-label="${labels[id] ?? id}: ${descriptions[fileId] ?? descriptions[id] ?? id}" aria-pressed="${selected}">${labels[id] ?? id}</button>`;
   }).join('')}</div>`;
@@ -203,13 +201,13 @@ function renderConfiguration(): string {
   return `<section class="editor-workspace config-layout" aria-label="Редактор конфигурации">
     <div class="config-editor-main">
       <div class="code-editor-shell"><div class="code-editor" id="yaml-editor" aria-label="Текст конфигурации"></div></div>
-      <div class="editor-statusbar"><span id="yaml-validation" class="editor-validation" aria-live="polite">Проверка конфигурации…</span><div class="editor-actions"><button class="editor-button" id="config-save-active" type="button" data-router-file disabled title="Сохранить файл на роутере без применения">Сохранить</button><button class="editor-button editor-button-primary" id="config-apply-active" type="button" data-router-file disabled title="Проверить, сохранить и перезапустить активное ядро">Применить</button><details class="editor-utilities"><summary class="editor-button"><span class="utilities-trigger-icon" aria-hidden="true">•••</span><span>Утилиты</span><span class="utilities-chevron" aria-hidden="true"></span></summary><div class="editor-utilities-menu" role="menu" aria-label="Утилиты конфигурации"><button type="button" role="menuitem" id="yaml-add-proxy" data-mihomo-only><span class="utility-icon" aria-hidden="true">↗</span><span>Добавить прокси</span></button><button type="button" role="menuitem" id="yaml-backups" data-mihomo-only><span class="utility-icon" aria-hidden="true">◷</span><span>Резервные копии</span></button><button type="button" role="menuitem" id="yaml-template" data-structured-only><span class="utility-icon" aria-hidden="true">▤</span><span>Шаблон конфигурации</span></button><button type="button" role="menuitem" id="yaml-validate" data-structured-only><span class="utility-icon" aria-hidden="true">✓</span><span>Проверить конфигурацию</span></button><button type="button" role="menuitem" id="yaml-format" data-structured-only><span class="utility-icon" aria-hidden="true">⌘</span><span>Форматировать</span></button><button type="button" role="menuitem" id="yaml-download"><span class="utility-icon" aria-hidden="true">↓</span><span>Скачать черновик</span></button></div></details></div></div>
+      <div class="editor-statusbar"><span id="yaml-validation" class="editor-validation" aria-live="polite">Проверка конфигурации…</span><div class="editor-actions"><button class="editor-button" id="config-save-active" type="button" data-router-file disabled title="Сохранить файл на роутере без применения">Сохранить</button><button class="editor-button editor-button-primary" id="config-apply-active" type="button" data-router-file disabled title="Проверить, сохранить и перезапустить активное ядро">Применить</button><details class="editor-utilities"><summary class="editor-button"><span class="utilities-trigger-icon" aria-hidden="true">•••</span><span>Утилиты</span><span class="utilities-chevron" aria-hidden="true"></span></summary><div class="editor-utilities-menu" role="menu" aria-label="Утилиты конфигурации"><button type="button" role="menuitem" id="yaml-add-proxy" data-mihomo-only><span class="utility-icon" aria-hidden="true">↗</span><span>Добавить прокси</span></button><button type="button" role="menuitem" id="yaml-backups" data-mihomo-only><span class="utility-icon" aria-hidden="true">◷</span><span>Резервные копии</span></button><button type="button" role="menuitem" id="yaml-template" data-structured-only><span class="utility-icon" aria-hidden="true">▤</span><span>Шаблон конфигурации</span></button></div></details></div></div>
     </div>
   </section>`;
 }
 
 function renderJournal(): string {
-  return `<section class="journal-panel ${logExpanded ? 'is-expanded' : ''}" aria-label="Журнал событий"><header class="journal-heading"><div class="journal-title"><h2>Журнал</h2><span id="journal-live" class="journal-live" ${xkeenControlBusy || configApplyBusy ? '' : 'hidden'}><i aria-hidden="true"></i> XKeen запускается</span></div><div class="journal-tools"><label class="journal-filter"><span aria-hidden="true">⌕</span><input id="journal-filter" type="search" placeholder="Фильтр" aria-label="Фильтр журнала" value="${escapeHtml(logFilter)}"></label><select id="journal-file" aria-label="Файл журнала">${logFiles.map((file) => `<option value="${file.id}" ${selectedLog === file.id ? 'selected' : ''}>${file.label}</option>`).join('')}</select><button class="journal-action-button" id="journal-pause" type="button" title="${logPaused ? 'Продолжить автообновление' : 'Приостановить автообновление'}" aria-label="${logPaused ? 'Продолжить автообновление' : 'Приостановить автообновление'}" aria-pressed="${logPaused}"><span aria-hidden="true">${logPaused ? '▶' : 'Ⅱ'}</span><span class="journal-action-label">${logPaused ? 'Продолжить' : 'Пауза'}</span></button><button class="journal-action-button" id="journal-copy" type="button" title="Копировать видимые записи" aria-label="Копировать видимые записи"><span aria-hidden="true">▢</span><span class="journal-action-label">Копировать</span></button><button class="journal-action-button" id="journal-download" type="button" title="Скачать видимые записи" aria-label="Скачать видимые записи"><span aria-hidden="true">⇩</span><span class="journal-action-label">Скачать</span></button><button class="journal-icon-button" id="journal-clear" type="button" title="Очистить отображение" aria-label="Очистить отображение">♲</button><button class="journal-icon-button" id="journal-expand" type="button" title="Развернуть журнал" aria-label="Развернуть журнал" aria-pressed="${logExpanded}">${logExpanded ? '⤢' : '⛶'}</button></div></header><div class="journal-body" id="journal-body" aria-live="off"></div><span class="sr-only" id="journal-announcement" role="status" aria-live="polite"></span></section>`;
+  return `<section class="journal-panel ${logExpanded ? 'is-expanded' : ''}" aria-label="Журнал событий"><header class="journal-heading"><div class="journal-title"><h2>Журнал</h2><span id="journal-live" class="journal-live" ${xkeenControlBusy || configApplyBusy ? '' : 'hidden'}><i aria-hidden="true"></i> XKeen запускается</span></div><div class="journal-tools"><label class="journal-filter"><span aria-hidden="true">⌕</span><input id="journal-filter" type="search" placeholder="Фильтр" aria-label="Фильтр журнала" value="${escapeHtml(logFilter)}"></label><select id="journal-file" aria-label="Файл журнала">${logFiles.map((file) => `<option value="${file.id}" ${selectedLog === file.id ? 'selected' : ''}>${file.label}</option>`).join('')}</select><button class="journal-action-button" id="journal-copy" type="button" title="Копировать видимые записи" aria-label="Копировать видимые записи"><span aria-hidden="true">▢</span><span class="journal-action-label">Копировать</span></button><button class="journal-action-button" id="journal-download" type="button" title="Скачать видимые записи" aria-label="Скачать видимые записи"><span aria-hidden="true">⇩</span><span class="journal-action-label">Скачать</span></button><button class="journal-icon-button" id="journal-clear" type="button" title="Очистить отображение" aria-label="Очистить отображение">♲</button><button class="journal-icon-button" id="journal-expand" type="button" title="Развернуть журнал" aria-label="Развернуть журнал" aria-pressed="${logExpanded}">${logExpanded ? '⤢' : '⛶'}</button></div></header><div class="journal-body" id="journal-body" aria-live="off"></div><span class="sr-only" id="journal-announcement" role="status" aria-live="polite"></span></section>`;
 }
 
 function setJournalRealtime(active: boolean): void {
@@ -259,6 +257,10 @@ function drawJournal(): void {
     const displayLine = stripLogSourceLabel(line);
     const row = document.createElement('div');
     row.className = 'journal-line';
+    if (logNewLines.has(line)) {
+      row.classList.add('journal-line-new');
+      logNewLines.delete(line);
+    }
     const parsed = formatJournalTimestamp(displayLine, uiPreferences.journalTimeZone);
     const severity = splitJournalLevel(parsed?.message ?? displayLine, displayLine);
     row.dataset.level = severity.level === 'ERROR' || severity.level === 'FATAL' ? 'error'
@@ -276,7 +278,16 @@ function drawJournal(): void {
       row.append(timestamp, badge);
     } else row.append(timestamp);
     const message = document.createElement('code');
-    message.textContent = severity.message;
+    for (const segment of formatJournalMessage(severity.message)) {
+      if (!segment.tone) {
+        message.append(document.createTextNode(segment.text));
+        continue;
+      }
+      const highlight = document.createElement('span');
+      highlight.className = `journal-message-${segment.tone}`;
+      highlight.textContent = segment.text;
+      message.append(highlight);
+    }
     row.append(message);
     list.append(row);
   }
@@ -311,16 +322,25 @@ async function loadSystemLog(): Promise<void> {
   const controller = new AbortController();
   logController = controller;
   logLoading = true;
-  drawJournal();
+  let shouldRedraw = !logData;
+  if (!logData) drawJournal();
   try {
-    logData = await getSystemLog(selectedLog, AbortSignal.any([controller.signal, AbortSignal.timeout(12_000)]));
+    const previousLog = logData;
+    const previousLines = previousLog?.lines ?? null;
+    const nextLog = await getSystemLog(selectedLog, AbortSignal.any([controller.signal, AbortSignal.timeout(12_000)]));
+    shouldRedraw = hasJournalLinesChanged(previousLines, nextLog.lines)
+      || previousLog?.file !== nextLog.file
+      || previousLog?.truncated !== nextLog.truncated;
+    logNewLines = new Set(previousLines ? getNewJournalLines(previousLines, nextLog.lines) : []);
+    logData = nextLog;
+    logError = null;
   } catch (error) {
     if (error instanceof DOMException && error.name === 'AbortError') return;
     if (!logData) logError = error instanceof Error ? error.message : 'Не удалось загрузить журнал';
   } finally {
     if (logController === controller) {
       logLoading = false;
-      drawJournal();
+      if (shouldRedraw || !logData) drawJournal();
       if (logRefreshAfterCurrent) {
         logRefreshAfterCurrent = false;
         window.setTimeout(() => void loadSystemLog(), 0);
@@ -344,18 +364,7 @@ function bindJournal(): void {
     logFilter = (event.currentTarget as HTMLInputElement).value;
     drawJournal();
   });
-  document.querySelector<HTMLButtonElement>('#journal-pause')?.addEventListener('click', (event) => {
-    logPaused = !logPaused;
-    const button = event.currentTarget as HTMLButtonElement;
-    const label = logPaused ? 'Продолжить автообновление' : 'Приостановить автообновление';
-    button.setAttribute('aria-pressed', String(logPaused));
-    button.setAttribute('aria-label', label);
-    button.title = label;
-    button.querySelector<HTMLElement>('.journal-action-label')!.textContent = logPaused ? 'Продолжить' : 'Пауза';
-    button.querySelector<HTMLElement>('[aria-hidden="true"]')!.textContent = logPaused ? '▶' : 'Ⅱ';
-    document.querySelector<HTMLElement>('#journal-announcement')!.textContent = logPaused ? 'Автообновление журнала приостановлено' : 'Автообновление журнала продолжено';
-  });
-  document.querySelector<HTMLButtonElement>('#journal-copy')?.addEventListener('click', () => {
+    document.querySelector<HTMLButtonElement>('#journal-copy')?.addEventListener('click', () => {
     const text = formatJournalCopy(logData?.lines ?? [], logFilter, uiPreferences.journalTimeZone);
     if (!text) return;
     void copyJournalText(text).then((copied) => showToast(copied ? 'Записи журнала скопированы' : 'Не удалось скопировать журнал', copied ? 'success' : 'error'));
@@ -1514,10 +1523,8 @@ let lastLogRefreshAt = 0;
 logRefreshTimer = window.setInterval(() => {
   if (document.hidden) return;
   const restartInProgress = xkeenControlBusy || configApplyBusy;
-  if (!shouldRefreshJournal(logPaused, restartInProgress)) return;
-  if (!restartInProgress && logExpanded) return;
   const now = Date.now();
-  if (restartInProgress || now - lastLogRefreshAt >= 15_000) {
+  if (restartInProgress || now - lastLogRefreshAt >= 5_000) {
     lastLogRefreshAt = now;
     void loadSystemLog();
   }

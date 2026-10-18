@@ -1,29 +1,39 @@
-export type ReferenceCore = 'mihomo' | 'xray';
-
-export interface ReferenceTemplate {
-  name: string;
-  url: string;
-}
-
-import mihomoBlocked from './templates/mihomo-blocked.yaml?raw';
+import mihomoConfigBlocked from './templates/zxc-rv/mihomo/config.yaml?raw';
+import mihomoConfigProxyExceptRu from './templates/zxc-rv/mihomo/config_2.yaml?raw';
+import xrayLog from './templates/zxc-rv/xray/01_log.json?raw';
+import xrayInboundMixed from './templates/zxc-rv/xray/03_inbounds_mixed.json?raw';
+import xrayInboundTproxy from './templates/zxc-rv/xray/03_inbounds_tproxy.json?raw';
+import xrayInboundMixedDscp from './templates/zxc-rv/xray/03_inbounds_mixed+dscp.json?raw';
+import xrayInboundTproxyDscp from './templates/zxc-rv/xray/03_inbounds_tproxy+dscp.json?raw';
+import xrayOutbounds from './templates/zxc-rv/xray/04_outbounds.json?raw';
+import xrayRoutingBlocked from './templates/zxc-rv/xray/05_routing_1.json?raw';
+import xrayRoutingProxyExceptRu from './templates/zxc-rv/xray/05_routing_2.json?raw';
+import xrayPolicy from './templates/zxc-rv/xray/06_policy.json?raw';
 import { bindDialogMotion, closeDialogWithMotion } from './dialog-motion';
-import mihomoProxyExceptRu from './templates/mihomo-proxy-except-ru.yaml?raw';
-import xrayBlocked from './templates/xray-blocked.jsonc?raw';
-import xrayProxyExceptRu from './templates/xray-proxy-except-ru.json?raw';
+
+export type ReferenceCore = 'mihomo' | 'xray';
 
 export interface BundledTemplate {
   name: string;
   content: string;
 }
 
+// Bundled verbatim from zxc-rv/assets at 8747e7b02af1631fff048bf2d832d3e5370bdb34.
 const bundledTemplates: Record<ReferenceCore, BundledTemplate[]> = {
   mihomo: [
-    { name: 'Только заблокированное (zxc-rv)', content: mihomoBlocked },
-    { name: 'Всё через PROXY, кроме RU (zxc-rv)', content: mihomoProxyExceptRu },
+    { name: 'Сonfig (только заблокированное, refilter+zkeenip)', content: mihomoConfigBlocked },
+    { name: 'Сonfig (все в прокси, кроме RU)', content: mihomoConfigProxyExceptRu },
   ],
   xray: [
-    { name: 'Routing: только заблокированное (zxc-rv)', content: xrayBlocked },
-    { name: 'Routing: всё через прокси, кроме RU (zxc-rv)', content: xrayProxyExceptRu },
+    { name: 'Log', content: xrayLog },
+    { name: 'Inbounds (Режим Mixed)', content: xrayInboundMixed },
+    { name: 'Inbounds (Режим TProxy)', content: xrayInboundTproxy },
+    { name: 'Inbounds (Режим Mixed+DSCP)', content: xrayInboundMixedDscp },
+    { name: 'Inbounds (Режим TProxy+DSCP)', content: xrayInboundTproxyDscp },
+    { name: 'Outbounds', content: xrayOutbounds },
+    { name: 'Routing (только заблокированное, zkeen)', content: xrayRoutingBlocked },
+    { name: 'Routing (все в прокси, кроме RU)', content: xrayRoutingProxyExceptRu },
+    { name: 'Policy', content: xrayPolicy },
   ],
 };
 
@@ -32,36 +42,11 @@ export function getBundledTemplates(core: ReferenceCore): BundledTemplate[] {
 }
 
 export function getDefaultTemplate(core: ReferenceCore): BundledTemplate {
-  const template = bundledTemplates[core][0];
+  const template = core === 'mihomo'
+    ? bundledTemplates.mihomo[0]
+    : bundledTemplates.xray.find(({ name }) => name.includes('Routing (только заблокированное'));
   if (!template) throw new Error(`Нет встроенного шаблона для ${core}`);
   return template;
-}
-
-const ASSETS_REVISION = '26e20e85ddde31622a7002e6567698c9389b164e';
-const ASSETS_ROOT = `https://raw.githubusercontent.com/zxc-rv/assets/${ASSETS_REVISION}/config_templates/`;
-const MANIFEST_URL = `${ASSETS_ROOT}templates.json`;
-let manifest: Partial<Record<ReferenceCore, ReferenceTemplate[]>> | undefined;
-
-async function getTemplates(core: ReferenceCore): Promise<ReferenceTemplate[]> {
-  if (!manifest) {
-    const response = await fetch(MANIFEST_URL, { credentials: 'omit', referrerPolicy: 'no-referrer' });
-    if (!response.ok) throw new Error(`Каталог шаблонов вернул HTTP ${response.status}`);
-    const data: unknown = await response.json();
-    if (!data || typeof data !== 'object') throw new Error('Каталог шаблонов имеет неверный формат');
-    manifest = data as Partial<Record<ReferenceCore, ReferenceTemplate[]>>;
-  }
-  const entries = manifest[core];
-  if (!Array.isArray(entries)) throw new Error(`В каталоге нет шаблонов для ${core}`);
-  return entries.map((item) => {
-    if (!item || typeof item.name !== 'string' || typeof item.url !== 'string') throw new Error('Некорректная запись шаблона');
-    const url = new URL(item.url);
-    if (url.hostname !== 'raw.githubusercontent.com' || url.pathname.split('/').slice(1, 3).join('/') !== 'zxc-rv/assets') {
-      throw new Error('Каталог содержит неожиданный источник шаблона');
-    }
-    const resourcePath = url.pathname.split('/').slice(4).join('/');
-    if (!resourcePath.startsWith(`config_templates/${core}/`) || resourcePath.includes('..')) throw new Error('Путь шаблона не прошёл проверку');
-    return { name: item.name, url: `${ASSETS_ROOT}${resourcePath}` };
-  });
 }
 
 function closeDialog(dialog: HTMLDialogElement): void {
@@ -69,24 +54,42 @@ function closeDialog(dialog: HTMLDialogElement): void {
 }
 
 export async function chooseReferenceTemplate(core: ReferenceCore): Promise<{ name: string; content: string } | null> {
-  const localTemplates = getBundledTemplates(core);
-  let remoteTemplates: ReferenceTemplate[] = [];
-  try {
-    remoteTemplates = (await getTemplates(core)).filter((item) =>
-      !localTemplates.some((local) => local.name === item.name || item.name.toLocaleLowerCase().includes(local.name.includes('PROXY') ? 'все в прокси' : 'только заблокированное')),
-    );
-  } catch {
-    // Bundled defaults stay usable offline if GitHub or its template manifest is unavailable.
-  }
-  const templates: Array<BundledTemplate | ReferenceTemplate> = [...localTemplates, ...remoteTemplates];
+  const templates = bundledTemplates[core];
   const dialog = document.createElement('dialog');
   dialog.className = 'template-dialog';
+  dialog.setAttribute('aria-labelledby', 'template-dialog-title');
+
   const form = document.createElement('form');
   form.method = 'dialog';
+  const heading = document.createElement('header');
+  heading.className = 'template-dialog-heading';
+  const icon = document.createElement('span');
+  icon.className = 'template-dialog-icon';
+  icon.setAttribute('aria-hidden', 'true');
+  icon.textContent = '▤';
   const title = document.createElement('h2');
-  title.textContent = `Шаблоны ${core === 'mihomo' ? 'Mihomo' : 'Xray'}`;
-  const description = document.createElement('p');
-  description.textContent = 'Выберите готовую схему маршрутизации. Загрузка заменит текущий черновик в редакторе.';
+  title.id = 'template-dialog-title';
+  title.textContent = 'Импорт шаблона';
+  const closeButton = document.createElement('button');
+  closeButton.type = 'button';
+  closeButton.className = 'template-dialog-close';
+  closeButton.setAttribute('aria-label', 'Закрыть');
+  closeButton.textContent = '×';
+  heading.append(icon, title, closeButton);
+
+  const description = document.createElement('div');
+  description.className = 'template-dialog-description';
+  const note = document.createElement('p');
+  note.append('Выберите готовый шаблон конфигурации для ');
+  const coreName = document.createElement('strong');
+  coreName.textContent = core === 'mihomo' ? 'Mihomo' : 'Xray';
+  note.append(coreName);
+  const count = document.createElement('span');
+  count.className = 'template-count';
+  count.textContent = String(templates.length);
+  count.setAttribute('aria-label', `${templates.length} шаблона`);
+  description.append(note, count);
+
   const options = document.createElement('div');
   options.className = 'template-options';
   options.setAttribute('role', 'radiogroup');
@@ -104,58 +107,28 @@ export async function chooseReferenceTemplate(core: ReferenceCore): Promise<{ na
       selectedIndex = index;
       options.querySelectorAll('.template-option').forEach((item, itemIndex) => item.classList.toggle('is-selected', itemIndex === index));
     });
-    const copy = document.createElement('span');
-    copy.className = 'template-option-copy';
-    const name = document.createElement('strong');
+    const name = document.createElement('span');
+    name.className = 'template-option-name';
     name.textContent = template.name;
-    const summary = document.createElement('small');
-    summary.textContent = /кроме ru|except.*ru|proxy.*except.*ru/i.test(template.name)
-      ? 'Направляет трафик через прокси, сохраняя прямой маршрут для RU.'
-      : /заблок|blocked|refilter/i.test(template.name)
-        ? 'Отправляет через прокси домены из правил блокировок, остальное — напрямую.'
-        : 'Готовая конфигурация. При загрузке её содержимое заменит текущий черновик.';
-    copy.append(name, summary);
-    label.append(radio, copy);
+    label.append(radio, name);
     options.append(label);
   }
-  const status = document.createElement('p');
-  status.className = 'template-status';
-  status.setAttribute('aria-live', 'polite');
-  const actions = document.createElement('div');
-  actions.className = 'template-actions';
-  const cancel = document.createElement('button');
-  cancel.type = 'button';
-  cancel.className = 'editor-button';
-  cancel.textContent = 'Отмена';
-  cancel.addEventListener('click', () => closeDialog(dialog));
+
   const importButton = document.createElement('button');
   importButton.type = 'button';
-  importButton.className = 'editor-button editor-button-primary';
-  importButton.textContent = 'Загрузить в редактор';
-  importButton.addEventListener('click', async () => {
+  importButton.className = 'template-import-button';
+  importButton.textContent = 'Импортировать';
+  importButton.addEventListener('click', () => {
     const template = templates[selectedIndex];
     if (!template) return;
-    importButton.disabled = true;
-    status.textContent = 'Загружаем…';
-    try {
-      let content: string;
-      if ('content' in template) {
-        content = template.content;
-      } else {
-        const response = await fetch(template.url, { credentials: 'omit', referrerPolicy: 'no-referrer' });
-        if (!response.ok) throw new Error(`HTTP ${response.status}`);
-        content = await response.text();
-      }
-      if (!content.trim() || content.length > 1_000_000) throw new Error('Шаблон пустой или превышает 1 МБ');
-      dialog.dispatchEvent(new CustomEvent('template-selected', { detail: { name: template.name, content } }));
-      closeDialog(dialog);
-    } catch (error) {
-      status.textContent = error instanceof Error ? `Не удалось загрузить: ${error.message}` : 'Не удалось загрузить шаблон';
-      importButton.disabled = false;
-    }
+    dialog.dispatchEvent(new CustomEvent('template-selected', { detail: template }));
+    closeDialog(dialog);
   });
-  actions.append(cancel, importButton);
-  form.append(title, description, options, status, actions);
+
+  const close = () => closeDialog(dialog);
+  closeButton.addEventListener('click', close);
+  form.addEventListener('submit', (event) => { event.preventDefault(); close(); });
+  form.append(heading, description, options, importButton);
   dialog.append(form);
   document.body.append(dialog);
   dialog.addEventListener('close', () => dialog.remove(), { once: true });

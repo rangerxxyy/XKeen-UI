@@ -1,9 +1,5 @@
 import { deduplicateRepeatedUiErrors, formatJournalTimestamp, splitJournalLevel, stripLogSourceLabel } from './journal-view-state';
 
-export function shouldRefreshJournal(paused: boolean, restartInProgress: boolean): boolean {
-  return !paused || restartInProgress;
-}
-
 export function canCopyJournal(viewState: string, visibleText: string): boolean {
   return viewState === 'data' && visibleText.length > 0;
 }

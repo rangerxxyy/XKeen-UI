@@ -240,6 +240,26 @@ describe('saveActiveMihomoConfig', () => {
 });
 
 describe('Xray configuration files', () => {
+  it('maps every zxc-rv Xray template file to one fixed router path', async () => {
+    const files = [
+      ['xray_log', '/opt/etc/xray/configs/01_log.json'],
+      ['xray_inbounds', '/opt/etc/xray/configs/03_inbounds.json'],
+      ['xray_outbounds', '/opt/etc/xray/configs/04_outbounds.json'],
+      ['xray_routing', '/opt/etc/xray/configs/05_routing.json'],
+      ['xray_policy', '/opt/etc/xray/configs/06_policy.json'],
+    ] as const;
+    const fetchMock = vi.fn(async (input: RequestInfo | URL) => {
+      const file = String(input).split('/').at(-1)!;
+      const path = files.find(([id]) => id === file)?.[1];
+      return new Response(JSON.stringify({ file, path, content: '{}' }), { headers: { 'Content-Type': 'application/json' } });
+    });
+    vi.stubGlobal('fetch', fetchMock);
+    for (const [file, path] of files) {
+      await expect(getXrayConfigFile(file)).resolves.toEqual({ path, content: '{}' });
+    }
+    expect(fetchMock).toHaveBeenCalledTimes(files.length);
+  });
+
   it('reads only a fixed routing file inside the active Xray config directory', async () => {
     vi.stubGlobal('fetch', async () => new Response(JSON.stringify({
       file: 'xray_routing', path: '/opt/etc/xray/configs/05_routing.json', content: '{"routing":{}}',

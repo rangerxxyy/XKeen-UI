@@ -312,7 +312,7 @@ export async function getActiveMihomoConfig(signal?: AbortSignal): Promise<Activ
 }
 
 export type RouterConfigFile = 'ip_exclude' | 'port_exclude' | 'port_proxying' | 'xkeen';
-export type XrayConfigFile = 'xray_outbounds' | 'xray_routing';
+export type XrayConfigFile = 'xray_log' | 'xray_inbounds' | 'xray_outbounds' | 'xray_routing' | 'xray_policy';
 const routerConfigPaths: Record<RouterConfigFile, string> = {
   ip_exclude: '/opt/etc/xkeen/ip_exclude.lst',
   port_exclude: '/opt/etc/xkeen/port_exclude.lst',
@@ -329,8 +329,11 @@ export async function getRouterConfigFile(file: RouterConfigFile, signal?: Abort
 }
 
 const xrayConfigPaths: Record<XrayConfigFile, string> = {
+  xray_log: '/opt/etc/xray/configs/01_log.json',
+  xray_inbounds: '/opt/etc/xray/configs/03_inbounds.json',
   xray_outbounds: '/opt/etc/xray/configs/04_outbounds.json',
   xray_routing: '/opt/etc/xray/configs/05_routing.json',
+  xray_policy: '/opt/etc/xray/configs/06_policy.json',
 };
 
 export async function getXrayConfigFile(file: XrayConfigFile, signal?: AbortSignal): Promise<{ path: string; content: string }> {

@@ -8,7 +8,7 @@ button.styled-select-trigger[hidden] { display:none; }
 .styled-select-caption { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
 .styled-select-chevron { flex:0 0 auto; width:7px; height:7px; border-right:1.5px solid var(--muted,#a5b2c3); border-bottom:1.5px solid var(--muted,#a5b2c3); transform:translateY(-2px) rotate(45deg); transition:transform .18s; }
 [aria-expanded="true"]>.styled-select-chevron { transform:translateY(2px) rotate(225deg); }
-.styled-select-menu { position:fixed; inset:auto; z-index:2147483000; box-sizing:border-box; margin:0; padding:6px; overflow:auto; overscroll-behavior:contain; scrollbar-width:thin; border:1px solid color-mix(in srgb,var(--stroke,#2a374a) 80%,var(--cyan,#5796ff)); border-radius:12px; color:var(--text,#eef3fa); background:linear-gradient(155deg,var(--surface-raised,#121c2c),var(--surface,#101827)); box-shadow:0 16px 44px #0005,0 3px 10px #0002; font:500 12px/1.45 var(--font-ui,Inter,system-ui,sans-serif); outline:none; transform-origin:top center; animation:styled-select-open .17s cubic-bezier(.2,.75,.25,1); }
+.styled-select-menu { position:fixed; inset:auto; z-index:2147483000; box-sizing:border-box; margin:0; padding:6px; overflow:auto; overscroll-behavior:contain; scrollbar-width:thin; border:1px solid color-mix(in srgb,var(--stroke,#2a374a) 80%,var(--cyan,#5796ff)); border-radius:12px; color:var(--text,#eef3fa); background:linear-gradient(155deg,var(--surface-raised,#121c2c),var(--surface,#101827)); box-shadow:0 16px 44px #0005,0 3px 10px #0002; font:500 12px/1.45 var(--font-ui,Inter,system-ui,sans-serif); outline:none; transform-origin:top center; animation:styled-select-open var(--motion-enter,200ms) var(--motion-ease,cubic-bezier(.2,.75,.25,1)); }
 .styled-select-menu[data-side="top"] { transform-origin:bottom center; }
 .styled-select-menu[hidden] { display:none; }
 .styled-select-menu::backdrop { background:transparent; }
@@ -22,4 +22,3 @@ button.styled-select-trigger[hidden] { display:none; }
 .source-field>button.styled-select-trigger,.dns-settings-form label>button.styled-select-trigger,.dns-query-form label>button.styled-select-trigger,.core-release-picker button.styled-select-trigger,.proxy-provider-replace button.styled-select-trigger,.template-select.styled-select-trigger { width:100%; }
 .journal-tools button.styled-select-trigger { min-height:30px; min-width:112px; font-size:12px; }
 @keyframes styled-select-open { from { opacity:0; transform:translateY(-4px) scale(.975); } to { opacity:1; transform:translateY(0) scale(1); } }
-@media(prefers-reduced-motion:reduce) { .styled-select-menu { animation:none; } button.styled-select-trigger,.styled-select-chevron,.styled-select-option { transition:none; } }

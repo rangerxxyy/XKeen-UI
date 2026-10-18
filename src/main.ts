@@ -869,6 +869,7 @@ async function closeConnectionFromUi(button: HTMLButtonElement): Promise<void> {
   try {
     await closeMihomoConnection(id, mihomoController?.signal);
     await loadMihomoPage('connections');
+    showToast('Mihomo закрыл соединение. Если оно появится снова, клиент открыл его повторно.', 'success');
   } catch (error) {
     connectionsError = error instanceof Error ? error.message : 'Не удалось закрыть соединение';
     connectionsLoading = false;
@@ -884,6 +885,7 @@ async function closeAllConnectionsFromUi(): Promise<void> {
   try {
     await closeAllMihomoConnections(mihomoController?.signal);
     await loadMihomoPage('connections');
+    showToast('Mihomo закрыл активные соединения. Клиенты могут открыть новые.', 'success');
   } catch (error) {
     connectionsError = error instanceof Error ? error.message : 'Не удалось закрыть соединения';
     connectionsLoading = false;

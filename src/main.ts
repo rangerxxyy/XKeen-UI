@@ -20,6 +20,7 @@ import { bindDialogMotion, closeDialogWithMotion } from './dialog-motion';
 import { lifecycleFeedback } from './service-feedback';
 import { readUiPreferences, validPingUrl, writeUiPreferences, type UiPreferences } from './preferences';
 import { formatJournalTimestamp, getJournalViewState, stripLogSourceLabel } from './journal-view-state';
+import { getJournalScrollTop } from './journal-scroll';
 import { SETTINGS_TABS, type SettingsTabId } from './settings-tabs';
 import { bindSelectorSortControl, renderSelectorSortControl } from './selector-sort-control';
 import { bindPingUrlControl, renderPingUrlControl } from './ping-url-control';
@@ -74,8 +75,8 @@ let xkeenControlBusy = false;
 let configApplyBusy = false;
 let xkeenControlAction: 'start' | 'stop' | 'restart' | null = null;
 const logFiles = [
-  { id: 'xray-access', label: 'Access Log' },
-  { id: 'xkeen-ui', label: 'Error Log' },
+  { id: 'xray-access', label: 'Журнал доступа Xray' },
+  { id: 'xkeen-ui', label: 'Журнал ошибок XKeen' },
 ];
 let selectedLog = 'xkeen-ui';
 let logData: SystemLog | null = null;
@@ -168,10 +169,15 @@ function renderConfigFileButtons(): string {
     : ids.includes(savedFile ?? '') && savedFile !== 'xray_json' && savedFile !== 'xray_routing' && savedFile !== 'xray_jsonc'
       ? savedFile : defaultFile;
   const labels: Record<string, string> = { config: 'config', xray_json: 'config', ip_exclude: 'ip_exclude', port_exclude: 'port_exclude', port_proxying: 'port_proxying', xkeen: 'xkeen', xray_routing: 'routing' };
+  const descriptions: Record<string, string> = {
+    config: 'Основной конфиг Mihomo', xray_json: 'Основной конфиг Xray', xray_routing: 'Правила маршрутизации Xray',
+    ip_exclude: 'IP-адреса и подсети вне обработки XKeen', port_exclude: 'Порты, исключённые из обработки XKeen',
+    port_proxying: 'Порты, направляемые через прокси', xkeen: 'Параметры запуска и маршрутизации XKeen',
+  };
   return `<div class="config-file-nav" aria-label="Файлы конфигурации">${ids.map((id) => {
     const fileId = id === 'config' && xray ? 'xray_json' : id;
     const selected = fileId === activeFile;
-    return `<button class="config-file-tab ${selected ? 'selected' : ''}" data-config-file="${fileId}" type="button" aria-pressed="${selected}">${labels[id] ?? id}</button>`;
+    return `<button class="config-file-tab ${selected ? 'selected' : ''}" data-config-file="${fileId}" type="button" title="${descriptions[fileId] ?? descriptions[id] ?? id}" aria-label="${labels[id] ?? id}: ${descriptions[fileId] ?? descriptions[id] ?? id}" aria-pressed="${selected}">${labels[id] ?? id}</button>`;
   }).join('')}</div>`;
 }
 
@@ -190,7 +196,7 @@ function renderComingSoon(page: Page): string {
 function renderConfiguration(): string {
   return `<section class="editor-workspace config-layout" aria-label="Редактор конфигурации">
     <div class="config-editor-main">
-      <strong id="editor-filename" class="sr-only">config.yaml</strong><span id="editor-language" class="sr-only">YAML · Mihomo</span><span id="editor-file-hint" class="sr-only">Локальный черновик</span>
+      <div class="config-file-context"><div><strong id="editor-filename">config.yaml</strong><span id="editor-language">YAML · Mihomo</span></div><span id="editor-file-hint">Локальный черновик</span></div>
       <div class="code-editor-shell"><div class="code-editor" id="yaml-editor" aria-label="Текст конфигурации"></div></div>
       <div class="editor-statusbar"><span id="yaml-validation" class="editor-validation" aria-live="polite">Проверка конфигурации…</span><div class="editor-actions"><button class="editor-button" id="config-save-active" type="button" data-router-file disabled title="Сохранить файл на роутере без применения">Сохранить</button><button class="editor-button editor-button-primary" id="config-apply-active" type="button" data-router-file disabled title="Проверить, сохранить и перезапустить активное ядро">Применить</button><details class="editor-utilities"><summary class="editor-button"><span class="utilities-trigger-icon" aria-hidden="true">•••</span><span>Утилиты</span><span class="utilities-chevron" aria-hidden="true"></span></summary><div class="editor-utilities-menu" role="menu" aria-label="Утилиты конфигурации"><button type="button" role="menuitem" id="yaml-add-proxy" data-mihomo-only><span class="utility-icon" aria-hidden="true">↗</span><span>Добавить прокси</span></button><button type="button" role="menuitem" id="yaml-template" data-structured-only><span class="utility-icon" aria-hidden="true">▤</span><span>Шаблон конфигурации</span></button><button type="button" role="menuitem" id="yaml-validate" data-structured-only><span class="utility-icon" aria-hidden="true">✓</span><span>Проверить конфигурацию</span></button><button type="button" role="menuitem" id="yaml-format" data-structured-only><span class="utility-icon" aria-hidden="true">⌘</span><span>Форматировать</span></button><button type="button" role="menuitem" id="yaml-download"><span class="utility-icon" aria-hidden="true">↓</span><span>Скачать черновик</span></button></div></details></div></div>
     </div>
@@ -198,7 +204,16 @@ function renderConfiguration(): string {
 }
 
 function renderJournal(): string {
-  return `<section class="journal-panel ${logExpanded ? 'is-expanded' : ''}" aria-label="Журнал событий"><header class="journal-heading"><h2>Журнал</h2><div class="journal-tools"><label class="journal-filter"><span aria-hidden="true">⌕</span><input id="journal-filter" type="search" placeholder="Фильтр" aria-label="Фильтр журнала" value="${escapeHtml(logFilter)}"></label><select id="journal-file" aria-label="Файл журнала">${logFiles.map((file) => `<option value="${file.id}" ${selectedLog === file.id ? 'selected' : ''}>${file.label}</option>`).join('')}</select><button class="journal-icon-button" id="journal-clear" type="button" title="Очистить отображение" aria-label="Очистить отображение">♲</button><button class="journal-icon-button" id="journal-expand" type="button" title="Развернуть журнал" aria-label="Развернуть журнал" aria-pressed="${logExpanded}">${logExpanded ? '⤢' : '⛶'}</button></div></header><div class="journal-body" id="journal-body" aria-live="polite"></div></section>`;
+  return `<section class="journal-panel ${logExpanded ? 'is-expanded' : ''}" aria-label="Журнал событий"><header class="journal-heading"><div class="journal-title"><h2>Журнал</h2><span id="journal-live" class="journal-live" ${xkeenControlBusy || configApplyBusy ? '' : 'hidden'}><i aria-hidden="true"></i> XKeen запускается</span></div><div class="journal-tools"><label class="journal-filter"><span aria-hidden="true">⌕</span><input id="journal-filter" type="search" placeholder="Фильтр" aria-label="Фильтр журнала" value="${escapeHtml(logFilter)}"></label><select id="journal-file" aria-label="Файл журнала">${logFiles.map((file) => `<option value="${file.id}" ${selectedLog === file.id ? 'selected' : ''}>${file.label}</option>`).join('')}</select><button class="journal-icon-button" id="journal-clear" type="button" title="Очистить отображение" aria-label="Очистить отображение">♲</button><button class="journal-icon-button" id="journal-expand" type="button" title="Развернуть журнал" aria-label="Развернуть журнал" aria-pressed="${logExpanded}">${logExpanded ? '⤢' : '⛶'}</button></div></header><div class="journal-body" id="journal-body" aria-live="polite"></div></section>`;
+}
+
+function setJournalRealtime(active: boolean): void {
+  const indicator = document.querySelector<HTMLElement>('#journal-live');
+  if (indicator) {
+    indicator.hidden = !active;
+    const label = configApplyBusy ? 'Перезапуск ядра' : xkeenControlAction === 'stop' ? 'Остановка XKeen' : xkeenControlAction === 'restart' ? 'Перезапуск XKeen' : 'Запуск XKeen';
+    indicator.lastChild!.textContent = ` ${label}`;
+  }
 }
 
 function drawJournal(): void {
@@ -219,6 +234,12 @@ function drawJournal(): void {
   }
   const filter = logFilter.trim().toLocaleLowerCase();
   const lines = (logData?.lines ?? []).filter((line) => !filter || line.toLocaleLowerCase().includes(filter));
+  const previousList = body.querySelector<HTMLElement>('.journal-lines');
+  const previousScroll = previousList ? {
+    scrollTop: previousList.scrollTop,
+    clientHeight: previousList.clientHeight,
+    scrollHeight: previousList.scrollHeight,
+  } : null;
   const list = document.createElement('div');
   list.className = 'journal-lines';
   for (const [index, line] of lines.entries()) {
@@ -259,7 +280,10 @@ function drawJournal(): void {
     file.textContent = logData?.file ?? 'Ожидается ответ backend';
     empty.append(icon, title, file);
     body.append(empty);
-  } else body.append(list);
+  } else {
+    body.append(list);
+    list.scrollTop = getJournalScrollTop(previousScroll, list.scrollHeight, list.clientHeight);
+  }
 }
 
 async function loadSystemLog(): Promise<void> {
@@ -330,6 +354,12 @@ async function mountConfigurationEditor(): Promise<void> {
 function render(): void {
   if (!app) return;
   const scrollTop = app.querySelector<HTMLElement>('.workspace-scroll')?.scrollTop ?? 0;
+  const nestedScrollPositions = new Map<string, number>();
+  for (const selector of ['.selector-list', '.connection-table-wrap', '.journal-lines']) {
+    app.querySelectorAll<HTMLElement>(selector).forEach((element, index) => {
+      nestedScrollPositions.set(`${selector}:${index}`, element.scrollTop);
+    });
+  }
   if (activePage !== 'configuration') yamlEditorModule?.unmountYamlEditor();
   const pageContent = activePage === 'selectors' ? renderSelectors(visibleSelectors(), selectorsLoading, selectorsError)
     : activePage === 'connections' ? renderConnections(connections, connectionsLoading, connectionsError, uiPreferences.showConnectionSource, connectionSourceNames)
@@ -341,6 +371,12 @@ function render(): void {
   app.innerHTML = `<div class="app-shell">${renderHeader()}${renderNavigation()}<div class="workspace-scroll"><main class="main-content${animatePageEntry ? ' page-enter' : ''}">${pageContent}</main>${renderJournal()}</div><div class="toast-region" aria-live="polite"></div></div>`;
   animatePageEntry = false;
   app.querySelector<HTMLElement>('.workspace-scroll')!.scrollTop = scrollTop;
+  for (const selector of ['.selector-list', '.connection-table-wrap', '.journal-lines']) {
+    app.querySelectorAll<HTMLElement>(selector).forEach((element, index) => {
+      const previous = nestedScrollPositions.get(`${selector}:${index}`);
+      if (previous !== undefined) element.scrollTop = previous;
+    });
+  }
   bindJournal();
   document.querySelectorAll<HTMLButtonElement>('[data-page]').forEach((button) => {
     button.addEventListener('click', () => {
@@ -401,7 +437,11 @@ async function runXkeenAction(action: string | undefined): Promise<void> {
     'Трафик через XKeen остановится. Если DNS передан Mihomo, остановка будет заблокирована.', 'Остановить'))) return;
   xkeenControlBusy = true;
   xkeenControlAction = action;
+  selectedLog = 'xkeen-ui';
+  logCleared = false;
   render();
+  setJournalRealtime(true);
+  void loadSystemLog();
   let actionError: string | undefined;
   try {
     xkeenStatus = await controlXkeen(action);
@@ -413,6 +453,7 @@ async function runXkeenAction(action: string | undefined): Promise<void> {
   } finally {
     xkeenControlBusy = false;
     xkeenControlAction = null;
+    setJournalRealtime(false);
     const feedback = lifecycleFeedback(action, actionError);
     selectedLog = feedback.logFile;
     logController?.abort();
@@ -1311,6 +1352,16 @@ render();
 window.addEventListener(CONFIG_APPLY_EVENT, (event) => {
   const detail = (event as CustomEvent<ConfigApplyEventDetail>).detail;
   configApplyBusy = detail.phase === 'start';
+  if (detail.phase === 'start') {
+    selectedLog = 'xkeen-ui';
+    logCleared = false;
+    const logSelect = document.querySelector<HTMLSelectElement>('#journal-file');
+    if (logSelect) logSelect.value = selectedLog;
+    void loadSystemLog();
+  } else {
+    void loadSystemLog();
+  }
+  setJournalRealtime(detail.phase === 'start');
   updateChrome();
   if (detail.phase === 'finish') {
     void refresh();
@@ -1343,4 +1394,14 @@ window.addEventListener('beforeunload', () => {
   logController?.abort();
   if (logRefreshTimer !== undefined) window.clearInterval(logRefreshTimer);
 });
-logRefreshTimer = window.setInterval(() => { if (!document.hidden && !logExpanded) void loadSystemLog(); }, 15_000);
+let lastLogRefreshAt = 0;
+logRefreshTimer = window.setInterval(() => {
+  if (document.hidden) return;
+  const restartInProgress = xkeenControlBusy || configApplyBusy;
+  if (!restartInProgress && logExpanded) return;
+  const now = Date.now();
+  if (restartInProgress || now - lastLogRefreshAt >= 15_000) {
+    lastLogRefreshAt = now;
+    void loadSystemLog();
+  }
+}, 1_500);

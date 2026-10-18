@@ -86,14 +86,35 @@ export async function chooseReferenceTemplate(core: ReferenceCore): Promise<{ na
   const title = document.createElement('h2');
   title.textContent = `Шаблоны ${core === 'mihomo' ? 'Mihomo' : 'Xray'}`;
   const description = document.createElement('p');
-  description.textContent = 'Шаблоны загружаются из закреплённой ревизии zxc-rv/assets. При импорте текущий локальный черновик заменится.';
-  const select = document.createElement('select');
-  select.className = 'template-select';
+  description.textContent = 'Выберите готовую схему маршрутизации. Загрузка заменит текущий черновик в редакторе.';
+  const options = document.createElement('div');
+  options.className = 'template-options';
+  options.setAttribute('role', 'radiogroup');
+  options.setAttribute('aria-label', `Шаблоны ${core === 'mihomo' ? 'Mihomo' : 'Xray'}`);
+  let selectedIndex = 0;
   for (const [index, template] of templates.entries()) {
-    const option = document.createElement('option');
-    option.value = String(index);
-    option.textContent = template.name;
-    select.append(option);
+    const label = document.createElement('label');
+    label.className = `template-option${index === selectedIndex ? ' is-selected' : ''}`;
+    const radio = document.createElement('input');
+    radio.type = 'radio';
+    radio.name = 'config-template';
+    radio.value = String(index);
+    radio.checked = index === selectedIndex;
+    radio.addEventListener('change', () => {
+      selectedIndex = index;
+      options.querySelectorAll('.template-option').forEach((item, itemIndex) => item.classList.toggle('is-selected', itemIndex === index));
+    });
+    const copy = document.createElement('span');
+    copy.className = 'template-option-copy';
+    const name = document.createElement('strong');
+    name.textContent = template.name;
+    const summary = document.createElement('small');
+    summary.textContent = /proxy.*except.*ru|всё.*proxy|все.*proxy|кроме ru/i.test(template.name)
+      ? 'Направляет трафик через прокси, сохраняя прямой маршрут для RU.'
+      : 'Отправляет через прокси домены из правил блокировок, остальное — напрямую.';
+    copy.append(name, summary);
+    label.append(radio, copy);
+    options.append(label);
   }
   const status = document.createElement('p');
   status.className = 'template-status';
@@ -110,7 +131,7 @@ export async function chooseReferenceTemplate(core: ReferenceCore): Promise<{ na
   importButton.className = 'editor-button editor-button-primary';
   importButton.textContent = 'Загрузить в редактор';
   importButton.addEventListener('click', async () => {
-    const template = templates[Number(select.value)];
+    const template = templates[selectedIndex];
     if (!template) return;
     importButton.disabled = true;
     status.textContent = 'Загружаем…';
@@ -132,7 +153,7 @@ export async function chooseReferenceTemplate(core: ReferenceCore): Promise<{ na
     }
   });
   actions.append(cancel, importButton);
-  form.append(title, description, select, status, actions);
+  form.append(title, description, options, status, actions);
   dialog.append(form);
   document.body.append(dialog);
   dialog.addEventListener('close', () => dialog.remove(), { once: true });

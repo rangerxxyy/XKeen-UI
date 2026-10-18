@@ -197,7 +197,10 @@ impl MihomoClient {
             .and_then(Value::as_object)
             .ok_or(MihomoError::InvalidSelection)?;
         let group_data = proxies.get(group).ok_or(MihomoError::InvalidSelection)?;
-        if group_data.get("type").and_then(Value::as_str) != Some("Selector") {
+        if !matches!(
+            group_data.get("type").and_then(Value::as_str),
+            Some("Selector" | "URLTest" | "Fallback" | "LoadBalance")
+        ) {
             return Err(MihomoError::InvalidSelection);
         }
         // Subscription nodes can be absent from /proxies while still being
@@ -233,7 +236,6 @@ impl MihomoClient {
                                 | "URLTest"
                                 | "LoadBalance"
                                 | "Fallback"
-                                | "Direct"
                                 | "Reject"
                                 | "Compatible"
                         )
@@ -293,7 +295,10 @@ impl MihomoClient {
             .and_then(Value::as_object)
             .ok_or(MihomoError::InvalidSelection)?;
         let group_data = proxies.get(group).ok_or(MihomoError::InvalidSelection)?;
-        if group_data.get("type").and_then(Value::as_str) != Some("Selector")
+        if !matches!(
+            group_data.get("type").and_then(Value::as_str),
+            Some("Selector" | "URLTest" | "Fallback" | "LoadBalance")
+        )
             || !group_data
                 .get("all")
                 .and_then(Value::as_array)
@@ -328,7 +333,6 @@ impl MihomoClient {
                         | "URLTest"
                         | "LoadBalance"
                         | "Fallback"
-                        | "Direct"
                         | "Reject"
                         | "Compatible"
                 )
@@ -736,18 +740,18 @@ mod tests {
             (StatusCode::OK, r#"{"providers":{"subscription":{"proxies":[{"name":"Sweden","type":"Hysteria2"}]}}}"#.into()),
             (StatusCode::OK, r#"{"delay":42}"#.into()),
             (StatusCode::OK, r#"{"delay":73}"#.into()),
+            (StatusCode::OK, r#"{"delay":8}"#.into()),
         ]).await;
         let result = client.ping_group("Main").await.unwrap();
-        assert_eq!(result["results"].as_array().unwrap().len(), 2);
+        assert_eq!(result["results"].as_array().unwrap().len(), 3);
         let entries = result["results"].as_array().unwrap();
         assert!(entries.iter().any(|item| item["name"] == "Finland"));
         assert!(entries.iter().any(|item| item["name"] == "Sweden"));
-        assert!(entries
-            .iter()
-            .all(|item| item["delay"] == 42 || item["delay"] == 73));
+        assert!(entries.iter().any(|item| item["name"] == "DIRECT" && item["delay"] == 8));
         assert_eq!(next_request(&mut requests).await.1, "/proxies");
         assert_eq!(next_request(&mut requests).await.1, "/providers/proxies");
         let paths = [
+            next_request(&mut requests).await.1,
             next_request(&mut requests).await.1,
             next_request(&mut requests).await.1,
         ];
@@ -757,6 +761,9 @@ mod tests {
         assert!(paths
             .iter()
             .any(|path| path.starts_with("/proxies/Sweden/delay?")));
+        assert!(paths
+            .iter()
+            .any(|path| path.starts_with("/proxies/DIRECT/delay?")));
         server.abort();
     }
 
@@ -788,6 +795,20 @@ mod tests {
             Err(MihomoError::InvalidSelection)
         ));
         assert_eq!(next_request(&mut requests).await.1, "/proxies");
+        server.abort();
+    }
+
+    #[tokio::test]
+    async fn ping_proxy_in_auto_policy_groups_and_direct_nodes() {
+        let (client, mut requests, server) = mock_controller(vec![
+            (StatusCode::OK, r#"{"proxies":{"Fastest":{"type":"URLTest","all":["DIRECT","Finland"]},"DIRECT":{"type":"Direct"},"Finland":{"type":"VLESS"}}}"#.into()),
+            (StatusCode::OK, r#"{"delay":8}"#.into()),
+        ]).await;
+        let result = client.ping_proxy_in_group("Fastest", "DIRECT").await.unwrap();
+        assert_eq!(result["results"][0]["name"], "DIRECT");
+        assert_eq!(result["results"][0]["delay"], 8);
+        assert_eq!(next_request(&mut requests).await.1, "/proxies");
+        assert!(next_request(&mut requests).await.1.starts_with("/proxies/DIRECT/delay?"));
         server.abort();
     }
 

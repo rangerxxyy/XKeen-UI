@@ -321,15 +321,22 @@ describe('getMihomoSelectors', () => {
         ] } } }
         : { proxies: {
           Main: { type: 'Selector', now: 'Sweden', all: ['Finland', 'Sweden', 'Stale entry'] },
+          Fastest: { type: 'URLTest', now: 'DIRECT', all: ['DIRECT', 'Finland'] },
+          DIRECT: { type: 'Direct', alive: true, history: [{ delay: 8 }] },
           Finland: { type: 'VLESS', alive: true, history: [{ delay: 37 }] },
         } };
       return new Response(JSON.stringify(body), { headers: { 'Content-Type': 'application/json' } });
     });
 
     await expect(getMihomoSelectors()).resolves.toEqual([{
-      name: 'Main', icon: null, current: 'Sweden', options: [
+      name: 'Main', type: 'Selector', icon: null, current: 'Sweden', options: [
         { name: 'Finland', type: 'VLESS', icon: null, alive: true, delay: 37 },
         { name: 'Sweden', type: 'VLESS', icon: 'flag-se', alive: true, delay: 73 },
+      ],
+    }, {
+      name: 'Fastest', type: 'URLTest', icon: null, current: 'DIRECT', options: [
+        { name: 'DIRECT', type: 'Direct', icon: null, alive: true, delay: 8 },
+        { name: 'Finland', type: 'VLESS', icon: null, alive: true, delay: 37 },
       ],
     }]);
   });

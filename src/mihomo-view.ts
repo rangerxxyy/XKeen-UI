@@ -84,6 +84,8 @@ export function renderPingStatusIcon(alive: boolean | null): string {
 }
 
 function proxyCard(group: MihomoSelector): string {
+  const groupType = group.type ?? 'Selector';
+  const autoManaged = groupType !== 'Selector';
   const options = group.options.map((option) => {
     const selected = option.name === group.current;
     const displayName = option.name;
@@ -96,14 +98,14 @@ function proxyCard(group: MihomoSelector): string {
     ].filter(Boolean).join('');
     const icon = option.icon ? `<img class="proxy-option-icon" src="${escapeHtml(option.icon)}" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.hidden=true">` : '';
     return `<div class="proxy-option ${selected ? 'is-selected' : ''}">
-      <button class="proxy-option-select" type="button" data-proxy-group="${escapeHtml(group.name)}" data-proxy-name="${escapeHtml(option.name)}" ${selected ? 'aria-current="true"' : ''} aria-label="${selected ? 'Текущий узел' : 'Выбрать узел'}: ${escapeHtml(displayName)}">
+      <button class="proxy-option-select" type="button" data-proxy-group="${escapeHtml(group.name)}" data-proxy-name="${escapeHtml(option.name)}" ${selected ? 'aria-current="true"' : ''} ${autoManaged ? 'disabled title="Узел выбирается ядром автоматически"' : ''} aria-label="${selected ? 'Текущий узел' : autoManaged ? 'Узел выбирается автоматически' : 'Выбрать узел'}: ${escapeHtml(displayName)}">
         <strong class="proxy-option-name" title="${escapeHtml(displayName)}">${icon}${renderProxyName(displayName)}</strong>
       </button><div class="proxy-option-bottom"><span class="proxy-transport-badges">${badges}</span><button class="proxy-health proxy-ping-value ${option.alive === true ? 'is-alive' : option.alive === false ? 'is-dead' : ''}" type="button" data-ping-proxy="${escapeHtml(option.name)}" data-ping-group="${escapeHtml(group.name)}" title="${state}. Нажмите, чтобы проверить ping" aria-label="${pingLabel}. Нажмите, чтобы повторить ping узла ${escapeHtml(option.name)}">${renderPingStatusIcon(option.alive)}<span>${delay}</span></button></div>
     </div>`;
   }).join('');
   const groupIcon = group.icon ? `<img class="selector-group-icon" src="${escapeHtml(group.icon)}" alt="" referrerpolicy="no-referrer" onerror="this.hidden=true">` : '';
   return `<section class="selector-card"><header class="selector-card-heading"><div><h2>${groupIcon}${escapeHtml(group.name)}</h2></div><div class="selector-heading-actions"><button class="ping-group" type="button" data-ping-group="${escapeHtml(group.name)}" aria-label="Пинг всех серверов группы ${escapeHtml(group.name)}" title="Пинг всех серверов группы">ϟ</button></div></header>
-    <div class="selector-card-meta"><span>Selector (${group.options.length})</span><span class="selector-meta-line">›</span><span>${group.current ? renderProxyName(group.current) : '—'}</span></div>
+    <div class="selector-card-meta"><span>${escapeHtml(groupType)} · ${group.options.length}</span><span class="selector-meta-line">›</span><span>${group.current ? renderProxyName(group.current) : autoManaged ? 'Автовыбор ядра' : '—'}</span></div>
     <div class="proxy-options">${options || '<div class="mihomo-inline-empty">В этой группе нет узлов.</div>'}</div>
   </section>`;
 }
@@ -111,7 +113,7 @@ function proxyCard(group: MihomoSelector): string {
 export function renderSelectors(groups: MihomoSelector[], loading: boolean, error: string | null): string {
   const visibleGroups = groups.filter((group) => group.name !== 'GLOBAL');
   const state = loadState(loading, error, 'группы');
-  return `${state || (visibleGroups.length === 0 ? '<section class="mihomo-empty"><span class="mihomo-error-mark">◇</span><strong>Группы Selector не найдены</strong><p>API Mihomo ответил, но не вернул выбираемых групп.</p></section>' : `<div class="selector-list">${visibleGroups.map(proxyCard).join('')}</div>`)}
+  return `${state || (visibleGroups.length === 0 ? '<section class="mihomo-empty"><span class="mihomo-error-mark">◇</span><strong>Группы прокси не найдены</strong><p>API Mihomo ответил, но не вернул группы для выбора или автоматической проверки.</p></section>' : `<div class="selector-list">${visibleGroups.map(proxyCard).join('')}</div>`)}
   `;
 }
 

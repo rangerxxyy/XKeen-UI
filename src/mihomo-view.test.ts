@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { applyPingResults, collectConnectionProxyIcons, orderSelectorsByConfig, renderConnections, renderPingStatusIcon, renderSelectors } from './mihomo-view';
+import { applyPingResults, collectConnectionProxyIcons, orderSelectorsByConfig, renderConnections, renderPingStatusIcon, renderSelectorDestination, renderSelectors } from './mihomo-view';
 import type { MihomoConnections, MihomoSelector } from './api';
 
 describe('applyPingResults', () => {
@@ -66,11 +66,12 @@ describe('renderSelectors', () => {
     expect(html).toContain('data-selector-destination="Автовыбор Mihomo"');
   });
 
-  it('leaves successful ping as a number and uses lightning before testing', () => {
+  it('keeps a crisp ping status icon for healthy, unknown, and unavailable nodes', () => {
     const html = renderPingStatusIcon(true);
-    expect(html).toBe('');
+    expect(html).toContain('class="ping-status-icon is-alive"');
+    expect(html).toContain('M4.5 8.5');
     expect(renderPingStatusIcon(null)).toContain('M9 1');
-    expect(html).not.toContain('M2 5.4');
+    expect(renderPingStatusIcon(false)).toContain('class="ping-status-icon is-dead"');
   });
 
   it('renders ISO country prefixes with bundled SVG flag icons in node names and selected routes', () => {
@@ -127,7 +128,7 @@ describe('renderSelectors', () => {
     ] }];
     const html = renderSelectors(groups, false, null);
     expect(html).toContain('proxy-health proxy-ping-value is-dead');
-    expect(html).toContain('class="ping-status-icon"');
+    expect(html).toContain('class="ping-status-icon is-dead"');
     expect(html).toContain('Узел не отвечает. Нажмите, чтобы проверить ping');
     expect(renderPingStatusIcon(false)).toContain('M5 2.5h6l2 2v7l-5 2-5-2v-7z');
     expect(renderPingStatusIcon(false)).toContain('m6.3 5.8 3.4 3.4m0-3.4L6.3 9.2');
@@ -141,6 +142,18 @@ describe('renderSelectors', () => {
     const html = renderSelectors(groups, false, null);
     expect(html).toContain('proxy-protocol-badge">vless</span><span class="proxy-transport-badge is-xudp">xudp</span>');
     expect(html).toContain('proxy-protocol-badge">hysteria2</span><span class="proxy-transport-badge is-udp">udp</span>');
+  });
+});
+
+describe('renderSelectorDestination', () => {
+  it('updates the displayed route when a selector target changes', () => {
+    const groups: MihomoSelector[] = [
+      { name: 'Main', type: 'Selector', icon: null, current: 'Finland', options: [{ name: 'Finland', type: 'VLESS', icon: null, alive: true, delay: 20 }] },
+      { name: 'YouTube', type: 'Selector', icon: null, current: 'Main', options: [{ name: 'Main', type: 'Selector', icon: null, alive: true, delay: 0 }] },
+    ];
+    expect(renderSelectorDestination(groups[1]!, groups)).toContain('Finland');
+    const switched = [{ ...groups[0]!, current: 'Sweden' }, groups[1]!];
+    expect(renderSelectorDestination(switched[1]!, switched)).toContain('Sweden');
   });
 });
 

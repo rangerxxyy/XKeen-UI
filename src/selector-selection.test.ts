@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import type { MihomoSelector } from './api';
-import { selectProxyOptimistically } from './selector-selection';
+import { getAffectedConnectionIds, queueSelectorWrite, restoreProxySelection, selectProxyOptimistically } from './selector-selection';
 
 const groups: MihomoSelector[] = [
   { name: 'Main', current: 'Sweden', icon: null, options: [
@@ -24,5 +24,38 @@ describe('optimistic selector state', () => {
   it('keeps the previous state when a group or proxy is unknown', () => {
     expect(selectProxyOptimistically(groups, 'Missing', 'Finland')).toBe(groups);
     expect(selectProxyOptimistically(groups, 'Main', 'Missing')).toBe(groups);
+  });
+
+  it('restores a server-confirmed selection, including no selection', () => {
+    expect(restoreProxySelection(selectProxyOptimistically(groups, 'Main', 'Finland'), 'Main', 'Sweden')[0]?.current).toBe('Sweden');
+    expect(restoreProxySelection(groups, 'Main', null)[0]?.current).toBeNull();
+  });
+});
+
+describe('connections affected by a selector switch', () => {
+  it('returns only active connection ids whose route includes the switched group', () => {
+    expect(getAffectedConnectionIds([
+      { id: 'via-main', chains: ['Main', 'Finland'] },
+      { id: 'via-main', chains: ['Main'] },
+      { id: 'via-other', chains: ['Other', 'Sweden'] },
+      { id: 'direct', chains: [] },
+    ], 'Main')).toEqual(['via-main']);
+  });
+});
+
+describe('selector write queue', () => {
+  it('does not hold the next selector write while post-selection cleanup is pending', async () => {
+    const queues = new Map<string, Promise<void>>();
+    const writes: string[] = [];
+    let finishCleanup!: () => void;
+    const cleanup = new Promise<void>((resolve) => { finishCleanup = resolve; });
+
+    const first = queueSelectorWrite(queues, 'Main', async () => { writes.push('Finland'); }, () => cleanup);
+    await first;
+    const second = queueSelectorWrite(queues, 'Main', async () => { writes.push('Sweden'); }, () => undefined);
+    await second;
+
+    expect(writes).toEqual(['Finland', 'Sweden']);
+    finishCleanup();
   });
 });

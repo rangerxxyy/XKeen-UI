@@ -10,7 +10,7 @@ import { CONFIG_APPLY_EVENT, type ConfigApplyEventDetail } from './config-action
 import { createSettingsLoader, type SettingsLoader } from './settings-load';
 import { renderConnectionDetails } from './connection-details';
 import { applyActiveMihomoConfig, closeAllMihomoConnections, closeMihomoConnection, controlXkeen, getActiveMihomoConfig, getCoreSources, getHealth, getMihomoConnections, getMihomoSelectors, getMihomoVersion, getRouterDeviceList, getRouterDnsStatus, getStatus, getSystemLog, getUpdateProxies, getXkeenStatus, logUiError, pingMihomoGroup, pingMihomoProxy, queryMihomoDns, requestAppUpdate, saveCoreSources, saveUpdateProxies, selectMihomoProxy, setRouterDnsManagement, type ApiState, type CoreSources, type MihomoConnections, type MihomoDnsResult, type MihomoSelector, type RouterDnsStatus, type SystemLog, type XkeenStatus } from './api';
-import { applyPingResults, collectConnectionProxyIcons, orderSelectorsByConfig, renderConnections, renderPingStatusIcon, renderSelectors } from './mihomo-view';
+import { applyPingResults, collectConnectionProxyIcons, orderSelectorsByConfig, renderConnections, renderPingStatusIcon, renderSelectorDestination, renderSelectors } from './mihomo-view';
 import { patchDnsManagement, patchMihomoDnsSettings, readMihomoDnsSettings, renderDns, type MihomoDnsSettings } from './dns-view';
 import { bindDnsTextareaGrowth } from './dns-textarea-growth';
 import { fetchConfiguredCoreReleases, isStableCompatibleRelease, openCoreReleaseDialog } from './core-releases';
@@ -23,7 +23,7 @@ import { readUiPreferences, validPingUrl, writeUiPreferences, type UiPreferences
 import { deduplicateRepeatedUiErrors, formatJournalMessage, formatJournalTimestamp, getJournalViewState, renderJournalLoadingSkeleton, splitJournalLevel, stripLogSourceLabel } from './journal-view-state';
 import { getJournalScrollTop, getNewJournalLines, hasJournalLinesChanged } from './journal-scroll';
 import { createAsyncStatusCache } from './dns-status-cache';
-import { selectProxyOptimistically } from './selector-selection';
+import { getAffectedConnectionIds, queueSelectorWrite, restoreProxySelection, selectProxyOptimistically } from './selector-selection';
 import { hideClearedJournalLines, rememberClearedJournal } from './journal-clear';
 import { journalExpandIcon, journalExpandLabel } from './journal-ui';
 import { renderAppReleaseActions, renderAppUpdateNotice, renderAppVersionChip } from './app-release-ui';
@@ -35,6 +35,7 @@ import { renderResourceMetrics } from './resource-metrics';
 import { shouldReportUiError } from './ui-error-dedupe';
 import { sortMihomoConnections, type ConnectionSort, type ConnectionSortKey } from './connection-sort';
 import { MAIN_NAVIGATION_PAGES, renderNavigationView, renderWorkspaceFrame } from './navigation-view';
+import { renderEditorUtilitiesMenu } from './editor-utilities';
 
 type Page = 'selectors' | 'connections' | 'configuration' | 'dns';
 
@@ -54,7 +55,9 @@ let mihomoController: AbortController | undefined;
 let selectors: MihomoSelector[] = [];
 let selectorsLoading = true;
 let selectorsError: string | null = null;
-let selectorSelectionBusy = false;
+const selectorSelectionQueues = new Map<string, Promise<void>>();
+const selectorSelectionVersions = new Map<string, number>();
+const confirmedSelectorSelections = new Map<string, string | null>();
 let connections: MihomoConnections | null = null;
 let connectionSourceNames: Record<string, string> = {};
 let connectionSort: ConnectionSort = { key: 'start', direction: 'descending' };
@@ -186,11 +189,13 @@ function renderConfigFileButtons(): string {
     ip_exclude: 'IP-адреса и подсети вне обработки XKeen', port_exclude: 'Порты, исключённые из обработки XKeen',
     port_proxying: 'Порты, направляемые через прокси', xkeen: 'Параметры запуска и маршрутизации XKeen',
   };
-  return `<div class="config-file-nav" aria-label="Файлы конфигурации">${ids.map((id) => {
+  const buttons = ids.map((id) => {
     const fileId = id;
     const selected = fileId === activeFile;
     return `<button class="config-file-tab ${selected ? 'selected' : ''}" data-config-file="${fileId}" type="button" title="${descriptions[fileId] ?? descriptions[id] ?? id}" aria-label="${labels[id] ?? id}: ${descriptions[fileId] ?? descriptions[id] ?? id}" aria-pressed="${selected}">${labels[id] ?? id}</button>`;
-  }).join('')}</div>`;
+  });
+  const primaryConfig = xray ? '' : buttons.shift() ?? '';
+  return `${primaryConfig ? `<div class="config-file-primary" aria-label="Основной конфиг">${primaryConfig.replace('config-file-tab ', 'config-file-tab config-file-primary-tab ')}</div>` : ''}<div class="config-file-nav" aria-label="Файлы конфигурации">${buttons.join('')}</div>`;
 }
 
 function renderComingSoon(page: Page): string {
@@ -209,7 +214,7 @@ function renderConfiguration(): string {
   return `<section class="editor-workspace config-layout" aria-label="Редактор конфигурации">
     <div class="config-editor-main">
       <div class="code-editor-shell"><div class="code-editor" id="yaml-editor" aria-label="Текст конфигурации"></div></div>
-        <div class="editor-statusbar"><span id="yaml-validation" class="editor-validation" aria-live="polite">Проверка конфигурации…</span><div class="editor-actions"><button class="editor-button editor-button-primary" id="config-apply-active" type="button" data-router-file disabled title="Проверить, сохранить и перезапустить активное ядро">Применить</button><button class="editor-button" id="config-save-active" type="button" data-router-file disabled title="Сохранить файл на роутере без применения">Сохранить</button><button class="editor-button" id="config-format-active" type="button" title="Отформатировать файл">&lt;/&gt; Формат</button><details class="editor-utilities"><summary class="editor-button"><span class="utilities-trigger-icon" aria-hidden="true">•••</span><span>Утилиты</span><span class="utilities-chevron" aria-hidden="true"></span></summary><div class="editor-utilities-menu" role="menu" aria-label="Утилиты конфигурации"><button type="button" role="menuitem" id="yaml-add-proxy" data-mihomo-only><span class="utility-icon" aria-hidden="true">↗</span><span>Добавить прокси</span></button><button type="button" role="menuitem" id="yaml-template" data-structured-only><span class="utility-icon" aria-hidden="true">▤</span><span>Шаблон конфигурации</span></button></div></details></div></div>
+        <div class="editor-statusbar"><span id="yaml-validation" class="editor-validation" aria-live="polite">Проверка конфигурации…</span><div class="editor-actions"><button class="editor-button editor-button-primary" id="config-apply-active" type="button" data-router-file disabled title="Проверить, сохранить и перезапустить активное ядро">Применить</button><button class="editor-button" id="config-save-active" type="button" data-router-file disabled title="Сохранить файл на роутере без применения">Сохранить</button><button class="editor-button" id="config-format-active" type="button" title="Отформатировать файл">&lt;/&gt; Формат</button><details class="editor-utilities"><summary class="editor-button"><span class="utilities-trigger-icon" aria-hidden="true">•••</span><span>Утилиты</span><span class="utilities-chevron" aria-hidden="true"></span></summary>${renderEditorUtilitiesMenu()}</details></div></div>
     </div>
   </section>`;
 }
@@ -1003,7 +1008,6 @@ function refreshConnectionSourceNames(data: MihomoConnections, signal: AbortSign
 }
 
 async function selectProxyFromUi(button: HTMLButtonElement): Promise<void> {
-  if (selectorSelectionBusy) return;
   const group = button.dataset.proxyGroup;
   const name = button.dataset.proxyName;
   if (button.getAttribute('aria-current') === 'true') return;
@@ -1011,20 +1015,68 @@ async function selectProxyFromUi(button: HTMLButtonElement): Promise<void> {
   const previous = selectors;
   const updated = selectProxyOptimistically(previous, group, name);
   if (updated === previous) return;
-  selectorSelectionBusy = true;
+  if (!confirmedSelectorSelections.has(group)) confirmedSelectorSelections.set(group, previous.find((item) => item.name === group)?.current ?? null);
+  const confirmedBeforeRequest = confirmedSelectorSelections.get(group) ?? null;
+  const version = (selectorSelectionVersions.get(group) ?? 0) + 1;
+  selectorSelectionVersions.set(group, version);
   selectors = updated;
   selectorsError = null;
-  render();
-  try {
-    await selectMihomoProxy(group, name);
-  } catch (error) {
-    selectors = previous;
+  updateSelectorSelectionInDom(group, name);
+  const request = queueSelectorWrite(selectorSelectionQueues, group, () => selectMihomoProxy(group, name), () => {
+    confirmedSelectorSelections.set(group, name);
+    if (selectorSelectionVersions.get(group) === version) void closeSelectorConnectionsAfterSwitch(group, version);
+  });
+  void request.catch((error: unknown) => {
+    if (selectorSelectionVersions.get(group) !== version) return;
+    const acceptedPriorSelection = confirmedSelectorSelections.get(group) !== confirmedBeforeRequest;
+    const confirmed = confirmedSelectorSelections.get(group) ?? null;
+    selectors = restoreProxySelection(selectors, group, confirmed);
     selectorsError = error instanceof Error ? error.message : 'Не удалось выбрать узел';
-    showToast(`Не удалось выбрать узел: ${selectorsError}`, 'error');
-  } finally {
-    selectorSelectionBusy = false;
+    updateSelectorSelectionInDom(group, confirmed ?? '');
     if (activePage === 'selectors') render();
+    showToast(`Не удалось выбрать узел: ${selectorsError}`, 'error');
+    if (acceptedPriorSelection) void closeSelectorConnectionsAfterSwitch(group, version);
+  });
+}
+
+async function closeSelectorConnectionsAfterSwitch(group: string, version: number): Promise<void> {
+  try {
+    const activeConnections = await getMihomoConnections();
+    if (selectorSelectionVersions.get(group) !== version) return;
+    const affectedIds = getAffectedConnectionIds(activeConnections.connections, group);
+    await Promise.all(affectedIds.map((id) => closeMihomoConnection(id)));
+    if (selectorSelectionVersions.get(group) !== version) return;
+    if (connections) connections = { ...connections, connections: connections.connections.filter((connection) => !affectedIds.includes(connection.id)) };
+    if (activePage === 'connections' && affectedIds.length > 0) await loadMihomoPage('connections');
+  } catch (error) {
+    if (selectorSelectionVersions.get(group) !== version) return;
+    showToast(error instanceof Error ? `Узел выбран, но активные соединения обновить не удалось: ${error.message}` : 'Узел выбран, но активные соединения не удалось обновить', 'error');
   }
+}
+
+function updateSelectorSelectionInDom(group: string, name: string): void {
+  document.querySelectorAll<HTMLButtonElement>('.proxy-option-select').forEach((option) => {
+    if (option.dataset.proxyGroup !== group) return;
+    const selected = option.dataset.proxyName === name;
+    const card = option.closest<HTMLElement>('.proxy-option');
+    card?.classList.toggle('is-selected', selected);
+    if (selected) option.setAttribute('aria-current', 'true');
+    else option.removeAttribute('aria-current');
+    const displayName = option.querySelector<HTMLElement>('.proxy-option-name')?.textContent?.trim() ?? option.dataset.proxyName ?? '';
+    option.setAttribute('aria-label', `${selected ? 'Текущий узел' : 'Выбрать узел'}: ${displayName}`);
+  });
+  document.querySelectorAll<HTMLElement>('.selector-card[data-selector-card]').forEach((card) => {
+    const selectedGroup = selectors.find((item) => item.name === card.dataset.selectorCard);
+    const destination = card.querySelector<HTMLElement>('[data-selector-destination]');
+    if (!selectedGroup || !destination) return;
+    const html = renderSelectorDestination(selectedGroup, selectors);
+    const template = document.createElement('template');
+    template.innerHTML = html;
+    const text = template.content.textContent ?? '';
+    destination.innerHTML = html;
+    destination.dataset.selectorDestination = text;
+    destination.closest<HTMLElement>('.selector-destination')?.setAttribute('title', `Маршрут: ${text}`);
+  });
 }
 
 function updateChrome(): void {

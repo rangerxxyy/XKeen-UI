@@ -206,8 +206,17 @@
 .app-shell .dns-field-heading>span:first-child { color:#e2e9f2; font-weight:650; }
 .app-shell .dns-info { display:inline-grid; flex:0 0 16px; width:16px; height:16px; place-items:center; border:1px solid #77849a; border-radius:50%; color:#aebbd0; font:600 10px/1 var(--font-ui); cursor:help; }
 .app-shell .dns-info:hover,.app-shell .dns-info:focus-visible { border-color:var(--cyan,#9b8ee8); color:var(--cyan,#9b8ee8); outline:2px solid color-mix(in srgb,var(--cyan,#9b8ee8) 35%,transparent); outline-offset:2px; }
+.app-shell .dns-workspace { overflow:visible; }
+.app-shell .dns-info { position:relative; z-index:2; }
+.app-shell .dns-info::after { position:absolute; z-index:20; left:50%; bottom:calc(100% + 9px); width:max-content; max-width:min(320px,calc(100vw - 40px)); padding:9px 11px; border:1px solid #3a4b65; border-radius:8px; color:#edf4ff; background:#111b2b; box-shadow:0 8px 24px #0005; content:attr(title); font:500 12px/1.5 var(--font-ui); white-space:normal; pointer-events:none; opacity:0; visibility:hidden; transform:translate(-50%,3px); transition:opacity .12s ease,transform .12s ease,visibility .12s; }
+.app-shell .dns-info:hover::after,.app-shell .dns-info:focus-visible::after { opacity:1; visibility:visible; transform:translate(-50%,0); }
+.app-shell .dns-field-heading { display:inline-flex; flex-wrap:wrap; vertical-align:middle; }
+.app-shell .dns-management-control { display:flex; align-items:center; gap:9px; margin:0 18px; }
+.app-shell .dns-management-control .dns-handoff-toggle { margin:0; }
+.app-shell .dns-runtime-list .dns-field-heading { align-items:center; gap:6px; }
 :root[data-theme="light"] .app-shell .dns-field-heading>span:first-child { color:#29364a; }
 :root[data-theme="light"] .app-shell .dns-info { border-color:#64748b; color:#53647c; }
+:root[data-theme="light"] .app-shell .dns-info::after { border-color:#cbd5e1; color:#172033; background:#fff; box-shadow:0 8px 24px #0f172a24; }
 :root[data-theme="light"] .template-dialog { color:#1e293b; background:#fff; border-color:#cbd5e1; }
 :root[data-theme="light"] .template-dialog p { color:#66758a; }
 :root[data-theme="light"] .template-dialog-close { color:#64748b; }

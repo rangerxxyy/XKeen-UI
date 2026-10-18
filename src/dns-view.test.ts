@@ -106,6 +106,20 @@ describe('DNS workspaces', () => {
     expect(view).toContain('DNS Diagnostics');
   });
 
+  it('provides accessible explanations for every DNS status, handoff, resolver, and diagnostic field', () => {
+    const state = { dnsOverride: false, mihomoDns: true, portListener: 'mihomo', nameServers: ['192.168.1.1'], detail: 'Состояние получено' };
+    const view = renderDns(null, false, null, '', 'A', { status: state, loading: false, error: null, busy: false, confirm: false }, {
+      values: { enhancedMode: 'redir-host', bootstrap: '', nameserver: '', nameserverPolicy: '', proxyServerNameserver: '', fallback: '' },
+      loading: false, error: null, busy: false,
+    });
+    const explanations = [...view.matchAll(/class="dns-info"[^>]*aria-label="([^"]+)"/g)].map((match) => match[1]);
+    for (const label of ['DNS Override', 'DNS Mihomo', 'Port 53', 'Router DNS Servers', 'DNS management', 'Enhanced Mode', 'Default Nameserver', 'Nameserver', 'Nameserver Policy', 'Proxy Server Nameserver', 'Fallback', 'Domain or IP', 'Record Type']) {
+      expect(explanations.some((description) => description?.includes(label)), label).toBe(true);
+    }
+    expect(explanations).toHaveLength(13);
+    expect(view.match(/class="dns-info"[^>]*tabindex="0"/g)).toHaveLength(13);
+  });
+
   it('warns when fake-ip is used with a blacklist filter mode', () => {
     const view = renderDns(null, false, null, '', 'A', undefined, {
       values: { enhancedMode: 'fake-ip', fakeIpFilterMode: 'blacklist', bootstrap: '', nameserver: '', nameserverPolicy: '', proxyServerNameserver: '', fallback: '' },

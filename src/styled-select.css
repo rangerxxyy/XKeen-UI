@@ -1,0 +1,25 @@
+/* The select keeps its identity and form semantics; the adjacent button owns interaction. */
+select.styled-select-native { position:absolute!important; width:1px!important; height:1px!important; padding:0!important; margin:-1px!important; overflow:hidden!important; clip-path:inset(50%)!important; white-space:nowrap!important; border:0!important; pointer-events:none!important; }
+button.styled-select-trigger { display:inline-flex; align-items:center; justify-content:space-between; gap:14px; min-width:0; min-height:36px; max-width:100%; padding:8px 11px; border:1px solid var(--stroke,#2a374a); border-radius:9px; color:var(--text,#eef3fa); background:linear-gradient(150deg,var(--surface-raised,#121c2c),var(--surface,#101827)); font:inherit; font-size:12px; line-height:1.35; text-align:left; cursor:pointer; transition:border-color .18s,box-shadow .18s,background .18s; }
+button.styled-select-trigger:hover { border-color:color-mix(in srgb,var(--cyan,#5796ff) 55%,var(--stroke,#2a374a)); }
+button.styled-select-trigger:focus-visible,button.styled-select-trigger[aria-expanded="true"] { outline:none; border-color:var(--cyan,#5796ff); box-shadow:0 0 0 3px color-mix(in srgb,var(--cyan,#5796ff) 15%,transparent); }
+button.styled-select-trigger:disabled { opacity:.5; cursor:not-allowed; }
+button.styled-select-trigger[hidden] { display:none; }
+.styled-select-caption { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.styled-select-chevron { flex:0 0 auto; width:7px; height:7px; border-right:1.5px solid var(--muted,#a5b2c3); border-bottom:1.5px solid var(--muted,#a5b2c3); transform:translateY(-2px) rotate(45deg); transition:transform .18s; }
+[aria-expanded="true"]>.styled-select-chevron { transform:translateY(2px) rotate(225deg); }
+.styled-select-menu { position:fixed; inset:auto; z-index:2147483000; box-sizing:border-box; margin:0; padding:6px; overflow:auto; overscroll-behavior:contain; scrollbar-width:thin; border:1px solid color-mix(in srgb,var(--stroke,#2a374a) 80%,var(--cyan,#5796ff)); border-radius:12px; color:var(--text,#eef3fa); background:linear-gradient(155deg,var(--surface-raised,#121c2c),var(--surface,#101827)); box-shadow:0 16px 44px #0005,0 3px 10px #0002; font:500 12px/1.45 var(--font-ui,Inter,system-ui,sans-serif); outline:none; transform-origin:top center; animation:styled-select-open .17s cubic-bezier(.2,.75,.25,1); }
+.styled-select-menu[data-side="top"] { transform-origin:bottom center; }
+.styled-select-menu[hidden] { display:none; }
+.styled-select-menu::backdrop { background:transparent; }
+.styled-select-option { position:relative; padding:9px 30px 9px 11px; border-radius:7px; cursor:pointer; overflow-wrap:anywhere; transition:background .12s,color .12s; }
+.styled-select-option[hidden] { display:none; }
+.styled-select-option:hover,.styled-select-option.is-active { background:var(--surface-hover,#1a2a41); }
+.styled-select-option[aria-selected="true"] { color:var(--cyan,#5796ff); background:color-mix(in srgb,var(--cyan,#5796ff) 10%,transparent); }
+.styled-select-option[aria-selected="true"]::after { content:'✓'; position:absolute; right:11px; top:9px; font-weight:700; }
+.styled-select-option[aria-disabled="true"] { opacity:.4; cursor:not-allowed; }
+.styled-select-group { padding:8px 11px 5px; color:var(--muted,#a5b2c3); font-size:10px; font-weight:650; letter-spacing:.04em; }
+.source-field>button.styled-select-trigger,.dns-settings-form label>button.styled-select-trigger,.dns-query-form label>button.styled-select-trigger,.core-release-picker button.styled-select-trigger,.proxy-provider-replace button.styled-select-trigger,.template-select.styled-select-trigger { width:100%; }
+.journal-tools button.styled-select-trigger { min-height:30px; min-width:112px; font-size:12px; }
+@keyframes styled-select-open { from { opacity:0; transform:translateY(-4px) scale(.975); } to { opacity:1; transform:translateY(0) scale(1); } }
+@media(prefers-reduced-motion:reduce) { .styled-select-menu { animation:none; } button.styled-select-trigger,.styled-select-chevron,.styled-select-option { transition:none; } }

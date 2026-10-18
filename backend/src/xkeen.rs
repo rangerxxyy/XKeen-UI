@@ -12,6 +12,7 @@ const INFO_FILE: &str = "/opt/sbin/.xkeen/01_info/01_info_variable.sh";
 const INIT_DIR: &str = "/opt/etc/init.d";
 const ALLOWED_CLIENTS: [&str; 2] = ["mihomo", "xray"];
 const SERVICE_STATE_TIMEOUT: usize = 60;
+const MAX_INIT_OUTPUT_BYTES: usize = 16 * 1024;
 
 #[derive(Clone, Debug, Serialize)]
 #[serde(rename_all = "camelCase")]
@@ -101,7 +102,13 @@ pub async fn control(action: &str) -> Result<XkeenStatus, String> {
         Err(error) => Err(error),
         Ok(args) => match path {
             None => Err("Не найден исполняемый init-файл XKeen".to_owned()),
-            Some(path) => match execute_init_command(Path::new(path), args).await {
+            Some(path) => match execute_init_command(
+                Path::new(path),
+                args,
+                Path::new(crate::logs::XKEEN_UI_LOG_PATH),
+            )
+            .await
+            {
                 Err(error) => Err(error),
                 Ok(()) => {
                     let mut confirmed = None;
@@ -193,7 +200,10 @@ fn process_transition_verified(
     }
 }
 
-async fn execute_init_command(path: &Path, args: &[&str]) -> Result<(), String> {
+async fn execute_init_command(path: &Path, args: &[&str], log_path: &Path) -> Result<(), String> {
+    let output = spawn_output_helper(log_path)
+        .map_err(|error| format!("Не удалось подготовить журнал XKeen: {error}"))?;
+    let stderr = output.try_clone().map_err(|error| error.to_string())?;
     let mut command = Command::new(path);
     command
         .args(args)
@@ -201,14 +211,13 @@ async fn execute_init_command(path: &Path, args: &[&str]) -> Result<(), String> 
         .env_clear()
         .env("PATH", "/opt/sbin:/opt/bin:/sbin:/bin:/usr/sbin:/usr/bin")
         .stdin(Stdio::null())
-        // Init scripts can start a daemon that inherits its parent's stdout/stderr.
-        // Keep those descriptors detached from the HTTP request before waiting.
-        .stdout(Stdio::null())
-        .stderr(Stdio::null())
+        .stdout(Stdio::from(std::os::fd::OwnedFd::from(output)))
+        .stderr(Stdio::from(std::os::fd::OwnedFd::from(stderr)))
         .env("HOME", "/root")
         .env("TERM", "dumb");
-    let status = tokio::time::timeout(Duration::from_secs(30), command.status())
-        .await
+    let mut child = command.spawn()
+        .map_err(|error| format!("Не удалось выполнить {}: {error}", path.display()))?;
+    let status = tokio::time::timeout(Duration::from_secs(30), child.wait()).await
         .map_err(|_| "Команда XKeen не завершилась за 30 секунд".to_owned())?
         .map_err(|error| format!("Не удалось выполнить {}: {error}", path.display()))?;
     if status.success() {
@@ -216,6 +225,104 @@ async fn execute_init_command(path: &Path, args: &[&str]) -> Result<(), String> 
     } else {
         Err(format!("XKeen завершил команду с кодом {status}"))
     }
+}
+
+fn spawn_output_helper(log_path: &Path) -> std::io::Result<std::os::unix::net::UnixStream> {
+    use std::io::Read;
+    let (mut writer, reader) = std::os::unix::net::UnixStream::pair()?;
+    let mut command = std::process::Command::new(std::env::current_exe()?);
+    #[cfg(not(test))]
+    command.arg("--internal-xkeen-output").arg(log_path);
+    #[cfg(test)]
+    command.args(["--exact", "xkeen::tests::output_helper_subprocess", "--nocapture"])
+        .env("XKEEN_UI_OUTPUT_HELPER_LOG", log_path);
+    command.stdin(Stdio::from(std::os::fd::OwnedFd::from(reader)))
+        .stdout(Stdio::null()).stderr(Stdio::null());
+    let mut child = command.spawn()?;
+    writer.set_read_timeout(Some(Duration::from_secs(2)))?;
+    let mut ready = [0_u8];
+    if let Err(error) = writer.read_exact(&mut ready) {
+        let _ = child.kill();
+        let _ = child.wait();
+        return Err(error);
+    }
+    writer.set_read_timeout(None)?;
+    if ready != [1] {
+        let _ = child.kill();
+        let _ = child.wait();
+        return Err(std::io::Error::other("output helper did not become ready"));
+    }
+    // Reap on natural EOF without tying the helper's lifetime to the panel.
+    std::thread::spawn(move || { let _ = child.wait(); });
+    Ok(writer)
+}
+
+pub(super) fn run_output_helper(log_path: &Path) -> std::io::Result<()> {
+    use std::{io::Write, os::fd::FromRawFd};
+    unsafe extern "C" {
+        fn setsid() -> std::os::raw::c_int;
+        fn prctl(option: std::os::raw::c_int, ...) -> std::os::raw::c_int;
+    }
+    // SAFETY: no pointer arguments to setsid; PR_SET_NAME reads a static,
+    // NUL-terminated string. The internal child exclusively owns descriptor 0.
+    if unsafe { setsid() } < 0 {
+        return Err(std::io::Error::last_os_error());
+    }
+    if unsafe { prctl(15, c"xkeen-logdrain".as_ptr(), 0, 0, 0) } < 0 {
+        return Err(std::io::Error::last_os_error());
+    }
+    let mut input = unsafe { fs::File::from_raw_fd(0) };
+    input.write_all(&[1])?;
+    drain_init_output(&mut input, log_path)
+}
+
+fn drain_init_output(input: &mut impl std::io::Read, log_path: &Path) -> std::io::Result<()> {
+    let mut buffer = [0_u8; 4096];
+    let mut pending = Vec::new();
+    let mut remaining_input = MAX_INIT_OUTPUT_BYTES;
+    let mut remaining_write = MAX_INIT_OUTPUT_BYTES;
+    loop {
+        let count = match input.read(&mut buffer) {
+            Err(error) if error.kind() == std::io::ErrorKind::Interrupted => continue,
+            result => result?,
+        };
+        if count == 0 {
+            if !pending.is_empty() {
+                persist_init_output_line(&pending, log_path, &mut remaining_write);
+            }
+            return Ok(());
+        }
+        let retained = count.min(remaining_input);
+        remaining_input -= retained;
+        for byte in &buffer[..retained] {
+            if *byte == b'\n' {
+                persist_init_output_line(&pending, log_path, &mut remaining_write);
+                pending.clear();
+            } else {
+                pending.push(*byte);
+            }
+        }
+        if remaining_input == 0 && !pending.is_empty() {
+            persist_init_output_line(&pending, log_path, &mut remaining_write);
+            pending.clear();
+        }
+        // Past the capture budget continue draining until all inherited writers
+        // close. No raw output files, unbounded buffers, or journal growth.
+    }
+}
+
+fn persist_init_output_line(bytes: &[u8], log_path: &Path, remaining: &mut usize) {
+    if *remaining < 2 { return; }
+    let clean = crate::logs::sanitize_line(&String::from_utf8_lossy(bytes));
+    if clean.trim().is_empty() { return; }
+    let timestamp = SystemTime::now().duration_since(UNIX_EPOCH).unwrap_or_default().as_secs();
+    let mut entry = format!("unix={timestamp} {clean}");
+    let mut end = entry.len().min(4096).min(*remaining - 1);
+    while !entry.is_char_boundary(end) { end -= 1; }
+    entry.truncate(end);
+    *remaining -= entry.len() + 1;
+    // Persistence failure must not close the drain and break the core's writer.
+    let _ = crate::logs::append_log_file(log_path, &[entry]);
 }
 
 fn control_args(action: &str) -> Result<&'static [&'static str], String> {
@@ -441,12 +548,107 @@ mod tests {
         std::fs::set_permissions(&path, std::fs::Permissions::from_mode(0o700)).unwrap();
 
         let started = Instant::now();
-        let result = execute_init_command(&path, &["restart", "on"]).await;
+        let log = path.with_extension("log");
+        let result = execute_init_command(&path, &["restart", "on"], &log).await;
         let elapsed = started.elapsed();
         let _ = std::fs::remove_file(&path);
+        let _ = std::fs::remove_file(&log);
 
         assert!(result.is_ok());
         assert!(elapsed < Duration::from_millis(1_500));
+    }
+
+    #[cfg(unix)]
+    #[tokio::test]
+    async fn persists_actual_init_output_even_when_the_command_fails() {
+        let path = std::env::temp_dir().join(format!(
+            "xkeen-ui-control-output-{}.sh",
+            std::process::id()
+        ));
+        let log = path.with_extension("log");
+        std::fs::write(&path, "#!/bin/sh\nprintf '\\033[32mПрокси-клиент запущен в режиме Hybrid\\033[0m\\n'\nprintf 'failure token=private token=second-private\\n' >&2\n(sleep 2) &\nexit 1\n").unwrap();
+        std::fs::set_permissions(&path, std::fs::Permissions::from_mode(0o700)).unwrap();
+        let started = Instant::now();
+        let result = execute_init_command(&path, &["restart", "on"], &log).await;
+        let deadline = Instant::now() + Duration::from_millis(500);
+        let contents = loop {
+            let contents = std::fs::read_to_string(&log).unwrap_or_default();
+            if contents.contains("failure token=[REDACTED] token=[REDACTED]") || Instant::now() >= deadline {
+                break contents;
+            }
+            tokio::time::sleep(Duration::from_millis(10)).await;
+        };
+        let _ = std::fs::remove_file(&path);
+        let _ = std::fs::remove_file(&log);
+        assert!(result.is_err());
+        assert!(started.elapsed() < Duration::from_millis(1_500));
+        assert!(contents.contains("Прокси-клиент запущен в режиме Hybrid"));
+        assert!(contents.contains("failure token=[REDACTED]"));
+        assert!(!contents.contains("private"));
+        assert!(!contents.contains('\u{001b}'));
+    }
+
+    #[test]
+    fn output_helper_subprocess() {
+        if let Some(path) = std::env::var_os("XKEEN_UI_OUTPUT_HELPER_LOG") {
+            super::run_output_helper(Path::new(&path)).unwrap();
+        }
+    }
+
+    #[test]
+    fn drains_excess_output_without_growing_the_journal_or_creating_raw_files() {
+        let directory = std::env::temp_dir().join(format!("xkeen-ui-drain-bounds-{}", std::process::id()));
+        std::fs::create_dir_all(&directory).unwrap();
+        let log = directory.join("journal.log");
+        let data = "token=first token=second output line\n".repeat(10_000).into_bytes();
+        let mut input = data.as_slice();
+        super::drain_init_output(&mut input, &log).unwrap();
+        assert!(input.is_empty());
+        let contents = std::fs::read_to_string(&log).unwrap();
+        assert!(!contents.contains("first"));
+        assert!(!contents.contains("second"));
+        assert!(contents.len() <= 16_384);
+        assert!(contents.contains("token=[REDACTED] token=[REDACTED]"));
+        assert_eq!(std::fs::read_dir(&directory).unwrap().count(), 1);
+        let _ = std::fs::remove_file(log);
+        std::fs::remove_dir(directory).unwrap();
+    }
+
+    #[test]
+    fn init_output_survives_capture_process_exit() {
+        const CHILD_ENV: &str = "XKEEN_UI_CAPTURE_EXIT_TEST";
+        if let Some(directory) = std::env::var_os(CHILD_ENV) {
+            let directory = std::path::PathBuf::from(directory);
+            let script = directory.join("init.sh");
+            let marker = directory.join("survived");
+            let log = directory.join("journal.log");
+            let result = tokio::runtime::Runtime::new().unwrap().block_on(
+                execute_init_command(&script, &[marker.to_str().unwrap()], &log),
+            );
+            std::process::exit(if result.is_ok() { 0 } else { 1 });
+        }
+        let directory = std::env::temp_dir().join(format!("xkeen-ui-capture-exit-{}", std::process::id()));
+        std::fs::create_dir_all(&directory).unwrap();
+        let script = directory.join("init.sh");
+        std::fs::write(&script, "#!/bin/sh\n(sleep 1; printf 'late daemon output\\n' || exit 1; printf survived > \"$1\") &\nexit 0\n").unwrap();
+        std::fs::set_permissions(&script, std::fs::Permissions::from_mode(0o700)).unwrap();
+        let status = std::process::Command::new(std::env::current_exe().unwrap())
+            .args(["--exact", "xkeen::tests::init_output_survives_capture_process_exit", "--nocapture"])
+            .env(CHILD_ENV, &directory)
+            .status().unwrap();
+        assert!(status.success());
+        let marker = directory.join("survived");
+        let log = directory.join("journal.log");
+        let deadline = Instant::now() + Duration::from_secs(4);
+        while (!marker.exists() || !std::fs::read_to_string(&log).unwrap_or_default().contains("late daemon output")) && Instant::now() < deadline {
+            std::thread::sleep(Duration::from_millis(20));
+        }
+        assert_eq!(std::fs::read_to_string(&marker).unwrap(), "survived");
+        assert!(std::fs::read_to_string(&log).unwrap().contains("late daemon output"));
+        let _ = std::fs::remove_file(marker);
+        let _ = std::fs::remove_file(script);
+        let _ = std::fs::remove_file(directory.join("journal.log"));
+        std::fs::remove_dir(&directory).unwrap();
     }
 
     #[test]

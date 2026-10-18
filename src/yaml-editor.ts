@@ -10,7 +10,7 @@ import { isMap, parseDocument } from 'yaml';
 import { chooseReferenceTemplate, getDefaultTemplate } from './templates';
 import { applyActiveMihomoConfig, applyXrayConfigFile, getActiveMihomoConfig, getRouterConfigFile, getXrayConfigFile, logUiError, saveActiveMihomoConfig, saveRouterConfigFile, saveXrayConfigFile, type RouterConfigFile, type XrayConfigFile } from './api';
 import { confirmInApp } from './confirm-dialog';
-import { canPersistConfig } from './config-actions';
+import { canPersistConfig, runConfigApply } from './config-actions';
 import { generateConfigForCore } from './outbound-parser';
 import { appendMihomoProxy } from './proxy-import';
 import { createMihomoProviderYaml, insertMihomoProvider, nextMihomoProviderName, type MihomoProviderPosition, type MihomoProviderSettings } from './mihomo-provider';
@@ -535,16 +535,18 @@ export function mountYamlEditor(routerMode = false, activeCore: 'mihomo' | 'xray
     try {
       const apiFile = xrayApiFile(fileId);
       const normalized = fileId === 'xray_routing' ? JSON.stringify(parseJsonc(content, []), null, 2) : content;
-      const result = fileId === 'config'
-        ? await applyActiveMihomoConfig(normalized, expectedContent, signal)
-        : await applyXrayConfigFile(apiFile, normalized, expectedContent, signal);
+      const result = await runConfigApply(fileId === 'config' ? 'mihomo' : 'xray', () => fileId === 'config'
+        ? applyActiveMihomoConfig(normalized, expectedContent, signal)
+        : applyXrayConfigFile(apiFile, normalized, expectedContent, signal));
       if (editor !== requestedEditor || currentFile().id !== fileId) return;
-      if (normalized !== content) editor.dispatch({ changes: { from: 0, to: editor.state.doc.length, insert: normalized } });
+      const draftUnchanged = editor.state.doc.toString() === content;
+      if (draftUnchanged && normalized !== content) editor.dispatch({ changes: { from: 0, to: editor.state.doc.length, insert: normalized } });
       if (fileId === 'config') activeConfigSnapshot = normalized;
       else xraySnapshots.set(apiFile, normalized);
       const hint = document.querySelector<HTMLElement>('#editor-file-hint');
       if (hint) hint.textContent = `Файл на роутере · ${result.path}`;
-      setValidation(`✓ ${result.detail}. Резервная копия: ${result.backup}`, true);
+      if (draftUnchanged) setValidation(fileId === 'config' ? 'YAML полностью валиден' : `${fileId === 'xray_routing' ? 'JSONC' : 'JSON'} полностью валиден`, true);
+      else currentDocumentValid = validateStructuredDocument(editor.state.doc.toString());
     } catch (error) {
       if (error instanceof Error && error.message.includes('HTTP 409')) {
         if (fileId === 'config') activeConfigSnapshot = null;

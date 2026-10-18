@@ -1,5 +1,5 @@
 export type SelectorSort = 'config' | 'name' | 'delay';
-export type UiTheme = 'system' | 'light' | 'dark';
+export type UiTheme = 'light' | 'dark';
 export type JournalTimeZone = 'local' | `UTC${'+' | '-'}${number}`;
 
 export interface UiPreferences {
@@ -20,7 +20,7 @@ export interface UiPreferences {
 }
 
 export const DEFAULT_UI_PREFERENCES: UiPreferences = {
-  theme: 'system',
+  theme: 'dark',
   journalTimeZone: 'local',
   showConnectionSource: true,
   closeConnectionsAfterApply: false,
@@ -45,7 +45,7 @@ export function readUiPreferences(storage: Pick<Storage, 'getItem'> | null = saf
     if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) return { ...DEFAULT_UI_PREFERENCES };
     const value = parsed as Partial<UiPreferences>;
     return {
-      theme: value.theme === 'light' || value.theme === 'dark' ? value.theme : 'system',
+      theme: value.theme === 'light' ? 'light' : 'dark',
       journalTimeZone: normalizeJournalTimeZone(value.journalTimeZone),
       showConnectionSource: typeof value.showConnectionSource === 'boolean' ? value.showConnectionSource : DEFAULT_UI_PREFERENCES.showConnectionSource,
       closeConnectionsAfterApply: typeof value.closeConnectionsAfterApply === 'boolean' ? value.closeConnectionsAfterApply : DEFAULT_UI_PREFERENCES.closeConnectionsAfterApply,

@@ -19,7 +19,7 @@ const MAX_LOG_BYTES: u64 = 256 * 1024;
 const MAX_LOG_LINES: usize = 1000;
 const MAX_LIFECYCLE_ENTRY_BYTES: usize = 4096;
 const MAX_LIFECYCLE_WRITE_BYTES: usize = 16 * 1024;
-const XKEEN_UI_LOG_PATH: &str = "/opt/var/log/xkeen-ui.log";
+pub(super) const XKEEN_UI_LOG_PATH: &str = "/opt/var/log/xkeen-ui.log";
 const XKEEN_RUNTIME_LOG_PATH: &str = "/opt/var/log/xkeen-detached.log";
 
 #[derive(Deserialize)]
@@ -184,7 +184,10 @@ fn ui_error_entry(timestamp: u64, source: &str, message: &str) -> Option<String>
 }
 
 async fn read_tail(source: &LogSource) -> std::io::Result<LogResult> {
-    let path = Path::new(source.path);
+    read_tail_path(source, Path::new(source.path)).await
+}
+
+async fn read_tail_path(source: &LogSource, path: &Path) -> std::io::Result<LogResult> {
     let metadata = tokio::fs::symlink_metadata(path).await?;
     if !metadata.is_file()
         || metadata.file_type().is_symlink()
@@ -298,7 +301,7 @@ pub(super) fn append_xkeen_lifecycle(entries: &[String]) -> std::io::Result<()> 
     append_log_file(Path::new(XKEEN_UI_LOG_PATH), entries)
 }
 
-fn append_log_file(path: &Path, entries: &[String]) -> std::io::Result<()> {
+pub(super) fn append_log_file(path: &Path, entries: &[String]) -> std::io::Result<()> {
     let parent = path.parent().ok_or_else(|| {
         std::io::Error::new(std::io::ErrorKind::InvalidInput, "log path has no parent")
     })?;
@@ -387,41 +390,46 @@ pub(super) fn sanitize_line(line: &str) -> String {
         "authorization:",
         "bearer ",
     ] {
-        let lower = clean.to_ascii_lowercase();
-        let Some(index) = lower.find(key) else {
-            continue;
-        };
-        let value_start = index + key.len();
-        let mut token_start = value_start;
-        while clean
-            .as_bytes()
-            .get(token_start)
-            .is_some_and(u8::is_ascii_whitespace)
-        {
-            token_start += 1;
-        }
-        if key == "authorization:" {
-            let scheme_end = clean[token_start..]
-                .find(char::is_whitespace)
-                .map_or(clean.len(), |offset| token_start + offset);
-            if matches!(
-                clean[token_start..scheme_end].to_ascii_lowercase().as_str(),
-                "bearer" | "basic"
-            ) {
-                token_start = scheme_end;
-                while clean
-                    .as_bytes()
-                    .get(token_start)
-                    .is_some_and(u8::is_ascii_whitespace)
-                {
-                    token_start += 1;
+        let mut search_start = 0;
+        loop {
+            let lower = clean.to_ascii_lowercase();
+            let Some(offset) = lower[search_start..].find(key) else {
+                break;
+            };
+            let index = search_start + offset;
+            let value_start = index + key.len();
+            let mut token_start = value_start;
+            while clean
+                .as_bytes()
+                .get(token_start)
+                .is_some_and(u8::is_ascii_whitespace)
+            {
+                token_start += 1;
+            }
+            if key == "authorization:" {
+                let scheme_end = clean[token_start..]
+                    .find(char::is_whitespace)
+                    .map_or(clean.len(), |offset| token_start + offset);
+                if matches!(
+                    clean[token_start..scheme_end].to_ascii_lowercase().as_str(),
+                    "bearer" | "basic"
+                ) {
+                    token_start = scheme_end;
+                    while clean
+                        .as_bytes()
+                        .get(token_start)
+                        .is_some_and(u8::is_ascii_whitespace)
+                    {
+                        token_start += 1;
+                    }
                 }
             }
+            let value_end = clean[token_start..]
+                .find(char::is_whitespace)
+                .map_or(clean.len(), |offset| token_start + offset);
+            clean.replace_range(value_start..value_end, "[REDACTED]");
+            search_start = value_start + "[REDACTED]".len();
         }
-        let value_end = clean[token_start..]
-            .find(char::is_whitespace)
-            .map_or(clean.len(), |offset| token_start + offset);
-        clean.replace_range(value_start..value_end, "[REDACTED]");
     }
     clean
 }
@@ -461,6 +469,14 @@ mod tests {
     }
 
     #[test]
+    fn redacts_every_occurrence_of_each_inline_secret() {
+        let line = "token=first token=second TOKEN=third password=one password=two Authorization: Bearer alpha Authorization: Basic beta";
+        let expected = "token=[REDACTED] token=[REDACTED] TOKEN=[REDACTED] password=[REDACTED] password=[REDACTED] Authorization:[REDACTED] Authorization:[REDACTED]";
+        assert_eq!(sanitize_line(line), expected);
+        assert_eq!(sanitize_line(&sanitize_line(line)), expected);
+    }
+
+    #[test]
     fn strips_ansi_color_codes_from_runtime_log_lines() {
         assert_eq!(
             sanitize_line("Прокси-клиент \u{001b}[91mостановлен\u{001b}[0m"),
@@ -487,6 +503,32 @@ mod tests {
         assert_eq!(ERROR_LOG_SOURCES[0].path, "/opt/var/log/xkeen-detached.log");
         assert_eq!(ERROR_LOG_SOURCES[1].path, "/opt/var/log/xray/error.log");
         assert_eq!(ERROR_LOG_SOURCES[2].path, XKEEN_UI_LOG_PATH);
+    }
+
+    #[tokio::test]
+    async fn reads_persisted_hybrid_lifecycle_output_without_filtering_it() {
+        let directory =
+            std::env::temp_dir().join(format!("xkeen-ui-hybrid-log-{}", std::process::id()));
+        std::fs::create_dir_all(&directory).unwrap();
+        let path = directory.join("xkeen-ui.log");
+        append_log_file(
+            &path,
+            &["unix=1792230000 Прокси-клиент запущен в режиме Hybrid".to_owned()],
+        )
+        .unwrap();
+        // read_tail accepts the same source id used by the aggregated Error Log.
+        let source = LogSource {
+            id: "xkeen-ui",
+            label: "XKeen UI",
+            path: "",
+        };
+        let result = read_tail_path(&source, &path).await.unwrap();
+        assert_eq!(
+            result.lines,
+            vec!["unix=1792230000 Прокси-клиент запущен в режиме Hybrid"]
+        );
+        let _ = std::fs::remove_file(path);
+        let _ = std::fs::remove_dir(directory);
     }
 
     #[test]

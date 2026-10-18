@@ -17,7 +17,7 @@ export function renderConnectionDetails(connection: MihomoConnection, sourceName
     ['Адрес источника', connection.source],
     ['Протокол', connection.network.toUpperCase()],
     ['Процесс', connection.process],
-    ['Цепочка', connection.chains.join(' → ')],
+    ['Цепочка', [...connection.chains].reverse().join(' → ')],
     ['Правило', connection.rule],
     ['Условие правила', connection.rulePayload],
     ['Начало соединения', start],

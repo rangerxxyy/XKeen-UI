@@ -74,11 +74,12 @@ function loadState(loading: boolean, error: string | null, noun: string): string
 }
 
 export function renderPingStatusIcon(alive: boolean | null): string {
+  if (alive === true) return '';
   const path = alive === false
     ? '<path d="M5 2.5h6l2 2v7l-5 2-5-2v-7z"/><path d="M8 5v4m-1.5-2h3"/>'
     : alive === true
       ? '<path d="M4.5 8.5l2.3 2.3 4.8-5.1"/>'
-      : '<circle cx="8" cy="8" r="6.25"/><path d="M8 4.5v3.7m0 2.3h.01"/>';
+      : '<path d="M9 1 3 9h4l-1 6 7-9H9z"/>';
   return `<i class="ping-status-icon" aria-hidden="true"><svg viewBox="0 0 16 16" focusable="false">${path}</svg></i>`;
 }
 
@@ -87,7 +88,7 @@ function proxyCard(group: MihomoSelector): string {
     const selected = option.name === group.current;
     const displayName = option.name;
     const state = option.alive === null ? 'Проверка недоступна' : option.alive ? 'Узел отвечает' : 'Узел не отвечает';
-    const delay = option.delay === null ? '—' : `${option.delay} мс`;
+    const delay = option.alive === true && option.delay !== null ? String(option.delay) : '';
     const pingLabel = option.alive === null ? 'Проверить ping' : option.alive ? 'Узел отвечает' : 'Узел не отвечает';
     const badges = [
       option.type && option.type !== 'Unknown' ? `<span class="proxy-protocol-badge">${escapeHtml(option.type.toLowerCase())}</span>` : '',
@@ -115,11 +116,13 @@ export function renderSelectors(groups: MihomoSelector[], loading: boolean, erro
 }
 
 function connectionRow(connection: MihomoConnection, showSourceName = false, sourceNames: Record<string, string> = {}): string {
-  const host = connection.host || connection.destination || 'Адрес недоступен';
-  const domain = host.toLocaleLowerCase();
-  const category = domain.includes('youtube') ? 'YouTube' : domain.includes('github') ? 'GitHub' : domain.includes('google') ? 'Google' : ['th.bing.com', 'geover.prod', 'cloudfront.net', 'usersnap.com', 'unisvg.com', 'iconify.design'].some((part) => domain.includes(part)) ? 'CDN' : '';
-  const runtimeRoute = connection.chains.length ? connection.chains.join(' › ') : 'Маршрут неизвестен';
-  const route = category && connection.chains.length && runtimeRoute.toLocaleLowerCase() !== category.toLocaleLowerCase() ? `${category} › ${runtimeRoute}` : runtimeRoute;
+  const rawHost = connection.host;
+  const host = rawHost ? connection.destinationPort && !/\]:\d+$/.test(rawHost) && !/^[^:]+:\d+$/.test(rawHost)
+    ? `${rawHost.includes(':') && !rawHost.startsWith('[') ? `[${rawHost}]` : rawHost}:${connection.destinationPort}` : rawHost
+    : connection.destination || 'Адрес недоступен';
+  const displayedChains = [...connection.chains].reverse();
+  const route = displayedChains.length ? displayedChains.join(' › ') : 'Маршрут неизвестен';
+  const category = displayedChains[0]?.toLowerCase() ?? '';
   const search = [host, connection.source, route, connection.rule, connection.rulePayload, connection.process].join(' ').toLocaleLowerCase();
   const network = connection.network.toUpperCase() || '—';
   const startedAt = Date.parse(connection.start);
@@ -128,12 +131,12 @@ function connectionRow(connection: MihomoConnection, showSourceName = false, sou
   const sourceName = showSourceName && connection.sourceIp ? sourceNames[connection.sourceIp] : undefined;
   const source = sourceName || connection.source || 'Неизвестное устройство';
   const sourceTitle = sourceName ? `${sourceName} (${connection.source})` : source;
-  const appIcon = category === 'YouTube' ? 'youtube' : category === 'GitHub' ? 'github' : category === 'Google' ? 'google' : category === 'CDN' ? 'web' : '';
-  const appGlyph = appIcon === 'youtube' ? '▶' : appIcon === 'github' ? '●' : appIcon === 'google' ? 'G' : '◎';
+  const appIcon = category.includes('youtube') ? 'youtube' : category.includes('github') ? 'github' : category.includes('google') ? 'google' : category.includes('cdn') ? 'web' : category.includes('meta') ? 'meta' : category === 'ai' ? 'ai' : '';
+  const appGlyph = appIcon === 'youtube' ? '▶' : appIcon === 'github' ? '●' : appIcon === 'google' ? 'G' : appIcon === 'meta' ? '∞' : appIcon === 'ai' ? '✦' : '◎';
   const routeIcon = appIcon ? `<span class="connection-app-icon is-${appIcon}" aria-hidden="true">${appGlyph}</span>` : '';
-  const chain = `<span class="connection-chain" title="${escapeHtml(route)}">${escapeHtml(route)}</span>`;
+  const chain = `<span class="connection-chain" title="${escapeHtml(route)}">${displayedChains.length ? displayedChains.map(renderProxyName).join(' <span aria-hidden="true">›</span> ') : escapeHtml(route)}</span>`;
   return `<tr data-search="${escapeHtml(search)}">
-    <td class="connection-route-cell${routeIcon ? ' has-app-icon' : ''}">${routeIcon}${chain}</td>
+    <td class="connection-route-cell${routeIcon ? ' has-app-icon' : ''}"><span class="connection-route-inner">${routeIcon}${chain}</span></td>
     <td class="connection-host" title="${escapeHtml(host)}"><button class="connection-inspect" type="button" data-inspect-connection="${escapeHtml(connection.id)}" aria-label="Подробности соединения ${escapeHtml(host)}">${escapeHtml(host)}</button></td>
     <td class="connection-network" title="Сетевой протокол">${escapeHtml(network)}</td>
     <td class="connection-source" title="${escapeHtml(sourceTitle)}">${escapeHtml(source)}</td>

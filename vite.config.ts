@@ -2,7 +2,7 @@ import { defineConfig, type Plugin } from 'vite';
 import packageJson from './package.json';
 
 function applicationShell(): Plugin {
-  const developmentDocument = '<!doctype html><html lang="ru"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="theme-color" content="#080d18"><title>XKeen UI</title></head><body><div id="app"></div><script type="module" src="/src/main.ts"></script></body></html>';
+  const developmentDocument = '<!doctype html><html lang="ru"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="theme-color" content="#080d18"><link rel="icon" type="image/svg+xml" href="./favicon.svg"><title>XKeen UI</title></head><body><div id="app"></div><script type="module" src="/src/main.ts"></script></body></html>';
 
   return {
     name: 'xkeen-application-shell',
@@ -26,7 +26,7 @@ function applicationShell(): Plugin {
       this.emitFile({
         type: 'asset',
         fileName: 'index.html',
-        source: `<!doctype html><html lang="ru"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="theme-color" content="#080d18"><meta name="description" content="Локальная панель управления XKeen, Xray и Mihomo"><title>XKeen UI</title>${styles}</head><body><div id="app"></div><script type="module" src="./${entry.fileName}"></script></body></html>`,
+        source: `<!doctype html><html lang="ru"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="theme-color" content="#080d18"><meta name="description" content="Локальная панель управления XKeen, Xray и Mihomo"><link rel="icon" type="image/svg+xml" href="./favicon.svg"><title>XKeen UI</title>${styles}</head><body><div id="app"></div><script type="module" src="./${entry.fileName}"></script></body></html>`,
       });
     },
   };

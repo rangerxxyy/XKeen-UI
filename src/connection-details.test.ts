@@ -22,7 +22,7 @@ describe('connection details', () => {
   it('shows full addresses, the actual route and metadata already provided by the API', () => {
     const html = renderConnectionDetails(sample, 'Test laptop');
     for (const text of ['long-host.example', '[2001:db8::1]:443', '192.0.2.2:1234',
-      'Test laptop', 'TCP', 'browser', 'Proxy → Europe', 'DomainSuffix', 'example', 'sample-id']) {
+      'Test laptop', 'TCP', 'browser', 'Europe → Proxy', 'DomainSuffix', 'example', 'sample-id']) {
       expect(html).toContain(text);
     }
     expect(html).toContain('Передано');

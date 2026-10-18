@@ -19,12 +19,14 @@ import { confirmInApp } from './confirm-dialog';
 import { bindDialogMotion, closeDialogWithMotion } from './dialog-motion';
 import { lifecycleFeedback } from './service-feedback';
 import { readUiPreferences, validPingUrl, writeUiPreferences, type UiPreferences } from './preferences';
-import { formatJournalTimestamp, getJournalViewState, splitJournalLevel, stripLogSourceLabel } from './journal-view-state';
+import { deduplicateRepeatedUiErrors, formatJournalTimestamp, getJournalViewState, matchesJournalLevel, splitJournalLevel, stripLogSourceLabel, type JournalLevelFilter } from './journal-view-state';
 import { getJournalScrollTop } from './journal-scroll';
 import { SETTINGS_TABS, type SettingsTabId } from './settings-tabs';
 import { bindSelectorSortControl, renderSelectorSortControl } from './selector-sort-control';
 import { bindPingUrlControl, renderPingUrlControl } from './ping-url-control';
 import { SourceNameResolver } from './source-names';
+import { renderResourceMetrics } from './resource-metrics';
+import { shouldReportUiError } from './ui-error-dedupe';
 
 type Page = 'selectors' | 'connections' | 'configuration' | 'dns';
 
@@ -85,6 +87,7 @@ let logLoading = false;
 let logCleared = false;
 let logExpanded = false;
 let logFilter = '';
+let logLevelFilter: JournalLevelFilter = 'all';
 let logController: AbortController | undefined;
 let logRefreshTimer: number | undefined;
 let logRefreshAfterCurrent = false;
@@ -94,6 +97,7 @@ let appUpdateMessage = 'Подготовка обновления…';
 let appUpdateInstalling = false;
 let uiPreferences: UiPreferences = readUiPreferences();
 const proxyPingFailures = new Map<string, number>();
+const recentUiErrors = new Map<string, number>();
 
 function applyUiTheme(): void {
   const theme = uiPreferences.theme;
@@ -138,17 +142,16 @@ function renderHeader(): string {
         ? xkeenStatus.running === true ? 'XKeen запущен' : xkeenStatus.running === false ? 'XKeen остановлен' : 'Статус XKeen недоступен'
         : 'XKeen не найден'
       : service ? (service.state === 'running' ? 'Сервис запущен' : service.state === 'stopped' ? 'Сервис остановлен' : 'Статус недоступен') : 'Состояние загружается';
-  const memory = status?.memory ? `RAM ${status.memory.usedMb}/${status.memory.totalMb} MB` : 'RAM —';
-  const cpu = status?.cpuPercent === null || status?.cpuPercent === undefined ? 'CPU —' : `CPU ${Math.round(status.cpuPercent)}%`;
+  const resourceMetrics = renderResourceMetrics(status?.memory ?? null, status?.cpuPercent ?? null);
   const canControl = status?.mode === 'router' && Boolean(xkeenStatus?.installed);
   const controls = canControl
     ? `${xkeenStatus?.running === false
       ? `<button class="header-service-action" data-xkeen-action="start" type="button" title="Запустить XKeen" aria-label="Запустить XKeen" ${serviceBusy ? 'disabled' : ''}>${serviceBusy && xkeenControlAction === 'start' ? '<span class="service-control-spinner" aria-hidden="true"></span>' : '▶'}</button>`
-      : `<button class="header-service-action" data-xkeen-action="restart" type="button" title="Перезапустить XKeen" aria-label="Перезапустить XKeen" ${serviceBusy ? 'disabled' : ''}>${configApplyBusy || (xkeenControlBusy && xkeenControlAction === 'restart') ? '<span class="service-control-spinner" aria-hidden="true"></span>' : '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 7v5h-5M4.9 9a7.5 7.5 0 0 1 12.4-2L20 12M4 17v-5h5m10.1 3a7.5 7.5 0 0 1-12.4 2L4 12"/></svg>'}</button><button class="header-service-action header-service-stop" data-xkeen-action="stop" type="button" title="Остановить XKeen" aria-label="Остановить XKeen" ${serviceBusy || xkeenStatus?.running !== true ? 'disabled' : ''}>${serviceBusy && xkeenControlAction === 'stop' ? '<span class="service-control-spinner" aria-hidden="true"></span>' : '■'}</button>`}`
+      : `<button class="header-service-action header-service-restart" data-xkeen-action="restart" type="button" title="Перезапустить XKeen" aria-label="Перезапустить XKeen" ${serviceBusy ? 'disabled' : ''}>${configApplyBusy || (xkeenControlBusy && xkeenControlAction === 'restart') ? '<span class="service-control-spinner" aria-hidden="true"></span>' : '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 7v5h-5M4.9 9a7.5 7.5 0 0 1 12.4-2L20 12M4 17v-5h5m10.1 3a7.5 7.5 0 0 1-12.4 2L4 12"/></svg>'}</button><button class="header-service-action header-service-stop" data-xkeen-action="stop" type="button" title="Остановить XKeen" aria-label="Остановить XKeen" ${serviceBusy || xkeenStatus?.running !== true ? 'disabled' : ''}>${serviceBusy && xkeenControlAction === 'stop' ? '<span class="service-control-spinner" aria-hidden="true"></span>' : '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="6" y="6" width="12" height="12" rx="2"/></svg>'}</button>`}`
     : '';
   return `<header class="topbar">
-    <div class="top-status-cluster ${serviceBusy ? 'is-xkeen-busy' : ''}"><div class="top-status" aria-label="Состояние XKeen" aria-live="polite"><span id="status-led" class="connection-led ${state.connected ? 'is-online' : 'is-offline'}"></span><span><strong id="service-label">${escapeHtml(serviceText)}</strong><small id="service-summary">${state.connected ? `${memory} · ${cpu}` : 'Ожидание соединения с backend'}</small></span></div><div class="header-service-controls" aria-label="Управление XKeen" aria-busy="${serviceBusy}">${controls}</div></div>
-    <a class="brand" href="#selectors" aria-label="XKeen UI, селекторы"><span class="brand-mark">X</span><span>XKeen <b>UI</b></span></a>
+    <div class="top-status-cluster ${serviceBusy ? 'is-xkeen-busy' : ''}"><div class="top-status" aria-label="Состояние XKeen" aria-live="polite"><span id="status-led" class="connection-led ${state.connected ? 'is-online' : 'is-offline'}"></span><span><strong id="service-label">${escapeHtml(serviceText)}</strong><small id="service-summary">${state.connected ? resourceMetrics : 'Ожидание соединения с backend'}</small></span></div><div class="header-service-controls" aria-label="Управление XKeen" aria-busy="${serviceBusy}">${controls}</div></div>
+    <a class="brand" href="#selectors" aria-label="XKeen UI, селекторы"><span>XKeen <b>UI</b></span></a>
     <div class="top-actions"><button class="version-chip core-chip core-version-button" id="core-version" type="button" title="Выбрать релиз Mihomo" aria-label="Выбрать релиз Mihomo"><span class="chip-icon">◈</span> Mihomo <b id="core-version-label">${coreLabel}</b><span class="chip-chevron" aria-hidden="true">⌄</span></button><button class="version-chip app-version-button" id="app-version" type="button" title="Выбрать релиз XKeen UI" aria-label="Выбрать релиз XKeen UI"><span class="chip-icon">⬡</span> XKeen UI <b id="app-version-label">v${status?.appVersion ?? APP_VERSION}</b><span class="chip-chevron" aria-hidden="true">⌄</span></button><button class="icon-button" id="settings" title="Настройки" aria-label="Настройки">⚙</button></div>
   </header>`;
 }
@@ -197,7 +200,7 @@ function renderComingSoon(page: Page): string {
 function renderConfiguration(): string {
   return `<section class="editor-workspace config-layout" aria-label="Редактор конфигурации">
     <div class="config-editor-main">
-      <div class="config-file-context"><div><strong id="editor-filename">config.yaml</strong><span id="editor-language">YAML · Mihomo</span></div><span id="editor-file-hint">Локальный черновик</span></div>
+      <div class="config-file-context"><div><strong id="editor-filename">config.yaml</strong><span id="editor-language">YAML · Mihomo</span><small id="editor-file-description">Основные правила и параметры Mihomo</small></div><span id="editor-file-hint">Локальный черновик</span></div>
       <div class="code-editor-shell"><div class="code-editor" id="yaml-editor" aria-label="Текст конфигурации"></div></div>
       <div class="editor-statusbar"><span id="yaml-validation" class="editor-validation" aria-live="polite">Проверка конфигурации…</span><div class="editor-actions"><button class="editor-button" id="config-save-active" type="button" data-router-file disabled title="Сохранить файл на роутере без применения">Сохранить</button><button class="editor-button editor-button-primary" id="config-apply-active" type="button" data-router-file disabled title="Проверить, сохранить и перезапустить активное ядро">Применить</button><details class="editor-utilities"><summary class="editor-button"><span class="utilities-trigger-icon" aria-hidden="true">•••</span><span>Утилиты</span><span class="utilities-chevron" aria-hidden="true"></span></summary><div class="editor-utilities-menu" role="menu" aria-label="Утилиты конфигурации"><button type="button" role="menuitem" id="yaml-add-proxy" data-mihomo-only><span class="utility-icon" aria-hidden="true">↗</span><span>Добавить прокси</span></button><button type="button" role="menuitem" id="yaml-template" data-structured-only><span class="utility-icon" aria-hidden="true">▤</span><span>Шаблон конфигурации</span></button><button type="button" role="menuitem" id="yaml-validate" data-structured-only><span class="utility-icon" aria-hidden="true">✓</span><span>Проверить конфигурацию</span></button><button type="button" role="menuitem" id="yaml-format" data-structured-only><span class="utility-icon" aria-hidden="true">⌘</span><span>Форматировать</span></button><button type="button" role="menuitem" id="yaml-download"><span class="utility-icon" aria-hidden="true">↓</span><span>Скачать черновик</span></button></div></details></div></div>
     </div>
@@ -205,7 +208,7 @@ function renderConfiguration(): string {
 }
 
 function renderJournal(): string {
-  return `<section class="journal-panel ${logExpanded ? 'is-expanded' : ''}" aria-label="Журнал событий"><header class="journal-heading"><div class="journal-title"><h2>Журнал</h2><span id="journal-live" class="journal-live" ${xkeenControlBusy || configApplyBusy ? '' : 'hidden'}><i aria-hidden="true"></i> XKeen запускается</span></div><div class="journal-tools"><label class="journal-filter"><span aria-hidden="true">⌕</span><input id="journal-filter" type="search" placeholder="Фильтр" aria-label="Фильтр журнала" value="${escapeHtml(logFilter)}"></label><select id="journal-file" aria-label="Файл журнала">${logFiles.map((file) => `<option value="${file.id}" ${selectedLog === file.id ? 'selected' : ''}>${file.label}</option>`).join('')}</select><button class="journal-icon-button" id="journal-clear" type="button" title="Очистить отображение" aria-label="Очистить отображение">♲</button><button class="journal-icon-button" id="journal-expand" type="button" title="Развернуть журнал" aria-label="Развернуть журнал" aria-pressed="${logExpanded}">${logExpanded ? '⤢' : '⛶'}</button></div></header><div class="journal-body" id="journal-body" aria-live="polite"></div></section>`;
+  return `<section class="journal-panel ${logExpanded ? 'is-expanded' : ''}" aria-label="Журнал событий"><header class="journal-heading"><div class="journal-title"><h2>Журнал</h2><span id="journal-live" class="journal-live" ${xkeenControlBusy || configApplyBusy ? '' : 'hidden'}><i aria-hidden="true"></i> XKeen запускается</span></div><div class="journal-tools"><label class="journal-filter"><span aria-hidden="true">⌕</span><input id="journal-filter" type="search" placeholder="Фильтр" aria-label="Фильтр журнала" value="${escapeHtml(logFilter)}"></label><select id="journal-file" aria-label="Файл журнала">${logFiles.map((file) => `<option value="${file.id}" ${selectedLog === file.id ? 'selected' : ''}>${file.label}</option>`).join('')}</select><select id="journal-level-filter" aria-label="Фильтр по уровню сообщений"><option value="all" ${logLevelFilter === 'all' ? 'selected' : ''}>Все уровни</option><option value="error" ${logLevelFilter === 'error' ? 'selected' : ''}>Ошибки</option><option value="warning" ${logLevelFilter === 'warning' ? 'selected' : ''}>Предупреждения</option><option value="info" ${logLevelFilter === 'info' ? 'selected' : ''}>Информация</option></select><button class="journal-icon-button" id="journal-clear" type="button" title="Очистить отображение" aria-label="Очистить отображение">♲</button><button class="journal-icon-button" id="journal-expand" type="button" title="Развернуть журнал" aria-label="Развернуть журнал" aria-pressed="${logExpanded}">${logExpanded ? '⤢' : '⛶'}</button></div></header><div class="journal-body" id="journal-body" aria-live="polite"></div></section>`;
 }
 
 function setJournalRealtime(active: boolean): void {
@@ -234,7 +237,13 @@ function drawJournal(): void {
     return;
   }
   const filter = logFilter.trim().toLocaleLowerCase();
-  const lines = (logData?.lines ?? []).filter((line) => !filter || line.toLocaleLowerCase().includes(filter));
+  const lines = deduplicateRepeatedUiErrors(logData?.lines ?? []).filter((line) => {
+    if (filter && !line.toLocaleLowerCase().includes(filter)) return false;
+    const displayLine = stripLogSourceLabel(line);
+    const parsed = formatJournalTimestamp(displayLine, uiPreferences.journalTimeZone);
+    const severity = splitJournalLevel(parsed?.message ?? displayLine, displayLine);
+    return matchesJournalLevel(logLevelFilter, severity.level);
+  });
   const previousList = body.querySelector<HTMLElement>('.journal-lines');
   const previousScroll = previousList ? {
     scrollTop: previousList.scrollTop,
@@ -282,7 +291,7 @@ function drawJournal(): void {
     icon.className = 'journal-empty-icon';
     icon.textContent = '▤';
     const title = document.createElement('strong');
-    title.textContent = filter ? 'Совпадений нет' : 'В выбранном журнале пока нет записей';
+    title.textContent = filter || logLevelFilter !== 'all' ? 'Совпадений нет' : 'В выбранном журнале пока нет записей';
     const file = document.createElement('p');
     file.textContent = logData?.file ?? 'Ожидается ответ backend';
     empty.append(icon, title, file);
@@ -330,6 +339,10 @@ function bindJournal(): void {
   });
   document.querySelector<HTMLInputElement>('#journal-filter')?.addEventListener('input', (event) => {
     logFilter = (event.currentTarget as HTMLInputElement).value;
+    drawJournal();
+  });
+  document.querySelector<HTMLSelectElement>('#journal-level-filter')?.addEventListener('change', (event) => {
+    logLevelFilter = (event.currentTarget as HTMLSelectElement).value as JournalLevelFilter;
     drawJournal();
   });
   document.querySelector<HTMLButtonElement>('#journal-clear')?.addEventListener('click', () => {
@@ -506,7 +519,10 @@ function bindXkeenControls(root: ParentNode): void {
 }
 
 function showToast(message: string, kind: 'success' | 'error' | 'info'): void {
-  if (kind === 'error') void logUiError('ui', message).catch(() => undefined);
+  if (kind === 'error') {
+    if (!shouldReportUiError(message, Date.now(), recentUiErrors)) return;
+    void logUiError('ui', message).catch(() => undefined);
+  }
   const region = document.querySelector<HTMLElement>('.toast-region');
   if (!region) return;
   const toast = document.createElement('div');
@@ -901,7 +917,9 @@ function updateChrome(): void {
       const nextLed = nextHeader.querySelector<HTMLElement>('#status-led');
       if (currentLed && nextLed && currentLed.className !== nextLed.className) currentLed.className = nextLed.className;
       setText('#service-label');
-      setText('#service-summary');
+      const currentSummary = header.querySelector<HTMLElement>('#service-summary');
+      const nextSummary = nextHeader.querySelector<HTMLElement>('#service-summary');
+      if (currentSummary && nextSummary && currentSummary.innerHTML !== nextSummary.innerHTML) currentSummary.innerHTML = nextSummary.innerHTML;
       setText('#core-version-label');
       setText('#app-version-label');
       header.querySelector('.top-status-cluster')?.classList.toggle('is-xkeen-busy', xkeenControlBusy || configApplyBusy);

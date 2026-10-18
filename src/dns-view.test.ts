@@ -87,6 +87,8 @@ describe('DNS workspaces', () => {
     });
     expect(view).toContain('id="mihomo-dns-settings"');
     expect(view).toContain('Правила DNS');
+    expect(view).toContain('Используются для обычных запросов устройств.');
+    expect(view).toContain('Назначают отдельные резолверы доменам или правилам.');
     expect(view).toContain('Проверка DNS');
   });
 });

@@ -171,6 +171,23 @@ describe('renderConnections', () => {
     expect(html).toContain('substrate.office.com:443');
     expect(html).toContain('DIRECT');
   });
+
+  it('renders a stable Telegram service icon before the route and keeps country flags inline', () => {
+    const data: MihomoConnections = {
+      uploadTotal: 314, downloadTotal: 234,
+      connections: [{
+        id: 'telegram-1', host: '91.105.192.100:80', destination: '', source: 'PC-1080TI',
+        network: 'tcp', process: '', chains: ['', '🇸🇪 ⚡ Sweden', 'Telegram', ''], rule: 'MATCH', rulePayload: '',
+        upload: 314, download: 234, start: '2026-10-18T07:30:00Z',
+      }],
+    };
+    const html = renderConnections(data, false, null);
+    expect(html).toContain('class="connection-app-icon is-telegram"');
+    expect(html).toContain('<svg viewBox="0 0 16 16" aria-hidden="true"');
+    expect(html).toContain('>Telegram <span aria-hidden="true">›</span> <span class="country-flag flag-se"');
+    expect(html).not.toContain('imageTelegramsvg');
+    expect(html).not.toContain('>›</span> <span aria-hidden="true">›</span>');
+  });
 });
 
 describe('orderSelectorsByConfig', () => {

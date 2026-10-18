@@ -122,9 +122,12 @@ function connectionRow(connection: MihomoConnection, showSourceName = false, sou
   const host = rawHost ? connection.destinationPort && !/\]:\d+$/.test(rawHost) && !/^[^:]+:\d+$/.test(rawHost)
     ? `${rawHost.includes(':') && !rawHost.startsWith('[') ? `[${rawHost}]` : rawHost}:${connection.destinationPort}` : rawHost
     : connection.destination || 'Адрес недоступен';
-  const displayedChains = [...connection.chains].reverse();
+  const displayedChains = connection.chains
+    .filter((chain): chain is string => typeof chain === 'string' && chain.trim().length > 0)
+    .map((chain) => chain.trim())
+    .reverse();
   const route = displayedChains.length ? displayedChains.join(' › ') : 'Маршрут неизвестен';
-  const category = displayedChains[0]?.toLowerCase() ?? '';
+  const categories = displayedChains.map((chain) => chain.toLowerCase());
   const search = [host, connection.source, route, connection.rule, connection.rulePayload, connection.process].join(' ').toLocaleLowerCase();
   const network = connection.network.toUpperCase() || '—';
   const startedAt = Date.parse(connection.start);
@@ -133,9 +136,18 @@ function connectionRow(connection: MihomoConnection, showSourceName = false, sou
   const sourceName = showSourceName && connection.sourceIp ? sourceNames[connection.sourceIp] : undefined;
   const source = sourceName || connection.source || 'Неизвестное устройство';
   const sourceTitle = sourceName ? `${sourceName} (${connection.source})` : source;
-  const appIcon = category.includes('youtube') ? 'youtube' : category.includes('github') ? 'github' : category.includes('google') ? 'google' : category.includes('cdn') ? 'web' : category.includes('meta') ? 'meta' : category === 'ai' ? 'ai' : '';
+  const appIcon = categories.some((name) => name.includes('telegram')) ? 'telegram'
+    : categories.some((name) => name.includes('youtube')) ? 'youtube'
+      : categories.some((name) => name.includes('github')) ? 'github'
+        : categories.some((name) => name.includes('google')) ? 'google'
+          : categories.some((name) => name.includes('cdn')) ? 'web'
+            : categories.some((name) => name.includes('meta')) ? 'meta'
+              : categories.some((name) => /^ai(?:\b|[-_])/i.test(name)) ? 'ai' : '';
   const appGlyph = appIcon === 'youtube' ? '▶' : appIcon === 'github' ? '●' : appIcon === 'google' ? 'G' : appIcon === 'meta' ? '∞' : appIcon === 'ai' ? '✦' : '◎';
-  const routeIcon = appIcon ? `<span class="connection-app-icon is-${appIcon}" aria-hidden="true">${appGlyph}</span>` : '';
+  const routeGlyph = appIcon === 'telegram'
+    ? '<svg viewBox="0 0 16 16" aria-hidden="true"><path d="M14.48 2.02 1.94 6.86c-.79.31-.75 1.43.06 1.66l3.22.94 1.2 3.67c.24.74 1.18.94 1.69.35l1.82-2.02 3.31 2.42c.6.44 1.45.1 1.58-.63l2.02-10.1c.17-.83-.56-1.44-1.36-1.13ZM6.1 9.13l6.13-4.05-4.8 4.8-.26 2.05-.99-2.8-.08-.02Z"/></svg>'
+    : appGlyph;
+  const routeIcon = appIcon ? `<span class="connection-app-icon is-${appIcon}" aria-hidden="true">${routeGlyph}</span>` : '';
   const chain = `<span class="connection-chain" title="${escapeHtml(route)}">${displayedChains.length ? displayedChains.map(renderProxyName).join(' <span aria-hidden="true">›</span> ') : escapeHtml(route)}</span>`;
   return `<tr data-search="${escapeHtml(search)}">
     <td class="connection-route-cell${routeIcon ? ' has-app-icon' : ''}"><span class="connection-route-inner">${routeIcon}${chain}</span></td>

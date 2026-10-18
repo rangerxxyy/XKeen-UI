@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { formatJournalTimestamp, getJournalViewState, splitJournalLevel, stripLogSourceLabel } from './journal-view-state';
+import { deduplicateRepeatedUiErrors, formatJournalTimestamp, getJournalViewState, matchesJournalLevel, splitJournalLevel, stripLogSourceLabel } from './journal-view-state';
 
 describe('getJournalViewState', () => {
   it('keeps existing journal rows visible while refreshing in the background', () => {
@@ -58,6 +58,16 @@ describe('stripLogSourceLabel', () => {
   });
 });
 
+describe('deduplicateRepeatedUiErrors', () => {
+  it('keeps the first copy of identical UI polling errors but preserves other repeated entries', () => {
+    const pollError = 'unix=1792319887 level=ERROR component=xkeen-ui source=ui message=Данные не обновились: Mihomo вернул некорректный список соединений  [XKeen UI]';
+    const serviceError = 'unix=1792319887 level=ERROR component=xkeen-ui source=config message=Ошибка YAML  [XKeen UI]';
+
+    expect(deduplicateRepeatedUiErrors([pollError, pollError, pollError, serviceError, serviceError]))
+      .toEqual([pollError, serviceError, serviceError]);
+  });
+});
+
 describe('splitJournalLevel', () => {
   it('separates XKeen severity labels from their message text', () => {
     expect(splitJournalLevel('INFO Start initial configuration in progress'))
@@ -67,5 +77,25 @@ describe('splitJournalLevel', () => {
   it('reads severity from panel lifecycle metadata when the message has no level prefix', () => {
     expect(splitJournalLevel('component=xkeen action=restart', 'unix=42 level=ERROR component=xkeen action=restart'))
       .toEqual({ level: 'ERROR', message: 'component=xkeen action=restart' });
+  });
+});
+
+describe('matchesJournalLevel', () => {
+  it('keeps every record visible in the default view', () => {
+    expect(matchesJournalLevel('all', null)).toBe(true);
+    expect(matchesJournalLevel('all', 'INFO')).toBe(true);
+  });
+
+  it('groups fatal messages with errors and accepts warning aliases', () => {
+    expect(matchesJournalLevel('error', 'FATAL')).toBe(true);
+    expect(matchesJournalLevel('error', 'INFO')).toBe(false);
+    expect(matchesJournalLevel('warning', 'WARNING')).toBe(true);
+    expect(matchesJournalLevel('warning', 'WARN')).toBe(true);
+  });
+
+  it('shows only informational records for the info filter', () => {
+    expect(matchesJournalLevel('info', 'INFO')).toBe(true);
+    expect(matchesJournalLevel('info', 'DEBUG')).toBe(true);
+    expect(matchesJournalLevel('info', null)).toBe(false);
   });
 });

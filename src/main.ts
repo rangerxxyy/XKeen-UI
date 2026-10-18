@@ -87,6 +87,7 @@ let logExpanded = false;
 let logFilter = '';
 let logController: AbortController | undefined;
 let logRefreshTimer: number | undefined;
+let logRefreshAfterCurrent = false;
 let appRelease: AppRelease | null = null;
 let appReleases: AppRelease[] = [];
 let appUpdateMessage = 'Подготовка обновления…';
@@ -302,6 +303,10 @@ async function loadSystemLog(): Promise<void> {
     if (logController === controller) {
       logLoading = false;
       drawJournal();
+      if (logRefreshAfterCurrent) {
+        logRefreshAfterCurrent = false;
+        window.setTimeout(() => void loadSystemLog(), 0);
+      }
     }
   }
 }
@@ -1359,7 +1364,8 @@ window.addEventListener(CONFIG_APPLY_EVENT, (event) => {
     if (logSelect) logSelect.value = selectedLog;
     void loadSystemLog();
   } else {
-    void loadSystemLog();
+    if (logLoading) logRefreshAfterCurrent = true;
+    else void loadSystemLog();
   }
   setJournalRealtime(detail.phase === 'start');
   updateChrome();

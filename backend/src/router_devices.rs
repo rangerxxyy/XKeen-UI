@@ -39,7 +39,8 @@ fn parse_system_memory(data: &Value) -> Option<MemoryStatus> {
         .split_once('/')?
         .0
         .trim()
-        .parse::<u64>()?;
+        .parse::<u64>()
+        .ok()?;
     if total_kb == 0 || used_kb > total_kb {
         return None;
     }

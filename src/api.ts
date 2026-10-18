@@ -275,6 +275,34 @@ export interface ActiveConfig {
   modified: string | null;
 }
 
+export interface MihomoConfigBackup { id: string; size: number; modified: number }
+
+export async function listMihomoConfigBackups(signal?: AbortSignal): Promise<MihomoConfigBackup[]> {
+  const payload = await getMihomoJson('/api/v1/config/backups', 'Загрузка резервных копий Mihomo', signal);
+  if (!isRecord(payload) || !Array.isArray(payload.backups) || payload.backups.length > 100 || payload.backups.some((item) =>
+    !isRecord(item) || typeof item.id !== 'string' || !/^\.mihomo-config-\d+-\d+\.yaml$/.test(item.id) ||
+    typeof item.size !== 'number' || item.size < 0 || item.size > 4 * 1024 * 1024 ||
+    typeof item.modified !== 'number' || item.modified < 0)) {
+    throw new Error('Backend вернул некорректный список резервных копий Mihomo');
+  }
+  return payload.backups as MihomoConfigBackup[];
+}
+
+export async function restoreMihomoConfigBackup(backupId: string, expectedContent: string, signal?: AbortSignal): Promise<ApplyMihomoConfigResult> {
+  if (!/^\.mihomo-config-\d+-\d+\.yaml$/.test(backupId)) throw new Error('Некорректный идентификатор резервной копии');
+  const response = await fetch('/api/v1/config/backups/restore', {
+    method: 'POST', headers: { Accept: 'application/json', 'Content-Type': 'application/json' },
+    body: JSON.stringify({ backupId, expectedContent }), signal,
+  });
+  const payload = await readJson(response, 'Восстановление конфигурации Mihomo');
+  if (!isRecord(payload) || payload.status !== 'applied' || payload.path !== '/opt/etc/mihomo/config.yaml' ||
+      typeof payload.backup !== 'string' || typeof payload.restarted !== 'boolean' || typeof payload.detail !== 'string') {
+    throw new Error('Backend вернул некорректный результат восстановления конфигурации');
+  }
+  if (typeof window !== 'undefined') window.dispatchEvent(new CustomEvent('xkeen-config-applied'));
+  return { status: 'applied', path: payload.path, backup: payload.backup, restarted: payload.restarted, detail: payload.detail };
+}
+
 export async function getActiveMihomoConfig(signal?: AbortSignal): Promise<ActiveConfig> {
   const payload = await getMihomoJson('/api/v1/config/active?core=mihomo', 'Чтение активной конфигурации', signal);
   if (!isRecord(payload) || payload.core !== 'mihomo' || typeof payload.path !== 'string' || typeof payload.content !== 'string') {

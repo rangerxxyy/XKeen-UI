@@ -8,12 +8,13 @@ import { json } from '@codemirror/lang-json';
 import { applyEdits, format as formatJsonc, parse as parseJsonc, printParseErrorCode, type ParseError } from 'jsonc-parser';
 import { isMap, parseDocument } from 'yaml';
 import { chooseReferenceTemplate, getDefaultTemplate } from './templates';
-import { applyActiveMihomoConfig, applyXrayConfigFile, getActiveMihomoConfig, getRouterConfigFile, getXrayConfigFile, logUiError, saveActiveMihomoConfig, saveRouterConfigFile, saveXrayConfigFile, type RouterConfigFile, type XrayConfigFile } from './api';
+import { applyActiveMihomoConfig, applyXrayConfigFile, getActiveMihomoConfig, getRouterConfigFile, getXrayConfigFile, listMihomoConfigBackups, logUiError, restoreMihomoConfigBackup, saveActiveMihomoConfig, saveRouterConfigFile, saveXrayConfigFile, type RouterConfigFile, type XrayConfigFile } from './api';
 import { confirmInApp } from './confirm-dialog';
 import { canPersistConfig, runConfigApply } from './config-actions';
 import { generateConfigForCore } from './outbound-parser';
 import { appendMihomoProxy } from './proxy-import';
 import { createMihomoProviderYaml, insertMihomoProvider, nextMihomoProviderName, type MihomoProviderPosition, type MihomoProviderSettings } from './mihomo-provider';
+import { formatBackupDate, formatBackupSize } from './config-backups';
 
 const draftKey = 'xkeen-ui:draft:';
 const activeFileKey = 'xkeen-ui:draft-active-file';
@@ -88,6 +89,63 @@ function setEditorIdentity(routerMode: boolean, activeCore: 'mihomo' | 'xray' | 
   if (templateButton) templateButton.hidden = file.id === 'xkeen' || file.format === 'text';
   const addProxyButton = document.querySelector<HTMLElement>('#yaml-add-proxy');
   if (addProxyButton) addProxyButton.hidden = file.id !== 'config' || activeCore !== 'mihomo';
+  const backupsButton = document.querySelector<HTMLElement>('#yaml-backups');
+  if (backupsButton) backupsButton.hidden = !routerMode || file.id !== 'config' || activeCore !== 'mihomo';
+}
+
+function bindConfigBackups(signal: AbortSignal): void {
+  document.querySelector<HTMLButtonElement>('#yaml-backups')?.addEventListener('click', async (event) => {
+    (event.currentTarget as HTMLButtonElement).closest('details')?.removeAttribute('open');
+    const dialog = document.createElement('dialog');
+    dialog.className = 'modal config-backups-dialog';
+    dialog.setAttribute('aria-labelledby', 'config-backups-title');
+    dialog.innerHTML = `<section class="modal-panel"><header class="modal-heading"><span class="modal-icon" aria-hidden="true">◷</span><h2 id="config-backups-title">Резервные копии Mihomo</h2><button class="icon-button" type="button" data-close-backups aria-label="Закрыть">×</button></header><p class="modal-note">Выберите сохранённый config.yaml. Перед восстановлением панель проверит конфигурацию, сохранит текущую версию и перезапустит Mihomo.</p><div class="config-backups-list" aria-live="polite"><p class="config-backups-empty">Загружаем список…</p></div></section>`;
+    document.body.append(dialog);
+    const close = () => { dialog.close(); dialog.remove(); };
+    dialog.querySelector('[data-close-backups]')?.addEventListener('click', close, { signal });
+    dialog.addEventListener('click', (clickEvent) => { if (clickEvent.target === dialog) close(); }, { signal });
+    dialog.showModal();
+    const list = dialog.querySelector<HTMLElement>('.config-backups-list');
+    try {
+      const backups = await listMihomoConfigBackups(signal);
+      if (!list || !dialog.isConnected) return;
+      list.replaceChildren();
+      if (!backups.length) {
+        const empty = document.createElement('p'); empty.className = 'config-backups-empty'; empty.textContent = 'Сохранённых резервных копий пока нет.'; list.append(empty); return;
+      }
+      for (const backup of backups) {
+        const row = document.createElement('article'); row.className = 'config-backup-row';
+        const details = document.createElement('div'); details.className = 'config-backup-details';
+        const name = document.createElement('strong'); name.textContent = formatBackupDate(backup.modified);
+        const meta = document.createElement('span'); meta.textContent = `${formatBackupSize(backup.size)} · ${backup.id}`;
+        details.append(name, meta);
+        const restore = document.createElement('button'); restore.type = 'button'; restore.className = 'editor-button editor-button-primary'; restore.textContent = 'Восстановить';
+        restore.addEventListener('click', async () => {
+          if (!(await confirmInApp('Восстановить конфигурацию?', 'Текущий config.yaml будет сохранён в резервную копию, затем выбранный файл пройдёт проверку Mihomo и будет применён с перезапуском ядра.', 'Восстановить'))) return;
+          restore.disabled = true; restore.textContent = 'Проверка…';
+          try {
+            const current = await getActiveMihomoConfig(signal);
+            await runConfigApply('mihomo', () => restoreMihomoConfigBackup(backup.id, current.content, signal));
+            const restored = await getActiveMihomoConfig(signal);
+            activeConfigSnapshot = restored.content;
+            if (editor && currentFile().id === 'config') {
+              editor.dispatch({ changes: { from: 0, to: editor.state.doc.length, insert: restored.content } });
+              editor.focus();
+            }
+            setValidation('Резервная копия проверена Mihomo и восстановлена', true);
+            close();
+          } catch (cause) {
+            restore.disabled = false; restore.textContent = 'Повторить';
+            const message = cause instanceof Error ? cause.message : 'Не удалось восстановить резервную копию.';
+            setValidation(`Восстановление не выполнено: ${message}`, false);
+          }
+        }, { signal });
+        row.append(details, restore); list.append(row);
+      }
+    } catch (cause) {
+      if (list) { list.replaceChildren(); const error = document.createElement('p'); error.className = 'config-backups-empty is-error'; error.textContent = cause instanceof Error ? cause.message : 'Не удалось загрузить резервные копии.'; list.append(error); }
+    }
+  }, { signal });
 }
 
 function bindAddProxyDialog(signal: AbortSignal): void {
@@ -411,6 +469,7 @@ export function mountYamlEditor(routerMode = false, activeCore: 'mihomo' | 'xray
 
   setEditorIdentity(routerMode, activeCore);
   bindAddProxyDialog(signal);
+  bindConfigBackups(signal);
   const file = currentFile();
   const storedDraft = sessionStorage.getItem(`${draftKey}${file.id}`);
   const startWithRouterFile = routerMode && (file.id === 'config' || isRouterConfigFile(file.id) || isXrayConfigFile(file.id));

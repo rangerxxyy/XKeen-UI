@@ -1553,6 +1553,22 @@ body { -webkit-font-smoothing:auto; }
 .proxy-import-dialog .modal-heading h2 { flex:1; margin:0; color:#f4f7fc; font-size:19px; font-weight:700; letter-spacing:-.02em; }
 .proxy-import-dialog .modal-icon { color:#7eb6ff; font-size:19px; }
 .proxy-import-dialog .modal-note { margin:0; color:#b9c6d8; font-size:13px; font-weight:450; line-height:1.5; }
+.config-backups-dialog { width:min(680px,calc(100vw - 24px)); max-width:none; max-height:min(88dvh,760px); padding:0; overflow:visible; border:0; background:transparent; color:inherit; }
+.config-backups-dialog::backdrop { background:#030711b8; backdrop-filter:blur(3px); }
+.config-backups-dialog .modal-panel { display:grid; gap:12px; max-height:min(88dvh,760px); padding:20px; overflow:hidden; border:1px solid #3c4663; border-radius:14px; background:linear-gradient(145deg,#141b2d,#0d1422 72%); color:#edf1fc; box-shadow:0 22px 60px #000a,0 0 36px #7666e51a; }
+.config-backups-dialog .modal-heading { display:flex; align-items:center; gap:10px; }
+.config-backups-dialog .modal-heading h2 { flex:1; margin:0; font-size:18px; }
+.config-backups-dialog .modal-icon { color:#b5a2ff; }
+.config-backups-dialog .modal-note { margin:0; color:#b9c6d8; font-size:13px; line-height:1.55; }
+.config-backups-list { display:grid; gap:8px; max-height:min(58dvh,520px); padding:2px 4px 2px 0; overflow:auto; overscroll-behavior:contain; }
+.config-backup-row { display:flex; align-items:center; justify-content:space-between; gap:12px; min-width:0; padding:12px; border:1px solid #303d55; border-radius:10px; background:#111a2a; transition:border-color .16s ease,background .16s ease,transform .16s ease; }
+.config-backup-row:hover { transform:translateY(-1px); border-color:#7264cb; background:#171f34; }
+.config-backup-details { display:grid; min-width:0; gap:4px; }
+.config-backup-details strong { color:#f1edff; font-size:13px; }
+.config-backup-details span { overflow:hidden; color:#aebbd0; font:11px/1.45 ui-monospace,SFMono-Regular,Consolas,monospace; text-overflow:ellipsis; white-space:nowrap; }
+.config-backups-empty { margin:0; padding:18px 12px; color:#b9c6d8; text-align:center; }
+.config-backups-empty.is-error { color:#ffb1b7; }
+@media(max-width:520px) { .config-backups-dialog .modal-panel { padding:14px; } .config-backup-row { align-items:flex-start; flex-direction:column; } .config-backup-row .editor-button { width:100%; } }
 .proxy-import-field { display:grid; gap:7px; color:#e8eef7; font-size:13px; font-weight:650; line-height:1.35; }
 .proxy-import-field input,.proxy-provider-field input { width:100%; min-width:0; min-height:38px; padding:0 11px; border:1px solid #34445d; border-radius:8px; background:#090f1a; color:#f0f4fa; font:500 13px/1.3 var(--font-ui); transition:border-color .14s ease,box-shadow .14s ease,background-color .14s ease; }
 .proxy-import-field input:focus-visible,.proxy-provider-field input:focus-visible,.proxy-provider-unit:focus-within { outline:none; border-color:#6b9ceb; box-shadow:0 0 0 2px #4978c344; }

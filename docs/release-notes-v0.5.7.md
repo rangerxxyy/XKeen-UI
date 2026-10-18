@@ -4,10 +4,11 @@ This release carries the selector, connections, configuration workspace, status 
 
 ## Changes
 
-- Selector changes remain responsive while requests are serialized; after a group switch, active connections routed through that group are closed so new traffic uses the selected node.
+- Selector changes remain responsive while requests are serialized; after a group switch, active connections routed through that group are closed so new traffic uses the selected node. Ping values are brighter, larger, and pinned to each node card's lower-right corner.
 - Connection route icons use the selector's icon assets at 18px, matching the upstream reference.
 - The configuration page keeps the event journal below the editor and reachable by scrolling the page. The `config` tab is separated and outlined. Core management no longer shows the obsolete safety paragraph or a redundant Done button.
 - Utilities follow the requested order, and the backups entry is removed from the menu while backend recovery remains available.
+- The service status controls are aligned and outlined, with clear running/stopped states.
 - Main navigation is ordered Selectors, Connections, DNS, Configuration.
 
 ## Verification and known limits

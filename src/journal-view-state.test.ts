@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { formatJournalTimestamp, getJournalViewState, stripLogSourceLabel } from './journal-view-state';
+import { formatJournalTimestamp, getJournalViewState, splitJournalLevel, stripLogSourceLabel } from './journal-view-state';
 
 describe('getJournalViewState', () => {
   it('keeps existing journal rows visible while refreshing in the background', () => {
@@ -32,6 +32,13 @@ describe('formatJournalTimestamp', () => {
     )).toEqual({ timestamp: '2026/10/17 14:37:51.016495', message: 'INFO Start initial configuration in progress' });
   });
 
+  it('formats XKeen slash timestamps and separates their severity from the message', () => {
+    expect(formatJournalTimestamp(
+      '2026/10/18 10:09:03.164232 INFO Start initial configuration in progress',
+      'local',
+    )).toEqual({ timestamp: '2026/10/18 10:09:03.164232', message: 'INFO Start initial configuration in progress' });
+  });
+
   it('formats the Unix timestamps written by the router lifecycle and UI error logger', () => {
     const timestamp = Math.floor(Date.parse('2026-10-16T17:30:00Z') / 1000);
     expect(formatJournalTimestamp(`unix=${timestamp} level=ERROR component=xkeen-ui source=yaml message=Invalid YAML`, 'Europe/Moscow'))
@@ -48,5 +55,17 @@ describe('stripLogSourceLabel', () => {
     expect(stripLogSourceLabel('Прокси-клиент остановлен  [Xray]')).toBe('Прокси-клиент остановлен');
     expect(stripLogSourceLabel('Ошибка YAML  [XKeen UI]')).toBe('Ошибка YAML');
     expect(stripLogSourceLabel('rule-set:category-ru@domain')).toBe('rule-set:category-ru@domain');
+  });
+});
+
+describe('splitJournalLevel', () => {
+  it('separates XKeen severity labels from their message text', () => {
+    expect(splitJournalLevel('INFO Start initial configuration in progress'))
+      .toEqual({ level: 'INFO', message: 'Start initial configuration in progress' });
+  });
+
+  it('reads severity from panel lifecycle metadata when the message has no level prefix', () => {
+    expect(splitJournalLevel('component=xkeen action=restart', 'unix=42 level=ERROR component=xkeen action=restart'))
+      .toEqual({ level: 'ERROR', message: 'component=xkeen action=restart' });
   });
 });

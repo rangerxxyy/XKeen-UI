@@ -86,6 +86,15 @@ describe('renderSelectors', () => {
     expect(html).toContain('aria-label="Проверить ping. Нажмите, чтобы повторить ping узла Finland"');
   });
 
+  it('shows automatic Fastest groups for ping without offering manual node selection', () => {
+    const html = renderSelectors([{ name: 'Fastest', type: 'URLTest', icon: null, current: 'DIRECT', options: [
+      { name: 'DIRECT', type: 'Direct', icon: null, alive: null, delay: null },
+    ] }], false, null);
+    expect(html).toContain('data-ping-group="Fastest"');
+    expect(html).toContain('data-ping-proxy="DIRECT"');
+    expect(html).toContain('disabled title="Узел выбирается ядром автоматически"');
+  });
+
   it('shows a clear red failure marker when a node is unreachable', () => {
     const groups: MihomoSelector[] = [{ name: 'Main', icon: null, current: null, options: [
       { name: 'Offline', type: 'VLESS', icon: null, alive: false, delay: null },

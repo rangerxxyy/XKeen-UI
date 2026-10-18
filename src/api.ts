@@ -69,6 +69,7 @@ export interface MihomoProxyOption {
 
 export interface MihomoSelector {
   name: string;
+  type?: string;
   icon: string | null;
   current: string | null;
   options: MihomoProxyOption[];
@@ -241,7 +242,7 @@ export async function getMihomoSelectors(signal?: AbortSignal): Promise<MihomoSe
     }
   }
   return Object.entries(proxies).flatMap(([key, raw]): MihomoSelector[] => {
-    if (!isRecord(raw) || raw.type !== 'Selector' || !Array.isArray(raw.all)) return [];
+    if (!isRecord(raw) || !['Selector', 'URLTest', 'Fallback', 'LoadBalance'].includes(String(raw.type)) || !Array.isArray(raw.all)) return [];
     const options = raw.all.flatMap((name): MihomoProxyOption[] => {
       if (typeof name !== 'string') return [];
       const option = proxies[name];
@@ -263,7 +264,7 @@ export async function getMihomoSelectors(signal?: AbortSignal): Promise<MihomoSe
         ...(typeof option.xudp === 'boolean' ? { xudp: option.xudp } : {}),
       }];
     });
-    return [{ name: typeof raw.name === 'string' ? raw.name : key, icon: typeof raw.icon === 'string' ? raw.icon : null, current: typeof raw.now === 'string' ? raw.now : null, options }];
+    return [{ name: typeof raw.name === 'string' ? raw.name : key, type: String(raw.type), icon: typeof raw.icon === 'string' ? raw.icon : null, current: typeof raw.now === 'string' ? raw.now : null, options }];
   });
 }
 

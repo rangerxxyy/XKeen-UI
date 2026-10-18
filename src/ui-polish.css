@@ -22,9 +22,11 @@
 .app-shell .topbar .brand { font-size:26px; }
 .app-shell .workspace-frame > .main-content { min-height:0; height:auto; flex:1 1 auto; overflow:auto; padding:15px 16px 18px; }
 .app-shell .workspace-frame .config-file-switcher-panel { flex:0 0 auto; margin:0 0 0 auto; }
-.app-shell .workspace-frame > .main-content:has(.config-layout) { overflow:hidden; }
+.app-shell .workspace-frame > .main-content:has(.config-layout) { overflow:visible; }
 .app-shell .workspace-frame:has(.selector-list),
 .app-shell .workspace-frame:has(.mihomo-empty) { flex:0 0 auto; height:auto; min-height:0; }
+.app-shell .workspace-frame:has(.config-layout) { flex:0 0 auto; height:auto; min-height:0; overflow:visible; }
+.app-shell .workspace-frame > .main-content:has(.config-layout) { flex:0 0 auto; }
 .app-shell .workspace-frame > .main-content:has(.selector-list),
 .app-shell .workspace-frame > .main-content:has(.mihomo-empty) { flex:0 0 auto; overflow:visible; }
 .app-shell .workspace-frame .config-layout { height:min(72vh,900px); min-height:min(560px,calc(100vh - 220px)); }
@@ -93,7 +95,7 @@
 .app-shell .connection-route-hop { display:inline-flex; align-items:center; gap:4px; flex:0 0 auto; }
 .app-shell .connection-proxy-icon { width:16px; height:16px; flex:0 0 16px; object-fit:contain; border-radius:50%; }
 .app-shell .connection-route-arrow { display:inline-grid; flex:0 0 16px; width:16px; height:16px; place-items:center; border-radius:50%; color:#c2c9d6; background:#283347; font-size:10px; font-weight:700; line-height:1; }
-.app-shell .proxy-health.proxy-ping-value { border:0; background:transparent; box-shadow:none; border-radius:6px; min-width:36px; padding:4px 6px; font-size:15px; font-weight:700; font-variant-numeric:tabular-nums; }
+.app-shell .proxy-health.proxy-ping-value { position:absolute; right:7px; bottom:5px; justify-content:flex-end; border:0; background:transparent; box-shadow:none; border-radius:6px; min-width:48px; min-height:28px; padding:3px 4px; font-size:16px; font-weight:750; font-variant-numeric:tabular-nums; }
 .app-shell .proxy-health.proxy-ping-value:hover { background:color-mix(in srgb,currentColor 9%,transparent); }
 .app-shell .proxy-health.proxy-ping-value:not(.is-alive):not(.is-dead) { color:#fff; }
 .app-shell .proxy-health.is-dead { color:var(--danger,#ff7187); }
@@ -164,7 +166,11 @@
 .connection-led.is-online { animation:service-breathe 2s ease-in-out infinite; }
 .is-xkeen-busy .connection-led { animation:service-breathe 1s ease-in-out infinite; }
 @keyframes service-sweep { from { background-position:180% 0; } to { background-position:-80% 0; } }
-@keyframes service-breathe { 50% { opacity:.55; box-shadow:0 0 10px var(--cyan,#5796ff); } }
+@keyframes service-breathe { 50% { opacity:.78; box-shadow:0 0 13px #22d3a0; } }
+.connection-led.is-online { background:#20d49e; box-shadow:0 0 8px #20d49e88; }
+:root[data-theme="light"] .top-status-cluster { border-color:#cfd7e3; background:#f6f8fc; box-shadow:inset 0 1px #fff; }
+:root[data-theme="light"] .config-file-primary { border-color:#cbd5e1; background:#f4f7fb; box-shadow:inset 0 1px #fff; }
+:root[data-theme="light"] .config-file-primary .config-file-tab { border-color:#64748b; color:#172033; background:#fff; box-shadow:inset 0 0 0 1px #33415512; }
 @media(prefers-reduced-motion:reduce) { .top-status-cluster.is-xkeen-busy::after,.connection-led.is-online,.is-xkeen-busy .connection-led { animation:none; } }
 @media(prefers-reduced-motion:reduce) { .app-shell *, .app-shell *::before, .app-shell *::after { scroll-behavior:auto!important; animation-duration:.01ms!important; animation-iteration-count:1!important; transition-duration:.01ms!important; } }
 
@@ -216,7 +222,7 @@
 }
 
 .topbar { border-color:#393257; background:linear-gradient(110deg,#17152a,#111323 58%,#18152c); }
-.top-status-cluster { gap:10px; }
+.top-status-cluster { min-height:48px; gap:10px; padding:6px 9px; border:1px solid #30394b; border-radius:12px; background:#0d1421; box-shadow:inset 0 1px #ffffff08; }
 .top-status { gap:10px; }
 .top-status strong { color:#eee9ff; font-size:12px; font-weight:650; }
 .top-status small { display:flex; align-items:center; gap:8px; color:#b9b0d5; font-size:10px; font-variant-numeric:tabular-nums; }
@@ -228,12 +234,15 @@
 .header-service-restart:hover:not(:disabled) { border-color:#a68aed; color:#fff; background:#36265a; }
 .header-service-stop { color:#ff8a9a; border-color:#714050; background:#291722; }
 .header-service-stop:hover:not(:disabled) { border-color:#de6d89; background:#472032; }
-.is-xkeen-busy .connection-led { box-shadow:0 0 12px #a78bfa; }
+.is-xkeen-busy .connection-led { box-shadow:0 0 12px #23d5a3; }
 .top-status-cluster.is-xkeen-busy::after { background:linear-gradient(110deg,transparent,#a78bfa25,transparent); }
 .top-status-cluster.is-xkeen-busy .top-status,.top-status-cluster.is-xkeen-busy .top-status strong { color:#e2d5ff; }
 .header-service-controls[aria-busy="true"] .header-service-action { border-color:#8e73cb; color:#e2d5ff; }
 .service-control-spinner { border-top-color:#d0bcff; box-shadow:0 0 0 3px #a78bfa24; }
-.config-file-switcher-panel { margin:0 12px 10px; padding:7px; overflow:hidden; border:1px solid #433b63; border-radius:14px; background:linear-gradient(145deg,#151628,#111827); box-shadow:inset 0 1px 0 #ffffff08,0 5px 16px #070a1425; }
+.config-file-switcher-panel { display:flex; align-items:center; gap:8px; margin:0 12px 10px auto; padding:0; overflow:visible; border:0; border-radius:0; background:transparent; box-shadow:none; }
+.config-file-primary { flex:0 0 auto; padding:4px; border:1px solid #39445a; border-radius:10px; background:#111827; box-shadow:inset 0 1px #ffffff08; }
+.config-file-primary .config-file-tab { min-height:34px; padding-inline:12px; border-color:#65728a; border-radius:7px; color:#f2f5fb; background:#0d1421; font:700 13px/1.2 var(--font-ui); box-shadow:inset 0 0 0 1px #ffffff10; }
+.config-file-primary .config-file-tab:hover,.config-file-primary .config-file-tab:focus-visible { border-color:#8eb8ff; background:#17233a; outline:none; }
 .config-file-nav { width:max-content; max-width:100%; margin:0; background:#211d35; border:1px solid #393052; }
 .config-file-nav .config-file-tab { flex:0 0 auto; }
 .config-file-nav .config-file-tab { min-height:36px; padding-inline:12px; color:#c2b9dc; font:650 13px/1.2 var(--font-ui); letter-spacing:0; transition:color .16s ease,background .16s ease,border-color .16s ease,transform .16s ease; }
@@ -422,8 +431,8 @@
 
 @media(max-width:600px) {
   .app-shell .topbar .brand { font-size:21px; }
-  .config-file-switcher-panel { margin:0 8px 8px; padding:5px; }
-  .config-file-nav { width:100%; overflow-x:auto; }
+  .config-file-switcher-panel { max-width:100%; margin:0 8px 8px auto; gap:5px; }
+  .config-file-nav { width:max-content; max-width:100%; overflow-x:auto; }
 }
 
 /* DNS status values sit directly on the page surface, as in zxc-rv. */
@@ -469,10 +478,20 @@
 .app-shell .dns-handoff-pane .dns-management-row { margin:0 16px 12px; }
 
 /* Keep configuration actions visible without scrolling a second log panel. */
-.app-shell .workspace-frame:has(.config-layout) + .journal-panel { display:none; }
+.app-shell .workspace-frame:has(.config-layout) + .journal-panel { display:flex; }
 
 /* Match the larger, clearer connection rows shown by the reference panel. */
 .app-shell .connection-table th { font-size:13px; }
 .app-shell .connection-table td,
 .app-shell .connection-table .connection-chain,
 .app-shell .connection-table td.connection-host { font-size:13px; }
+
+/* Keep selector pings legible and pinned to the lower-right corner of each node. */
+.app-shell .proxy-option { position:relative; }
+.app-shell .proxy-option-bottom { padding-right:54px; }
+.app-shell .proxy-health.proxy-ping-value { position:absolute; right:7px; bottom:5px; min-width:48px; min-height:30px; justify-content:flex-end; padding:3px 4px; font-size:19px; font-weight:750; }
+.app-shell .proxy-health.proxy-ping-value .ping-status-icon { display:inline-grid; flex:0 0 18px; width:18px; height:18px; place-items:center; }
+.app-shell .proxy-health.proxy-ping-value .ping-status-icon svg { width:18px; height:18px; fill:none; stroke:currentColor; stroke-width:1.8; stroke-linecap:round; stroke-linejoin:round; }
+.app-shell .proxy-health.proxy-ping-value .ping-status-icon.is-alive { color:#24dfa8; filter:drop-shadow(0 0 3px #24dfa855); }
+.app-shell .proxy-health.proxy-ping-value .ping-status-icon.is-unknown { color:#ffbd52; }
+.app-shell .proxy-health.proxy-ping-value .ping-status-icon.is-dead { color:#ff6e86; }

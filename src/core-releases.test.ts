@@ -7,6 +7,7 @@ import {
   isDisplayableCoreRelease,
   isStableCompatibleRelease,
   normalizeCoreRepository,
+  renderCoreReleaseDialogMarkup,
   safeCoreReleaseLink,
 } from './core-releases';
 
@@ -14,6 +15,15 @@ const asset = (name: string, size = 1024) => ({
   name,
   size,
   browser_download_url: `https://github.com/owner/repo/releases/download/v1/${encodeURIComponent(name)}`,
+});
+
+describe('core release dialog markup', () => {
+  it('keeps the close icon and removes the redundant note and done button', () => {
+    const markup = renderCoreReleaseDialogMarkup('Обновление Mihomo');
+    expect(markup).toContain('aria-label="Закрыть"');
+    expect(markup).not.toContain('Готово');
+    expect(markup).not.toContain('Перед заменой активного ядра');
+  });
 });
 
 const release = (overrides: Record<string, unknown> = {}) => ({

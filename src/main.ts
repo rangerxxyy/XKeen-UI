@@ -10,7 +10,7 @@ import { CONFIG_APPLY_EVENT, type ConfigApplyEventDetail } from './config-action
 import { createSettingsLoader, type SettingsLoader } from './settings-load';
 import { renderConnectionDetails } from './connection-details';
 import { applyActiveMihomoConfig, closeAllMihomoConnections, closeMihomoConnection, controlXkeen, getActiveMihomoConfig, getCoreSources, getHealth, getMihomoConnections, getMihomoSelectors, getMihomoVersion, getRouterDeviceList, getRouterDnsStatus, getStatus, getSystemLog, getUpdateProxies, getXkeenStatus, logUiError, pingMihomoGroup, pingMihomoProxy, queryMihomoDns, requestAppUpdate, saveCoreSources, saveUpdateProxies, selectMihomoProxy, setRouterDnsManagement, type ApiState, type CoreSources, type MihomoConnections, type MihomoDnsResult, type MihomoSelector, type RouterDnsStatus, type SystemLog, type XkeenStatus } from './api';
-import { applyPingResults, collectConnectionProxyIcons, orderSelectorsByConfig, renderConnections, renderPingStatusIcon, renderSelectors } from './mihomo-view';
+import { applyPingResults, collectConnectionProxyIcons, orderSelectorsByConfig, renderConnections, renderPingStatusIcon, renderSelectorDestination, renderSelectors } from './mihomo-view';
 import { patchDnsManagement, patchMihomoDnsSettings, readMihomoDnsSettings, renderDns, type MihomoDnsSettings } from './dns-view';
 import { bindDnsTextareaGrowth } from './dns-textarea-growth';
 import { fetchConfiguredCoreReleases, isStableCompatibleRelease, openCoreReleaseDialog } from './core-releases';
@@ -23,7 +23,7 @@ import { readUiPreferences, validPingUrl, writeUiPreferences, type UiPreferences
 import { deduplicateRepeatedUiErrors, formatJournalMessage, formatJournalTimestamp, getJournalViewState, renderJournalLoadingSkeleton, splitJournalLevel, stripLogSourceLabel } from './journal-view-state';
 import { getJournalScrollTop, getNewJournalLines, hasJournalLinesChanged } from './journal-scroll';
 import { createAsyncStatusCache } from './dns-status-cache';
-import { selectProxyOptimistically } from './selector-selection';
+import { getAffectedConnectionIds, restoreProxySelection, selectProxyOptimistically } from './selector-selection';
 import { hideClearedJournalLines, rememberClearedJournal } from './journal-clear';
 import { journalExpandIcon, journalExpandLabel } from './journal-ui';
 import { renderAppReleaseActions, renderAppUpdateNotice, renderAppVersionChip } from './app-release-ui';
@@ -54,7 +54,9 @@ let mihomoController: AbortController | undefined;
 let selectors: MihomoSelector[] = [];
 let selectorsLoading = true;
 let selectorsError: string | null = null;
-let selectorSelectionBusy = false;
+const selectorSelectionQueues = new Map<string, Promise<void>>();
+const selectorSelectionVersions = new Map<string, number>();
+const confirmedSelectorSelections = new Map<string, string | null>();
 let connections: MihomoConnections | null = null;
 let connectionSourceNames: Record<string, string> = {};
 let connectionSort: ConnectionSort = { key: 'start', direction: 'descending' };
@@ -186,11 +188,13 @@ function renderConfigFileButtons(): string {
     ip_exclude: 'IP-адреса и подсети вне обработки XKeen', port_exclude: 'Порты, исключённые из обработки XKeen',
     port_proxying: 'Порты, направляемые через прокси', xkeen: 'Параметры запуска и маршрутизации XKeen',
   };
-  return `<div class="config-file-nav" aria-label="Файлы конфигурации">${ids.map((id) => {
+  const buttons = ids.map((id) => {
     const fileId = id;
     const selected = fileId === activeFile;
     return `<button class="config-file-tab ${selected ? 'selected' : ''}" data-config-file="${fileId}" type="button" title="${descriptions[fileId] ?? descriptions[id] ?? id}" aria-label="${labels[id] ?? id}: ${descriptions[fileId] ?? descriptions[id] ?? id}" aria-pressed="${selected}">${labels[id] ?? id}</button>`;
-  }).join('')}</div>`;
+  });
+  const primaryConfig = xray ? '' : buttons.shift() ?? '';
+  return `${primaryConfig ? `<div class="config-file-primary" aria-label="Основной конфиг">${primaryConfig.replace('config-file-tab ', 'config-file-tab config-file-primary-tab ')}</div>` : ''}<div class="config-file-nav" aria-label="Файлы конфигурации">${buttons.join('')}</div>`;
 }
 
 function renderComingSoon(page: Page): string {
@@ -1003,7 +1007,6 @@ function refreshConnectionSourceNames(data: MihomoConnections, signal: AbortSign
 }
 
 async function selectProxyFromUi(button: HTMLButtonElement): Promise<void> {
-  if (selectorSelectionBusy) return;
   const group = button.dataset.proxyGroup;
   const name = button.dataset.proxyName;
   if (button.getAttribute('aria-current') === 'true') return;
@@ -1011,20 +1014,67 @@ async function selectProxyFromUi(button: HTMLButtonElement): Promise<void> {
   const previous = selectors;
   const updated = selectProxyOptimistically(previous, group, name);
   if (updated === previous) return;
-  selectorSelectionBusy = true;
+  if (!confirmedSelectorSelections.has(group)) confirmedSelectorSelections.set(group, previous.find((item) => item.name === group)?.current ?? null);
+  const version = (selectorSelectionVersions.get(group) ?? 0) + 1;
+  selectorSelectionVersions.set(group, version);
   selectors = updated;
   selectorsError = null;
-  render();
-  try {
-    await selectMihomoProxy(group, name);
-  } catch (error) {
-    selectors = previous;
-    selectorsError = error instanceof Error ? error.message : 'Не удалось выбрать узел';
-    showToast(`Не удалось выбрать узел: ${selectorsError}`, 'error');
-  } finally {
-    selectorSelectionBusy = false;
-    if (activePage === 'selectors') render();
-  }
+  updateSelectorSelectionInDom(group, name);
+  const previousRequest = selectorSelectionQueues.get(group) ?? Promise.resolve();
+  const request = previousRequest.catch(() => undefined).then(async () => {
+    try {
+      await selectMihomoProxy(group, name);
+      confirmedSelectorSelections.set(group, name);
+    } catch (error) {
+      if (selectorSelectionVersions.get(group) === version) {
+        selectors = restoreProxySelection(selectors, group, confirmedSelectorSelections.get(group) ?? null);
+        selectorsError = error instanceof Error ? error.message : 'Не удалось выбрать узел';
+        updateSelectorSelectionInDom(group, confirmedSelectorSelections.get(group) ?? '');
+        if (activePage === 'selectors') render();
+        showToast(`Не удалось выбрать узел: ${selectorsError}`, 'error');
+      }
+      return;
+    }
+    if (selectorSelectionVersions.get(group) !== version) return;
+    try {
+      const activeConnections = await getMihomoConnections();
+      const affectedIds = getAffectedConnectionIds(activeConnections.connections, group);
+      await Promise.all(affectedIds.map((id) => closeMihomoConnection(id)));
+      if (connections) connections = { ...connections, connections: connections.connections.filter((connection) => !affectedIds.includes(connection.id)) };
+      if (activePage === 'connections' && affectedIds.length > 0) await loadMihomoPage('connections');
+    } catch (error) {
+      showToast(error instanceof Error ? `Узел выбран, но активные соединения обновить не удалось: ${error.message}` : 'Узел выбран, но активные соединения не удалось обновить', 'error');
+    }
+  });
+  selectorSelectionQueues.set(group, request);
+  void request.finally(() => {
+    if (selectorSelectionQueues.get(group) === request) selectorSelectionQueues.delete(group);
+  });
+}
+
+function updateSelectorSelectionInDom(group: string, name: string): void {
+  document.querySelectorAll<HTMLButtonElement>('.proxy-option-select').forEach((option) => {
+    if (option.dataset.proxyGroup !== group) return;
+    const selected = option.dataset.proxyName === name;
+    const card = option.closest<HTMLElement>('.proxy-option');
+    card?.classList.toggle('is-selected', selected);
+    if (selected) option.setAttribute('aria-current', 'true');
+    else option.removeAttribute('aria-current');
+    const displayName = option.querySelector<HTMLElement>('.proxy-option-name')?.textContent?.trim() ?? option.dataset.proxyName ?? '';
+    option.setAttribute('aria-label', `${selected ? 'Текущий узел' : 'Выбрать узел'}: ${displayName}`);
+  });
+  document.querySelectorAll<HTMLElement>('.selector-card[data-selector-card]').forEach((card) => {
+    const selectedGroup = selectors.find((item) => item.name === card.dataset.selectorCard);
+    const destination = card.querySelector<HTMLElement>('[data-selector-destination]');
+    if (!selectedGroup || !destination) return;
+    const html = renderSelectorDestination(selectedGroup, selectors);
+    const template = document.createElement('template');
+    template.innerHTML = html;
+    const text = template.content.textContent ?? '';
+    destination.innerHTML = html;
+    destination.dataset.selectorDestination = text;
+    destination.closest<HTMLElement>('.selector-destination')?.setAttribute('title', `Маршрут: ${text}`);
+  });
 }
 
 function updateChrome(): void {

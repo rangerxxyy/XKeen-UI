@@ -220,8 +220,11 @@ function renderReleaseList(target: HTMLElement, core: CoreName, releases: GitHub
     }
     list.append(card);
   }
-  const note = element('p', 'core-release-note', 'Перед заменой активного ядра панель проверяет конфигурацию. Для защиты от сбоя создаётся временная копия; при включённой настройке прежний бинарник также сохраняется для ручного отката.');
-  target.replaceChildren(list, ...(visible.length ? [note] : []));
+  target.replaceChildren(list);
+}
+
+export function renderCoreReleaseDialogMarkup(title: string): string {
+  return `<form method="dialog" class="modal-panel core-release-dialog-panel"><div class="modal-heading"><span class="modal-icon">⇩</span><h2>${title}</h2><button class="icon-button" aria-label="Закрыть">×</button></div><div class="core-release-dialog-source"><span id="core-release-repository">Источник загружается…</span><span class="core-release-github">GitHub</span></div><p class="modal-note" id="core-release-dialog-status" aria-live="polite">Загружаем совместимые ARM64-релизы…</p><div id="core-release-dialog-list" class="core-release-dialog-list"></div></form>`;
 }
 
 export async function openCoreReleaseDialog(
@@ -233,7 +236,7 @@ export async function openCoreReleaseDialog(
   const dialog = document.createElement('dialog');
   dialog.className = 'modal core-release-dialog';
   const title = core === 'mihomo' ? 'Обновление Mihomo' : 'Обновление Xray';
-  dialog.innerHTML = `<form method="dialog" class="modal-panel core-release-dialog-panel"><div class="modal-heading"><span class="modal-icon">⇩</span><h2>${title}</h2><button class="icon-button" aria-label="Закрыть">×</button></div><div class="core-release-dialog-source"><span id="core-release-repository">Источник загружается…</span><span class="core-release-github">GitHub</span></div><p class="modal-note" id="core-release-dialog-status" aria-live="polite">Загружаем совместимые ARM64-релизы…</p><div id="core-release-dialog-list" class="core-release-dialog-list"></div><button class="button button-primary modal-close" type="submit">Готово</button></form>`;
+  dialog.innerHTML = renderCoreReleaseDialogMarkup(title);
   document.body.append(dialog);
   dialog.addEventListener('close', () => dialog.remove(), { once: true });
   bindDialogMotion(dialog);

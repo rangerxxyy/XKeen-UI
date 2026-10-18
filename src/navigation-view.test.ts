@@ -2,8 +2,8 @@ import { describe, expect, it } from 'vitest';
 import { MAIN_NAVIGATION_PAGES, renderNavigationView, renderWorkspaceFrame } from './navigation-view';
 
 describe('main navigation', () => {
-  it('keeps config files in a framed group at the right of the reference main tab row', () => {
-    const configTabs = '<div class="config-file-nav"><button class="config-file-tab selected">config</button><button>ip_exclude</button></div>';
+  it('separates the primary config file from the remaining file tabs', () => {
+    const configTabs = '<button class="config-file-primary-tab selected">config</button><div class="config-file-nav"><button>ip_exclude</button></div>';
     const configMarkup = renderNavigationView(MAIN_NAVIGATION_PAGES, 'configuration', configTabs);
     const otherPageMarkup = renderNavigationView(MAIN_NAVIGATION_PAGES, 'selectors', configTabs);
     const mainNavigation = configMarkup.slice(0, configMarkup.indexOf('</nav>') + '</nav>'.length);
@@ -11,6 +11,7 @@ describe('main navigation', () => {
     expect(MAIN_NAVIGATION_PAGES.map((page) => page.id)).toEqual(['selectors', 'connections', 'configuration', 'dns']);
     expect(mainNavigation).toContain('class="config-file-switcher-panel"');
     expect(mainNavigation.indexOf('data-page="configuration"')).toBeLessThan(mainNavigation.indexOf('class="config-file-switcher-panel"'));
+    expect(mainNavigation).toContain('class="config-file-primary-tab selected"');
     expect(mainNavigation).toContain('class="config-file-nav"');
     expect(configMarkup.match(/<nav/g)).toHaveLength(1);
     expect(otherPageMarkup).not.toContain('class="config-file-switcher-panel"');

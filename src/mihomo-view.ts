@@ -93,13 +93,13 @@ function renderConnectionSkeleton(): string {
 }
 
 export function renderPingStatusIcon(alive: boolean | null): string {
-  if (alive === true) return '';
   const path = alive === false
     ? '<path d="M5 2.5h6l2 2v7l-5 2-5-2v-7z"/><path d="m6.3 5.8 3.4 3.4m0-3.4L6.3 9.2"/>'
     : alive === true
       ? '<path d="M4.5 8.5l2.3 2.3 4.8-5.1"/>'
       : '<path d="M9 1 3 9h4l-1 6 7-9H9z"/>';
-  return `<i class="ping-status-icon" aria-hidden="true"><svg viewBox="0 0 16 16" focusable="false">${path}</svg></i>`;
+  const status = alive === true ? 'is-alive' : alive === false ? 'is-dead' : 'is-unknown';
+  return `<i class="ping-status-icon ${status}" aria-hidden="true"><svg viewBox="0 0 16 16" focusable="false">${path}</svg></i>`;
 }
 
 function selectorDestination(group: MihomoSelector, groups: MihomoSelector[]): string[] {
@@ -115,6 +115,11 @@ function selectorDestination(group: MihomoSelector, groups: MihomoSelector[]): s
     current = nextGroup.current;
   }
   return routes;
+}
+
+export function renderSelectorDestination(group: MihomoSelector, groups: MihomoSelector[]): string {
+  const destination = selectorDestination(group, groups);
+  return destination.map(renderProxyName).join('<span class="selector-route-separator" aria-hidden="true">→</span>');
 }
 
 function proxyCard(group: MihomoSelector, groups: MihomoSelector[]): string {
@@ -140,8 +145,8 @@ function proxyCard(group: MihomoSelector, groups: MihomoSelector[]): string {
     </div>`;
   }).join('');
   const groupIcon = group.icon ? `<img class="selector-group-icon" src="${escapeHtml(group.icon)}" alt="" referrerpolicy="no-referrer" onerror="this.hidden=true">` : '';
-  return `<section class="selector-card"><header class="selector-card-heading"><div><h2>${groupIcon}${escapeHtml(group.name)}</h2></div><div class="selector-heading-actions"><button class="ping-group" type="button" data-ping-group="${escapeHtml(group.name)}" aria-label="Пинг всех серверов группы ${escapeHtml(group.name)}" title="Пинг всех серверов группы">ϟ</button></div></header>
-    <div class="selector-card-meta"><span>${escapeHtml(groupType)} · ${group.options.length}</span><span class="selector-destination" title="Маршрут: ${escapeHtml(destinationText)}"><span class="selector-route-arrow" aria-hidden="true">→</span><strong data-selector-destination="${escapeHtml(destinationText)}">${destination.map(renderProxyName).join('<span class="selector-route-separator" aria-hidden="true">→</span>')}</strong></span></div>
+  return `<section class="selector-card" data-selector-card="${escapeHtml(group.name)}"><header class="selector-card-heading"><div><h2>${groupIcon}${escapeHtml(group.name)}</h2></div><div class="selector-heading-actions"><button class="ping-group" type="button" data-ping-group="${escapeHtml(group.name)}" aria-label="Пинг всех серверов группы ${escapeHtml(group.name)}" title="Пинг всех серверов группы">ϟ</button></div></header>
+    <div class="selector-card-meta"><span>${escapeHtml(groupType)} · ${group.options.length}</span><span class="selector-destination" title="Маршрут: ${escapeHtml(destinationText)}"><span class="selector-route-arrow" aria-hidden="true">→</span><strong data-selector-destination="${escapeHtml(destinationText)}">${renderSelectorDestination(group, groups)}</strong></span></div>
     <div class="proxy-options">${options || '<div class="mihomo-inline-empty">В этой группе нет узлов.</div>'}</div>
   </section>`;
 }

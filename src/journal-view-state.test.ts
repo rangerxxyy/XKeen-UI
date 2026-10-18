@@ -1,5 +1,14 @@
 import { describe, expect, it } from 'vitest';
-import { deduplicateRepeatedUiErrors, formatJournalTimestamp, getJournalViewState, splitJournalLevel, stripLogSourceLabel } from './journal-view-state';
+import { deduplicateRepeatedUiErrors, formatJournalTimestamp, getJournalViewState, renderJournalLoadingSkeleton, splitJournalLevel, stripLogSourceLabel } from './journal-view-state';
+
+describe('renderJournalLoadingSkeleton', () => {
+  it('renders reserved journal rows rather than a centered spinner on first load', () => {
+    const html = renderJournalLoadingSkeleton();
+    expect(html).toContain('class="journal-skeleton"');
+    expect(html).toContain('class="journal-skeleton-row"');
+    expect(html).not.toContain('loading-orbit');
+  });
+});
 
 describe('getJournalViewState', () => {
   it('keeps existing journal rows visible while refreshing in the background', () => {

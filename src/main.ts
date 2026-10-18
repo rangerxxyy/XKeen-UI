@@ -18,9 +18,9 @@ import { confirmInApp } from './confirm-dialog';
 import { bindDialogMotion, closeDialogWithMotion } from './dialog-motion';
 import { lifecycleFeedback } from './service-feedback';
 import { readUiPreferences, validPingUrl, writeUiPreferences, type UiPreferences } from './preferences';
-import { deduplicateRepeatedUiErrors, formatJournalTimestamp, getJournalViewState, splitJournalLevel, stripLogSourceLabel } from './journal-view-state';
+import { deduplicateRepeatedUiErrors, formatJournalTimestamp, getJournalViewState, renderJournalLoadingSkeleton, splitJournalLevel, stripLogSourceLabel } from './journal-view-state';
 import { getJournalScrollTop } from './journal-scroll';
-import { canCopyJournal, formatJournalCopy, shouldRefreshJournal } from './journal-controls';
+import { canCopyJournal, formatJournalCopy, formatJournalDownload, shouldRefreshJournal } from './journal-controls';
 import { SETTINGS_TABS, type SettingsTabId } from './settings-tabs';
 import { bindSelectorSortControl, renderSelectorSortControl } from './selector-sort-control';
 import { bindPingUrlControl, renderPingUrlControl } from './ping-url-control';
@@ -209,7 +209,7 @@ function renderConfiguration(): string {
 }
 
 function renderJournal(): string {
-  return `<section class="journal-panel ${logExpanded ? 'is-expanded' : ''}" aria-label="Журнал событий"><header class="journal-heading"><div class="journal-title"><h2>Журнал</h2><span id="journal-live" class="journal-live" ${xkeenControlBusy || configApplyBusy ? '' : 'hidden'}><i aria-hidden="true"></i> XKeen запускается</span></div><div class="journal-tools"><label class="journal-filter"><span aria-hidden="true">⌕</span><input id="journal-filter" type="search" placeholder="Фильтр" aria-label="Фильтр журнала" value="${escapeHtml(logFilter)}"></label><select id="journal-file" aria-label="Файл журнала">${logFiles.map((file) => `<option value="${file.id}" ${selectedLog === file.id ? 'selected' : ''}>${file.label}</option>`).join('')}</select><button class="journal-action-button" id="journal-pause" type="button" title="${logPaused ? 'Продолжить автообновление' : 'Приостановить автообновление'}" aria-label="${logPaused ? 'Продолжить автообновление' : 'Приостановить автообновление'}" aria-pressed="${logPaused}"><span aria-hidden="true">${logPaused ? '▶' : 'Ⅱ'}</span><span class="journal-action-label">${logPaused ? 'Продолжить' : 'Пауза'}</span></button><button class="journal-action-button" id="journal-copy" type="button" title="Копировать видимые записи" aria-label="Копировать видимые записи"><span aria-hidden="true">▢</span><span class="journal-action-label">Копировать</span></button><button class="journal-icon-button" id="journal-clear" type="button" title="Очистить отображение" aria-label="Очистить отображение">♲</button><button class="journal-icon-button" id="journal-expand" type="button" title="Развернуть журнал" aria-label="Развернуть журнал" aria-pressed="${logExpanded}">${logExpanded ? '⤢' : '⛶'}</button></div></header><div class="journal-body" id="journal-body" aria-live="off"></div><span class="sr-only" id="journal-announcement" role="status" aria-live="polite"></span></section>`;
+  return `<section class="journal-panel ${logExpanded ? 'is-expanded' : ''}" aria-label="Журнал событий"><header class="journal-heading"><div class="journal-title"><h2>Журнал</h2><span id="journal-live" class="journal-live" ${xkeenControlBusy || configApplyBusy ? '' : 'hidden'}><i aria-hidden="true"></i> XKeen запускается</span></div><div class="journal-tools"><label class="journal-filter"><span aria-hidden="true">⌕</span><input id="journal-filter" type="search" placeholder="Фильтр" aria-label="Фильтр журнала" value="${escapeHtml(logFilter)}"></label><select id="journal-file" aria-label="Файл журнала">${logFiles.map((file) => `<option value="${file.id}" ${selectedLog === file.id ? 'selected' : ''}>${file.label}</option>`).join('')}</select><button class="journal-action-button" id="journal-pause" type="button" title="${logPaused ? 'Продолжить автообновление' : 'Приостановить автообновление'}" aria-label="${logPaused ? 'Продолжить автообновление' : 'Приостановить автообновление'}" aria-pressed="${logPaused}"><span aria-hidden="true">${logPaused ? '▶' : 'Ⅱ'}</span><span class="journal-action-label">${logPaused ? 'Продолжить' : 'Пауза'}</span></button><button class="journal-action-button" id="journal-copy" type="button" title="Копировать видимые записи" aria-label="Копировать видимые записи"><span aria-hidden="true">▢</span><span class="journal-action-label">Копировать</span></button><button class="journal-action-button" id="journal-download" type="button" title="Скачать видимые записи" aria-label="Скачать видимые записи"><span aria-hidden="true">⇩</span><span class="journal-action-label">Скачать</span></button><button class="journal-icon-button" id="journal-clear" type="button" title="Очистить отображение" aria-label="Очистить отображение">♲</button><button class="journal-icon-button" id="journal-expand" type="button" title="Развернуть журнал" aria-label="Развернуть журнал" aria-pressed="${logExpanded}">${logExpanded ? '⤢' : '⛶'}</button></div></header><div class="journal-body" id="journal-body" aria-live="off"></div><span class="sr-only" id="journal-announcement" role="status" aria-live="polite"></span></section>`;
 }
 
 function setJournalRealtime(active: boolean): void {
@@ -225,15 +225,14 @@ function drawJournal(): void {
   const body = document.querySelector<HTMLElement>('#journal-body');
   if (!body) return;
   const viewState = getJournalViewState({ loading: logLoading, hasData: logData !== null, error: logError, cleared: logCleared });
+  const visibleText = formatJournalCopy(logData?.lines ?? [], logFilter, uiPreferences.journalTimeZone);
+  const hasVisibleRecords = canCopyJournal(viewState, visibleText);
   const copyButton = document.querySelector<HTMLButtonElement>('#journal-copy');
-  if (copyButton) {
-    copyButton.disabled = !canCopyJournal(
-      viewState,
-      formatJournalCopy(logData?.lines ?? [], logFilter, uiPreferences.journalTimeZone),
-    );
-  }
+  if (copyButton) copyButton.disabled = !hasVisibleRecords;
+  const downloadButton = document.querySelector<HTMLButtonElement>('#journal-download');
+  if (downloadButton) downloadButton.disabled = !hasVisibleRecords;
   if (viewState === 'loading') {
-    body.innerHTML = '<div class="journal-empty"><span class="loading-orbit" aria-hidden="true"></span><strong>Загружаем журнал</strong></div>';
+    body.innerHTML = renderJournalLoadingSkeleton();
     return;
   }
   if (viewState === 'error') {
@@ -360,6 +359,22 @@ function bindJournal(): void {
     const text = formatJournalCopy(logData?.lines ?? [], logFilter, uiPreferences.journalTimeZone);
     if (!text) return;
     void copyJournalText(text).then((copied) => showToast(copied ? 'Записи журнала скопированы' : 'Не удалось скопировать журнал', copied ? 'success' : 'error'));
+  });
+  document.querySelector<HTMLButtonElement>('#journal-download')?.addEventListener('click', () => {
+    const text = formatJournalDownload(logData?.lines ?? [], logFilter, uiPreferences.journalTimeZone);
+    if (!text) return;
+    const blob = new Blob([text], { type: 'text/plain;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+    link.href = url;
+    link.download = `xkeen-${selectedLog}-${timestamp}.txt`;
+    link.hidden = true;
+    document.body.append(link);
+    link.click();
+    link.remove();
+    window.setTimeout(() => URL.revokeObjectURL(url), 1000);
+    showToast('Журнал скачан', 'success');
   });
   document.querySelector<HTMLButtonElement>('#journal-clear')?.addEventListener('click', () => {
     logCleared = true;

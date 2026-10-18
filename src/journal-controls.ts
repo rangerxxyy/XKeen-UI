@@ -20,3 +20,8 @@ export function formatJournalCopy(lines: string[], filter: string, timeZone: str
     })
     .join('\n');
 }
+
+export function formatJournalDownload(lines: string[], filter: string, timeZone: string): string {
+  const text = formatJournalCopy(lines, filter, timeZone);
+  return text ? `${text}\n` : '';
+}

@@ -32,6 +32,7 @@ import { bindSelectorSortControl, renderSelectorSortControl } from './selector-s
 import { bindPingUrlControl, renderPingUrlControl } from './ping-url-control';
 import { SourceNameResolver } from './source-names';
 import { renderResourceMetrics } from './resource-metrics';
+import { bindHoverTooltips } from './hover-tooltips';
 import { shouldReportUiError } from './ui-error-dedupe';
 import { sortMihomoConnections, type ConnectionSort, type ConnectionSortKey } from './connection-sort';
 import { MAIN_NAVIGATION_PAGES, renderNavigationView, renderProviderNavigationActions, renderWorkspaceFrame } from './navigation-view';
@@ -121,6 +122,7 @@ function applyUiTheme(): void {
 applyUiTheme();
 
 const app = document.querySelector<HTMLDivElement>('#app');
+bindHoverTooltips(document);
 if (!app) throw new Error('Корневой элемент интерфейса #app не найден');
 const APP_VERSION = __APP_VERSION__;
 

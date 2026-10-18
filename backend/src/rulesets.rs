@@ -62,7 +62,7 @@ async fn read_content(name: &str) -> Result<(String, String), String> {
                 .unwrap_or("domain"),
         )
         .await
-        .map(|content| (content, path));
+        .map(|content| (content, path.clone()));
     }
     tokio::fs::read_to_string(&path)
         .await

@@ -481,3 +481,10 @@
 :root[data-theme="light"] .app-shell .editor-utilities-links > summary:hover,:root[data-theme="light"] .app-shell .editor-utilities-links[open] > summary,:root[data-theme="light"] .app-shell .editor-utilities-links > summary:focus-visible,:root[data-theme="light"] .app-shell .editor-utilities-links-menu .utility-link:hover,:root[data-theme="light"] .app-shell .editor-utilities-links-menu .utility-link:focus-visible { color:#352653; background:#f0ebfa; }
 :root[data-theme="light"] .app-shell .editor-utilities-links-menu { border-color:#d4cbe7; background:linear-gradient(155deg,#fff,#f8f6fc); box-shadow:0 16px 38px #27324a24; }
 :root[data-theme="light"] .app-shell .editor-utilities-divider { background:#dce2eb; }
+
+/* Keep DNS status rows on the same surface as the surrounding workspace. */
+.app-shell .dns-handoff-pane .dns-workspace-heading { min-height:0; padding:10px 16px 2px; border-bottom:0; }
+.app-shell .dns-handoff-pane .dns-workspace-heading h2 { color:var(--text-muted,#aab6c8); font-size:13px; font-weight:600; }
+.app-shell .dns-handoff-pane .dns-runtime-list { margin:2px 16px 10px; border:0; border-radius:0; background:transparent; }
+.app-shell .dns-handoff-pane .dns-runtime-list>div { min-height:38px; padding:7px 4px; background:transparent; }
+.app-shell .dns-handoff-pane .dns-management-row { margin:0 16px 12px; }

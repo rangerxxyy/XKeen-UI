@@ -1,7 +1,25 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { applyActiveMihomoConfig, applyXrayConfigFile, getMihomoSelectors, getRouterConfigFile, getRouterDeviceList, getSystemLog, getXrayConfigFile, installCoreRelease, listMihomoConfigBackups, logUiError, pingMihomoGroup, pingMihomoProxy, requestAppUpdate, restoreMihomoConfigBackup, saveActiveMihomoConfig, saveRouterConfigFile, saveXrayConfigFile, validateMihomoConfig } from './api';
+import { applyActiveMihomoConfig, applyXrayConfigFile, getMihomoSelectors, getRouterConfigFile, getRouterDeviceList, getSystemLog, getXrayConfigFile, installCoreRelease, listMihomoConfigBackups, logUiError, pingMihomoGroup, pingMihomoProxy, requestAppUpdate, restoreMihomoConfigBackup, saveActiveMihomoConfig, saveRouterConfigFile, saveXrayConfigFile, selectMihomoProxy, validateMihomoConfig } from './api';
 
 afterEach(() => vi.unstubAllGlobals());
+
+describe('selectMihomoProxy', () => {
+  it('switches the selected proxy with one direct request and no inventory fetch', async () => {
+    const fetchMock = vi.fn(async () => new Response(JSON.stringify({ status: 'ok' }), {
+      headers: { 'Content-Type': 'application/json' },
+    }));
+    vi.stubGlobal('fetch', fetchMock);
+
+    await expect(selectMihomoProxy('Main', 'Finland')).resolves.toBeUndefined();
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+    expect(fetchMock).toHaveBeenCalledWith('/api/v1/mihomo/proxies/select', {
+      method: 'PUT',
+      headers: { Accept: 'application/json', 'Content-Type': 'application/json' },
+      body: JSON.stringify({ group: 'Main', name: 'Finland' }),
+      signal: undefined,
+    });
+  });
+});
 
 describe('Mihomo config backups API', () => {
   it('accepts a bounded list of safe backup basenames', async () => {

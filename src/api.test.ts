@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { applyActiveMihomoConfig, applyXrayConfigFile, getMihomoProxyProviders, getMihomoSelectors, getRouterConfigFile, getRouterDeviceList, getSystemLog, getXrayConfigFile, installCoreRelease, listMihomoConfigBackups, logUiError, pingMihomoGroup, pingMihomoProxy, refreshMihomoProxyProvider, requestAppUpdate, restoreMihomoConfigBackup, saveActiveMihomoConfig, saveRouterConfigFile, saveXrayConfigFile, selectMihomoProxy, validateMihomoConfig } from './api';
+import { applyActiveMihomoConfig, applyXrayConfigFile, getMihomoProxyProviders, getMihomoRuleProviders, getMihomoSelectors, getRouterConfigFile, getRouterDeviceList, getSystemLog, getXrayConfigFile, installCoreRelease, listMihomoConfigBackups, logUiError, pingMihomoGroup, pingMihomoProxy, refreshMihomoProxyProvider, requestAppUpdate, restoreMihomoConfigBackup, saveActiveMihomoConfig, saveRouterConfigFile, saveXrayConfigFile, selectMihomoProxy, validateMihomoConfig } from './api';
 
 afterEach(() => vi.unstubAllGlobals());
 
@@ -18,6 +18,22 @@ describe('Mihomo proxy providers API', () => {
       upload: 1024, download: 2048, total: 1048576, expire: 1792407600,
       updatedAt: '2026-10-18T16:00:00Z', proxies: [{ name: 'Sweden', type: 'VLESS' }, { name: 'Finland', type: 'Hysteria2' }],
     }]);
+  });
+
+  it('excludes proxy groups if they are mixed into the provider response', async () => {
+    vi.stubGlobal('fetch', vi.fn(async () => new Response(JSON.stringify({ providers: {
+      subscription_1: { name: 'subscription_1', type: 'Proxy', vehicleType: 'HTTP', proxies: [] },
+      Main: { name: 'Main', type: 'Selector', proxies: [{ name: 'subscription_1', type: 'Proxy' }] },
+    } }), { headers: { 'Content-Type': 'application/json' } })));
+    await expect(getMihomoProxyProviders()).resolves.toMatchObject([{ name: 'subscription_1', vehicleType: 'HTTP' }]);
+  });
+
+  it('keeps proxy groups out of the rule-set list', async () => {
+    vi.stubGlobal('fetch', vi.fn(async () => new Response(JSON.stringify({ providers: {
+      'category-ai@domain': { name: 'category-ai@domain', type: 'Rule', format: 'MrsRule', behavior: 'Domain', ruleCount: 192 },
+      Main: { name: 'Main', type: 'Selector', proxies: [{ name: 'Sweden' }] },
+    } }), { headers: { 'Content-Type': 'application/json' } })));
+    await expect(getMihomoRuleProviders()).resolves.toMatchObject([{ name: 'category-ai@domain', ruleCount: 192 }]);
   });
 
   it('requests a refresh for the selected provider through the backend proxy', async () => {

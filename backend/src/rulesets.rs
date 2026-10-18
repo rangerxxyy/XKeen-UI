@@ -77,7 +77,7 @@ fn find_provider(yaml: &str, wanted: &str) -> Option<std::collections::HashMap<S
     let mut values = std::collections::HashMap::new();
     for raw in yaml.lines() {
         let line = raw.trim_end();
-        let trimmed = line.trim();
+        let trimmed = line.trim().trim_start_matches('\u{feff}');
         if trimmed.is_empty() || trimmed.starts_with('#') {
             continue;
         }
@@ -99,7 +99,22 @@ fn find_provider(yaml: &str, wanted: &str) -> Option<std::collections::HashMap<S
             provider_indent = Some(indent);
             values.clear();
             if !value.is_empty() {
-                values.insert("payload".into(), value.to_owned());
+                let inline = value.trim();
+                if let Some(entries) = inline
+                    .strip_prefix('{')
+                    .and_then(|value| value.strip_suffix('}'))
+                {
+                    for entry in entries.split(',') {
+                        if let Some((key, value)) = split_yaml_pair(entry.trim()) {
+                            let key = key.trim();
+                            if key != "<<" {
+                                values.insert(key.to_owned(), unquote(value.trim()).to_owned());
+                            }
+                        }
+                    }
+                } else {
+                    values.insert("payload".into(), value.to_owned());
+                }
             }
             continue;
         }
@@ -222,6 +237,20 @@ mod tests {
         );
         assert_eq!(provider.get("behavior").map(String::as_str), Some("domain"));
         assert!(find_provider(yaml, "missing").is_none());
+    }
+
+    #[test]
+    fn finds_rule_provider_when_config_has_utf8_bom_and_inline_mapping() {
+        let yaml = "\u{feff}rule-providers:\n  category-ai@domain: { <<: *domain, url: https://example.test/category-ai.mrs }\n";
+        let provider = find_provider(yaml, "category-ai@domain");
+        assert!(
+            provider.is_some(),
+            "the active provider name must match the runtime API name"
+        );
+        assert_eq!(
+            provider.unwrap().get("url").map(String::as_str),
+            Some("https://example.test/category-ai.mrs")
+        );
     }
 
     #[test]

@@ -66,7 +66,7 @@ async fn read_content(name: &str) -> Result<(String, String), String> {
     }
     tokio::fs::read_to_string(&path)
         .await
-        .map(|content| (content, path))
+        .map(|content| (content, path.clone()))
         .map_err(|e| format!("Не удалось прочитать файл rule-set {path}: {e}"))
 }
 

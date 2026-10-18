@@ -210,7 +210,7 @@ describe('renderConnections', () => {
     expect(html).not.toContain('connection-app-icon');
   });
 
-  it('keeps country flags in the route and separates the recognized service icon from its route', () => {
+  it('keeps Mihomo route hops and uses their selector icons without guessed service decoration', () => {
     const data: MihomoConnections = {
       uploadTotal: 314, downloadTotal: 234,
       connections: [{
@@ -219,12 +219,17 @@ describe('renderConnections', () => {
         upload: 314, download: 234, start: '2026-10-18T07:30:00Z',
       }],
     };
-    const html = renderConnections(data, false, null);
+    const icons = collectConnectionProxyIcons([{
+      name: 'Telegram', icon: 'https://icons.example/telegram.svg', current: null, options: [],
+    }, {
+      name: '🇸🇪 ⚡ Sweden', icon: null, current: null, options: [],
+    }]);
+    const html = renderConnections(data, false, null, false, {}, { key: 'start', direction: 'descending' }, icons);
     expect(html).toContain('aria-label="Маршрут: Telegram → 🇸🇪 ⚡ Sweden"');
     expect(html).toContain('<span class="connection-chain" role="group" aria-label="Маршрут: Telegram → 🇸🇪 ⚡ Sweden"');
-    expect(html).toContain('class="connection-app-icon is-telegram"');
-    expect(html).toContain('<span class="connection-route-hop" title="Telegram"><span class="connection-route-label">Telegram</span></span><span class="connection-route-arrow" aria-hidden="true">→</span><span class="connection-route-hop" title="🇸🇪 ⚡ Sweden"><span class="connection-route-label"><span class="country-flag flag-se"');
-    expect(html.match(/class="connection-app-icon is-telegram"/g)).toHaveLength(1);
+    expect(html).toContain('<span class="connection-route-hop" title="Telegram"><span class="connection-route-label"><img class="connection-proxy-icon" src="https://icons.example/telegram.svg"');
+    expect(html).toContain('<span class="connection-route-hop" title="🇸🇪 ⚡ Sweden"><span class="connection-route-label"><span class="country-flag flag-se"');
+    expect(html).not.toContain('connection-app-icon');
     expect(html).toContain('<span class="country-flag flag-se"');
     expect(html).not.toContain('imageTelegramsvg');
     expect(html).not.toContain('>›</span> <span aria-hidden="true">›</span>');
@@ -255,7 +260,7 @@ describe('renderConnections', () => {
     expect(html).toContain('<span class="connection-route-label"><img class="connection-proxy-icon" src="https://icons.example/exit.svg" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.hidden=true">Exit</span>');
   });
 
-  it('separates a known application icon and label from the proxy route', () => {
+  it('does not infer service icons from connection hosts', () => {
     const data: MihomoConnections = {
       uploadTotal: 0, downloadTotal: 0,
       connections: [{
@@ -265,13 +270,12 @@ describe('renderConnections', () => {
     };
     const html = renderConnections(data, false, null);
 
-    expect(html).toContain('class="connection-app-icon is-github"');
-    expect(html).toContain('<span class="connection-route-label">GitHub</span>');
-    expect(html).toContain('<span class="connection-route-arrow" aria-hidden="true">→</span>');
+    expect(html).not.toContain('connection-app-icon');
+    expect(html).toContain('Маршрут: 🇸🇪 ⚡ Sweden');
     expect(html).toContain('<span class="connection-route-label"><span class="country-flag flag-se"');
   });
 
-  it('recognizes service icons from common hostnames without changing their proxy route', () => {
+  it('shows the exact proxy route regardless of the destination service', () => {
     const cases: Array<[string, string, string]> = [
       ['api.github.com', 'github', 'GitHub'],
       ['chatgpt.com', 'ai', 'AI'],
@@ -291,8 +295,9 @@ describe('renderConnections', () => {
       };
       const html = renderConnections(data, false, null);
 
-      expect(html).toContain(`class="connection-app-icon is-${service}"`);
-      expect(html).toContain(`Маршрут: ${label} → DIRECT`);
+      expect(html).not.toContain('connection-app-icon');
+      expect(html).toContain('Маршрут: DIRECT');
+      expect(html).not.toContain(`Маршрут: ${label} → DIRECT`);
     }
   });
 
@@ -306,7 +311,7 @@ describe('renderConnections', () => {
     };
     const html = renderConnections(data, false, null);
 
-    expect(html).toContain('Маршрут: GitHub → Main → 🇫🇮 ⚡ Finland · TCP');
+    expect(html).toContain('Маршрут: Main → 🇫🇮 ⚡ Finland · TCP');
     expect(html).toContain('<span class="connection-route-hop" title="Main"><span class="connection-route-label">Main</span></span>');
   });
 });

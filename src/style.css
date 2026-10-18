@@ -24,7 +24,7 @@ button:focus-visible, a:focus-visible { outline: 2px solid var(--cyan); outline-
 .top-status:hover strong { color: #c9c5ef; }
 .connection-led,.footer-indicator,.tiny-dot { width: 8px; height: 8px; background: #f1a75b; border-radius: 50%; box-shadow: 0 0 10px #f1a75b55; flex: 0 0 auto; }
 .connection-led.is-online,.footer-indicator.is-online,.tiny-dot { background: var(--mint); box-shadow: 0 0 10px #40d6a055; }
-.connection-led.is-offline { background: #708097; box-shadow: none; }
+.connection-led.is-offline { background: #ff5d6c; box-shadow: 0 0 10px #ff5d6c66; }
 .top-status strong { font-size: 12px; font-weight: 600; display: block; color: #d7e0f0; }
 .top-status small { color: var(--muted); font-size: 10px; display: block; margin-top: 3px; }
 .top-status small { max-width: 360px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
@@ -422,8 +422,8 @@ body { background: #090a14; }
 .core-manager-status.is-installed { color:#a99be8; background:#292445; }
 .core-manager-status.is-missing { color:#ff6976; background:#3b202d; }
 .core-manager-row .button { min-width:90px; flex:0 0 auto; }
-.core-manager-row .button-primary { color:#f7f4ff; background:#514b8e; border-color:#7770bd; }
-.core-manager-row .button-primary:hover { background:#6259a8; border-color:#938be0; }
+.core-manager-row .button-primary { color:#f3f7ff; background:#182a43; border-color:#435a78; font:650 12px/1.2 var(--font-ui); }
+.core-manager-row .button-primary:hover { background:#203956; border-color:#6687b2; }
 .update-toast { display:grid; grid-template-columns:minmax(0,1fr) auto; align-items:center; gap:12px; padding:12px 13px; border-color:#2c3d54; background:#111b2a; pointer-events:auto; }
 .update-toast-copy { display:flex; min-width:0; align-items:flex-start; gap:10px; padding:0; border:0; color:inherit; background:transparent; text-align:left; cursor:pointer; }
 .update-toast-icon { display:grid; width:19px; height:19px; flex:0 0 19px; place-items:center; border:1px solid #697a91; border-radius:50%; color:#e5edf8; font-size:12px; font-weight:700; }
@@ -614,8 +614,6 @@ body { font-size: 14px; }
   .template-option { padding:11px; }
   .template-option-copy strong { font-size:12px; }
 }
-.connection-app-icon { width:17px; height:17px; margin-right:6px; vertical-align:middle; line-height:1; transform:translateY(-1px); }
-.connection-app-icon.is-youtube { display:inline-grid; width:17px; height:13px; border-radius:4px; font-size:8px; vertical-align:middle; }
 .connection-table td.connection-host,.connection-table td.connection-source { overflow:hidden; text-overflow:ellipsis; }
 
 /* DNS forms use a steady label/field rhythm with clear card separation. */
@@ -855,12 +853,6 @@ body { color:var(--text); -webkit-font-smoothing:antialiased; }
 .connection-table tbody tr:hover { background:#121d2c; }
 .connection-table tbody tr[hidden] { display:none; }
 .connection-table td.connection-route-cell { display:table-cell; white-space:nowrap; }
-.connection-app-icon { display:inline-grid; width:17px; height:17px; margin-right:6px; vertical-align:-4px; place-items:center; border:1px solid transparent; border-radius:50%; color:#43c8f2; font-size:13px; font-weight:750; line-height:1; }
-.connection-app-icon.is-web { border-color:#008ec0; font-size:14px; }
-.connection-app-icon.is-youtube { border-radius:5px; color:#fff; background:#e92835; font-size:9px; }
-.connection-app-icon.is-github { color:#e8b2f5; background:#533064; font-size:10px; }
-.connection-app-icon.is-google { color:#4285f4; font-size:16px; }
-.connection-app-icon.is-microsoft { color:#65d3ff; font-size:14px; }
 .connection-chain { display:inline-block; max-width:calc(100% - 28px); overflow:hidden; vertical-align:middle; color:#eef4fc; font-size:11px; font-weight:570; text-overflow:ellipsis; white-space:nowrap; }
 .connection-route-cell:not(.has-app-icon) .connection-chain { max-width:100%; }
 .connection-chain::first-letter { color:#d2d9e5; }
@@ -1056,8 +1048,6 @@ dialog.template-dialog.is-closing { animation: modal-panel-out var(--dialog-exit
 :root { --surface:#101827; --surface-raised:#121c2c; --surface-hover:#1a2a41; --stroke:#2a374a; --stroke-soft:#202c3d; --text:#eef3fa; --muted:#a5b2c3; --subtle:#7f8da0; --blue:#4f8df7; --cyan:#5796ff; --mint:#00cc8a; }
 .connection-table td.connection-route-cell > .connection-chain { display:inline-block; max-width:calc(100% - 28px); overflow:hidden; vertical-align:middle; text-overflow:ellipsis; white-space:nowrap; }
 .connection-table td.connection-route-cell:not(.has-app-icon) > .connection-chain { max-width:100%; }
-.connection-app-icon { vertical-align:middle; transform:translateY(-1px); }
-.connection-app-icon.is-youtube { display:inline-grid; width:17px; height:13px; border-radius:4px; font-size:8px; vertical-align:middle; }
 .dns-workspace { border-color:#2a374a; border-radius:14px; background:#101827; }
 .dns-workspace-heading { min-height:54px; padding:14px 18px; border-bottom-color:#202c3d; }
 .dns-workspace-heading h2 { margin:0; color:#f1f5fb; font-size:16px; font-weight:650; }
@@ -1174,10 +1164,10 @@ dialog.template-dialog.is-closing { animation: modal-panel-out var(--dialog-exit
 
 /* Theme-aware timestamp column and light appearance. */
 :root {
-  --editor-bg:#080e1b; --editor-text:#e1e9f8; --editor-gutter-bg:#0a1120; --editor-gutter-text:#566a88;
+  --editor-bg:#080e1d; --editor-text:#c0caf5; --editor-gutter-bg:#080e1d; --editor-gutter-text:#3b4261;
   --editor-border:#1e2b40; --editor-active-line:#111e31; --editor-active-gutter:#9ab4d7;
-  --editor-caret:#65c9ff; --editor-selection:#244775; --editor-property:#62a8ff; --editor-string:#9cda78;
-  --editor-number:#ff9b55; --editor-atom:#d58bff; --editor-comment:#777ca7; --editor-punctuation:#a8bad4; --editor-keyword:#68c9e8;
+  --editor-caret:#c0caf5; --editor-selection:#2d4f8e; --editor-property:#7aa2f7; --editor-string:#9ece6a;
+  --editor-number:#ff9e64; --editor-atom:#bb9af7; --editor-comment:#565f89; --editor-punctuation:#89ddff; --editor-keyword:#bb9af7;
 }
 .journal-line { grid-template-columns:max-content max-content minmax(0,1fr); align-items:start; }
 .journal-timestamp { color:#aab8ca; font:500 11px/1.5 var(--font-ui); white-space:nowrap; }
@@ -1188,8 +1178,8 @@ dialog.template-dialog.is-closing { animation: modal-panel-out var(--dialog-exit
   --blue:#285bc1; --cyan:#1769ac; --mint:#087d59; --violet:#6948a8; --amber:#8a5d0c; --red:#b33d4c;
   --editor-bg:#ffffff; --editor-text:#1c2a3a; --editor-gutter-bg:#f1f4f8; --editor-gutter-text:#65758a;
   --editor-border:#d8e0ea; --editor-active-line:#eaf2fc; --editor-active-gutter:#315b8f;
-  --editor-caret:#1769ac; --editor-selection:#b9d6f8; --editor-property:#205ba8; --editor-string:#286d25;
-  --editor-number:#9b4b0a; --editor-atom:#7645a1; --editor-comment:#66778b; --editor-punctuation:#596b80; --editor-keyword:#126a84;
+  --editor-caret:#0f172a; --editor-selection:#dbeafe; --editor-property:#2563eb; --editor-string:#15803d;
+  --editor-number:#ea580c; --editor-atom:#7c3aed; --editor-comment:#64748b; --editor-punctuation:#0f766e; --editor-keyword:#7c3aed;
   color:#1c2a3a; background:#f2f5fa;
 }
 :root[data-theme="light"] body { color:#1c2a3a; background:#f2f5fa; }

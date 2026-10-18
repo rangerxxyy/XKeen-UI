@@ -1244,7 +1244,14 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         }
         return xkeen::run_output_helper(std::path::Path::new(&args[1])).map_err(Into::into);
     }
-    tokio::runtime::Runtime::new()?.block_on(run_panel())
+    // Router traffic is low and all network I/O is async; one worker avoids
+    // reserving a second Tokio worker stack on memory-constrained devices.
+    tokio::runtime::Builder::new_multi_thread()
+        .worker_threads(1)
+        .max_blocking_threads(4)
+        .enable_all()
+        .build()?
+        .block_on(run_panel())
 }
 
 async fn run_panel() -> Result<(), Box<dyn std::error::Error>> {
@@ -1446,7 +1453,7 @@ mod tests {
 
     #[test]
     fn backend_package_version_matches_release_version() {
-        assert_eq!(env!("CARGO_PKG_VERSION"), "0.5.5");
+        assert_eq!(env!("CARGO_PKG_VERSION"), "0.5.6");
     }
 
     #[test]

@@ -101,20 +101,22 @@ jobs:
       - uses: actions/checkout@v4
       - uses: dtolnay/rust-toolchain@stable
         with:
-          targets: aarch64-unknown-linux-gnu
+          targets: aarch64-unknown-linux-musl
       - uses: actions/download-artifact@v4
         with:
           name: frontend-web
           path: release/web/
       - run: cargo install cross --git https://github.com/cross-rs/cross --locked
-      - run: cross build --release --locked --target aarch64-unknown-linux-gnu
+      - run: cross build --release --locked --target aarch64-unknown-linux-musl
         working-directory: backend
-        env:
-          RUSTFLAGS: -C link-arg=-Wl,--dynamic-linker=/opt/lib/ld-linux-aarch64.so.1 -C link-arg=-Wl,-rpath,/opt/lib
       - run: |
           set -euo pipefail
           mkdir -p router-aarch64/web
-          cp backend/target/aarch64-unknown-linux-gnu/release/xkeen-ui router-aarch64/xkeen-ui
+          cp backend/target/aarch64-unknown-linux-musl/release/xkeen-ui router-aarch64/xkeen-ui
+          if readelf -l router-aarch64/xkeen-ui | grep -q 'Requesting program interpreter'; then
+            echo 'ARM64 router binary must be statically linked for Entware/musl compatibility' >&2
+            exit 1
+          fi
           cp -R release/web/. router-aarch64/web/
           chmod 755 router-aarch64/xkeen-ui
           tar -czf xkeen-ui-linux-aarch64.tar.gz -C router-aarch64 xkeen-ui web

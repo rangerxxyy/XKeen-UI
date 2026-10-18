@@ -19,31 +19,25 @@
 .app-shell .workspace-frame > .navigation .nav-icon svg { display:block; width:17px; height:17px; fill:none; stroke:currentColor; stroke-width:1.7; stroke-linecap:round; stroke-linejoin:round; }
 .app-shell .workspace-frame > .navigation .nav-item.active .nav-icon { color:#c5adff; }
 .app-shell .workspace-frame > .navigation .nav-label { white-space:nowrap; }
-.app-shell .topbar .brand { font-size:22px; }
+.app-shell .topbar .brand { font-size:26px; }
 .app-shell .workspace-frame > .main-content { min-height:0; height:auto; flex:1 1 auto; overflow:auto; padding:15px 16px 18px; }
 .app-shell .workspace-frame .config-file-switcher-panel { flex:0 0 auto; margin:0 0 0 auto; }
 .app-shell .workspace-frame > .main-content:has(.config-layout) { overflow:hidden; }
+.app-shell .workspace-frame:has(.selector-list),
+.app-shell .workspace-frame:has(.mihomo-empty) { flex:0 0 auto; height:auto; min-height:0; }
+.app-shell .workspace-frame > .main-content:has(.selector-list),
+.app-shell .workspace-frame > .main-content:has(.mihomo-empty) { flex:0 0 auto; overflow:visible; }
 .app-shell .workspace-frame .config-layout { height:min(72vh,900px); min-height:min(560px,calc(100vh - 220px)); }
 @media(min-width:601px) {
   .app-shell .workspace-frame > .main-content:has(.selector-list) { display:flex; flex-direction:column; }
-  .app-shell .workspace-frame > .main-content .selector-list { flex:1 1 auto; min-height:0; max-height:none; }
+  .app-shell .workspace-frame > .main-content .selector-list { flex:0 1 auto; min-height:0; max-height:min(68vh,720px); }
 }
 .app-shell .connection-route-inner { gap:8px; }
-.app-shell .connection-table td.connection-route-cell > .connection-route-inner > .connection-app-icon { flex:0 0 21px; margin:0 2px 0 0!important; }
 .app-shell .connection-table td.connection-route-cell .connection-chain { display:inline-flex; gap:0; }
 .app-shell .connection-table td.connection-route-cell .connection-route-arrow { flex:0 0 14px; width:14px; height:14px; margin:0 6px; color:#bac4d4; background:#273143; font-size:9px; }
 .app-shell .connection-table td.connection-route-cell .connection-route-label { display:inline-flex; min-width:0; align-items:center; gap:5px; }
 .app-shell .connection-table td.connection-route-cell .connection-proxy-icon { width:15px; height:15px; flex:0 0 15px; object-fit:contain; border-radius:4px; }
 .app-shell .connection-table td.connection-route-cell .connection-route-hop { min-width:0; overflow:hidden; text-overflow:ellipsis; }
-.app-shell .connection-table td.connection-route-cell .connection-app-icon { display:grid; width:21px; height:21px; place-items:center; border:1px solid color-mix(in srgb,currentColor 38%,transparent); border-radius:6px; }
-.app-shell .connection-table td.connection-route-cell .connection-app-icon svg { display:block; width:15px; height:15px; fill:currentColor; stroke:currentColor; stroke-width:1.6; stroke-linecap:round; stroke-linejoin:round; }
-.app-shell .connection-table td.connection-route-cell .connection-app-icon.is-github { color:#e3c2ef; background:#2b2136; }
-.app-shell .connection-table td.connection-route-cell .connection-app-icon.is-telegram { color:#54c2e9; background:#132e3c; }
-.app-shell .connection-table td.connection-route-cell .connection-app-icon.is-meta { color:#68adff; background:#162940; }
-.app-shell .connection-table td.connection-route-cell .connection-app-icon.is-tiktok { color:#f3a6e8; background:#302137; }
-.app-shell .connection-table td.connection-route-cell .connection-app-icon.is-google { color:#83b4ff; background:#1a2940; }
-.app-shell .connection-table td.connection-route-cell .connection-app-icon.is-youtube { color:#ff7b86; background:#3a1b24; }
-.app-shell .connection-table td.connection-route-cell .connection-app-icon.is-ai { color:#76dfcc; background:#15312f; }
 :root:not([data-theme="light"]) .app-shell .connections-panel { background:#0b0e19; }
 :root:not([data-theme="light"]) .app-shell .connections-toolbar { background:#0e1220; }
 :root:not([data-theme="light"]) .app-shell .connection-table-wrap { background:#0a0d17; }
@@ -136,15 +130,6 @@
 .app-shell .app-version-button.is-update-available { border-color:#22d3c5; box-shadow:0 0 0 1px #22d3c533,0 0 14px #22d3c51c; }
 .app-shell .app-version-button.is-update-available .chip-icon { color:#43e2d5; }
 .app-shell .app-version-button.is-update-available:hover { border-color:#6df5e8; background:#102529; box-shadow:0 0 0 1px #22d3c566,0 0 18px #22d3c533; }
-.app-shell .connection-app-icon { display:inline-grid; flex:0 0 21px; width:21px; height:21px; margin:0; place-items:center; border:1px solid color-mix(in srgb,currentColor 40%,transparent); border-radius:6px; background:color-mix(in srgb,currentColor 12%,transparent); vertical-align:middle; }
-.app-shell .connection-app-icon svg { display:block; width:15px; height:15px; fill:currentColor; stroke:currentColor; stroke-width:1.4; stroke-linecap:round; stroke-linejoin:round; }
-.app-shell .connection-app-icon.is-telegram { color:#52c3ef; background:#122d3b; }
-.app-shell .connection-app-icon.is-youtube { color:#ff6972; background:#3a1c26; }
-.app-shell .connection-app-icon.is-github { color:#e4c3f0; background:#2d2338; }
-.app-shell .connection-app-icon.is-google { color:#86b6ff; background:#1a2940; }
-.app-shell .connection-app-icon.is-meta { color:#7dbbff; background:#17293d; }
-.app-shell .connection-app-icon.is-ai { color:#7de4d0; background:#153331; }
-.app-shell .connection-app-icon.is-web { color:#8ebcff; background:#172842; }
 .app-shell .connection-chain { display:inline-flex; align-items:center; gap:4px; max-width:100%; min-width:0; overflow:hidden; vertical-align:middle; color:#eef4fc; font-size:12px; font-weight:600; white-space:nowrap; }
 .app-shell .connection-route-hop { display:inline; color:#e8edf5; font-weight:600; }
 .app-shell .connection-route-arrow { display:inline-grid; flex:0 0 14px; width:14px; height:14px; place-items:center; border-radius:50%; color:#b8c2d0; background:#263143; font-size:10px; font-weight:700; line-height:1; }
@@ -275,8 +260,6 @@
 .app-shell .connection-table th:nth-child(7) { width:1%; }
 .app-shell .connection-table td .connection-route-inner { display:flex; align-items:center; gap:6px; min-width:0; white-space:nowrap; }
 .app-shell .connection-table td .connection-route-inner .connection-chain { display:block; flex:0 1 auto; min-width:0; max-width:100%; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
-.app-shell .connection-table td .connection-route-inner .connection-app-icon { display:inline-flex; flex:0 0 16px; margin:0; }
-.app-shell .connection-table td .connection-route-inner .connection-app-icon { flex-basis:21px; }
 .app-shell .connection-table td.connection-host { padding-right:7px; padding-left:7px; }
 @media(max-width:680px) {
   .app-shell .connection-table { min-width:690px; }
@@ -308,6 +291,14 @@
 .app-shell .dns-runtime-list>div { min-height:43px; border-color:#29253b; }
 .app-shell .dns-runtime-list>div strong:not(.state-pill) { color:#c8b8ff; }
 .app-shell .dns-settings-form textarea { min-height:96px; padding:11px 12px; border-radius:9px; background:#0d0d1b; line-height:1.6; }
+.app-shell .dns-settings-form textarea { overflow-y:hidden; resize:vertical; }
+.core-release-notes-content { display:grid; gap:9px; color:var(--muted,#a0a8bb); font-size:13px; line-height:1.55; overflow-wrap:anywhere; }
+.core-release-notes-content h3 { margin:4px 0 0; color:var(--text,#edf3fb); font-size:14px; }
+.core-release-notes-content p,.core-release-notes-content ul { margin:0; }
+.core-release-notes-content ul { padding-left:20px; }
+.core-release-notes-content li+li { margin-top:4px; }
+.core-release-notes-content a { color:var(--blue,#82aaff); text-decoration:underline; }
+.core-release-notes-content code { font-family:var(--font-code,monospace); }
 .template-dialog form { display:flex; flex-direction:column; gap:14px; }
 .template-dialog-heading { display:flex; align-items:center; gap:10px; }
 .template-dialog-heading h2 { flex:1; margin:0; }
@@ -380,6 +371,9 @@
 .app-shell .editor-utilities-menu button:hover,.app-shell .editor-utilities-menu button:focus-visible { color:#f2edff; background:#2a2340; transform:translateX(2px); }
 .app-shell .editor-utilities-menu .utility-icon { color:#b49cf8; }
 .app-shell .proxy-health.proxy-ping-value { min-width:48px; font-size:19px; }
+.app-shell .proxy-health.proxy-ping-value { min-height:29px; }
+.app-shell .proxy-health.proxy-ping-value .ping-status-icon,
+.app-shell .proxy-health.proxy-ping-value .ping-status-icon svg { width:17px; height:17px; }
 .app-shell .connection-table .connection-close { display:inline-grid; place-items:center; width:32px; height:32px; border:1px solid transparent; border-radius:8px; font-size:0; }
 .app-shell .connection-table .connection-close svg { width:16px; height:16px; fill:none; stroke:currentColor; stroke-width:1.8; stroke-linecap:round; }
 .app-shell .connection-table .connection-close:hover,.app-shell .connection-table .connection-close:focus-visible { border-color:#a64558; background:#351923; color:#ff9aa5; outline:none; }
@@ -427,6 +421,7 @@
 :root[data-theme="light"] .app-shell .editor-utilities-menu button:hover,:root[data-theme="light"] .app-shell .editor-utilities-menu button:focus-visible { color:#352653; background:#f0ebfa; }
 
 @media(max-width:600px) {
+  .app-shell .topbar .brand { font-size:21px; }
   .config-file-switcher-panel { margin:0 8px 8px; padding:5px; }
   .config-file-nav { width:100%; overflow-x:auto; }
 }
@@ -435,7 +430,6 @@
 .app-shell .dns-runtime-list { border-color:transparent; background:transparent; }
 .app-shell .dns-runtime-list>div { background:transparent; }
 .app-shell .dns-workspace.dns-handoff-pane { background:transparent; }
-.app-shell .dns-handoff-pane .dns-management-refresh { min-height:32px; height:32px; padding:0 10px; font-size:11px; }
 
 /* Match zxc-rv's readable connection rows while keeping the route icon assets intact. */
 .app-shell .connection-table th { font-size:12px; }
@@ -466,3 +460,19 @@
 :root[data-theme="light"] .app-shell .editor-utilities-links > summary:hover,:root[data-theme="light"] .app-shell .editor-utilities-links[open] > summary,:root[data-theme="light"] .app-shell .editor-utilities-links > summary:focus-visible,:root[data-theme="light"] .app-shell .editor-utilities-links-menu .utility-link:hover,:root[data-theme="light"] .app-shell .editor-utilities-links-menu .utility-link:focus-visible { color:#352653; background:#f0ebfa; }
 :root[data-theme="light"] .app-shell .editor-utilities-links-menu { border-color:#d4cbe7; background:linear-gradient(155deg,#fff,#f8f6fc); box-shadow:0 16px 38px #27324a24; }
 :root[data-theme="light"] .app-shell .editor-utilities-divider { background:#dce2eb; }
+
+/* Keep DNS status rows on the same surface as the surrounding workspace. */
+.app-shell .dns-handoff-pane .dns-workspace-heading { min-height:0; padding:10px 16px 2px; border-bottom:0; }
+.app-shell .dns-handoff-pane .dns-workspace-heading h2 { color:var(--text-muted,#aab6c8); font-size:13px; font-weight:600; }
+.app-shell .dns-handoff-pane .dns-runtime-list { margin:2px 16px 10px; border:0; border-radius:0; background:transparent; }
+.app-shell .dns-handoff-pane .dns-runtime-list>div { min-height:38px; padding:7px 4px; background:transparent; }
+.app-shell .dns-handoff-pane .dns-management-row { margin:0 16px 12px; }
+
+/* Keep configuration actions visible without scrolling a second log panel. */
+.app-shell .workspace-frame:has(.config-layout) + .journal-panel { display:none; }
+
+/* Match the larger, clearer connection rows shown by the reference panel. */
+.app-shell .connection-table th { font-size:13px; }
+.app-shell .connection-table td,
+.app-shell .connection-table .connection-chain,
+.app-shell .connection-table td.connection-host { font-size:13px; }

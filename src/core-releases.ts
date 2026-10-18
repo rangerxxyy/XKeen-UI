@@ -103,6 +103,42 @@ function sizeLabel(size: number): string {
     .format(size / 1_000_000);
 }
 
+function escapeReleaseText(value: string): string {
+  return value.replace(/[&<>"']/g, (character) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[character] ?? character);
+}
+
+function formatInlineReleaseText(value: string): string {
+  return escapeReleaseText(value).replace(/\[([^\]]+)\]\((https:\/\/[^\s)]+)\)/g, (_match, label: string, href: string) =>
+    `<a href="${href}" target="_blank" rel="noopener noreferrer">${label}</a>`)
+    .replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>')
+    .replace(/`([^`]+)`/g, '<code>$1</code>');
+}
+
+export function formatReleaseNotes(markdown: string): string {
+  const output: string[] = [];
+  let list: string[] = [];
+  const flushList = () => {
+    if (list.length) output.push(`<ul>${list.map((item) => `<li>${formatInlineReleaseText(item)}</li>`).join('')}</ul>`);
+    list = [];
+  };
+  const normalized = markdown.slice(0, 12_000).replace(/<img\b([^>]*)>/gi, (_tag, attributes: string) => {
+    const alt = attributes.match(/\balt\s*=\s*(["'])(.*?)\1/i)?.[2]?.trim() || 'Изображение';
+    const src = attributes.match(/\bsrc\s*=\s*(["'])(https:\/\/[^"']+)\1/i)?.[2];
+    return src ? `[${alt}](${src})` : alt;
+  });
+  for (const line of normalized.split(/\r?\n/)) {
+    const heading = line.match(/^#{1,4}\s+(.+)$/);
+    const item = line.match(/^\s*[-*+]\s+(.+)$/);
+    if (item) { list.push(item[1] ?? ''); continue; }
+    flushList();
+    if (!line.trim()) continue;
+    if (heading) output.push(`<h3>${formatInlineReleaseText(heading[1] ?? '')}</h3>`);
+    else output.push(`<p>${formatInlineReleaseText(line)}</p>`);
+  }
+  flushList();
+  return output.join('');
+}
+
 function element<K extends keyof HTMLElementTagNameMap>(tag: K, className?: string, text?: string): HTMLElementTagNameMap[K] {
   const node = document.createElement(tag);
   if (className) node.className = className;
@@ -154,8 +190,8 @@ function renderReleaseList(target: HTMLElement, core: CoreName, releases: GitHub
       notes.className = 'core-release-changelog';
       if (release === visible[0]) notes.open = true;
       notes.append(element('summary', undefined, 'Что изменилось'));
-      const text = element('pre');
-      text.textContent = release.body.slice(0, 12_000);
+      const text = element('div', 'core-release-notes-content');
+      text.innerHTML = formatReleaseNotes(release.body);
       notes.append(text);
       card.append(notes);
     }

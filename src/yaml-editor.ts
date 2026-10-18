@@ -3,6 +3,7 @@ import { EditorView, highlightActiveLine, keymap, lineNumbers } from '@codemirro
 import { defaultKeymap, history, historyKeymap } from '@codemirror/commands';
 import { HighlightStyle, syntaxHighlighting } from '@codemirror/language';
 import { tags } from '@lezer/highlight';
+import { indentationMarkers } from '@replit/codemirror-indentation-markers';
 import { yaml } from '@codemirror/lang-yaml';
 import { json } from '@codemirror/lang-json';
 import { parse as parseJsonc, printParseErrorCode, type ParseError } from 'jsonc-parser';
@@ -183,8 +184,8 @@ function bindAmneziaImportDialog(signal: AbortSignal): void {
   }
   const addConnectionButton = menu.querySelector('#yaml-add-proxy');
   const templateButton = menu.querySelector('#yaml-template');
-  if (addConnectionButton) menu.insertBefore(trigger, addConnectionButton.nextSibling);
-  else if (templateButton) menu.insertBefore(trigger, templateButton);
+  if (templateButton) menu.insertBefore(trigger, templateButton.nextSibling);
+  else if (addConnectionButton) menu.insertBefore(trigger, addConnectionButton.nextSibling);
   trigger.hidden = currentFile().id !== 'config';
   trigger.addEventListener('click', (event) => {
     (event.currentTarget as HTMLButtonElement).closest('details')?.removeAttribute('open');
@@ -493,8 +494,8 @@ function bindAddProxyDialog(signal: AbortSignal): void {
 }
 
 const editorTheme = EditorView.theme({
-  '&': { height: '100%', color: 'var(--editor-text, #e1e9f8)', backgroundColor: 'var(--editor-bg, #080e1b)', fontSize: '14px', fontWeight: '500' },
-  '.cm-scroller': { overflow: 'auto', fontFamily: '"JetBrains Mono Variable", "JetBrains Mono", ui-monospace, SFMono-Regular, Consolas, monospace', lineHeight: '1.6' },
+  '&': { height: '100%', color: 'var(--editor-text, #c0caf5)', backgroundColor: 'var(--editor-bg, #080e1d)', fontSize: '14px', fontWeight: '400' },
+  '.cm-scroller': { overflow: 'auto', fontFamily: 'var(--font-code, "JetBrains Mono Variable", "JetBrains Mono", ui-monospace, SFMono-Regular, Consolas, monospace)', lineHeight: '1.5' },
   '.cm-content': { padding: '14px 0', caretColor: 'var(--editor-caret, #65c9ff)' },
   '.cm-gutters': { color: 'var(--editor-gutter-text, #566a88)', backgroundColor: 'var(--editor-gutter-bg, #0a1120)', borderRight: '1px solid var(--editor-border, #1e2b40)' },
   '.cm-activeLine': { backgroundColor: 'var(--editor-active-line, #111e31)' },
@@ -504,13 +505,13 @@ const editorTheme = EditorView.theme({
 });
 
 const editorHighlight = HighlightStyle.define([
-  { tag: tags.propertyName, color: 'var(--editor-property, #62a8ff)', fontWeight: '600' },
-  { tag: [tags.string, tags.special(tags.string)], color: 'var(--editor-string, #9cda78)' },
-  { tag: [tags.number, tags.integer, tags.float], color: 'var(--editor-number, #ff9b55)' },
-  { tag: [tags.bool, tags.null, tags.atom], color: 'var(--editor-atom, #d58bff)' },
-  { tag: tags.comment, color: 'var(--editor-comment, #777ca7)', fontStyle: 'italic' },
-  { tag: [tags.punctuation, tags.bracket], color: 'var(--editor-punctuation, #a8bad4)' },
-  { tag: [tags.keyword, tags.operator], color: 'var(--editor-keyword, #68c9e8)' },
+  { tag: tags.propertyName, color: 'var(--editor-property, #7aa2f7)' },
+  { tag: [tags.string, tags.special(tags.string)], color: 'var(--editor-string, #9ece6a)' },
+  { tag: [tags.number, tags.integer, tags.float], color: 'var(--editor-number, #ff9e64)' },
+  { tag: [tags.bool, tags.null, tags.atom], color: 'var(--editor-atom, #bb9af7)' },
+  { tag: tags.comment, color: 'var(--editor-comment, #565f89)', fontStyle: 'italic' },
+  { tag: [tags.punctuation, tags.bracket], color: 'var(--editor-punctuation, #89ddff)' },
+  { tag: [tags.keyword, tags.operator], color: 'var(--editor-atom, #bb9af7)' },
 ]);
 
 function editorElement(): HTMLElement | null {
@@ -665,6 +666,7 @@ export function mountYamlEditor(routerMode = false, activeCore: 'mihomo' | 'xray
         keymap.of([...defaultKeymap, ...historyKeymap]),
         lineNumbers(),
         highlightActiveLine(),
+        indentationMarkers({ highlightActiveBlock: false, hideFirstIndent: true, markerType: 'codeOnly', thickness: 1, colors: { dark: '#27344d', light: '#e2e8f0' } }),
         ...(file.format === 'yaml' ? [yaml()] : file.format === 'text' ? [] : [json()]),
         syntaxHighlighting(editorHighlight),
         editorReadOnly.of(EditorState.readOnly.of(true)),

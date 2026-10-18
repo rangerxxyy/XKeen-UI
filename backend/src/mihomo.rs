@@ -150,21 +150,9 @@ impl MihomoClient {
         if !valid_name(group) || !valid_name(proxy) {
             return Err(MihomoError::InvalidSelection);
         }
-        let proxies = self.get_json(Endpoint::Proxies).await?;
-        let group_data = proxies
-            .get("proxies")
-            .and_then(Value::as_object)
-            .and_then(|entries| entries.get(group))
-            .ok_or(MihomoError::InvalidSelection)?;
-        let is_selector = group_data.get("type").and_then(Value::as_str) == Some("Selector");
-        let contains_proxy = group_data
-            .get("all")
-            .and_then(Value::as_array)
-            .is_some_and(|entries| entries.iter().any(|entry| entry.as_str() == Some(proxy)));
-        if !is_selector || !contains_proxy {
-            return Err(MihomoError::InvalidSelection);
-        }
-
+        // Mihomo validates the current selector and target when handling PUT.
+        // Avoid fetching the full proxy inventory first: this was an extra
+        // round trip on every switch and made local selector changes sluggish.
         let encoded_group = utf8_percent_encode(group, NON_ALPHANUMERIC);
         let body = Bytes::from(json!({ "name": proxy }).to_string());
         let response = self
@@ -692,28 +680,13 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn proxy_selection_checks_group_membership_then_sends_put() {
-        let (client, mut requests, server) = mock_controller(vec![
-            (
-                StatusCode::OK,
-                r#"{"proxies":{"Main / Europe":{"type":"Selector","all":["Finland","DIRECT"]}}}"#
-                    .into(),
-            ),
-            (StatusCode::NO_CONTENT, String::new()),
-        ])
-        .await;
+    async fn proxy_selection_sends_one_put_and_lets_mihomo_validate_current_membership() {
+        let (client, mut requests, server) =
+            mock_controller(vec![(StatusCode::NO_CONTENT, String::new())]).await;
         client
             .select_proxy("Main / Europe", "Finland")
             .await
             .unwrap();
-        assert_eq!(
-            next_request(&mut requests).await,
-            (
-                Method::GET,
-                "/proxies".into(),
-                Some("Bearer mock-secret".into())
-            )
-        );
         assert_eq!(
             next_request(&mut requests).await,
             (
@@ -813,21 +786,18 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn proxy_selection_refuses_non_member_before_mutating() {
-        let (client, mut requests, server) = mock_controller(vec![(
-            StatusCode::OK,
-            r#"{"proxies":{"Main":{"type":"Selector","all":["Finland"]}}}"#.into(),
-        )])
-        .await;
+    async fn proxy_selection_reports_mihomo_rejection_for_unknown_group_or_member() {
+        let (client, mut requests, server) =
+            mock_controller(vec![(StatusCode::NOT_FOUND, String::new())]).await;
         assert!(matches!(
             client.select_proxy("Main", "Unknown").await,
-            Err(MihomoError::InvalidSelection)
+            Err(MihomoError::UpstreamStatus(404))
         ));
         assert_eq!(
             next_request(&mut requests).await,
             (
-                Method::GET,
-                "/proxies".into(),
+                Method::PUT,
+                "/proxies/Main".into(),
                 Some("Bearer mock-secret".into())
             )
         );

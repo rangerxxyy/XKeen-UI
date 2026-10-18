@@ -149,28 +149,15 @@ function element<K extends keyof HTMLElementTagNameMap>(tag: K, className?: stri
 function renderReleaseList(target: HTMLElement, core: CoreName, releases: GitHubRelease[], keepBackup: () => boolean = () => true): void {
   const list = element('div', 'core-release-list');
   const visible = releases.filter((release) => isDisplayableCoreRelease(core, release));
-  if (visible.length) {
-    const picker = element('label', 'core-release-picker');
-    picker.append(element('span', undefined, 'Версия'));
-    const select = element('select', 'editor-select');
-    select.setAttribute('aria-label', `Выберите версию ${core}`);
-    for (const release of visible) {
-      const option = document.createElement('option');
-      option.value = release.tag_name;
-      option.textContent = `${release.name || release.tag_name} · ${release.tag_name}`;
-      select.append(option);
-    }
-    select.addEventListener('change', () => {
-      list.querySelector<HTMLElement>(`[data-release-tag="${CSS.escape(select.value)}"]`)?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-    });
-    picker.append(select);
-    list.append(picker);
-  }
   if (!visible.length) {
     list.append(element('p', 'core-release-empty', 'Совместимого релиза с архивом для ARM64 пока нет.'));
   }
   for (const release of visible) {
     const card = element('article', 'core-release-card');
+    card.setAttribute('role', 'radio');
+    card.tabIndex = 0;
+    card.setAttribute('aria-checked', String(release === visible[0]));
+    if (release === visible[0]) card.classList.add('is-selected');
     card.dataset.releaseTag = release.tag_name;
     const heading = element('div', 'core-release-heading');
     const title = element('strong', undefined, release.name || release.tag_name);
@@ -178,22 +165,19 @@ function renderReleaseList(target: HTMLElement, core: CoreName, releases: GitHub
     badges.append(element('span', `core-release-badge${release.prerelease ? ' is-preview' : ''}`, release.prerelease ? 'Pre-Release' : 'Stable'));
     const asset = findCompatibleCoreAsset(core, release.assets);
     badges.append(element('span', `core-release-badge${asset ? ' is-ready' : ' is-muted'}`, asset ? 'ARM64' : 'Нет архива ARM64'));
-    heading.append(title, badges);
+    const radio = element('span', 'core-release-radio');
+    radio.setAttribute('aria-hidden', 'true');
+    heading.append(title, badges, radio);
     card.append(heading);
 
     const published = release.published_at
       ? new Date(release.published_at).toLocaleDateString('ru-RU', { year: 'numeric', month: 'short', day: 'numeric' })
       : 'дата не указана';
-    card.append(element('p', 'core-release-meta', `${release.tag_name} · ${published} · ${release.assets.length} файлов`));
+    card.append(element('p', 'core-release-meta', `${published}`));
     if (release.body?.trim()) {
-      const notes = document.createElement('details');
-      notes.className = 'core-release-changelog';
-      if (release === visible[0]) notes.open = true;
-      notes.append(element('summary', undefined, 'Что изменилось'));
       const text = element('div', 'core-release-notes-content');
       text.innerHTML = formatReleaseNotes(release.body);
-      notes.append(text);
-      card.append(notes);
+      card.append(text);
     }
     if (asset) {
       const assetRow = element('div', 'core-release-asset');
@@ -201,14 +185,12 @@ function renderReleaseList(target: HTMLElement, core: CoreName, releases: GitHub
       assetRow.append(element('span', undefined, sizeLabel(asset.size)));
       card.append(assetRow);
       const digest = asset.digest?.match(/^sha256:([a-f0-9]{64})$/i)?.[1];
-      if (digest && asset.size > 0 && asset.size <= 32 * 1024 * 1024) {
-        const install = element('button', 'editor-button editor-button-primary', 'Установить / обновить');
-        install.type = 'button';
-        install.addEventListener('click', () => void installRelease(core, release.tag_name, asset.name, digest, install, list, keepBackup));
-        card.append(install);
-      } else {
+      if (!(digest && asset.size > 0 && asset.size <= 32 * 1024 * 1024)) {
         card.append(element('p', 'core-release-note', 'GitHub не предоставил проверяемый SHA-256 или архив превышает 32 MiB; установка недоступна.'));
       }
+      card.dataset.assetName = asset.name;
+      card.dataset.assetDigest = digest ?? '';
+      card.dataset.installable = String(Boolean(digest && asset.size > 0 && asset.size <= 32 * 1024 * 1024));
     }
     const link = safeCoreReleaseLink(release.html_url);
     if (link) {
@@ -221,10 +203,35 @@ function renderReleaseList(target: HTMLElement, core: CoreName, releases: GitHub
     list.append(card);
   }
   target.replaceChildren(list);
+  const action = target.closest<HTMLElement>('.core-release-dialog-panel')?.querySelector<HTMLButtonElement>('#core-release-install');
+  const updateAction = () => {
+    const selected = list.querySelector<HTMLElement>('.core-release-card.is-selected');
+    if (action) action.disabled = !selected || selected.dataset.installable !== 'true';
+  };
+  const selectCard = (selected: HTMLElement | null) => {
+    if (!selected) return;
+    list.querySelectorAll('.core-release-card').forEach((card) => {
+      card.classList.toggle('is-selected', card === selected);
+      card.setAttribute('aria-checked', String(card === selected));
+    });
+    updateAction();
+  };
+  list.addEventListener('click', (event) => selectCard((event.target as HTMLElement).closest<HTMLElement>('.core-release-card')));
+  list.addEventListener('keydown', (event) => {
+    if (!(event instanceof KeyboardEvent) || (event.key !== 'Enter' && event.key !== ' ')) return;
+    const card = (event.target as HTMLElement).closest<HTMLElement>('.core-release-card');
+    if (card) { event.preventDefault(); selectCard(card); }
+  });
+  if (action) action.addEventListener('click', () => {
+    const selected = list.querySelector<HTMLButtonElement>('.core-release-card.is-selected');
+    if (!selected?.dataset.installable || !selected.dataset.assetName || !selected.dataset.assetDigest) return;
+    void installRelease(core, selected.dataset.releaseTag ?? '', selected.dataset.assetName, selected.dataset.assetDigest, action, target, keepBackup);
+  });
+  updateAction();
 }
 
 export function renderCoreReleaseDialogMarkup(title: string): string {
-  return `<form method="dialog" class="modal-panel core-release-dialog-panel"><div class="modal-heading"><span class="modal-icon">⇩</span><h2>${title}</h2><button class="icon-button" aria-label="Закрыть">×</button></div><div class="core-release-dialog-source"><span id="core-release-repository">Источник загружается…</span><span class="core-release-github">GitHub</span></div><p class="modal-note" id="core-release-dialog-status" aria-live="polite">Загружаем совместимые ARM64-релизы…</p><div id="core-release-dialog-list" class="core-release-dialog-list"></div></form>`;
+  return `<form method="dialog" class="modal-panel core-release-dialog-panel"><div class="modal-heading"><svg class="modal-download-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12m0 0 5-5m-5 5-5-5M4 17v4h16v-4"/></svg><h2>${title}</h2><button class="icon-button" aria-label="Закрыть">×</button></div><div class="core-release-dialog-source"><span id="core-release-repository">Источник загружается…</span><span class="core-release-github">GitHub</span></div><p class="modal-note" id="core-release-dialog-status" aria-live="polite">Загружаем совместимые ARM64-релизы…</p><div id="core-release-dialog-list" class="core-release-dialog-list"></div><footer class="core-release-actions"><button id="core-release-install" class="editor-button editor-button-primary" type="button" disabled>Установить</button></footer></form>`;
 }
 
 export async function openCoreReleaseDialog(
@@ -286,7 +293,7 @@ async function installRelease(core: CoreName, tag: string, asset: string, sha256
     feedback.textContent = error instanceof Error ? error.message : `Не удалось установить ${core}.`;
   } finally {
     button.disabled = false;
-    button.textContent = 'Установить / обновить';
+    button.textContent = 'Установить';
   }
 }
 

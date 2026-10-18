@@ -36,6 +36,8 @@ import { shouldReportUiError } from './ui-error-dedupe';
 import { sortMihomoConnections, type ConnectionSort, type ConnectionSortKey } from './connection-sort';
 import { MAIN_NAVIGATION_PAGES, renderNavigationView, renderWorkspaceFrame } from './navigation-view';
 import { renderEditorUtilitiesMenu } from './editor-utilities';
+import { openRulesetsDialog } from './rulesets-view';
+import { openSubscriptionsDialog } from './subscriptions-view';
 
 type Page = 'selectors' | 'connections' | 'configuration' | 'dns';
 
@@ -166,7 +168,7 @@ function renderHeader(): string {
   return `<header class="topbar">
     <div class="top-status-cluster ${serviceBusy ? 'is-xkeen-busy' : ''}"><div class="top-status" aria-label="Состояние XKeen" aria-live="polite"><span id="status-led" class="connection-led ${xkeenRunning ? 'is-online' : 'is-offline'}"></span><span><strong id="service-label">${escapeHtml(serviceText)}</strong><small id="service-summary">${state.connected ? resourceMetrics : 'Ожидание соединения с backend'}</small></span></div><div class="header-service-controls" aria-label="Управление XKeen" aria-busy="${serviceBusy}">${controls}</div></div>
     <a class="brand" href="#selectors" aria-label="XKeen UI, селекторы"><span>XKeen <b>UI</b></span></a>
-    <div class="top-actions"><button class="version-chip core-chip core-version-button" id="core-version" type="button" title="Управление ядрами" aria-label="Управление ядрами"><span class="chip-icon">◈</span> Mihomo <b id="core-version-label">${coreLabel}</b><span class="chip-chevron" aria-hidden="true">⌄</span></button>${renderAppVersionChip(status?.appVersion ?? APP_VERSION, Boolean(appUpdateAvailable))}<button class="icon-button" id="settings" title="Настройки" aria-label="Настройки">⚙</button></div>
+    <div class="top-actions"><button class="version-chip core-chip core-version-button" id="core-version" type="button" title="Управление ядрами" aria-label="Управление ядрами"><svg class="chip-icon chip-cpu-icon" viewBox="0 0 16 16" aria-hidden="true"><rect x="3" y="3" width="10" height="10" rx="2"/><path d="M6 1v2m4-2v2m-4 10v2m4-2v2M1 6h2m-2 4h2m10-4h2m-2 4h2"/></svg> Mihomo <b id="core-version-label">${coreLabel}</b><span class="chip-chevron" aria-hidden="true">⌄</span></button><button class="version-chip subscriptions-open" id="subscriptions-open" type="button" title="Просмотр подписок Mihomo"><svg viewBox="0 0 16 16" aria-hidden="true"><ellipse cx="8" cy="3.5" rx="5.5" ry="2"/><path d="M2.5 3.5v9c0 1.1 2.5 2 5.5 2s5.5-.9 5.5-2v-9M2.5 8c0 1.1 2.5 2 5.5 2s5.5-.9 5.5-2"/></svg><span>Подписки</span></button><button class="version-chip rulesets-open" id="rulesets-open" type="button" title="Просмотр файлов rule-set Mihomo"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3 2.5h7l3 3v8H3zM10 2.5v3h3M5 8h6M5 10.5h6"/></svg><span>Рулсеты</span></button>${renderAppVersionChip(status?.appVersion ?? APP_VERSION, Boolean(appUpdateAvailable))}<button class="icon-button" id="settings" title="Настройки" aria-label="Настройки">⚙</button></div>
   </header>`;
 }
 
@@ -475,6 +477,8 @@ function render(): void {
   });
   document.querySelectorAll<HTMLButtonElement>('#retry').forEach((button) => button.addEventListener('click', () => void refresh()));
   document.querySelector<HTMLButtonElement>('#settings')?.addEventListener('click', openSettings);
+  document.querySelector<HTMLButtonElement>('#rulesets-open')?.addEventListener('click', () => void openRulesetsDialog());
+  document.querySelector<HTMLButtonElement>('#subscriptions-open')?.addEventListener('click', () => void openSubscriptionsDialog());
   document.querySelector<HTMLButtonElement>('#app-version')?.addEventListener('click', () => void openAppReleases());
   document.querySelector<HTMLButtonElement>('#core-version')?.addEventListener('click', () => {
     const serviceFor = (name: string) => state.status?.services.find((service) => service.name.toLowerCase() === name);
@@ -1124,7 +1128,7 @@ function updateChrome(): void {
 async function openAppReleases(): Promise<void> {
   const dialog = document.createElement('dialog');
   dialog.className = 'modal app-release-dialog';
-  dialog.innerHTML = `<div class="modal-panel app-releases-panel"><div class="modal-heading"><span class="modal-icon">⬡</span><h2>Обновление XKeen UI</h2><button class="icon-button" id="app-releases-close" type="button" aria-label="Закрыть">×</button></div><div class="core-release-dialog-source"><span>rangerxxyy/XKeen-UI</span><span class="core-release-github">GitHub</span></div><p class="modal-note" id="app-releases-status" aria-live="polite">Загружаем последние стабильные сборки…</p><div id="app-release-list" class="app-release-list" aria-label="Стабильные релизы XKeen UI"></div>${renderAppReleaseActions()}</div>`;
+  dialog.innerHTML = `<div class="modal-panel app-releases-panel"><div class="modal-heading"><svg class="modal-download-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12m0 0 5-5m-5 5-5-5M4 17v4h16v-4"/></svg><h2>Обновление XKeen UI</h2><button class="icon-button" id="app-releases-close" type="button" aria-label="Закрыть">×</button></div><div class="core-release-dialog-source"><span>rangerxxyy/XKeen-UI</span><span class="core-release-github">GitHub</span></div><p class="modal-note" id="app-releases-status" aria-live="polite">Загружаем последние стабильные сборки…</p><div id="app-release-list" class="app-release-list" aria-label="Стабильные релизы XKeen UI"></div>${renderAppReleaseActions()}</div>`;
   document.body.append(dialog);
   bindDialogMotion(dialog);
   dialog.showModal();
@@ -1139,7 +1143,7 @@ async function openAppReleases(): Promise<void> {
     const downgrade = appRelease ? isInstalledNewerOrEqual(installed, appRelease.tag_name) && !isInstalledNewerOrEqual(appRelease.tag_name, installed) : false;
     install.disabled = !appRelease || state.status?.mode !== 'router' || appUpdateInstalling || downgrade;
     install.textContent = downgrade ? 'Выбрана версия старее установленной'
-      : appRelease && !isInstalledNewerOrEqual(installed, appRelease.tag_name) ? 'Установить' : 'Переустановить';
+      : 'Установить';
   };
   list.addEventListener('click', (event) => {
     const card = (event.target as HTMLElement).closest<HTMLButtonElement>('.app-release-card');
@@ -1502,8 +1506,7 @@ async function installAppUpdate(): Promise<void> {
     if (message) message.textContent = appUpdateMessage;
     if (installButton) {
       installButton.disabled = false;
-      installButton.textContent = appRelease && !isInstalledNewerOrEqual(state.status?.appVersion ?? APP_VERSION, appRelease.tag_name)
-        ? 'Установить выбранную' : 'Переустановить выбранную';
+      installButton.textContent = 'Установить';
     }
     render();
   }

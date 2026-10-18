@@ -27,6 +27,17 @@ describe('applyPingResults', () => {
     expect(applyPingResults(groups, [{ name: 'Offline', delay: null }])[0]?.options[0])
       .toMatchObject({ alive: false, delay: null });
   });
+
+  it('uses the upstream ping color cutoffs: green below 300, yellow through 599, red from 600', () => {
+    const group: MihomoSelector[] = [{ name: 'Main', icon: null, current: null, options: [
+      ...[299, 300, 599, 600].map((delay) => ({ name: `node-${delay}`, type: 'VLESS', icon: null, alive: null, delay: null })),
+    ] }];
+    const updated = applyPingResults(group, [299, 300, 599, 600].map((delay) => ({ name: `node-${delay}`, delay })));
+    const html = renderSelectors(updated, false, null);
+    expect(html.match(/proxy-ping-value is-alive/g)).toHaveLength(1);
+    expect(html.match(/proxy-ping-value is-slow/g)).toHaveLength(2);
+    expect(html.match(/proxy-ping-value is-dead/g)).toHaveLength(1);
+  });
 });
 
 describe('renderSelectors', () => {
@@ -72,6 +83,16 @@ describe('renderSelectors', () => {
     expect(html).toContain('M4.5 8.5');
     expect(renderPingStatusIcon(null)).toContain('M9 1');
     expect(renderPingStatusIcon(false)).toContain('class="ping-status-icon is-dead"');
+  });
+
+  it('renders route arrows as fixed non-shrinking elements between connection hops', () => {
+    const data: MihomoConnections = { uploadTotal: 0, downloadTotal: 0, connections: [{
+      id: 'abc', host: 'example.com:443', destination: 'example.com', source: '192.168.1.5', network: 'tcp', process: '',
+      chains: ['GitHub', 'Sweden'], rule: '', rulePayload: '', upload: 1, download: 2, start: new Date().toISOString(),
+    }] };
+    const html = renderConnections(data, false, null);
+    expect(html).toContain('class="connection-route-arrow"');
+    expect(html).not.toContain('GitHub → Sweden</span>');
   });
 
   it('renders ISO country prefixes with bundled SVG flag icons in node names and selected routes', () => {

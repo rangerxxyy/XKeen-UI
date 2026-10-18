@@ -1,7 +1,32 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { applyActiveMihomoConfig, applyXrayConfigFile, getMihomoSelectors, getRouterConfigFile, getRouterDeviceList, getSystemLog, getXrayConfigFile, installCoreRelease, listMihomoConfigBackups, logUiError, pingMihomoGroup, pingMihomoProxy, requestAppUpdate, restoreMihomoConfigBackup, saveActiveMihomoConfig, saveRouterConfigFile, saveXrayConfigFile, selectMihomoProxy, validateMihomoConfig } from './api';
+import { applyActiveMihomoConfig, applyXrayConfigFile, getMihomoProxyProviders, getMihomoSelectors, getRouterConfigFile, getRouterDeviceList, getSystemLog, getXrayConfigFile, installCoreRelease, listMihomoConfigBackups, logUiError, pingMihomoGroup, pingMihomoProxy, refreshMihomoProxyProvider, requestAppUpdate, restoreMihomoConfigBackup, saveActiveMihomoConfig, saveRouterConfigFile, saveXrayConfigFile, selectMihomoProxy, validateMihomoConfig } from './api';
 
 afterEach(() => vi.unstubAllGlobals());
+
+describe('Mihomo proxy providers API', () => {
+  it('maps provider counts, subscription usage, expiry, and update metadata', async () => {
+    vi.stubGlobal('fetch', vi.fn(async () => new Response(JSON.stringify({ providers: {
+      subscription_1: {
+        name: 'subscription_1', type: 'Proxy', vehicleType: 'HTTP',
+        proxies: [{ name: 'Sweden', type: 'VLESS' }, { name: 'Finland', type: 'Hysteria2' }],
+        subscriptionInfo: { Upload: 1024, Download: 2048, Total: 1048576, Expire: 1792407600 },
+        updatedAt: '2026-10-18T16:00:00Z',
+      },
+    } }), { headers: { 'Content-Type': 'application/json' } })));
+    await expect(getMihomoProxyProviders()).resolves.toEqual([{
+      name: 'subscription_1', vehicleType: 'HTTP', proxyCount: 2,
+      upload: 1024, download: 2048, total: 1048576, expire: 1792407600,
+      updatedAt: '2026-10-18T16:00:00Z', proxies: [{ name: 'Sweden', type: 'VLESS' }, { name: 'Finland', type: 'Hysteria2' }],
+    }]);
+  });
+
+  it('requests a refresh for the selected provider through the backend proxy', async () => {
+    const fetchMock = vi.fn(async () => new Response(JSON.stringify({ status: 'refresh-requested' }), { headers: { 'Content-Type': 'application/json' } }));
+    vi.stubGlobal('fetch', fetchMock);
+    await expect(refreshMihomoProxyProvider('subscription 1')).resolves.toBeUndefined();
+    expect(fetchMock).toHaveBeenCalledWith('/api/v1/mihomo/providers/proxies/subscription%201/refresh', expect.objectContaining({ method: 'PUT' }));
+  });
+});
 
 describe('selectMihomoProxy', () => {
   it('switches the selected proxy with one direct request and no inventory fetch', async () => {

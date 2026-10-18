@@ -80,6 +80,80 @@ export interface MihomoPingResult {
   delay: number | null;
 }
 
+export interface MihomoRuleProvider {
+  name: string;
+  format: string;
+  behavior: string;
+  updatedAt: string | null;
+  ruleCount: number;
+}
+
+export interface MihomoProxyProviderNode { name: string; type: string }
+export interface MihomoProxyProvider {
+  name: string;
+  vehicleType: string;
+  proxies: MihomoProxyProviderNode[];
+  proxyCount: number;
+  upload: number;
+  download: number;
+  total: number;
+  expire: number | null;
+  updatedAt: string | number | null;
+}
+
+export async function getMihomoProxyProviders(signal?: AbortSignal): Promise<MihomoProxyProvider[]> {
+  const payload = await getMihomoJson('/api/v1/mihomo/providers/proxies', 'Получение списка подписок', signal);
+  if (!isRecord(payload) || !isRecord(payload.providers)) throw new Error('Mihomo вернул некорректный список подписок');
+  return Object.entries(payload.providers).flatMap(([name, raw]): MihomoProxyProvider[] => {
+    if (!isRecord(raw)) return [];
+    const proxies = Array.isArray(raw.proxies) ? raw.proxies.flatMap((proxy): MihomoProxyProviderNode[] => {
+      if (!isRecord(proxy) || typeof proxy.name !== 'string') return [];
+      return [{ name: proxy.name, type: typeof proxy.type === 'string' ? proxy.type : '—' }];
+    }) : [];
+    const info = isRecord(raw.subscriptionInfo) ? raw.subscriptionInfo : {};
+    const finiteCount = (value: unknown) => typeof value === 'number' && Number.isFinite(value) && value >= 0 ? value : 0;
+    return [{
+      name,
+      vehicleType: typeof raw.vehicleType === 'string' ? raw.vehicleType : typeof raw.type === 'string' ? raw.type : '—',
+      proxies,
+      proxyCount: proxies.length,
+      upload: finiteCount(info.Upload),
+      download: finiteCount(info.Download),
+      total: finiteCount(info.Total),
+      expire: typeof info.Expire === 'number' && Number.isFinite(info.Expire) && info.Expire > 0 ? info.Expire : null,
+      updatedAt: typeof raw.updatedAt === 'string' || typeof raw.updatedAt === 'number' ? raw.updatedAt : null,
+    }];
+  }).sort((a, b) => a.name.localeCompare(b.name, 'ru'));
+}
+
+export async function refreshMihomoProxyProvider(name: string, signal?: AbortSignal): Promise<void> {
+  if (!name || name.length > 256 || /[\u0000-\u001f\u007f]/.test(name)) throw new Error('Некорректное имя подписки');
+  const response = await fetch(`/api/v1/mihomo/providers/proxies/${encodeURIComponent(name)}/refresh`, {
+    method: 'PUT',
+    headers: { Accept: 'application/json' },
+    signal,
+  });
+  const payload = await readJson(response, `Обновление подписки «${name}»`);
+  if (!isRecord(payload) || payload.status !== 'refresh-requested') throw new Error('Backend не подтвердил обновление подписки');
+}
+
+export async function getMihomoRuleProviders(signal?: AbortSignal): Promise<MihomoRuleProvider[]> {
+  const payload = await getMihomoJson('/api/v1/mihomo/providers/rules', 'Получение списка rule-set', signal);
+  if (!isRecord(payload) || !isRecord(payload.providers)) throw new Error('Mihomo вернул некорректный список rule-set');
+  return Object.entries(payload.providers).flatMap(([name, raw]) => {
+    if (!isRecord(raw)) return [];
+    const count = typeof raw.ruleCount === 'number' ? raw.ruleCount : Array.isArray(raw.rules) ? raw.rules.length : 0;
+    return [{ name, format: typeof raw.format === 'string' ? raw.format : '—', behavior: typeof raw.behavior === 'string' ? raw.behavior : '—', updatedAt: typeof raw.updatedAt === 'string' ? raw.updatedAt : null, ruleCount: Math.max(0, count) }];
+  }).sort((a, b) => a.name.localeCompare(b.name, 'ru'));
+}
+
+export async function getMihomoRuleProviderContent(name: string, signal?: AbortSignal): Promise<{ content: string; path: string }> {
+  if (!name || name.length > 256 || /[\u0000-\u001f\u007f]/.test(name)) throw new Error('Некорректное имя rule-set');
+  const payload = await getMihomoJson(`/api/v1/mihomo/providers/rules/${encodeURIComponent(name)}`, 'Чтение содержимого rule-set', signal);
+  if (!isRecord(payload) || typeof payload.content !== 'string' || typeof payload.path !== 'string') throw new Error('Backend вернул некорректное содержимое rule-set');
+  return { content: payload.content, path: payload.path };
+}
+
 export interface MihomoPingOptions {
   url: string;
   timeoutMs: number;

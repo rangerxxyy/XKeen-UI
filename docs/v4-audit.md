@@ -10,12 +10,12 @@ Audit baseline: `main` at `36e49f3` / v0.3.7. Reference: [`zxc-rv/XKeen-UI`](htt
 - **P1 — DNS compatibility guidance:** `fake-ip` with the default/explicit `blacklist` filter mode can cause traffic that bypasses Mihomo to fail. The DNS page now reads the live filter mode and shows an actionable warning unless it is `whitelist` or `rule`. It does not change user configuration. Applying an active Mihomo config already validates it and restarts the XKeen service, providing a full-restart path instead of relying on Clash hot reload.
 - **P1 — runtime smoke test unavailable locally:** Vite runs, but nothing is listening on its configured backend target `127.0.0.1:1001`; the dev proxy therefore returns HTTP 500 for API calls. No local browser response was fabricated and no user router was touched during this pass.
 - **P2 — upstream capability gaps:** this repository has no equivalent yet for the reference's config-backup browser/restore workflow, Geo database scanner, route test suite, plugin-based multi-router config application, or HTTP subscription preview. Existing Mihomo outbound parsing, core updates, config validation, logs and DNS controls remain implemented independently. These gaps require feature-specific security and resource review before release claims.
-- **P2 — authentication coverage:** the API validates same-origin for mutations, but there is no complete account/session authentication flow. Keep service bound to loopback by default and do not claim KeenDNS internet exposure is protected by an account system.
+- **P2 — authentication coverage:** the API validates same-origin for mutations, but there is no complete account/session authentication flow. Router installation binds to the detected `br0` IPv4 address; do not expose the panel through KeenDNS or the public internet without a separate VPN/authenticated gateway.
 
 ## Verification performed
 
-- `pnpm test`: 192 frontend tests pass.
+- `pnpm test`: 195 frontend tests pass.
 - `pnpm build`: TypeScript check and Vite production build pass.
 - `git diff --check`: passes.
 - Local browser: layout and journal toolbar render; backend-dependent data shows the real proxy error state. A direct probe of `/health` and `/api/v1/status` on `127.0.0.1:1001` confirmed connection refused.
-- Rust tests, formatting, Linux CI, and AArch64 artifact have not yet been run for this worktree.
+- Rust tests, formatting, Linux backend CI, and the AArch64 cross-build all pass on the current branch head `960cdf5` (CI run `39115788438`).

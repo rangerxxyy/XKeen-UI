@@ -50,6 +50,7 @@
   .app-shell .journal-tools select { flex:1 1 auto; min-width:0; width:auto; }
   .app-shell .journal-action-button { width:34px; min-width:34px; padding:0; }
   .app-shell .journal-action-label { display:none; }
+  .app-shell .dns-fake-ip-warning { margin-right:14px; margin-left:14px; }
 }
 @media(prefers-reduced-motion:reduce) { .app-shell .journal-action-button { transition:none; } }
 .top-status-cluster.is-xkeen-busy { position:relative; isolation:isolate; }

@@ -11,6 +11,7 @@ export function patchDnsManagement(content: string, enabled: boolean): string {
 
 export interface MihomoDnsSettings {
   enhancedMode: 'redir-host' | 'fake-ip';
+  fakeIpFilterMode?: string;
   bootstrap: string;
   nameserver: string;
   nameserverPolicy: string;
@@ -20,6 +21,7 @@ export interface MihomoDnsSettings {
 
 const defaultDnsSettings: MihomoDnsSettings = {
   enhancedMode: 'redir-host',
+  fakeIpFilterMode: 'blacklist',
   bootstrap: '',
   nameserver: '',
   nameserverPolicy: '',
@@ -45,8 +47,10 @@ export function readMihomoDnsSettings(content: string): MihomoDnsSettings {
     ? Object.entries(rawPolicy as Record<string, unknown>).map(([key, value]) => `${key}: ${Array.isArray(value) ? `[${value.map(String).join(', ')}]` : String(value)}`).join('\n')
     : '';
   const mode = scalar('enhanced-mode');
+  const fakeIpFilterMode = scalar('fake-ip-filter-mode').trim().toLowerCase() || 'blacklist';
   return {
     enhancedMode: mode === 'fake-ip' ? 'fake-ip' : 'redir-host',
+    fakeIpFilterMode,
     bootstrap: list('default-nameserver'),
     nameserver: list('nameserver'),
     nameserverPolicy: policy,
@@ -115,14 +119,18 @@ export function renderDns(result: MihomoDnsResult | null, loading: boolean, erro
 
   const values = dnsConfig?.values ?? defaultDnsSettings;
   const settingsError = dnsConfig?.error ? `<div class="dns-feedback is-error" role="alert"><span>!</span><div><strong>Ошибка настроек DNS</strong><p>${escapeHtml(dnsConfig.error)}</p></div></div>` : '';
+  const fakeIpFilterMode = values.fakeIpFilterMode || 'blacklist';
+  const fakeIpWarning = dnsConfig?.values && values.enhancedMode === 'fake-ip' && !['whitelist', 'rule'].includes(fakeIpFilterMode)
+    ? `<aside class="dns-fake-ip-warning" role="note"><span aria-hidden="true">!</span><p><strong>Проверьте режим фильтра fake-ip.</strong> Сейчас используется <code>${escapeHtml(fakeIpFilterMode)}</code>. При таком режиме часть трафика может обходить Mihomo; для <code>fake-ip</code> обычно подходят <code>whitelist</code> или <code>rule</code>. <a href="https://wiki.metacubex.one/ru/config/dns/#fake-ip-filter-mode" target="_blank" rel="noopener noreferrer">Подробнее в документации Mihomo</a></p></aside>`
+    : '';
   const settingsMarkup = dnsConfig?.values ? `<form id="mihomo-dns-settings" class="dns-settings-form"><label><span>Режим DNS<small class="dns-field-hint">redir-host сохраняет реальные адреса; fake-ip выдаёт клиентам виртуальные.</small></span><select name="enhancedMode"><option value="redir-host" ${values.enhancedMode === 'redir-host' ? 'selected' : ''}>redir-host</option><option value="fake-ip" ${values.enhancedMode === 'fake-ip' ? 'selected' : ''}>fake-ip</option></select></label>${[
     ['bootstrap', 'Начальные DNS-серверы', 'Нужны для поиска адресов самих DNS-серверов.'],
     ['nameserver', 'Основные DNS-серверы', 'Используются для обычных запросов устройств.'],
     ['nameserverPolicy', 'Правила DNS', 'Назначают отдельные резолверы доменам или правилам.'],
     ['proxyServerNameserver', 'DNS-серверы прокси', 'Разрешают адреса прокси-серверов.'],
     ['fallback', 'Резервные DNS-серверы', 'Подключаются, когда основные серверы не дают подходящий ответ.'],
-  ].map(([name, label, description]) => `<label class="dns-settings-wide"><span>${label}<small class="dns-field-hint">${description}</small></span><textarea name="${name}" rows="${name === 'nameserverPolicy' || name === 'nameserver' ? 4 : 2}" spellcheck="false">${escapeHtml(values[name as keyof MihomoDnsSettings])}</textarea></label>`).join('')}<button class="button button-primary" type="submit" ${dnsConfig?.busy || dnsConfig?.loading ? 'disabled' : ''}>${dnsConfig?.busy ? 'Применяем…' : 'Сохранить DNS'}</button></form>` : dnsConfig?.loading ? '<div class="dns-feedback"><span class="loading-orbit" aria-hidden="true"></span><div><strong>Загружаем DNS Mihomo</strong><p>Читаем активный конфиг роутера.</p></div></div>' : '<p class="dns-no-answer">Настройки DNS доступны в режиме роутера.</p>';
-  const mihomoPanel = `<section class="dns-workspace dns-mihomo-pane"><header class="dns-workspace-heading"><h2>DNS Mihomo</h2></header>${settingsError}${settingsMarkup}<details class="dns-diagnostics"><summary>Проверка DNS</summary><form id="dns-query-form" class="dns-query-form"><label><span>Домен или IP</span><input name="name" type="text" autocomplete="off" autocapitalize="none" spellcheck="false" maxlength="253" placeholder="example.com" value="${escapeHtml(queryName)}" required></label><label><span>Тип</span><select name="type">${['A', 'AAAA', 'CNAME', 'TXT', 'MX', 'NS', 'PTR', 'SRV', 'HTTPS', 'SVCB'].map((type) => `<option ${type === queryType ? 'selected' : ''}>${type}</option>`).join('')}</select></label><button class="button button-primary" type="submit" ${loading ? 'disabled' : ''}>${loading ? 'Запрос…' : 'Проверить'}</button></form>${status}</details></section>`;
+  ].map(([name, label, description]) => `<label class="dns-settings-wide"><span>${label}<small class="dns-field-hint">${description}</small></span><textarea name="${name}" rows="${name === 'nameserverPolicy' || name === 'nameserver' ? 4 : 2}" spellcheck="false">${escapeHtml(values[name as keyof MihomoDnsSettings] ?? '')}</textarea></label>`).join('')}<button class="button button-primary" type="submit" ${dnsConfig?.busy || dnsConfig?.loading ? 'disabled' : ''}>${dnsConfig?.busy ? 'Применяем…' : 'Сохранить DNS'}</button></form>` : dnsConfig?.loading ? '<div class="dns-feedback"><span class="loading-orbit" aria-hidden="true"></span><div><strong>Загружаем DNS Mihomo</strong><p>Читаем активный конфиг роутера.</p></div></div>' : '<p class="dns-no-answer">Настройки DNS доступны в режиме роутера.</p>';
+  const mihomoPanel = `<section class="dns-workspace dns-mihomo-pane"><header class="dns-workspace-heading"><h2>DNS Mihomo</h2></header>${settingsError}${fakeIpWarning}${settingsMarkup}<details class="dns-diagnostics"><summary>Проверка DNS</summary><form id="dns-query-form" class="dns-query-form"><label><span>Домен или IP</span><input name="name" type="text" autocomplete="off" autocapitalize="none" spellcheck="false" maxlength="253" placeholder="example.com" value="${escapeHtml(queryName)}" required></label><label><span>Тип</span><select name="type">${['A', 'AAAA', 'CNAME', 'TXT', 'MX', 'NS', 'PTR', 'SRV', 'HTTPS', 'SVCB'].map((type) => `<option ${type === queryType ? 'selected' : ''}>${type}</option>`).join('')}</select></label><button class="button button-primary" type="submit" ${loading ? 'disabled' : ''}>${loading ? 'Запрос…' : 'Проверить'}</button></form>${status}</details></section>`;
   const dnsStatus = management?.status;
   const stateError = management?.error ? `<div class="dns-feedback is-error" role="alert"><span>!</span><div><strong>Состояние не получено</strong><p>${escapeHtml(management.error)}</p></div></div>` : '';
   const stateLoading = management?.loading ? '<div class="dns-feedback"><span class="loading-orbit" aria-hidden="true"></span><div><strong>Читаем состояние</strong><p>Запрашиваем настройки KeeneticOS и Mihomo.</p></div></div>' : '';

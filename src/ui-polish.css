@@ -127,6 +127,13 @@
 .app-shell .dns-runtime-list>div strong:not(.state-pill) { color:#c8b8ff; }
 .app-shell .dns-settings-form textarea { min-height:96px; padding:11px 12px; border-radius:9px; background:#0d0d1b; line-height:1.6; }
 .app-shell .dns-settings-form select { min-height:40px; border-radius:9px; }
+.app-shell .dns-fake-ip-warning { display:flex; align-items:flex-start; gap:10px; margin:0 18px 14px; padding:12px 13px; border:1px solid #755c2d; border-radius:10px; color:#f2dca9; background:linear-gradient(120deg,#302514,#241e16); }
+.app-shell .dns-fake-ip-warning>span { flex:0 0 20px; width:20px; height:20px; display:grid; place-items:center; border-radius:50%; color:#ffdb7d; background:#58421e; font-size:12px; font-weight:800; }
+.app-shell .dns-fake-ip-warning p { min-width:0; color:#e9d8b6; font-size:12px; line-height:1.55; }
+.app-shell .dns-fake-ip-warning strong { color:#ffe4a1; }
+.app-shell .dns-fake-ip-warning code { padding:1px 4px; border-radius:4px; color:#ffe7b0; background:#17130e; font:600 11px/1.4 "JetBrains Mono Variable",monospace; }
+.app-shell .dns-fake-ip-warning a { color:#cbb4ff; text-decoration:underline; text-underline-offset:2px; }
+.app-shell .dns-fake-ip-warning a:focus-visible { outline:2px solid #cbb4ff; outline-offset:2px; border-radius:2px; }
 .app-shell .dns-settings-form>label>span { display:grid; gap:3px; }
 .app-shell .dns-field-hint { color:#a89fbd; font-size:11px; font-weight:450; line-height:1.4; }
 .app-shell .dns-diagnostics { margin:0 18px 16px; padding:0 12px; border:1px solid #342c4b; border-radius:10px; background:#121224; }
@@ -144,5 +151,9 @@
 :root[data-theme="light"] .app-shell .dns-runtime-list>div strong:not(.state-pill) { color:#66509b; }
 :root[data-theme="light"] .app-shell .dns-settings-form textarea { background:#fff; }
 :root[data-theme="light"] .app-shell .dns-diagnostics { border-color:#ded8ec; background:#fff; }
+:root[data-theme="light"] .app-shell .dns-fake-ip-warning { border-color:#ead49b; color:#665019; background:linear-gradient(120deg,#fff8e3,#fffdf7); }
+:root[data-theme="light"] .app-shell .dns-fake-ip-warning p { color:#62542f; }
+:root[data-theme="light"] .app-shell .dns-fake-ip-warning strong { color:#62480b; }
+:root[data-theme="light"] .app-shell .dns-fake-ip-warning code { color:#5e4712; background:#f5eddb; }
 :root[data-theme="light"] .app-shell .editor-utilities-menu { border-color:#d4cbe7; background:linear-gradient(155deg,#fff,#f8f6fc); box-shadow:0 16px 38px #27324a24; }
 :root[data-theme="light"] .app-shell .editor-utilities-menu button:hover,:root[data-theme="light"] .app-shell .editor-utilities-menu button:focus-visible { color:#352653; background:#f0ebfa; }

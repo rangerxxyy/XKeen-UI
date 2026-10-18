@@ -5,6 +5,7 @@ describe('XKeen UI release controls', () => {
   it('uses a compact version-only chip with an accessible update label', () => {
     const html = renderAppVersionChip('0.4.3');
     expect(html).toContain('aria-label="Обновить XKeen UI, версия v0.4.3"');
+    expect(html).toContain('M12 3v12m0 0 5-5m-5 5-5-5');
     expect(html).toContain('>v0.4.3</b>');
     expect(html).not.toContain('Открыть релиз');
   });

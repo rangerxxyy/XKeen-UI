@@ -19,6 +19,10 @@
 .app-shell .workspace-frame > .navigation .nav-icon svg { display:block; width:17px; height:17px; fill:none; stroke:currentColor; stroke-width:1.7; stroke-linecap:round; stroke-linejoin:round; }
 .app-shell .workspace-frame > .navigation .nav-item.active .nav-icon { color:#c5adff; }
 .app-shell .workspace-frame > .navigation .nav-label { white-space:nowrap; }
+.app-shell .workspace-frame > .navigation .navigation-spacer { flex:1 0 18px; }
+.app-shell .workspace-frame > .navigation .config-file-switcher-panel { margin:0; }
+.app-shell .workspace-frame > .navigation .navigation-actions { display:flex; flex:0 0 auto; align-items:center; gap:7px; margin-left:auto; }
+.app-shell .workspace-frame > .navigation .navigation-actions .version-chip { display:inline-flex; flex:0 0 auto; align-items:center; gap:7px; }
 .app-shell .topbar .brand { font-size:26px; }
 .app-shell .workspace-frame > .main-content { min-height:0; height:auto; flex:1 1 auto; overflow:auto; padding:15px 16px 18px; }
 .app-shell .workspace-frame .config-file-switcher-panel { flex:0 0 auto; margin:0 0 0 auto; }
@@ -126,11 +130,11 @@
 .app-shell .journal-level-badge { min-width:54px; padding:4px 8px; font-size:10px; font-weight:750; }
 .app-shell .app-version-button { min-width:82px; justify-content:center; gap:8px; padding-inline:12px; border-color:#4c4668; color:#e6e3f2; font:650 12px/1 var(--font-ui); font-variant-numeric:tabular-nums; letter-spacing:.01em; text-rendering:optimizeLegibility; -webkit-font-smoothing:antialiased; }
 .app-shell .app-version-button b { color:#f5f3fc; font-weight:700; }
-.app-shell .app-version-button .chip-icon { display:grid; width:16px; height:16px; place-items:center; color:#b6a7e7; }
+.app-shell .app-version-button .chip-icon { display:grid; width:16px; height:16px; place-items:center; color:#fff; }
 .app-shell .app-version-button .chip-icon svg { display:block; width:16px; height:16px; stroke:currentColor; stroke-width:1.8; stroke-linecap:round; stroke-linejoin:round; }
 .app-shell .app-version-button:hover { border-color:#a78bfa; background:#201c31; }
 .app-shell .app-version-button.is-update-available { border-color:#22d3c5; box-shadow:0 0 0 1px #22d3c533,0 0 14px #22d3c51c; }
-.app-shell .app-version-button.is-update-available .chip-icon { color:#43e2d5; }
+.app-shell .app-version-button.is-update-available .chip-icon { color:#fff; }
 .app-shell .app-version-button.is-update-available:hover { border-color:#6df5e8; background:#102529; box-shadow:0 0 0 1px #22d3c566,0 0 18px #22d3c533; }
 .app-shell .connection-chain { display:inline-flex; align-items:center; gap:4px; max-width:100%; min-width:0; overflow:hidden; vertical-align:middle; color:#eef4fc; font-size:12px; font-weight:600; white-space:nowrap; }
 .app-shell .connection-route-hop { display:inline; color:#e8edf5; font-weight:600; }
@@ -580,11 +584,12 @@
   .rulesets-list { overflow:auto; }
   .ruleset-table { min-width:680px; table-layout:auto; }
   .rulesets-dialog .ruleset-content { inset:70px 13px 13px; }
+  .app-shell .workspace-frame > .navigation .navigation-actions { gap:5px; }
 }
 .app-shell .proxy-health.proxy-ping-value .ping-status-icon.is-dead { color:#ff6e86; }
-.top-actions .subscriptions-open,.top-actions .rulesets-open { display:inline-flex; align-items:center; gap:7px; min-height:36px; padding:0 11px; border:1px solid #303d58; border-radius:9px; color:#eef2fb; background:#0c1322; font-size:12px; font-weight:650; }
-.top-actions .subscriptions-open:hover,.top-actions .rulesets-open:hover { border-color:#6974ab; background:#151a30; }
-.top-actions .subscriptions-open svg,.top-actions .rulesets-open svg { width:15px; height:15px; fill:none; stroke:#fff; stroke-width:1.8; stroke-linecap:round; stroke-linejoin:round; }
+.top-actions .subscriptions-open,.top-actions .rulesets-open,.navigation-actions .subscriptions-open,.navigation-actions .rulesets-open { display:inline-flex; align-items:center; gap:7px; min-height:36px; padding:0 11px; border:1px solid #303d58; border-radius:9px; color:#eef2fb; background:#0c1322; font-size:12px; font-weight:650; }
+.top-actions .subscriptions-open:hover,.top-actions .rulesets-open:hover,.navigation-actions .subscriptions-open:hover,.navigation-actions .rulesets-open:hover { border-color:#6974ab; background:#151a30; }
+.top-actions .subscriptions-open svg,.top-actions .rulesets-open svg,.navigation-actions .subscriptions-open svg,.navigation-actions .rulesets-open svg { width:15px; height:15px; fill:none; stroke:#fff; stroke-width:1.8; stroke-linecap:round; stroke-linejoin:round; }
 .subscriptions-dialog { width:min(850px,95vw); max-width:min(850px,95vw); }
 .subscriptions-panel { position:relative; display:flex; flex-direction:column; gap:12px; width:100%; max-height:88vh; padding:16px; overflow:hidden; border-color:#34415e; background:#10182a; }
 .subscriptions-panel .modal-heading { flex:0 0 auto; }
@@ -626,7 +631,7 @@
 .subscription-node { display:flex; align-items:center; justify-content:space-between; gap:12px; min-height:36px; padding:7px 9px; border-bottom:1px solid #27344b; color:#f0f3fa; font-size:13px; }
 .subscription-node small { flex:0 0 auto; color:#aebbd0; font-size:11px; }
 .subscription-node-empty { padding:14px 8px; color:#aebbd0; font-size:12px; }
-@media(max-width:600px) { .subscriptions-panel { width:96vw; max-height:90dvh; padding:12px; } .subscriptions-table { font-size:11px; } .subscriptions-table th,.subscriptions-table td { padding:7px 7px; } .top-actions .subscriptions-open,.top-actions .rulesets-open { min-height:32px; padding:0 7px; font-size:10px; } }
+@media(max-width:600px) { .subscriptions-panel { width:96vw; max-height:90dvh; padding:12px; } .subscriptions-table { font-size:11px; } .subscriptions-table th,.subscriptions-table td { padding:7px 7px; } .top-actions .subscriptions-open,.top-actions .rulesets-open,.navigation-actions .subscriptions-open,.navigation-actions .rulesets-open { min-height:34px; padding:0 7px; font-size:10px; } }
 :root[data-theme="light"] .subscriptions-open,:root[data-theme="light"] .rulesets-open { border-color:#c9d3e1; color:#243348; background:#f7f9fc; }
 :root[data-theme="light"] .subscriptions-open:hover,:root[data-theme="light"] .rulesets-open:hover { border-color:#9487c7; background:#f1effb; }
 :root[data-theme="light"] .subscriptions-dialog .subscriptions-panel { border-color:#d4d9e6; color:#26364b; background:#fff; }

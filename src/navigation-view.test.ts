@@ -8,7 +8,7 @@ describe('main navigation', () => {
     const otherPageMarkup = renderNavigationView(MAIN_NAVIGATION_PAGES, 'selectors', configTabs);
     const mainNavigation = configMarkup.slice(0, configMarkup.indexOf('</nav>') + '</nav>'.length);
 
-    expect([...mainNavigation.matchAll(/data-page="([^"]+)"/g)].map((match) => match[1])).toEqual(['selectors', 'connections', 'dns', 'configuration']);
+    expect([...mainNavigation.matchAll(/data-page="([^"]+)"/g)].map((match) => match[1])).toEqual(['selectors', 'connections', 'configuration', 'dns']);
     expect(mainNavigation).toContain('class="config-file-switcher-panel"');
     expect(mainNavigation.indexOf('data-page="configuration"')).toBeLessThan(mainNavigation.indexOf('class="config-file-switcher-panel"'));
     expect(mainNavigation).toContain('class="config-file-primary-tab selected"');
@@ -25,6 +25,15 @@ describe('main navigation', () => {
     expect(markup).toContain('data-page="connections" aria-current="page"');
     expect(markup).toContain('<span class="nav-label">Соединения</span></button>');
     expect(markup).not.toContain('data-page="proxies"');
+  });
+
+  it('places rulesets before subscriptions at the right end of the navigation row', () => {
+    const actions = '<div class="navigation-actions"><button id="rulesets-open">Рулсеты</button><button id="subscriptions-open">Подписки</button></div>';
+    const markup = renderNavigationView(MAIN_NAVIGATION_PAGES, 'selectors', '', actions);
+
+    expect(markup.indexOf('class="navigation-spacer"')).toBeLessThan(markup.indexOf('class="navigation-actions"'));
+    expect(markup.indexOf('id="rulesets-open"')).toBeLessThan(markup.indexOf('id="subscriptions-open"'));
+    expect(markup.indexOf('class="navigation-actions"')).toBeGreaterThan(markup.indexOf('data-page="dns"'));
   });
 
   it('places navigation and active content inside one rounded workspace frame', () => {

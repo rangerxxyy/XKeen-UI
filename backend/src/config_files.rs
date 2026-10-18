@@ -437,7 +437,7 @@ async fn save_list(
     content: &str,
     expected: &str,
 ) -> Result<String, String> {
-    if file == "xkeen" || file.starts_with("xray_")
+    if (file == "xkeen" || file.starts_with("xray_"))
         && !matches!(
             serde_json::from_str::<serde_json::Value>(content),
             Ok(serde_json::Value::Object(_))

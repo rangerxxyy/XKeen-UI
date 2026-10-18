@@ -1029,7 +1029,9 @@ mod tests {
 
     #[test]
     fn backup_ids_only_accept_generated_mihomo_yaml_names() {
-        assert!(is_mihomo_backup_id(".mihomo-config-3608-1792253130778141508.yaml"));
+        assert!(is_mihomo_backup_id(
+            ".mihomo-config-3608-1792253130778141508.yaml"
+        ));
         for unsafe_id in [
             "../config.yaml",
             ".mihomo-config-1-2.yaml/../../config.yaml",

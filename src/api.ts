@@ -106,6 +106,10 @@ export async function getMihomoProxyProviders(signal?: AbortSignal): Promise<Mih
   if (!isRecord(payload) || !isRecord(payload.providers)) throw new Error('Mihomo вернул некорректный список подписок');
   return Object.entries(payload.providers).flatMap(([name, raw]): MihomoProxyProvider[] => {
     if (!isRecord(raw)) return [];
+    const type = typeof raw.type === 'string' ? raw.type.toLocaleLowerCase('en') : '';
+    const vehicleType = typeof raw.vehicleType === 'string' ? raw.vehicleType : '';
+    if (['selector', 'urltest', 'fallback', 'loadbalance', 'direct', 'reject'].includes(type)) return [];
+    if (!vehicleType && type !== 'proxy') return [];
     const proxies = Array.isArray(raw.proxies) ? raw.proxies.flatMap((proxy): MihomoProxyProviderNode[] => {
       if (!isRecord(proxy) || typeof proxy.name !== 'string') return [];
       return [{ name: proxy.name, type: typeof proxy.type === 'string' ? proxy.type : '—' }];
@@ -114,7 +118,7 @@ export async function getMihomoProxyProviders(signal?: AbortSignal): Promise<Mih
     const finiteCount = (value: unknown) => typeof value === 'number' && Number.isFinite(value) && value >= 0 ? value : 0;
     return [{
       name,
-      vehicleType: typeof raw.vehicleType === 'string' ? raw.vehicleType : typeof raw.type === 'string' ? raw.type : '—',
+      vehicleType: vehicleType || '—',
       proxies,
       proxyCount: proxies.length,
       upload: finiteCount(info.Upload),
@@ -142,6 +146,8 @@ export async function getMihomoRuleProviders(signal?: AbortSignal): Promise<Miho
   if (!isRecord(payload) || !isRecord(payload.providers)) throw new Error('Mihomo вернул некорректный список rule-set');
   return Object.entries(payload.providers).flatMap(([name, raw]) => {
     if (!isRecord(raw)) return [];
+    const type = typeof raw.type === 'string' ? raw.type.toLocaleLowerCase('en') : '';
+    if (['selector', 'urltest', 'fallback', 'loadbalance', 'direct', 'reject', 'proxy'].includes(type)) return [];
     const count = typeof raw.ruleCount === 'number' ? raw.ruleCount : Array.isArray(raw.rules) ? raw.rules.length : 0;
     return [{ name, format: typeof raw.format === 'string' ? raw.format : '—', behavior: typeof raw.behavior === 'string' ? raw.behavior : '—', updatedAt: typeof raw.updatedAt === 'string' ? raw.updatedAt : null, ruleCount: Math.max(0, count) }];
   }).sort((a, b) => a.name.localeCompare(b.name, 'ru'));

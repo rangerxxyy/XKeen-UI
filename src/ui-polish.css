@@ -549,6 +549,38 @@
 .core-release-actions #core-release-install { width:100%; min-height:40px; color:#fff; border-color:#254aaf; background:#2445af; }
 .ruleset-content-close { color:#fff; }
 @media(max-width:600px) { .app-shell .top-status-cluster { max-width:230px; } .rulesets-panel { width:96vw; padding:12px; } .ruleset-table { font-size:11px; } .ruleset-table th,.ruleset-table td { padding:8px 6px; } }
+.modal.rulesets-dialog { width:min(880px,calc(100vw - 28px)); max-width:none; max-height:calc(100dvh - 28px); overflow:hidden; }
+.rulesets-panel { box-sizing:border-box; width:100%; max-height:inherit; padding:20px; }
+.rulesets-panel .modal-heading { gap:12px; margin:0; }
+.rulesets-heading-copy { min-width:0; flex:1; }
+.rulesets-heading-copy h2 { margin:0; color:#f4f6fc; font-size:19px; font-weight:720; }
+.rulesets-heading-copy p { margin:4px 0 0; color:#9ba9bf; font-size:12px; }
+.ruleset-title-icon { display:grid; width:36px; height:36px; flex:0 0 36px; place-items:center; border:1px solid #3d365c; border-radius:10px; color:#c2a8ff; background:#1b1830; }
+.rulesets-list { flex:1 1 auto; scrollbar-color:#46536a #0b1220; }
+.ruleset-table { min-width:0; table-layout:fixed; }
+.ruleset-table th:first-child,.ruleset-table td:first-child { width:44px; color:#9aa9bf; }
+.ruleset-table th:nth-child(2) { width:30%; }
+.ruleset-table th:nth-child(3),.ruleset-table th:nth-child(4) { width:13%; }
+.ruleset-table th:nth-child(5) { width:12%; }
+.ruleset-table th:nth-child(6) { width:19%; }
+.ruleset-table th:last-child { width:112px; }
+.ruleset-table td { overflow:hidden; text-overflow:ellipsis; }
+.ruleset-table .ruleset-name { color:#eef3fb; font-weight:650; }
+.ruleset-table .ruleset-format,.ruleset-table .ruleset-behavior { color:#d4c9ff; }
+.ruleset-table .ruleset-count { color:#58e6b5; font-variant-numeric:tabular-nums; }
+.ruleset-table .ruleset-updated { color:#9eacc1; font-variant-numeric:tabular-nums; }
+.ruleset-view-button { min-height:34px; border-color:#55457b; background:#18172b; transition:background .15s,border-color .15s; }
+.ruleset-view-button:hover { border-color:#9d7be9; background:#28203d; }
+.rulesets-dialog .ruleset-content { inset:78px 20px 20px; }
+@media(max-width:600px) {
+  .modal.rulesets-dialog { width:calc(100vw - 16px); max-height:calc(100dvh - 16px); }
+  .rulesets-panel { padding:13px; }
+  .rulesets-heading-copy h2 { font-size:16px; }
+  .rulesets-heading-copy p { font-size:11px; }
+  .rulesets-list { overflow:auto; }
+  .ruleset-table { min-width:680px; table-layout:auto; }
+  .rulesets-dialog .ruleset-content { inset:70px 13px 13px; }
+}
 .app-shell .proxy-health.proxy-ping-value .ping-status-icon.is-dead { color:#ff6e86; }
 .top-actions .subscriptions-open,.top-actions .rulesets-open { display:inline-flex; align-items:center; gap:7px; min-height:36px; padding:0 11px; border:1px solid #303d58; border-radius:9px; color:#eef2fb; background:#0c1322; font-size:12px; font-weight:650; }
 .top-actions .subscriptions-open:hover,.top-actions .rulesets-open:hover { border-color:#6974ab; background:#151a30; }

@@ -147,7 +147,8 @@ fn install_or_update(options: &InstallOptions) -> Result<(), Box<dyn Error>> {
         service_stop(&options.prefix)?;
     }
     let requested_port = preferred_install_port(options.port, was_installed, saved.port);
-    let port = match choose_port(requested_port) {
+    let reuse_saved_port = was_installed && options.port.is_none();
+    let port = match choose_port(requested_port, reuse_saved_port) {
         Ok(port) => port,
         Err(error) => {
             if was_installed {
@@ -296,9 +297,9 @@ fn preferred_install_bind(saved: Option<Ipv4Addr>, has_override: bool) -> Option
     }
 }
 
-fn choose_port(requested: Option<u16>) -> io::Result<u16> {
+fn choose_port(requested: Option<u16>, reuse_saved_port: bool) -> io::Result<u16> {
     if let Some(port) = requested {
-        return if port_is_available(port) {
+        return if reuse_saved_port || port_is_available(port) {
             Ok(port)
         } else {
             Err(io::Error::new(
@@ -875,7 +876,7 @@ mod tests {
         let occupied = TcpListener::bind(("0.0.0.0", 0)).unwrap();
         let port = occupied.local_addr().unwrap().port();
         assert!(first_available_port(port).unwrap() > port);
-        assert!(choose_port(None).unwrap() >= DEFAULT_PORT);
+        assert!(choose_port(None, false).unwrap() >= DEFAULT_PORT);
     }
 
     #[test]
@@ -890,7 +891,18 @@ mod tests {
         let occupied = TcpListener::bind(("0.0.0.0", 0)).unwrap();
         let port = occupied.local_addr().unwrap().port();
         assert_eq!(
-            choose_port(Some(port)).unwrap_err().kind(),
+            choose_port(Some(port), false).unwrap_err().kind(),
+            std::io::ErrorKind::AddrInUse
+        );
+    }
+
+    #[test]
+    fn update_can_reuse_its_saved_port_after_stopping_the_old_process() {
+        let listener = TcpListener::bind(("0.0.0.0", 0)).unwrap();
+        let port = listener.local_addr().unwrap().port();
+        assert_eq!(choose_port(Some(port), true).unwrap(), port);
+        assert_eq!(
+            choose_port(Some(port), false).unwrap_err().kind(),
             std::io::ErrorKind::AddrInUse
         );
     }

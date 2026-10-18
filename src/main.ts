@@ -23,7 +23,7 @@ import { readUiPreferences, validPingUrl, writeUiPreferences, type UiPreferences
 import { deduplicateRepeatedUiErrors, formatJournalMessage, formatJournalTimestamp, getJournalViewState, renderJournalLoadingSkeleton, splitJournalLevel, stripLogSourceLabel } from './journal-view-state';
 import { getJournalScrollTop, getNewJournalLines, hasJournalLinesChanged } from './journal-scroll';
 import { createAsyncStatusCache } from './dns-status-cache';
-import { getAffectedConnectionIds, restoreProxySelection, selectProxyOptimistically } from './selector-selection';
+import { getAffectedConnectionIds, queueSelectorWrite, restoreProxySelection, selectProxyOptimistically } from './selector-selection';
 import { hideClearedJournalLines, rememberClearedJournal } from './journal-clear';
 import { journalExpandIcon, journalExpandLabel } from './journal-ui';
 import { renderAppReleaseActions, renderAppUpdateNotice, renderAppVersionChip } from './app-release-ui';
@@ -1016,41 +1016,42 @@ async function selectProxyFromUi(button: HTMLButtonElement): Promise<void> {
   const updated = selectProxyOptimistically(previous, group, name);
   if (updated === previous) return;
   if (!confirmedSelectorSelections.has(group)) confirmedSelectorSelections.set(group, previous.find((item) => item.name === group)?.current ?? null);
+  const confirmedBeforeRequest = confirmedSelectorSelections.get(group) ?? null;
   const version = (selectorSelectionVersions.get(group) ?? 0) + 1;
   selectorSelectionVersions.set(group, version);
   selectors = updated;
   selectorsError = null;
   updateSelectorSelectionInDom(group, name);
-  const previousRequest = selectorSelectionQueues.get(group) ?? Promise.resolve();
-  const request = previousRequest.catch(() => undefined).then(async () => {
-    try {
-      await selectMihomoProxy(group, name);
-      confirmedSelectorSelections.set(group, name);
-    } catch (error) {
-      if (selectorSelectionVersions.get(group) === version) {
-        selectors = restoreProxySelection(selectors, group, confirmedSelectorSelections.get(group) ?? null);
-        selectorsError = error instanceof Error ? error.message : 'Не удалось выбрать узел';
-        updateSelectorSelectionInDom(group, confirmedSelectorSelections.get(group) ?? '');
-        if (activePage === 'selectors') render();
-        showToast(`Не удалось выбрать узел: ${selectorsError}`, 'error');
-      }
-      return;
-    }
+  const request = queueSelectorWrite(selectorSelectionQueues, group, () => selectMihomoProxy(group, name), () => {
+    confirmedSelectorSelections.set(group, name);
+    if (selectorSelectionVersions.get(group) === version) void closeSelectorConnectionsAfterSwitch(group, version);
+  });
+  void request.catch((error: unknown) => {
     if (selectorSelectionVersions.get(group) !== version) return;
-    try {
-      const activeConnections = await getMihomoConnections();
-      const affectedIds = getAffectedConnectionIds(activeConnections.connections, group);
-      await Promise.all(affectedIds.map((id) => closeMihomoConnection(id)));
-      if (connections) connections = { ...connections, connections: connections.connections.filter((connection) => !affectedIds.includes(connection.id)) };
-      if (activePage === 'connections' && affectedIds.length > 0) await loadMihomoPage('connections');
-    } catch (error) {
-      showToast(error instanceof Error ? `Узел выбран, но активные соединения обновить не удалось: ${error.message}` : 'Узел выбран, но активные соединения не удалось обновить', 'error');
-    }
+    const acceptedPriorSelection = confirmedSelectorSelections.get(group) !== confirmedBeforeRequest;
+    const confirmed = confirmedSelectorSelections.get(group) ?? null;
+    selectors = restoreProxySelection(selectors, group, confirmed);
+    selectorsError = error instanceof Error ? error.message : 'Не удалось выбрать узел';
+    updateSelectorSelectionInDom(group, confirmed ?? '');
+    if (activePage === 'selectors') render();
+    showToast(`Не удалось выбрать узел: ${selectorsError}`, 'error');
+    if (acceptedPriorSelection) void closeSelectorConnectionsAfterSwitch(group, version);
   });
-  selectorSelectionQueues.set(group, request);
-  void request.finally(() => {
-    if (selectorSelectionQueues.get(group) === request) selectorSelectionQueues.delete(group);
-  });
+}
+
+async function closeSelectorConnectionsAfterSwitch(group: string, version: number): Promise<void> {
+  try {
+    const activeConnections = await getMihomoConnections();
+    if (selectorSelectionVersions.get(group) !== version) return;
+    const affectedIds = getAffectedConnectionIds(activeConnections.connections, group);
+    await Promise.all(affectedIds.map((id) => closeMihomoConnection(id)));
+    if (selectorSelectionVersions.get(group) !== version) return;
+    if (connections) connections = { ...connections, connections: connections.connections.filter((connection) => !affectedIds.includes(connection.id)) };
+    if (activePage === 'connections' && affectedIds.length > 0) await loadMihomoPage('connections');
+  } catch (error) {
+    if (selectorSelectionVersions.get(group) !== version) return;
+    showToast(error instanceof Error ? `Узел выбран, но активные соединения обновить не удалось: ${error.message}` : 'Узел выбран, но активные соединения не удалось обновить', 'error');
+  }
 }
 
 function updateSelectorSelectionInDom(group: string, name: string): void {

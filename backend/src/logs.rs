@@ -274,8 +274,9 @@ fn is_expected_ui_noise(source: &str, message: &str) -> bool {
     let normalized = message.to_lowercase();
     (normalized.contains("mihomo proxy ping:")
         && normalized.contains("узел не входит в доступную группу selector"))
-        || normalized
-            .contains("данные не обновились: mihomo вернул некорректный список соединений")
+        || normalized.contains(
+            "данные не обновились: mihomo вернул некорректный список соединений",
+        )
         || (normalized.contains("clash ws proxy error:")
             && normalized.contains("connection refused"))
 }

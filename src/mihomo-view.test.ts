@@ -295,6 +295,20 @@ describe('renderConnections', () => {
       expect(html).toContain(`Маршрут: ${label} → DIRECT`);
     }
   });
+
+  it('preserves a real Main hop between a service and the selected proxy', () => {
+    const data: MihomoConnections = {
+      uploadTotal: 0, downloadTotal: 0,
+      connections: [{
+        id: 'github-main', host: 'github.com', destination: '', source: 'PC', network: 'tcp', process: '',
+        chains: ['🇫🇮 ⚡ Finland · TCP', 'Main'], rule: 'MATCH', rulePayload: '', upload: 0, download: 0, start: '',
+      }],
+    };
+    const html = renderConnections(data, false, null);
+
+    expect(html).toContain('Маршрут: GitHub → Main → 🇫🇮 ⚡ Finland · TCP');
+    expect(html).toContain('<span class="connection-route-hop" title="Main"><span class="connection-route-label">Main</span></span>');
+  });
 });
 
 describe('orderSelectorsByConfig', () => {

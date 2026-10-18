@@ -199,7 +199,7 @@ function connectionRow(connection: MihomoConnection, showSourceName = false, sou
   const chainsWithoutService = service && displayedChains.some((hop) => hop.toLocaleLowerCase() === service.label.toLocaleLowerCase())
     ? displayedChains.filter((hop) => hop.toLocaleLowerCase() !== service.label.toLocaleLowerCase())
     : displayedChains;
-  const routeNodes = service ? [service.label, ...chainsWithoutService.filter((hop) => hop.toLocaleLowerCase() !== 'main')] : displayedChains;
+  const routeNodes = service ? [service.label, ...chainsWithoutService] : displayedChains;
   const route = routeNodes.length ? routeNodes.join(' → ') : 'Маршрут неизвестен';
   const network = connection.network.toUpperCase() || '—';
   const startedAt = Date.parse(connection.start);

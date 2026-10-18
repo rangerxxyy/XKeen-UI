@@ -109,9 +109,11 @@ export async function chooseReferenceTemplate(core: ReferenceCore): Promise<{ na
     const name = document.createElement('strong');
     name.textContent = template.name;
     const summary = document.createElement('small');
-    summary.textContent = /proxy.*except.*ru|всё.*proxy|все.*proxy|кроме ru/i.test(template.name)
+    summary.textContent = /кроме ru|except.*ru|proxy.*except.*ru/i.test(template.name)
       ? 'Направляет трафик через прокси, сохраняя прямой маршрут для RU.'
-      : 'Отправляет через прокси домены из правил блокировок, остальное — напрямую.';
+      : /заблок|blocked|refilter/i.test(template.name)
+        ? 'Отправляет через прокси домены из правил блокировок, остальное — напрямую.'
+        : 'Готовая конфигурация. При загрузке её содержимое заменит текущий черновик.';
     copy.append(name, summary);
     label.append(radio, copy);
     options.append(label);

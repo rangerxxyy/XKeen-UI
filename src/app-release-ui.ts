@@ -8,7 +8,7 @@ function escapeHtml(value: string): string {
 export function renderAppVersionChip(version: string, updateAvailable = false): string {
   const normalized = version.replace(/^v/i, '');
   const label = escapeHtml(updateAvailable ? `Доступно обновление XKeen UI ${normalized}` : `Обновить XKeen UI, версия v${normalized}`);
-  return `<button class="version-chip app-version-button${updateAvailable ? ' is-update-available' : ''}" id="app-version" type="button" title="${label}" aria-label="${label}"><span class="chip-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none"><path d="M12 3v12m0 0 5-5m-5 5-5-5M4 17v4h16v-4"/></svg></span><b id="app-version-label">v${escapeHtml(normalized)}</b></button>`;
+  return `<button class="version-chip app-version-button${updateAvailable ? ' is-update-available' : ''}" id="app-version" type="button" title="${label}" aria-label="${label}"><span class="chip-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none"><path d="M12 3 20 7.5 12 12 4 7.5 12 3Z"/><path d="M4 7.5v9L12 21l8-4.5v-9M12 12v9M8 5l8 4.5M5 12l7 4.5 7-4.5"/></svg></span><b id="app-version-label">v${escapeHtml(normalized)}</b></button>`;
 }
 
 export function renderAppUpdateNotice(version: string, releaseUrl: string): string {

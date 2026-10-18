@@ -34,7 +34,7 @@ import { SourceNameResolver } from './source-names';
 import { renderResourceMetrics } from './resource-metrics';
 import { shouldReportUiError } from './ui-error-dedupe';
 import { sortMihomoConnections, type ConnectionSort, type ConnectionSortKey } from './connection-sort';
-import { MAIN_NAVIGATION_PAGES, renderNavigationView, renderWorkspaceFrame } from './navigation-view';
+import { MAIN_NAVIGATION_PAGES, renderNavigationView, renderProviderNavigationActions, renderWorkspaceFrame } from './navigation-view';
 import { renderEditorUtilitiesMenu } from './editor-utilities';
 import { openRulesetsDialog } from './rulesets-view';
 import { openSubscriptionsDialog } from './subscriptions-view';
@@ -179,10 +179,6 @@ function renderNavigation(): string {
     activePage === 'configuration' ? renderConfigFileButtons() : '',
     renderProviderNavigationActions(),
   );
-}
-
-function renderProviderNavigationActions(): string {
-  return `<div class="navigation-actions"></div>`;
 }
 
 function renderConfigFileButtons(): string {

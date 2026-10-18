@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { MAIN_NAVIGATION_PAGES, renderNavigationView, renderWorkspaceFrame } from './navigation-view';
+import { MAIN_NAVIGATION_PAGES, renderNavigationView, renderProviderNavigationActions, renderWorkspaceFrame } from './navigation-view';
 
 describe('main navigation', () => {
   it('separates the primary config file from the remaining file tabs', () => {
@@ -28,9 +28,11 @@ describe('main navigation', () => {
   });
 
   it('places rulesets before subscriptions at the right end of the navigation row', () => {
-    const actions = '<div class="navigation-actions"><button id="rulesets-open">Рулсеты</button><button id="subscriptions-open">Подписки</button></div>';
+    const actions = renderProviderNavigationActions();
     const markup = renderNavigationView(MAIN_NAVIGATION_PAGES, 'selectors', '', actions);
 
+    expect(actions).toContain('id="rulesets-open"');
+    expect(actions).toContain('id="subscriptions-open"');
     expect(markup.indexOf('class="navigation-spacer"')).toBeLessThan(markup.indexOf('class="navigation-actions"'));
     expect(markup.indexOf('id="rulesets-open"')).toBeLessThan(markup.indexOf('id="subscriptions-open"'));
     expect(markup.indexOf('class="navigation-actions"')).toBeGreaterThan(markup.indexOf('data-page="dns"'));

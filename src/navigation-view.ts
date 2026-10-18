@@ -7,6 +7,10 @@ export const MAIN_NAVIGATION_PAGES = [
   { id: 'dns', label: 'DNS', icon: '<circle cx="10" cy="10" r="7"/><circle cx="10" cy="10" r="2.5"/><path d="M10 3v2M17 10h-2"/>' },
 ] as const;
 
+export function renderProviderNavigationActions(): string {
+  return `<div class="navigation-actions"><button class="version-chip rulesets-open" id="rulesets-open" type="button" title="Просмотр rule-set Mihomo" aria-label="Рулсеты"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3 2.5h7l3 3v8H3zM10 2.5v3h3M5 8h6M5 10.5h6"/></svg><span>Рулсеты</span></button><button class="version-chip subscriptions-open" id="subscriptions-open" type="button" title="Просмотр подписок Mihomo" aria-label="Подписки"><svg viewBox="0 0 16 16" aria-hidden="true"><ellipse cx="8" cy="3.5" rx="5.5" ry="2"/><path d="M2.5 3.5v9c0 1.1 2.5 2 5.5 2s5.5-.9 5.5-2v-9M2.5 8c0 1.1 2.5 2 5.5 2s5.5-.9 5.5-2"/></svg><span>Подписки</span></button></div>`;
+}
+
 export function renderNavigationView(pages: readonly NavigationPage[], activePage: string, configFileTabs = '', rightActions = ''): string {
   const configurationPage = activePage === 'configuration';
   const fileTabs = configurationPage ? `<div class="config-file-switcher-panel">${configFileTabs}</div>` : '';

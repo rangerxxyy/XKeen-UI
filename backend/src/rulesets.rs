@@ -214,14 +214,15 @@ fn is_mrs_provider(
         .get("format")
         .is_some_and(|format| format.eq_ignore_ascii_case("mrs"))
         || path.to_ascii_lowercase().ends_with(".mrs")
-        || provider.get("url").is_some_and(|url| url_has_suffix(url, ".mrs"))
+        || provider
+            .get("url")
+            .is_some_and(|url| url_has_suffix(url, ".mrs"))
     {
         return true;
     }
     if provider.get("format").is_some_and(|format| {
         format.eq_ignore_ascii_case("yaml") || format.eq_ignore_ascii_case("text")
-    })
-        || path.to_ascii_lowercase().ends_with(".yaml")
+    }) || path.to_ascii_lowercase().ends_with(".yaml")
         || path.to_ascii_lowercase().ends_with(".yml")
         || path.to_ascii_lowercase().ends_with(".txt")
         || provider.get("url").is_some_and(|url| {
@@ -235,9 +236,9 @@ fn is_mrs_provider(
     // The bundled zxc-rv configuration inherits `format: mrs` from YAML
     // anchors, so its conventional @domain/@ipcidr names identify that format.
     provider.get("format").is_none()
-        && name
-            .rsplit_once('@')
-            .is_some_and(|(_, behavior)| behavior.eq_ignore_ascii_case("domain") || behavior.eq_ignore_ascii_case("ipcidr"))
+        && name.rsplit_once('@').is_some_and(|(_, behavior)| {
+            behavior.eq_ignore_ascii_case("domain") || behavior.eq_ignore_ascii_case("ipcidr")
+        })
 }
 
 fn url_has_suffix(url: &str, suffix: &str) -> bool {
@@ -359,8 +360,16 @@ mod tests {
     #[test]
     fn recognizes_zxc_mrs_providers_when_path_has_no_extension() {
         let provider = find_provider("rule-providers:\n  adlist@domain: { <<: *domain, url: https://example.test/adlist.mrs }\n", "adlist@domain").unwrap();
-        assert!(is_mrs_provider("adlist@domain", &provider, "/opt/etc/mihomo/abc"));
+        assert!(is_mrs_provider(
+            "adlist@domain",
+            &provider,
+            "/opt/etc/mihomo/abc"
+        ));
         let provider = find_provider("rule-providers:\n  google@domain: { type: http, url: https://example.test/google.yaml }\n", "google@domain").unwrap();
-        assert!(!is_mrs_provider("google@domain", &provider, "/opt/etc/mihomo/abc"));
+        assert!(!is_mrs_provider(
+            "google@domain",
+            &provider,
+            "/opt/etc/mihomo/abc"
+        ));
     }
 }

@@ -56,6 +56,8 @@ describe('DNS workspaces', () => {
     const view = renderDns(null, false, null, '', 'A', { status: state, loading: false, error: null, busy: false, confirm: false });
     expect(view.indexOf('Слушатель 53 порта')).toBeLessThan(view.indexOf('Включить управление DNS'));
     expect(view.indexOf('dns-runtime-list')).toBeLessThan(view.indexOf('dns-management-row'));
+    const runtimeStatus = view.match(/<div class="dns-runtime-list">([\s\S]*?)<\/div><\/div>/)?.[1] ?? '';
+    expect(runtimeStatus).not.toContain('dns-info');
   });
 
   it('reflects the actual DNS handoff state in the switch and active labels', () => {
@@ -170,11 +172,13 @@ describe('DNS workspaces', () => {
       loading: false, error: null, busy: false,
     });
     const explanations = [...view.matchAll(/class="dns-info"[^>]*aria-label="([^"]+)"/g)].map((match) => match[1]);
-    for (const label of ['DNS Override', 'DNS Mihomo', 'Слушатель 53 порта', 'Управление DNS', 'Enhanced Mode', 'Default Nameserver', 'Nameserver', 'Nameserver Policy', 'Proxy Server Nameserver', 'Fallback', 'Domain or IP', 'Record Type']) {
+    for (const label of ['Управление DNS', 'Enhanced Mode', 'Default Nameserver', 'Nameserver', 'Nameserver Policy', 'Proxy Server Nameserver', 'Fallback', 'Domain or IP', 'Record Type']) {
       expect(explanations.some((description) => description?.includes(label)), label).toBe(true);
     }
-    expect(explanations).toHaveLength(12);
-    expect(view.match(/class="dns-info"[^>]*tabindex="0"/g)).toHaveLength(12);
+    expect(explanations).toHaveLength(9);
+    expect(view.match(/class="dns-info"[^>]*tabindex="0"/g)).toHaveLength(9);
+    expect(view).not.toContain('title="Enhanced Mode:');
+    expect(view).toContain('data-tooltip="Enhanced Mode:');
   });
 
   it('warns when fake-ip is used with a blacklist filter mode', () => {

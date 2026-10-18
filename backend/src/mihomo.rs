@@ -57,6 +57,7 @@ pub enum MihomoError {
     ResponseTooLarge,
     InvalidJson(serde_json::Error),
     InvalidSelection,
+    InvalidProviderName,
     InvalidConnectionId,
     InvalidDnsQuery,
 }
@@ -163,6 +164,19 @@ impl MihomoClient {
         } else {
             Err(MihomoError::UpstreamStatus(response.status().as_u16()))
         }
+    }
+
+    pub async fn refresh_proxy_provider(&self, name: &str) -> Result<(), MihomoError> {
+        if !valid_name(name) {
+            return Err(MihomoError::InvalidProviderName);
+        }
+        let encoded_name = utf8_percent_encode(name, NON_ALPHANUMERIC);
+        self.expect_success(
+            Method::PUT,
+            &format!("providers/proxies/{encoded_name}"),
+            None,
+        )
+        .await
     }
 
     pub async fn ping_group(&self, group: &str) -> Result<Value, MihomoError> {
@@ -694,6 +708,40 @@ mod tests {
                 "/proxies/Main%20%2F%20Europe".into(),
                 Some("Bearer mock-secret".into())
             )
+        );
+        server.abort();
+    }
+
+    #[tokio::test]
+    async fn proxy_provider_refresh_uses_encoded_name_and_put() {
+        let (client, mut requests, server) =
+            mock_controller(vec![(StatusCode::NO_CONTENT, String::new())]).await;
+        client
+            .refresh_proxy_provider("subscription 1")
+            .await
+            .unwrap();
+        assert_eq!(
+            next_request(&mut requests).await,
+            (
+                Method::PUT,
+                "/providers/proxies/subscription%201".into(),
+                Some("Bearer mock-secret".into())
+            )
+        );
+        server.abort();
+    }
+
+    #[tokio::test]
+    async fn proxy_provider_refresh_rejects_invalid_name_before_request() {
+        let (client, mut requests, server) = mock_controller(vec![]).await;
+        assert!(matches!(
+            client.refresh_proxy_provider("bad\nname").await,
+            Err(MihomoError::InvalidProviderName)
+        ));
+        assert!(
+            tokio::time::timeout(std::time::Duration::from_millis(50), requests.recv())
+                .await
+                .is_err()
         );
         server.abort();
     }

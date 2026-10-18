@@ -32,6 +32,7 @@ mod installer;
 mod logs;
 mod mihomo;
 mod router_devices;
+mod rulesets;
 mod xkeen;
 use mihomo::{Endpoint as MihomoEndpoint, MihomoClient, MihomoError};
 
@@ -939,8 +940,29 @@ async fn mihomo_proxy_providers(State(state): State<AppState>) -> Response {
     mihomo_raw_data(State(state), MihomoEndpoint::ProxyProviders).await
 }
 
+async fn refresh_mihomo_proxy_provider(
+    State(state): State<AppState>,
+    Path(name): Path<String>,
+) -> Response {
+    if !state.router_mode {
+        return (
+            StatusCode::SERVICE_UNAVAILABLE,
+            Json(serde_json::json!({"error":"Обновление подписок недоступно в режиме симуляции"})),
+        )
+            .into_response();
+    }
+    match state.mihomo.refresh_proxy_provider(&name).await {
+        Ok(()) => Json(serde_json::json!({"status":"refresh-requested"})).into_response(),
+        Err(error) => mihomo_error_response(error),
+    }
+}
+
 async fn mihomo_rule_providers(State(state): State<AppState>) -> Response {
     mihomo_data(State(state), MihomoEndpoint::RuleProviders).await
+}
+
+async fn mihomo_rule_provider(Path(name): Path<String>) -> Response {
+    rulesets::get_content(Path(name)).await
 }
 
 async fn mihomo_dns_query(
@@ -1117,6 +1139,10 @@ fn mihomo_error_response(error: MihomoError) -> Response {
         MihomoError::InvalidSelection => (
             StatusCode::BAD_REQUEST,
             "Узел не входит в доступную группу Selector",
+        ),
+        MihomoError::InvalidProviderName => (
+            StatusCode::BAD_REQUEST,
+            "Имя подписки содержит недопустимые символы",
         ),
         MihomoError::InvalidConnectionId => (
             StatusCode::BAD_REQUEST,
@@ -1350,6 +1376,10 @@ async fn run_panel() -> Result<(), Box<dyn std::error::Error>> {
             get(mihomo_proxy_providers),
         )
         .route("/api/v1/mihomo/providers/rules", get(mihomo_rule_providers))
+        .route(
+            "/api/v1/mihomo/providers/rules/{name}",
+            get(mihomo_rule_provider),
+        )
         .route("/api/v1/mihomo/dns/query", get(mihomo_dns_query));
     let read_api = read_api.route("/api/v1/dns", get(dns_control::status));
     let mutation_api = Router::new()
@@ -1388,6 +1418,10 @@ async fn run_panel() -> Result<(), Box<dyn std::error::Error>> {
         .route(
             "/api/v1/mihomo/proxies/ping-one",
             axum::routing::post(ping_mihomo_proxy),
+        )
+        .route(
+            "/api/v1/mihomo/providers/proxies/{name}/refresh",
+            axum::routing::put(refresh_mihomo_proxy_provider),
         )
         .route(
             "/api/v1/config/active",

@@ -268,10 +268,6 @@ export async function getMihomoSelectors(signal?: AbortSignal): Promise<MihomoSe
   });
 }
 
-export async function getMihomoProxyProviders(signal?: AbortSignal): Promise<unknown> {
-  return getMihomoJson('/api/v1/mihomo/providers/proxies', 'Получение провайдеров прокси', signal);
-}
-
 export interface ActiveConfig {
   core: 'mihomo';
   path: string;

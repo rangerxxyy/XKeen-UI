@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { applyPingResults, orderSelectorsByConfig, renderConnections, renderPingStatusIcon, renderSelectors } from './mihomo-view';
+import { applyPingResults, collectConnectionProxyIcons, orderSelectorsByConfig, renderConnections, renderPingStatusIcon, renderSelectors } from './mihomo-view';
 import type { MihomoConnections, MihomoSelector } from './api';
 
 describe('applyPingResults', () => {
@@ -173,7 +173,7 @@ describe('renderConnections', () => {
     expect(html).not.toContain('>browser.exe</td>');
   });
 
-  it('shows service icons before grouped routes and leaves DIRECT flows uncluttered', () => {
+  it('separates route hops and does not duplicate the route with a guessed service icon', () => {
     const data: MihomoConnections = {
       uploadTotal: 0, downloadTotal: 0,
       connections: [
@@ -182,17 +182,17 @@ describe('renderConnections', () => {
       ],
     };
     const html = renderConnections(data, false, null);
-    expect(html).toContain('class="connection-app-icon is-web"');
     expect(html).toContain('aria-label="Маршрут: CDN → DIRECT"');
     expect(html).toContain('class="connection-route-arrow"');
     expect(html).not.toContain('connection-route-node');
-    expect(html).toContain('<span class="connection-route-hop" title="CDN">CDN</span><span class="connection-route-arrow" aria-hidden="true">→</span><span class="connection-route-hop" title="DIRECT">DIRECT</span>');
+    expect(html).toContain('<span class="connection-route-hop" title="CDN">CDN</span> <span class="connection-route-arrow" aria-hidden="true">→</span> <span class="connection-route-hop" title="DIRECT">DIRECT</span>');
     expect(html).toContain('th.bing.com:443');
     expect(html).toContain('substrate.office.com:443');
     expect(html).toContain('DIRECT');
+    expect(html).not.toContain('connection-app-icon');
   });
 
-  it('renders a stable Telegram service icon before the route and keeps country flags inline', () => {
+  it('keeps country flags in the route and does not infer a duplicate app icon from the chain', () => {
     const data: MihomoConnections = {
       uploadTotal: 314, downloadTotal: 234,
       connections: [{
@@ -202,15 +202,38 @@ describe('renderConnections', () => {
       }],
     };
     const html = renderConnections(data, false, null);
-    expect(html).toContain('class="connection-app-icon is-telegram"');
-    expect(html).toContain('<span class="connection-app-icon is-telegram" aria-hidden="true"><svg viewBox="0 0 24 24">');
     expect(html).toContain('aria-label="Маршрут: Telegram → 🇸🇪 ⚡ Sweden"');
     expect(html).toContain('<span class="connection-chain" role="group" aria-label="Маршрут: Telegram → 🇸🇪 ⚡ Sweden"');
-    expect(html).toContain('<span class="connection-route-hop" title="Telegram">Telegram</span><span class="connection-route-arrow" aria-hidden="true">→</span><span class="connection-route-hop" title="🇸🇪 ⚡ Sweden"><span class="country-flag flag-se"');
-    expect(html).not.toContain('connection-route-node');
+    expect(html).toContain('<span class="connection-route-hop" title="Telegram">Telegram</span> <span class="connection-route-arrow" aria-hidden="true">→</span> <span class="connection-route-hop" title="🇸🇪 ⚡ Sweden"><span class="country-flag flag-se"');
+    expect(html).not.toContain('connection-app-icon');
     expect(html).toContain('<span class="country-flag flag-se"');
     expect(html).not.toContain('imageTelegramsvg');
     expect(html).not.toContain('>›</span> <span aria-hidden="true">›</span>');
+  });
+
+  it('uses Mihomo proxy icons for the first and final route hops like zxc-rv', () => {
+    const data: MihomoConnections = {
+      uploadTotal: 0, downloadTotal: 0,
+      connections: [{
+        id: 'three-hop', host: 'example.com', destination: '', source: 'PC', network: 'tcp', process: '',
+        chains: ['Exit', 'Middle', 'Main'], rule: 'MATCH', rulePayload: '', upload: 0, download: 0, start: '',
+      }],
+    };
+    const selectors: MihomoSelector[] = [{
+      name: 'Main', icon: 'https://icons.example/main.svg', current: 'Exit', options: [
+        { name: 'Exit', type: 'VLESS', icon: 'https://icons.example/exit.svg', alive: true, delay: 10 },
+        { name: 'Middle', type: 'VLESS', icon: 'https://icons.example/middle.svg', alive: true, delay: 10 },
+      ],
+    }];
+    const icons = collectConnectionProxyIcons(selectors);
+    const html = renderConnections(data, false, null, false, {}, { key: 'start', direction: 'descending' }, icons);
+
+    expect(html).toContain('src="https://icons.example/main.svg"');
+    expect(html).toContain('src="https://icons.example/exit.svg"');
+    expect(html).not.toContain('src="https://icons.example/middle.svg"');
+    expect(html).toContain('Маршрут: Main → Middle → Exit');
+    expect(html).toContain('>Main</span> <span class="connection-route-arrow"');
+    expect(html).toContain('>Exit</span>');
   });
 });
 

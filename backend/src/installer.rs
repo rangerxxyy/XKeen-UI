@@ -144,6 +144,7 @@ fn install_or_update(options: &InstallOptions) -> Result<(), Box<dyn Error>> {
     validate_owned_paths(&paths)?;
     let was_installed = paths.app.exists();
     if was_installed {
+        println!("Остановка текущей панели…");
         service_stop(&options.prefix)?;
     }
     let requested_port = preferred_install_port(options.port, was_installed, saved.port);
@@ -165,6 +166,7 @@ fn install_or_update(options: &InstallOptions) -> Result<(), Box<dyn Error>> {
     };
 
     let backup = if paths.app.exists() {
+        println!("Сохранение предыдущей версии панели…");
         let backup = paths.backup_path()?;
         fs::rename(&paths.app, &backup)?;
         Some(backup)
@@ -183,6 +185,7 @@ fn install_or_update(options: &InstallOptions) -> Result<(), Box<dyn Error>> {
         return Err("installer staging path already exists; refusing to reuse it".into());
     }
     let result = (|| -> Result<(), Box<dyn Error>> {
+        println!("Установка новой версии панели…");
         copy_package(&package_dir, &staging)?;
         set_mode(&staging.join("xkeen-ui"), 0o755)?;
         prepare_runtime_binary(&staging)?;
@@ -193,6 +196,7 @@ fn install_or_update(options: &InstallOptions) -> Result<(), Box<dyn Error>> {
             fs::create_dir_all(parent)?;
         }
         write_service(&paths.service, &options.prefix)?;
+        println!("Запуск обновлённой панели…");
         service_start(&options.prefix)?;
         Ok(())
     })();

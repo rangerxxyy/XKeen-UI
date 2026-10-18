@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { checkAppUpdate, isNewerVersion, listAppReleases } from './app-update';
+import { appUpdateProgressFromLog, checkAppUpdate, isInstalledReleaseVersion, isNewerVersion, listAppReleases } from './app-update';
 
 afterEach(() => vi.unstubAllGlobals());
 
@@ -23,6 +23,25 @@ describe('XKeen UI release check', () => {
     expect(isNewerVersion('v0.2.0', '0.2.0')).toBe(false);
     expect(isNewerVersion('v0.1.9', '0.2.0')).toBe(false);
     expect(isNewerVersion('main', '0.2.0')).toBe(false);
+  });
+
+  it('recognizes the requested release after installation despite a stale pre-update version', () => {
+    expect(isInstalledReleaseVersion('0.5.2', 'v0.5.2')).toBe(true);
+    expect(isInstalledReleaseVersion('0.5.0', 'v0.5.2')).toBe(false);
+    expect(isInstalledReleaseVersion('0.5.10', 'v0.5.2')).toBe(false);
+  });
+
+  it('translates installer log entries into the current update stage', () => {
+    const start = 'Starting XKeen UI update to v0.5.2';
+    expect(appUpdateProgressFromLog([start, 'Fetching installer from GitHub'], 'v0.5.2')).toBe('Загружаем установщик XKeen UI…');
+    expect(appUpdateProgressFromLog([start, 'Загрузка пакета XKeen UI (aarch64)'], 'v0.5.2')).toBe('Загружаем пакет XKeen UI…');
+    expect(appUpdateProgressFromLog([start, 'Проверка контрольной суммы…'], 'v0.5.2')).toBe('Проверяем целостность пакета…');
+    expect(appUpdateProgressFromLog([start, 'Остановка текущей панели…'], 'v0.5.2')).toBe('Останавливаем текущую панель…');
+    expect(appUpdateProgressFromLog([start, 'Установка новой версии панели…'], 'v0.5.2')).toBe('Устанавливаем XKeen UI v0.5.2…');
+    expect(appUpdateProgressFromLog([start, 'Запуск обновлённой панели…'], 'v0.5.2')).toBe('Запускаем обновлённую панель…');
+    expect(appUpdateProgressFromLog([start, 'SUCCESS: XKeen UI v0.5.2 installed'], 'v0.5.2')).toBe('Установка завершена. Перезагружаем панель…');
+    expect(appUpdateProgressFromLog(['Starting XKeen UI update to v0.5.1', 'Загрузка пакета XKeen UI'], 'v0.5.2')).toBeNull();
+    expect(appUpdateProgressFromLog(['Загрузка пакета XKeen UI'], 'v0.5.2')).toBeNull();
   });
 
   it('reports only a published stable release with the expected ARM64 package', async () => {

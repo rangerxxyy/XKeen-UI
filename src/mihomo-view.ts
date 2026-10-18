@@ -102,9 +102,26 @@ export function renderPingStatusIcon(alive: boolean | null): string {
   return `<i class="ping-status-icon" aria-hidden="true"><svg viewBox="0 0 16 16" focusable="false">${path}</svg></i>`;
 }
 
-function proxyCard(group: MihomoSelector): string {
+function selectorDestination(group: MihomoSelector, groups: MihomoSelector[]): string[] {
+  if (!group.current) return [group.type && group.type !== 'Selector' ? 'Автовыбор Mihomo' : 'Не выбрано'];
+  const routes: string[] = [];
+  const visited = new Set([group.name]);
+  let current: string | null = group.current;
+  while (current) {
+    routes.push(current);
+    const nextGroup = groups.find((candidate) => candidate.name === current);
+    if (!nextGroup?.current || visited.has(current)) break;
+    visited.add(current);
+    current = nextGroup.current;
+  }
+  return routes;
+}
+
+function proxyCard(group: MihomoSelector, groups: MihomoSelector[]): string {
   const groupType = group.type ?? 'Selector';
   const autoManaged = groupType !== 'Selector';
+  const destination = selectorDestination(group, groups);
+  const destinationText = destination.join(' → ');
   const options = group.options.map((option) => {
     const selected = option.name === group.current;
     const displayName = option.name;
@@ -124,7 +141,7 @@ function proxyCard(group: MihomoSelector): string {
   }).join('');
   const groupIcon = group.icon ? `<img class="selector-group-icon" src="${escapeHtml(group.icon)}" alt="" referrerpolicy="no-referrer" onerror="this.hidden=true">` : '';
   return `<section class="selector-card"><header class="selector-card-heading"><div><h2>${groupIcon}${escapeHtml(group.name)}</h2></div><div class="selector-heading-actions"><button class="ping-group" type="button" data-ping-group="${escapeHtml(group.name)}" aria-label="Пинг всех серверов группы ${escapeHtml(group.name)}" title="Пинг всех серверов группы">ϟ</button></div></header>
-    <div class="selector-card-meta"><span>${escapeHtml(groupType)} · ${group.options.length}</span><span class="selector-meta-line">›</span><span>${group.current ? renderProxyName(group.current) : autoManaged ? 'Автовыбор ядра' : '—'}</span></div>
+    <div class="selector-card-meta"><span>${escapeHtml(groupType)} · ${group.options.length}</span><span class="selector-destination" title="Маршрут: ${escapeHtml(destinationText)}"><small>Куда:</small><strong data-selector-destination="${escapeHtml(destinationText)}">${destination.map(renderProxyName).join('<span class="selector-route-arrow" aria-hidden="true"> → </span>')}</strong></span></div>
     <div class="proxy-options">${options || '<div class="mihomo-inline-empty">В этой группе нет узлов.</div>'}</div>
   </section>`;
 }
@@ -133,7 +150,7 @@ export function renderSelectors(groups: MihomoSelector[], loading: boolean, erro
   if (loading) return renderSelectorSkeleton();
   const visibleGroups = groups.filter((group) => group.name !== 'GLOBAL');
   const state = loadState(loading, error, 'группы');
-  return `${state || (visibleGroups.length === 0 ? '<section class="mihomo-empty"><span class="mihomo-error-mark">◇</span><strong>Группы прокси не найдены</strong><p>API Mihomo ответил, но не вернул группы для выбора или автоматической проверки.</p></section>' : `<div class="selector-list">${visibleGroups.map(proxyCard).join('')}</div>`)}
+  return `${state || (visibleGroups.length === 0 ? '<section class="mihomo-empty"><span class="mihomo-error-mark">◇</span><strong>Группы прокси не найдены</strong><p>API Mihomo ответил, но не вернул группы для выбора или автоматической проверки.</p></section>' : `<div class="selector-list">${visibleGroups.map((group) => proxyCard(group, visibleGroups)).join('')}</div>`)}
   `;
 }
 

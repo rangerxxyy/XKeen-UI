@@ -251,6 +251,17 @@ fn get_br0_ip() -> Result<String, String> {
         .ok_or_else(|| "Не удалось определить IPv4-адрес br0".into())
 }
 
+fn resolve_br0_ip_for_toggle(
+    enabled: bool,
+    lookup: impl FnOnce() -> Result<String, String>,
+) -> Result<Option<String>, String> {
+    if enabled {
+        lookup().map(Some)
+    } else {
+        Ok(None)
+    }
+}
+
 fn port_53_listener() -> Option<String> {
     let mut sockets = BTreeSet::new();
     for protocol in ["tcp", "udp", "tcp6", "udp6"] {
@@ -410,7 +421,7 @@ pub async fn toggle(
     if request.enabled && previous.dns_override {
         return error(StatusCode::CONFLICT, "DNS Override уже включён в KeeneticOS. Сначала отключите его или проверьте текущий режим DNS");
     }
-    let br0_ip = match get_br0_ip() {
+    let br0_ip = match resolve_br0_ip_for_toggle(request.enabled, get_br0_ip) {
         Ok(value) => value,
         Err(e) => return error(StatusCode::SERVICE_UNAVAILABLE, e),
     };
@@ -430,7 +441,13 @@ pub async fn toggle(
                 ),
             };
         }
-        for command in enable_router_dns_commands(&previous, &br0_ip) {
+        let Some(br0_ip) = br0_ip.as_deref() else {
+            return error(
+                StatusCode::INTERNAL_SERVER_ERROR,
+                "Не удалось определить IPv4-адрес br0 для включения передачи DNS",
+            );
+        };
+        for command in enable_router_dns_commands(&previous, br0_ip) {
             if let Err(e) = ndmc(&command).await {
                 return rollback_enable(&previous, &current, &candidate, e).await;
             }
@@ -625,7 +642,7 @@ mod tests {
     use super::{
         enable_router_dns_commands, mihomo_dns_listens_on_router_interface,
         mihomo_dns_preserves_router_handoff, parse_restore_state, read_mihomo_dns_enabled,
-        set_mihomo_dns, DnsRestoreState,
+        resolve_br0_ip_for_toggle, set_mihomo_dns, DnsRestoreState,
     };
 
     #[test]
@@ -701,6 +718,23 @@ mod tests {
                 "opkg dns-override",
                 "system configuration save",
             ]
+        );
+    }
+
+    #[test]
+    fn disabling_dns_handoff_does_not_require_a_br0_address() {
+        let result = resolve_br0_ip_for_toggle(false, || {
+            panic!("br0 lookup must not run while disabling DNS handoff")
+        });
+        assert_eq!(result, Ok(None));
+
+        assert_eq!(
+            resolve_br0_ip_for_toggle(true, || Ok("192.168.1.1".into())),
+            Ok(Some("192.168.1.1".into()))
+        );
+        assert_eq!(
+            resolve_br0_ip_for_toggle(true, || Err("missing br0".into())),
+            Err("missing br0".into())
         );
     }
 }

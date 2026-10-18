@@ -1,5 +1,13 @@
 # Changelog
 
+## v0.5.8 — 2026-10-18
+
+- **Подписки:** добавить управление proxy-providers Mihomo с поиском, числом узлов, типом источника, трафиком, сроком действия, временем обновления, просмотром узлов и обновлением одного или всех провайдеров.
+- **Импорт прокси:** оставить HTTPS-ссылки подписок в штатном сценарии генерации `proxy-provider` и применения к выбранным группам Mihomo.
+- **Рулсеты:** добавить просмотр файлов rule-set из конфигурации Mihomo, включая локальные файлы и кешированные MRS с ограничением размера.
+- **Селекторы и обновления:** уточнить цветовые уровни пинга, выровнять стрелки маршрутов, улучшить FAQ-подсказки и привести диалоги обновления ядер и панели к единому виду.
+- **Проверка:** локально прошли 279 тестов, typecheck и production build; GitHub CI прошёл frontend, installer, backend lifecycle и AArch64 cross-build. Реальное обновление подписки, DNS handoff/rollback, RAM и задержку переключения нужно проверить на роутере.
+
 ## v0.5.7 — 2026-10-18
 
 - **Selectors:** keep the selected proxy responsive while selector requests are serialized, close active connections associated with the switched group after a selection change, and make each node's ping brighter and easier to read at the card's lower-right corner.

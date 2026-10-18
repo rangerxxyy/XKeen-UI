@@ -48,9 +48,14 @@
   .app-shell .journal-tools { display:flex; width:100%; gap:6px; }
   .app-shell .journal-filter { flex:1 1 100%; width:100%; }
   .app-shell .journal-tools select { flex:1 1 auto; min-width:0; width:auto; }
-  .app-shell .journal-action-button { width:34px; min-width:34px; padding:0; }
+  .app-shell .journal-action-button { width:44px; min-width:44px; min-height:44px; padding:0; }
   .app-shell .journal-action-label { display:none; }
   .app-shell .dns-fake-ip-warning { margin-right:14px; margin-left:14px; }
+  .app-shell .nav-item,.app-shell .button,.app-shell .editor-button,
+  .app-shell .icon-button,.app-shell .header-service-action,
+  .app-shell .settings-tab,.app-shell .editor-utilities > summary,
+  .app-shell .modal button:not(.styled-select-option) { min-height:44px; }
+  .app-shell .icon-button,.app-shell .header-service-action { min-width:44px; }
 }
 @media(prefers-reduced-motion:reduce) { .app-shell .journal-action-button { transition:none; } }
 .top-status-cluster.is-xkeen-busy { position:relative; isolation:isolate; }

@@ -1,5 +1,4 @@
-import '@fontsource-variable/inter';
-import '@fontsource-variable/jetbrains-mono';
+import './fonts.css';
 import './country-flags.css';
 import './style.css';
 import './typography.css';

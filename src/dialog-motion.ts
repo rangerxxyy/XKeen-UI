@@ -1,4 +1,5 @@
 type DialogCloseOptions = { durationMs?: number; reducedMotion?: boolean };
+const DIALOG_EXIT_DURATION_MS = 160;
 
 export function closeDialogWithMotion(dialog: HTMLDialogElement, returnValue = '', options: DialogCloseOptions = {}): void {
   if (!dialog.open || dialog.dataset.closing === 'true') return;
@@ -15,7 +16,7 @@ export function closeDialogWithMotion(dialog: HTMLDialogElement, returnValue = '
     dialog.classList.remove('is-closing');
     delete dialog.dataset.closing;
     dialog.close(returnValue);
-  }, options.durationMs ?? 160);
+  }, options.durationMs ?? DIALOG_EXIT_DURATION_MS);
 }
 
 export function bindDialogMotion(dialog: HTMLDialogElement): void {

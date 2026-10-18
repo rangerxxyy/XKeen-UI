@@ -109,7 +109,10 @@ export async function getMihomoProxyProviders(signal?: AbortSignal): Promise<Mih
     const type = typeof raw.type === 'string' ? raw.type.toLocaleLowerCase('en') : '';
     const vehicleType = typeof raw.vehicleType === 'string' ? raw.vehicleType : '';
     if (['selector', 'urltest', 'fallback', 'loadbalance', 'direct', 'reject'].includes(type)) return [];
-    if (!vehicleType && type !== 'proxy') return [];
+    // Mihomo groups can also be reported with type "Proxy" by wrappers. A
+    // real proxy-provider always exposes vehicleType, so use that field as
+    // the strict discriminator for the Subscriptions screen.
+    if (!vehicleType) return [];
     const proxies = Array.isArray(raw.proxies) ? raw.proxies.flatMap((proxy): MihomoProxyProviderNode[] => {
       if (!isRecord(proxy) || typeof proxy.name !== 'string') return [];
       return [{ name: proxy.name, type: typeof proxy.type === 'string' ? proxy.type : '—' }];
@@ -259,6 +262,22 @@ export async function setRouterDnsManagement(request: {
     signal,
   });
   await readJson(response, request.enabled ? 'Передача DNS Mihomo' : 'Возврат DNS KeeneticOS');
+}
+
+export async function getDnsAutoApply(signal?: AbortSignal): Promise<boolean> {
+  const payload = await getMihomoJson('/api/v1/dns/auto-apply', 'Получение настройки автоприменения DNS', signal);
+  if (!isRecord(payload) || typeof payload.enabled !== 'boolean') throw new Error('Backend вернул некорректную настройку автоприменения DNS');
+  return payload.enabled;
+}
+
+export async function setDnsAutoApply(enabled: boolean, signal?: AbortSignal): Promise<void> {
+  const response = await fetch('/api/v1/dns/auto-apply', {
+    method: 'PUT',
+    headers: { Accept: 'application/json', 'Content-Type': 'application/json' },
+    body: JSON.stringify({ enabled }),
+    signal,
+  });
+  await readJson(response, 'Сохранение автоприменения DNS');
 }
 
 export interface MihomoDnsRecord {

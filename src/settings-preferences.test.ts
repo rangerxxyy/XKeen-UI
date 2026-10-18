@@ -20,6 +20,11 @@ describe('ping URL setting', () => {
 });
 
 describe('saved Mihomo and update preferences', () => {
+  it('keeps the router boot reapply mode in the supported settings values', () => {
+    expect(readUiPreferences({ getItem: () => JSON.stringify({ dnsAutostart: 'auto' }) }).dnsAutostart).toBe('auto');
+    expect(readUiPreferences({ getItem: () => JSON.stringify({ dnsAutostart: 'unknown' }) }).dnsAutostart).toBe('off');
+  });
+
   it('loads existing switch, delay and ping values from the current storage key', () => {
     const stored = new Map<string, string>([['xkeen-ui:preferences:v1', JSON.stringify({
       showConnectionSource: false,

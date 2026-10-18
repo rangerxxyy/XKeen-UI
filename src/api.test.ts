@@ -24,6 +24,7 @@ describe('Mihomo proxy providers API', () => {
     vi.stubGlobal('fetch', vi.fn(async () => new Response(JSON.stringify({ providers: {
       subscription_1: { name: 'subscription_1', type: 'Proxy', vehicleType: 'HTTP', proxies: [] },
       Main: { name: 'Main', type: 'Selector', proxies: [{ name: 'subscription_1', type: 'Proxy' }] },
+      MainProxy: { name: 'MainProxy', type: 'Proxy', proxies: [{ name: 'subscription_1', type: 'Proxy' }] },
     } }), { headers: { 'Content-Type': 'application/json' } })));
     await expect(getMihomoProxyProviders()).resolves.toMatchObject([{ name: 'subscription_1', vehicleType: 'HTTP' }]);
   });

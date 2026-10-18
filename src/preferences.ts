@@ -7,7 +7,7 @@ export interface UiPreferences {
   journalTimeZone: JournalTimeZone;
   showConnectionSource: boolean;
   closeConnectionsAfterApply: boolean;
-  dnsAutostart: 'off' | 'confirm';
+  dnsAutostart: 'off' | 'confirm' | 'auto';
   hideUnavailableProxies: boolean;
   unavailableThreshold: number;
   selectorSort: SelectorSort;
@@ -49,7 +49,7 @@ export function readUiPreferences(storage: Pick<Storage, 'getItem'> | null = saf
       journalTimeZone: normalizeJournalTimeZone(value.journalTimeZone),
       showConnectionSource: typeof value.showConnectionSource === 'boolean' ? value.showConnectionSource : DEFAULT_UI_PREFERENCES.showConnectionSource,
       closeConnectionsAfterApply: typeof value.closeConnectionsAfterApply === 'boolean' ? value.closeConnectionsAfterApply : DEFAULT_UI_PREFERENCES.closeConnectionsAfterApply,
-      dnsAutostart: value.dnsAutostart === 'confirm' ? 'confirm' : 'off',
+      dnsAutostart: value.dnsAutostart === 'confirm' || value.dnsAutostart === 'auto' ? value.dnsAutostart : 'off',
       hideUnavailableProxies: typeof value.hideUnavailableProxies === 'boolean' ? value.hideUnavailableProxies : DEFAULT_UI_PREFERENCES.hideUnavailableProxies,
       unavailableThreshold: validInteger(value.unavailableThreshold, 1, 10, DEFAULT_UI_PREFERENCES.unavailableThreshold),
       selectorSort: value.selectorSort === 'name' || value.selectorSort === 'delay' ? value.selectorSort : 'config',

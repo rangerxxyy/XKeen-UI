@@ -72,6 +72,7 @@ async fn read_content(name: &str) -> Result<(String, String), String> {
 
 fn find_provider(yaml: &str, wanted: &str) -> Option<std::collections::HashMap<String, String>> {
     let mut in_providers = false;
+    let mut section_indent = 0usize;
     let mut provider_indent = None;
     let mut found = false;
     let mut values = std::collections::HashMap::new();
@@ -83,14 +84,20 @@ fn find_provider(yaml: &str, wanted: &str) -> Option<std::collections::HashMap<S
         }
         let indent = line.len() - line.trim_start().len();
         if indent == 0 {
-            in_providers = trimmed == "rule-providers:" || trimmed.starts_with("rule-providers: #");
+            in_providers = trimmed == "rule-providers:"
+                || trimmed.starts_with("rule-providers: #")
+                || trimmed.starts_with("rule-providers: &");
+            section_indent = indent;
             provider_indent = None;
             continue;
         }
         if !in_providers {
             continue;
         }
-        if indent == 2 {
+        if provider_indent.is_none() {
+            provider_indent = Some(indent);
+        }
+        if Some(indent) == provider_indent {
             let Some((key, value)) = split_yaml_pair(trimmed) else {
                 continue;
             };
@@ -118,7 +125,7 @@ fn find_provider(yaml: &str, wanted: &str) -> Option<std::collections::HashMap<S
             }
             continue;
         }
-        if found && provider_indent.is_some_and(|base| indent > base) {
+        if found && provider_indent.is_some_and(|base| indent > base && indent > section_indent) {
             if let Some((key, value)) = split_yaml_pair(trimmed) {
                 values.insert(key.trim().to_owned(), unquote(value.trim()).to_owned());
             }
@@ -251,6 +258,23 @@ mod tests {
             provider.unwrap().get("url").map(String::as_str),
             Some("https://example.test/category-ai.mrs")
         );
+    }
+
+    #[test]
+    fn finds_provider_with_valid_four_space_yaml_indentation() {
+        let yaml = "rule-providers:\n    adlist@domain: { <<: *domain, url: https://example.test/adlist.mrs }\n";
+        assert!(find_provider(yaml, "adlist@domain").is_some());
+    }
+
+    #[test]
+    fn finds_rule_providers_in_the_bundled_zxc_style_configuration() {
+        let yaml = include_str!("../../src/templates/zxc-rv/mihomo/config.yaml");
+        for name in ["adlist@domain", "category-ai@domain", "telegram@ipcidr"] {
+            assert!(
+                find_provider(yaml, name).is_some(),
+                "missing provider {name}"
+            );
+        }
     }
 
     #[test]

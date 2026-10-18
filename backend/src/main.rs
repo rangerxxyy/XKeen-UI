@@ -1344,6 +1344,9 @@ async fn run_panel() -> Result<(), Box<dyn std::error::Error>> {
         )),
         app_update_running: Arc::new(AtomicBool::new(false)),
     };
+    if router_mode {
+        dns_control::start_boot_reapply(state.clone());
+    }
     let web = web_root();
     let index = web.join("index.html");
     let read_api = Router::new()
@@ -1381,13 +1384,19 @@ async fn run_panel() -> Result<(), Box<dyn std::error::Error>> {
             get(mihomo_rule_provider),
         )
         .route("/api/v1/mihomo/dns/query", get(mihomo_dns_query));
-    let read_api = read_api.route("/api/v1/dns", get(dns_control::status));
+    let read_api = read_api
+        .route("/api/v1/dns", get(dns_control::status))
+        .route("/api/v1/dns/auto-apply", get(dns_control::get_auto_apply));
     let mutation_api = Router::new()
         .route(
             "/api/v1/logs/ui-error",
             axum::routing::post(logs::append_ui_error),
         )
         .route("/api/v1/dns", axum::routing::put(dns_control::toggle))
+        .route(
+            "/api/v1/dns/auto-apply",
+            axum::routing::put(dns_control::set_auto_apply),
+        )
         .route("/api/v1/xkeen/control", axum::routing::post(control_xkeen))
         .route("/api/v1/cores/install", axum::routing::post(install_core))
         .route("/api/v1/app/update", axum::routing::post(update_app))

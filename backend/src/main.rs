@@ -348,7 +348,7 @@ struct SystemStatus {
     port: u16,
     uptime_seconds: u64,
     platform: String,
-    memory: Option<MemoryStatus>,
+    memory: Option<router_devices::MemoryStatus>,
     load_average: Option<f32>,
     cpu_percent: Option<f32>,
     services: Vec<ServiceStatus>,

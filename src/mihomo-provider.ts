@@ -1,4 +1,4 @@
-import { isMap, parseDocument, stringify } from 'yaml';
+import { isMap, isSeq, parseDocument, stringify } from 'yaml';
 
 export type MihomoProviderPosition = 'start' | 'end' | 'replace';
 
@@ -83,6 +83,7 @@ export function insertMihomoProvider(
   generatedProvider: string,
   position: MihomoProviderPosition,
   replaceName?: string,
+  targetGroups: string[] = [],
 ): string {
   const document = parseDocument(source, { uniqueKeys: true, version: '1.2' });
   if (document.errors.length) throw new Error(`Текущий YAML содержит ошибку: ${document.errors[0]?.message ?? 'неизвестная ошибка'}`);
@@ -111,20 +112,39 @@ export function insertMihomoProvider(
   if (position === 'replace') {
     if (!replaceName || !providerMap.has(replaceName)) throw new Error('Выберите существующий провайдер для замены');
     providerMap.set(replaceName, document.createNode((entry.value as { toJSON(): unknown }).toJSON()));
-    return document.toString({ indent: 2, lineWidth: 0 });
+  } else {
+    if (providerMap.has(name)) throw new Error(`Провайдер «${name}» уже существует`);
+    providerMap.set(name, document.createNode((entry.value as { toJSON(): unknown }).toJSON()));
+    if (position === 'start') {
+      const index = providerMap.items.findIndex((item) => {
+        const key = (item as { key?: unknown }).key;
+        const value = key && typeof key === 'object' && 'toJSON' in key && typeof key.toJSON === 'function'
+          ? key.toJSON()
+          : key;
+        return String(value) === name;
+      });
+      if (index > 0) providerMap.items.unshift(...providerMap.items.splice(index, 1));
+    }
   }
 
-  if (providerMap.has(name)) throw new Error(`Провайдер «${name}» уже существует`);
-  providerMap.set(name, document.createNode((entry.value as { toJSON(): unknown }).toJSON()));
-  if (position === 'start') {
-    const index = providerMap.items.findIndex((item) => {
-      const key = (item as { key?: unknown }).key;
-      const value = key && typeof key === 'object' && 'toJSON' in key && typeof key.toJSON === 'function'
-        ? key.toJSON()
-        : key;
-      return String(value) === name;
-    });
-    if (index > 0) providerMap.items.unshift(...providerMap.items.splice(index, 1));
+  const referencedProviderName = position === 'replace' ? replaceName : name;
+  if (targetGroups.length) {
+    const groups = document.get('proxy-groups', true);
+    if (!isSeq(groups)) throw new Error('Чтобы подключить подписку, в конфигурации должен быть список proxy-groups');
+    const found = new Set<string>();
+    for (const group of groups.items) {
+      if (!isMap(group)) continue;
+      const groupName = String(group.get('name', true)?.toJSON() ?? '');
+      if (!targetGroups.includes(groupName)) continue;
+      found.add(groupName);
+      const use = group.get('use', true);
+      if (use === undefined) group.set('use', [referencedProviderName]);
+      else if (isSeq(use)) {
+        if (!use.items.some((item) => String((item as { toJSON?: () => unknown } | null)?.toJSON?.() ?? item) === referencedProviderName)) use.add(referencedProviderName);
+      } else throw new Error(`Поле use в группе «${groupName}» должно быть списком`);
+    }
+    const missing = targetGroups.filter((group) => !found.has(group));
+    if (missing.length) throw new Error(`Группа не найдена: ${missing.join(', ')}`);
   }
   return document.toString({ indent: 2, lineWidth: 0 });
 }

@@ -17,16 +17,16 @@ describe('XKeen UI release controls', () => {
   });
 
   it('highlights the version chip and shows the available version in a dismissible notice', () => {
-    const html = renderAppVersionChip('0.4.5', true);
+    const html = renderAppVersionChip('0.5.0', true);
     expect(html).toContain('app-version-button is-update-available');
-    expect(html).toContain('Доступно обновление XKeen UI 0.4.5');
+    expect(html).toContain('Доступно обновление XKeen UI 0.5.0');
 
-    const notice = renderAppUpdateNotice('v0.4.5', 'https://github.com/rangerxxyy/XKeen-UI/releases/tag/v0.4.5');
+    const notice = renderAppUpdateNotice('v0.5.0', 'https://github.com/rangerxxyy/XKeen-UI/releases/tag/v0.5.0');
     expect(notice).toContain('Доступно обновление');
-    expect(notice).toContain('Доступна новая версия XKeen UI v0.4.5');
+    expect(notice).toContain('Доступна новая версия XKeen UI v0.5.0');
     expect(notice).toContain('data-open-app-update');
     expect(notice).toContain('data-dismiss-app-update');
-    expect(notice).toContain('https://github.com/rangerxxyy/XKeen-UI/releases/tag/v0.4.5');
+    expect(notice).toContain('https://github.com/rangerxxyy/XKeen-UI/releases/tag/v0.5.0');
   });
 
   it('keeps the installer action and omits the external release link', () => {

@@ -1,4 +1,4 @@
-import { EditorState } from '@codemirror/state';
+import { Compartment, EditorState } from '@codemirror/state';
 import { EditorView, highlightActiveLine, keymap, lineNumbers } from '@codemirror/view';
 import { defaultKeymap, history, historyKeymap } from '@codemirror/commands';
 import { HighlightStyle, syntaxHighlighting } from '@codemirror/language';
@@ -6,7 +6,7 @@ import { tags } from '@lezer/highlight';
 import { yaml } from '@codemirror/lang-yaml';
 import { json } from '@codemirror/lang-json';
 import { parse as parseJsonc, printParseErrorCode, type ParseError } from 'jsonc-parser';
-import { isMap, parseDocument } from 'yaml';
+import { isMap, isSeq, parseDocument } from 'yaml';
 import { chooseReferenceTemplate, getDefaultTemplate } from './templates';
 import { getXrayTemplateTarget } from './template-target';
 import { applyActiveMihomoConfig, applyXrayConfigFile, getActiveMihomoConfig, getRouterConfigFile, getXrayConfigFile, listMihomoConfigBackups, logUiError, restoreMihomoConfigBackup, saveActiveMihomoConfig, saveRouterConfigFile, saveXrayConfigFile, type RouterConfigFile, type XrayConfigFile } from './api';
@@ -33,6 +33,9 @@ const draftFiles = [
 ] as const;
 let editor: EditorView | null = null;
 let editorBindings: AbortController | null = null;
+let editorEditing = false;
+let editorReadOnly = new Compartment();
+let editorEditable = new Compartment();
 let activeFile = sessionStorage.getItem(activeFileKey) ?? 'config';
 if (activeFile === 'xray_jsonc') activeFile = 'xray_routing';
 let activeConfigSnapshot: string | null = null;
@@ -137,6 +140,7 @@ function bindConfigBackups(signal: AbortSignal): void {
             const restored = await getActiveMihomoConfig(signal);
             activeConfigSnapshot = restored.content;
             if (editor && currentFile().id === 'config') {
+              enableEditorEditing();
               editor.dispatch({ changes: { from: 0, to: editor.state.doc.length, insert: restored.content } });
               editor.focus();
             }
@@ -179,6 +183,7 @@ function bindAddProxyDialog(signal: AbortSignal): void {
             <label class="proxy-provider-field proxy-provider-wide"><span>URL подписки</span><input name="subscriptionUrl" type="url" autocomplete="url" required></label>
             <p class="proxy-provider-hint proxy-provider-wide">Mihomo будет обновлять этот источник по заданному интервалу.</p>
           </div></fieldset>
+          <fieldset class="proxy-provider-group"><legend>Добавить в группы прокси</legend><p class="proxy-provider-hint">Выберите группы, в которых Mihomo должен показывать узлы этой подписки.</p><div class="proxy-provider-groups" data-provider-groups><span class="proxy-provider-hint">Сначала выберите корректную конфигурацию с proxy-groups.</span></div></fieldset>
           <fieldset class="proxy-provider-group"><legend><label class="proxy-provider-toggle"><input name="healthCheckEnabled" type="checkbox" checked><span>Проверка работоспособности</span></label></legend><div class="proxy-provider-grid" data-provider-section="health">
             <label class="proxy-provider-field proxy-provider-wide"><span>URL проверки</span><input name="healthCheckUrl" type="url" value="https://www.gstatic.com/generate_204"></label>
             <label class="proxy-provider-field"><span>Интервал проверок</span><span class="proxy-provider-unit"><input name="healthCheckInterval" type="number" min="1" value="300"><small>сек</small></span></label>
@@ -214,6 +219,7 @@ function bindAddProxyDialog(signal: AbortSignal): void {
     const providerEditor = form?.querySelector<HTMLElement>('.proxy-provider-editor');
     const yamlPreview = form?.querySelector<HTMLElement>('.proxy-provider-yaml');
     const providerSettings = form?.querySelector<HTMLElement>('.proxy-provider-settings');
+    const providerGroups = form?.querySelector<HTMLElement>('[data-provider-groups]');
     const generateButton = form?.querySelector<HTMLButtonElement>('[data-generate-provider]');
     const close = () => { if (dialog.open) dialog.close(); else dialog.remove(); };
     signal.addEventListener('abort', close, { once: true });
@@ -305,12 +311,41 @@ function bindAddProxyDialog(signal: AbortSignal): void {
             replaceButton.disabled = !isMap(providers) || providers.items.length === 0;
             replaceButton.title = replaceButton.disabled ? 'В конфигурации пока нет провайдеров для замены' : 'Заменить существующий провайдер';
           }
+          if (providerGroups) {
+            providerGroups.replaceChildren();
+            const groupDocument = parseDocument(current, { uniqueKeys: true, version: '1.2' });
+            const groups = groupDocument.get('proxy-groups', true);
+            if (!groupDocument.errors.length && isSeq(groups)) {
+              for (const group of groups.items) {
+                if (!isMap(group)) continue;
+                const groupName = String(group.get('name', true)?.toJSON() ?? '');
+                if (!groupName) continue;
+                const label = document.createElement('label');
+                label.className = 'proxy-provider-group-option';
+                const checkbox = document.createElement('input');
+                checkbox.type = 'checkbox';
+                checkbox.dataset.providerGroup = groupName;
+                checkbox.value = groupName;
+                const name = document.createElement('span');
+                name.textContent = groupName;
+                label.append(checkbox, name);
+                providerGroups.append(label);
+              }
+            }
+            if (!providerGroups.childElementCount) {
+              const empty = document.createElement('span');
+              empty.className = 'proxy-provider-hint';
+              empty.textContent = 'В конфигурации не найдены группы прокси. Создайте proxy-groups и повторите импорт.';
+              providerGroups.append(empty);
+            }
+          }
           refreshPreview();
           providerEditor?.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
           return;
         }
         if (generated.type !== 'proxy') throw new Error('Для этого типа ссылки нет генератора Mihomo.');
         const updated = appendMihomoProxy(current, generated.content);
+        enableEditorEditing();
         editor.dispatch({ changes: { from: 0, to: editor.state.doc.length, insert: updated } });
         editor.focus();
         setValidation('Прокси добавлен в локальный черновик. Проверьте конфигурацию перед применением.', true);
@@ -331,7 +366,10 @@ function bindAddProxyDialog(signal: AbortSignal): void {
       try {
         const current = editor.state.doc.toString();
         const content = createMihomoProviderYaml(settingsValue());
-        const updated = insertMihomoProvider(current, content, position, replaceTarget);
+        const targetGroups = [...(providerGroups?.querySelectorAll<HTMLInputElement>('[data-provider-group]:checked') ?? [])].map((checkbox) => checkbox.value);
+        if (!targetGroups.length) throw new Error('Выберите хотя бы одну группу, в которой нужно показать узлы подписки.');
+        const updated = insertMihomoProvider(current, content, position, replaceTarget, targetGroups);
+        enableEditorEditing();
         editor.dispatch({ changes: { from: 0, to: editor.state.doc.length, insert: updated } });
         editor.focus();
         setValidation(`Провайдер подписки ${position === 'replace' ? 'заменён' : 'добавлен'} в локальный черновик. Проверьте конфигурацию перед применением.`, true);
@@ -374,6 +412,14 @@ const editorHighlight = HighlightStyle.define([
 
 function editorElement(): HTMLElement | null {
   return document.querySelector<HTMLElement>('#yaml-editor');
+}
+
+function enableEditorEditing(): void {
+  if (!editor || editorEditing) return;
+  editorEditing = true;
+  editor.dispatch({ effects: [editorReadOnly.reconfigure(EditorState.readOnly.of(false)), editorEditable.reconfigure(EditorView.editable.of(true))] });
+  document.querySelector<HTMLElement>('#editor-view-hint')?.setAttribute('hidden', '');
+  editor.focus();
 }
 
 function setValidation(message: string, valid: boolean | null): void {
@@ -464,6 +510,13 @@ export function mountYamlEditor(routerMode = false, activeCore: 'mihomo' | 'xray
   if (saveButton) saveButton.disabled = currentSnapshot() === null;
 
   setEditorIdentity(routerMode, activeCore);
+  editorEditing = false;
+  editorReadOnly = new Compartment();
+  editorEditable = new Compartment();
+  document.querySelector<HTMLElement>('#editor-view-hint')?.removeAttribute('hidden');
+  parent.addEventListener('click', (event) => {
+    if ((event.target as HTMLElement).closest('.cm-content')) enableEditorEditing();
+  }, { signal });
   bindAddProxyDialog(signal);
   bindConfigBackups(signal);
   const file = currentFile();
@@ -494,6 +547,8 @@ export function mountYamlEditor(routerMode = false, activeCore: 'mihomo' | 'xray
         highlightActiveLine(),
         ...(file.format === 'yaml' ? [yaml()] : file.format === 'text' ? [] : [json()]),
         syntaxHighlighting(editorHighlight),
+        editorReadOnly.of(EditorState.readOnly.of(true)),
+        editorEditable.of(EditorView.editable.of(false)),
         editorTheme,
         updateListener,
       ],
@@ -542,6 +597,7 @@ export function mountYamlEditor(routerMode = false, activeCore: 'mihomo' | 'xray
         sessionStorage.setItem(activeFileKey, targetId);
         setEditorIdentity(routerMode, activeCore);
       }
+      enableEditorEditing();
       editor.dispatch({ changes: { from: 0, to: editor.state.doc.length, insert: template.content } });
       editor.focus();
       validateStructuredDocument(template.content);

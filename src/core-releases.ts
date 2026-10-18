@@ -18,6 +18,7 @@ type GitHubRelease = {
   published_at: string | null;
   prerelease: boolean;
   draft: boolean;
+  body?: string | null;
   assets: GitHubAsset[];
 };
 
@@ -57,6 +58,7 @@ export function isCoreRelease(value: unknown): value is GitHubRelease {
     && (typeof release.published_at === 'string' || release.published_at === null)
     && typeof release.prerelease === 'boolean'
     && typeof release.draft === 'boolean'
+    && (release.body === undefined || release.body === null || (typeof release.body === 'string' && release.body.length <= 50_000))
     && Array.isArray(release.assets)
     && release.assets.every((asset) => asset && typeof asset.name === 'string'
       && typeof asset.size === 'number' && Number.isFinite(asset.size) && asset.size >= 0
@@ -74,6 +76,13 @@ export function findCompatibleCoreAsset(core: CoreName, assets: GitHubAsset[]): 
 
 export function isStableCompatibleRelease(core: CoreName, release: GitHubRelease): boolean {
   return !release.draft && !release.prerelease && Boolean(findCompatibleCoreAsset(core, release.assets));
+}
+
+export function isDisplayableCoreRelease(core: CoreName, release: GitHubRelease): boolean {
+  if (core === 'xray') {
+    return !release.draft && Boolean(findCompatibleCoreAsset(core, release.assets));
+  }
+  return isStableCompatibleRelease(core, release);
 }
 
 export function safeCoreReleaseLink(value: string): string | undefined {
@@ -103,7 +112,7 @@ function element<K extends keyof HTMLElementTagNameMap>(tag: K, className?: stri
 
 function renderReleaseList(target: HTMLElement, core: CoreName, releases: GitHubRelease[], keepBackup: () => boolean = () => true): void {
   const list = element('div', 'core-release-list');
-  const visible = releases.filter((release) => isStableCompatibleRelease(core, release));
+  const visible = releases.filter((release) => isDisplayableCoreRelease(core, release));
   if (visible.length) {
     const picker = element('label', 'core-release-picker');
     picker.append(element('span', undefined, 'Версия'));
@@ -122,7 +131,7 @@ function renderReleaseList(target: HTMLElement, core: CoreName, releases: GitHub
     list.append(picker);
   }
   if (!visible.length) {
-    list.append(element('p', 'core-release-empty', 'Стабильного релиза с архивом для ARM64 пока нет.'));
+    list.append(element('p', 'core-release-empty', 'Совместимого релиза с архивом для ARM64 пока нет.'));
   }
   for (const release of visible) {
     const card = element('article', 'core-release-card');
@@ -130,7 +139,7 @@ function renderReleaseList(target: HTMLElement, core: CoreName, releases: GitHub
     const heading = element('div', 'core-release-heading');
     const title = element('strong', undefined, release.name || release.tag_name);
     const badges = element('span', 'core-release-badges');
-    badges.append(element('span', 'core-release-badge', 'Стабильная'));
+    badges.append(element('span', `core-release-badge${release.prerelease ? ' is-preview' : ''}`, release.prerelease ? 'Pre-Release' : 'Stable'));
     const asset = findCompatibleCoreAsset(core, release.assets);
     badges.append(element('span', `core-release-badge${asset ? ' is-ready' : ' is-muted'}`, asset ? 'ARM64' : 'Нет архива ARM64'));
     heading.append(title, badges);
@@ -140,6 +149,16 @@ function renderReleaseList(target: HTMLElement, core: CoreName, releases: GitHub
       ? new Date(release.published_at).toLocaleDateString('ru-RU', { year: 'numeric', month: 'short', day: 'numeric' })
       : 'дата не указана';
     card.append(element('p', 'core-release-meta', `${release.tag_name} · ${published} · ${release.assets.length} файлов`));
+    if (release.body?.trim()) {
+      const notes = document.createElement('details');
+      notes.className = 'core-release-changelog';
+      if (release === visible[0]) notes.open = true;
+      notes.append(element('summary', undefined, 'Что изменилось'));
+      const text = element('pre');
+      text.textContent = release.body.slice(0, 12_000);
+      notes.append(text);
+      card.append(notes);
+    }
     if (asset) {
       const assetRow = element('div', 'core-release-asset');
       assetRow.append(element('code', undefined, asset.name));
@@ -178,7 +197,7 @@ export async function openCoreReleaseDialog(
   const dialog = document.createElement('dialog');
   dialog.className = 'modal core-release-dialog';
   const title = core === 'mihomo' ? 'Обновление Mihomo' : 'Обновление Xray';
-  dialog.innerHTML = `<form method="dialog" class="modal-panel core-release-dialog-panel"><div class="modal-heading"><span class="modal-icon">⇩</span><h2>${title}</h2><button class="icon-button" aria-label="Закрыть">×</button></div><div class="core-release-dialog-source"><span id="core-release-repository">Источник загружается…</span><span class="core-release-github">GitHub</span></div><p class="modal-note" id="core-release-dialog-status" aria-live="polite">Загружаем последние стабильные ARM64-релизы…</p><div id="core-release-dialog-list" class="core-release-dialog-list"></div><button class="button button-primary modal-close" type="submit">Готово</button></form>`;
+  dialog.innerHTML = `<form method="dialog" class="modal-panel core-release-dialog-panel"><div class="modal-heading"><span class="modal-icon">⇩</span><h2>${title}</h2><button class="icon-button" aria-label="Закрыть">×</button></div><div class="core-release-dialog-source"><span id="core-release-repository">Источник загружается…</span><span class="core-release-github">GitHub</span></div><p class="modal-note" id="core-release-dialog-status" aria-live="polite">Загружаем совместимые ARM64-релизы…</p><div id="core-release-dialog-list" class="core-release-dialog-list"></div><button class="button button-primary modal-close" type="submit">Готово</button></form>`;
   document.body.append(dialog);
   dialog.addEventListener('close', () => dialog.remove(), { once: true });
   bindDialogMotion(dialog);
@@ -192,8 +211,8 @@ export async function openCoreReleaseDialog(
     const repo = normalizeCoreRepository(configuredRepository);
     source.textContent = repo;
     const releases = await fetchCoreReleases(configuredRepository);
-    const visible = releases.filter((release) => isStableCompatibleRelease(core, release));
-    status.textContent = `${visible.length} стабильных ARM64-релизов${currentVersion ? ` · установлена ${currentVersion}` : ''}`;
+    const visible = releases.filter((release) => isDisplayableCoreRelease(core, release));
+    status.textContent = `${visible.length} совместимых ARM64-релизов${currentVersion ? ` · установлена ${currentVersion}` : ''}`;
     renderReleaseList(target, core, releases, keepBackup);
   } catch (error) {
     status.textContent = error instanceof Error ? error.message : 'Не удалось загрузить релизы.';
@@ -209,8 +228,14 @@ async function installRelease(core: CoreName, tag: string, asset: string, sha256
   );
   if (!confirmed) return;
   button.disabled = true;
-  button.textContent = 'Проверка и установка…';
-  let feedback = element('p', 'core-release-feedback', `Загружаем и проверяем ${asset}.`);
+  button.textContent = 'Загрузка и установка…';
+  const feedback = element('div', 'core-release-feedback');
+  feedback.setAttribute('role', 'status');
+  feedback.setAttribute('aria-live', 'polite');
+  const progress = document.createElement('progress');
+  progress.max = 100;
+  progress.setAttribute('aria-label', 'Загрузка и установка ядра');
+  feedback.append(progress, element('span', undefined, `Загружаем и проверяем ${asset}.`));
   list.append(feedback);
   try {
     const result = await installCoreRelease({ core, tag, asset, sha256, keepBackup: keep });

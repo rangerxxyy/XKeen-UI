@@ -418,7 +418,6 @@ function enableEditorEditing(): void {
   if (!editor || editorEditing) return;
   editorEditing = true;
   editor.dispatch({ effects: [editorReadOnly.reconfigure(EditorState.readOnly.of(false)), editorEditable.reconfigure(EditorView.editable.of(true))] });
-  document.querySelector<HTMLElement>('#editor-view-hint')?.setAttribute('hidden', '');
   editor.focus();
 }
 
@@ -455,7 +454,7 @@ function validateYaml(text: string): boolean {
     setValidation('YAML синтаксически корректен, но корнем документа ожидается объект Mihomo.', false);
     return false;
   }
-  setValidation('✓ YAML валиден · проверка Mihomo при сохранении', true);
+  setValidation('✓ YAML валиден', true);
   return true;
 }
 
@@ -513,7 +512,6 @@ export function mountYamlEditor(routerMode = false, activeCore: 'mihomo' | 'xray
   editorEditing = false;
   editorReadOnly = new Compartment();
   editorEditable = new Compartment();
-  document.querySelector<HTMLElement>('#editor-view-hint')?.removeAttribute('hidden');
   parent.addEventListener('click', (event) => {
     if ((event.target as HTMLElement).closest('.cm-content')) enableEditorEditing();
   }, { signal });

@@ -9,8 +9,8 @@ import { enhanceStyledSelects, syncStyledSelects } from './styled-select';
 import { CONFIG_APPLY_EVENT, type ConfigApplyEventDetail } from './config-actions';
 import { createSettingsLoader, type SettingsLoader } from './settings-load';
 import { renderConnectionDetails } from './connection-details';
-import { applyActiveMihomoConfig, closeAllMihomoConnections, closeMihomoConnection, controlXkeen, getActiveMihomoConfig, getCoreSources, getHealth, getMihomoConnections, getMihomoProxyProviders, getMihomoSelectors, getMihomoVersion, getRouterDeviceList, getRouterDnsStatus, getStatus, getSystemLog, getUpdateProxies, getXkeenStatus, logUiError, pingMihomoGroup, pingMihomoProxy, queryMihomoDns, requestAppUpdate, saveCoreSources, saveUpdateProxies, selectMihomoProxy, setRouterDnsManagement, type ApiState, type CoreSources, type MihomoConnections, type MihomoDnsResult, type MihomoSelector, type RouterDnsStatus, type SystemLog, type XkeenStatus } from './api';
-import { applyPingResults, orderSelectorsByConfig, renderConnections, renderPingStatusIcon, renderSelectors } from './mihomo-view';
+import { applyActiveMihomoConfig, closeAllMihomoConnections, closeMihomoConnection, controlXkeen, getActiveMihomoConfig, getCoreSources, getHealth, getMihomoConnections, getMihomoSelectors, getMihomoVersion, getRouterDeviceList, getRouterDnsStatus, getStatus, getSystemLog, getUpdateProxies, getXkeenStatus, logUiError, pingMihomoGroup, pingMihomoProxy, queryMihomoDns, requestAppUpdate, saveCoreSources, saveUpdateProxies, selectMihomoProxy, setRouterDnsManagement, type ApiState, type CoreSources, type MihomoConnections, type MihomoDnsResult, type MihomoSelector, type RouterDnsStatus, type SystemLog, type XkeenStatus } from './api';
+import { applyPingResults, collectConnectionProxyIcons, orderSelectorsByConfig, renderConnections, renderPingStatusIcon, renderSelectors } from './mihomo-view';
 import { patchDnsManagement, patchMihomoDnsSettings, readMihomoDnsSettings, renderDns, type MihomoDnsSettings } from './dns-view';
 import { fetchCoreReleases, isStableCompatibleRelease, openCoreReleaseDialog } from './core-releases';
 import { openCoreManagerDialog } from './core-manager';
@@ -31,14 +31,12 @@ import { SourceNameResolver } from './source-names';
 import { renderResourceMetrics } from './resource-metrics';
 import { shouldReportUiError } from './ui-error-dedupe';
 import { sortMihomoConnections, type ConnectionSort, type ConnectionSortKey } from './connection-sort';
-import { parseProxyProviders, renderProxyProviders, type ProxyProviderView } from './proxy-providers-view';
 
-type Page = 'selectors' | 'connections' | 'proxies' | 'configuration' | 'dns';
+type Page = 'selectors' | 'connections' | 'configuration' | 'dns';
 
 const pages: { id: Page; label: string; icon: string }[] = [
   { id: 'selectors', label: 'Селекторы', icon: '⇄' },
   { id: 'connections', label: 'Соединения', icon: '⌁' },
-  { id: 'proxies', label: 'Прокси', icon: '◈' },
   { id: 'configuration', label: 'Конфигурация', icon: '⌘' },
   { id: 'dns', label: 'DNS', icon: '◎' },
 ];
@@ -63,9 +61,6 @@ let connectionSort: ConnectionSort = { key: 'start', direction: 'descending' };
 const sourceNameResolver = new SourceNameResolver(() => getRouterDeviceList());
 let connectionsLoading = true;
 let connectionsError: string | null = null;
-let proxyProviders: ProxyProviderView[] = [];
-let proxyProvidersLoading = false;
-let proxyProvidersError: string | null = null;
 let dnsResult: MihomoDnsResult | null = null;
 let dnsLoading = false;
 let dnsError: string | null = null;
@@ -169,8 +164,7 @@ function renderHeader(): string {
 }
 
 function renderNavigation(): string {
-  const fileButtons = activePage === 'configuration' ? renderConfigFileButtons() : '';
-  return `<nav class="navigation ${activePage === 'configuration' ? 'navigation-config' : ''}" aria-label="Разделы панели">${pages.map((page) => `<button class="nav-item ${activePage === page.id ? 'active' : ''}" data-page="${page.id}" ${activePage === page.id ? 'aria-current="page"' : ''}><span class="nav-icon">${page.icon}</span>${page.label}</button>`).join('')}<span class="navigation-spacer"></span>${fileButtons}</nav>`;
+  return `<nav class="navigation" aria-label="Разделы панели">${pages.map((page) => `<button class="nav-item ${activePage === page.id ? 'active' : ''}" data-page="${page.id}" ${activePage === page.id ? 'aria-current="page"' : ''}><span class="nav-icon">${page.icon}</span>${page.label}</button>`).join('')}<span class="navigation-spacer"></span></nav>`;
 }
 
 function renderConfigFileButtons(): string {
@@ -201,7 +195,6 @@ function renderComingSoon(page: Page): string {
   const descriptions: Record<Page, string> = {
     selectors: 'Подключите проверенный Mihomo API, чтобы показывать фактические группы, узлы и выбранные значения.',
     connections: 'Здесь появятся соединения, источники, цепочки прокси и объёмы трафика из runtime API ядра.',
-    proxies: 'Подписки и узлы, предоставленные текущей конфигурацией Mihomo.',
     dns: 'Управление DNS будет раздельным для Mihomo и Xray, с проверкой конфигурации и безопасным применением.',
     configuration: 'Редактор профилей появится после подключения YAML/JSON валидаторов и сценария резервного копирования.',
   };
@@ -211,7 +204,7 @@ function renderComingSoon(page: Page): string {
 function renderConfiguration(): string {
   return `<section class="editor-workspace config-layout" aria-label="Редактор конфигурации">
     <div class="config-editor-main">
-      <div class="code-editor-shell"><div class="editor-view-hint" id="editor-view-hint">Просмотр · нажмите на поле, чтобы редактировать</div><div class="code-editor" id="yaml-editor" aria-label="Текст конфигурации"></div></div>
+      <div class="code-editor-shell"><div class="code-editor" id="yaml-editor" aria-label="Текст конфигурации"></div></div>
         <div class="editor-statusbar"><span id="yaml-validation" class="editor-validation" aria-live="polite">Проверка конфигурации…</span><div class="editor-actions"><button class="editor-button" id="config-save-active" type="button" data-router-file disabled title="Сохранить файл на роутере без применения">Сохранить</button><button class="editor-button editor-button-primary" id="config-apply-active" type="button" data-router-file disabled title="Проверить, сохранить и перезапустить активное ядро">Применить</button><details class="editor-utilities"><summary class="editor-button"><span class="utilities-trigger-icon" aria-hidden="true">•••</span><span>Утилиты</span><span class="utilities-chevron" aria-hidden="true"></span></summary><div class="editor-utilities-menu" role="menu" aria-label="Утилиты конфигурации"><button type="button" role="menuitem" id="yaml-add-proxy" data-mihomo-only><span class="utility-icon" aria-hidden="true">↗</span><span>Добавить прокси</span></button><button type="button" role="menuitem" id="yaml-template" data-structured-only><span class="utility-icon" aria-hidden="true">▤</span><span>Шаблон конфигурации</span></button><button type="button" role="menuitem" id="yaml-backups" data-mihomo-only><span class="utility-icon" aria-hidden="true">◷</span><span>Резервные копии</span></button></div></details></div></div>
     </div>
   </section>`;
@@ -432,14 +425,13 @@ function render(): void {
   }
   if (activePage !== 'configuration') yamlEditorModule?.unmountYamlEditor();
   const pageContent = activePage === 'selectors' ? renderSelectors(visibleSelectors(), selectorsLoading, selectorsError)
-    : activePage === 'connections' ? renderConnections(connections, connectionsLoading, connectionsError, uiPreferences.showConnectionSource, connectionSourceNames, connectionSort)
-      : activePage === 'proxies' ? renderProxyProviders(proxyProviders, proxyProvidersLoading, proxyProvidersError)
-        : activePage === 'dns' ? renderDns(dnsResult, dnsLoading, dnsError, dnsQueryName, dnsQueryType, {
+    : activePage === 'connections' ? renderConnections(connections, connectionsLoading, connectionsError, uiPreferences.showConnectionSource, connectionSourceNames, connectionSort, collectConnectionProxyIcons(selectors))
+      : activePage === 'dns' ? renderDns(dnsResult, dnsLoading, dnsError, dnsQueryName, dnsQueryType, {
           status: dnsManagementStatus, loading: dnsManagementLoading, error: dnsManagementError,
           busy: dnsManagementBusy, confirm: dnsManagementConfirm,
         }, { values: dnsConfig?.values ?? null, loading: dnsConfigLoading, error: dnsConfigError, busy: dnsConfigBusy })
         : renderComingSoon(activePage);
-  app.innerHTML = `<div class="app-shell">${renderHeader()}${renderNavigation()}<div class="workspace-scroll"><main class="main-content${animatePageEntry ? ' page-enter' : ''}">${pageContent}</main>${renderJournal()}</div><div class="toast-region" aria-live="polite"></div></div>`;
+  app.innerHTML = `<div class="app-shell">${renderHeader()}${renderNavigation()}${activePage === 'configuration' ? `<div class="config-file-switcher-panel">${renderConfigFileButtons()}</div>` : ''}<div class="workspace-scroll"><main class="main-content${animatePageEntry ? ' page-enter' : ''}">${pageContent}</main>${renderJournal()}</div><div class="toast-region" aria-live="polite"></div></div>`;
   animatePageEntry = false;
   updateAppUpdateNotice();
   app.querySelector<HTMLElement>('.workspace-scroll')!.scrollTop = scrollTop;
@@ -752,7 +744,6 @@ function bindMihomoInteractions(): void {
     button.addEventListener('click', () => openConnectionDetails(button.dataset.inspectConnection ?? ''));
   });
   document.querySelector<HTMLButtonElement>('#mihomo-retry')?.addEventListener('click', () => void loadMihomoPage(activePage));
-  document.querySelector<HTMLButtonElement>('#proxy-providers-retry')?.addEventListener('click', () => void loadMihomoPage('proxies'));
   document.querySelectorAll<HTMLButtonElement>('.proxy-option-select').forEach((button) => {
     button.addEventListener('click', () => void selectProxyFromUi(button));
   });
@@ -940,8 +931,8 @@ async function autoCloseConnectionsAfterApply(): Promise<void> {
 }
 
 async function loadMihomoPage(page: Page): Promise<void> {
-  if (page !== 'selectors' && page !== 'connections' && page !== 'proxies') return;
-  const hadData = page === 'selectors' ? selectors.length > 0 : page === 'connections' ? connections !== null : proxyProviders.length > 0;
+  if (page !== 'selectors' && page !== 'connections') return;
+  const hadData = page === 'selectors' ? selectors.length > 0 : connections !== null;
   mihomoController?.abort();
   mihomoController = new AbortController();
   const { signal } = mihomoController;
@@ -954,7 +945,6 @@ async function loadMihomoPage(page: Page): Promise<void> {
   }
   if (page === 'selectors') { selectorsLoading = !hadData; selectorsError = null; }
   else if (page === 'connections') { connectionsLoading = !hadData; connectionsError = null; }
-  else { proxyProvidersLoading = !hadData; proxyProvidersError = null; }
   if (activePage === page && !hadData) render();
   try {
     if (page === 'selectors') {
@@ -968,21 +958,17 @@ async function loadMihomoPage(page: Page): Promise<void> {
     else if (page === 'connections') {
       connections = await getMihomoConnections(signal);
       if (uiPreferences.showConnectionSource) refreshConnectionSourceNames(connections, signal);
-    } else {
-      proxyProviders = parseProxyProviders(await getMihomoProxyProviders(signal));
     }
   } catch (error) {
     if (error instanceof DOMException && error.name === 'AbortError') return;
     const message = error instanceof Error ? error.message : 'Неизвестная ошибка API Mihomo';
     if (page === 'selectors') selectorsError = hadData ? null : message;
     else if (page === 'connections') connectionsError = hadData ? null : message;
-    else proxyProvidersError = hadData ? null : message;
     if (hadData) showToast(`Данные не обновились: ${message}`, 'error');
   } finally {
     if (!signal.aborted) {
       if (page === 'selectors') selectorsLoading = false;
       else if (page === 'connections') connectionsLoading = false;
-      else proxyProvidersLoading = false;
       if (activePage === page) render();
     }
   }

@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { applyActiveMihomoConfig, applyXrayConfigFile, getMihomoProxyProviders, getMihomoSelectors, getRouterConfigFile, getRouterDeviceList, getSystemLog, getXrayConfigFile, installCoreRelease, listMihomoConfigBackups, logUiError, pingMihomoGroup, pingMihomoProxy, requestAppUpdate, restoreMihomoConfigBackup, saveActiveMihomoConfig, saveRouterConfigFile, saveXrayConfigFile, validateMihomoConfig } from './api';
+import { applyActiveMihomoConfig, applyXrayConfigFile, getMihomoSelectors, getRouterConfigFile, getRouterDeviceList, getSystemLog, getXrayConfigFile, installCoreRelease, listMihomoConfigBackups, logUiError, pingMihomoGroup, pingMihomoProxy, requestAppUpdate, restoreMihomoConfigBackup, saveActiveMihomoConfig, saveRouterConfigFile, saveXrayConfigFile, validateMihomoConfig } from './api';
 
 afterEach(() => vi.unstubAllGlobals());
 
@@ -23,16 +23,6 @@ describe('Mihomo config backups API', () => {
     vi.stubGlobal('fetch', fetchMock);
     await expect(restoreMihomoConfigBackup('.mihomo-config-1-2.yaml', 'current yaml')).resolves.toMatchObject({ status: 'applied', restarted: true });
     expect(fetchMock).toHaveBeenCalledWith('/api/v1/config/backups/restore', expect.objectContaining({ method: 'POST', body: JSON.stringify({ backupId: '.mihomo-config-1-2.yaml', expectedContent: 'current yaml' }) }));
-  });
-});
-
-describe('getMihomoProxyProviders', () => {
-  it('reads provider nodes from the same-origin Mihomo API', async () => {
-    const payload = { providers: { Main: { vehicleType: 'HTTP', proxies: [{ name: 'Sweden', type: 'VLESS' }] } } };
-    const fetchMock = vi.fn(async () => new Response(JSON.stringify(payload), { headers: { 'Content-Type': 'application/json' } }));
-    vi.stubGlobal('fetch', fetchMock);
-    await expect(getMihomoProxyProviders()).resolves.toEqual(payload);
-    expect(fetchMock).toHaveBeenCalledWith('/api/v1/mihomo/providers/proxies', { headers: { Accept: 'application/json' }, signal: undefined });
   });
 });
 

@@ -8,7 +8,7 @@ describe('main navigation', () => {
     const otherPageMarkup = renderNavigationView(MAIN_NAVIGATION_PAGES, 'selectors', configTabs);
     const mainNavigation = configMarkup.slice(0, configMarkup.indexOf('</nav>') + '</nav>'.length);
 
-    expect(MAIN_NAVIGATION_PAGES.map((page) => page.id)).toEqual(['selectors', 'connections', 'dns', 'configuration']);
+    expect(MAIN_NAVIGATION_PAGES.map((page) => page.id)).toEqual(['selectors', 'connections', 'configuration', 'dns']);
     expect(mainNavigation).toContain('class="config-file-switcher-panel"');
     expect(mainNavigation.indexOf('data-page="configuration"')).toBeLessThan(mainNavigation.indexOf('class="config-file-switcher-panel"'));
     expect(mainNavigation).toContain('class="config-file-nav"');

@@ -16,7 +16,8 @@ describe('DNS workspaces', () => {
     expect(view).toContain('Слушатель 53 порта');
     expect(view).not.toContain('DNS-серверы роутера');
     expect(view).toContain('Статус DNS');
-    expect(view).toContain('id="dns-management-refresh"');
+    expect(view).not.toContain('dns-management-refresh');
+    expect(view).not.toContain('Обновить статус');
     expect(view).toContain('Включить управление DNS');
     expect(view).not.toContain('Состояние получено');
     expect(view).toContain('type="checkbox" role="switch"');
@@ -45,9 +46,16 @@ describe('DNS workspaces', () => {
 
   it('requires an explicit second step before changing router DNS', () => {
     const view = renderDns(null, false, null, '', 'A');
-    expect(view).toContain('Обновить статус');
+    expect(view).not.toContain('Обновить статус');
     expect(view).toContain('id="dns-management-toggle"');
     expect(view).toMatch(/id="dns-management-toggle"[^>]*type="checkbox"[^>]*role="switch"[^>]*disabled/);
+  });
+
+  it('places DNS management after the three compact runtime status rows', () => {
+    const state = { dnsOverride: true, mihomoDns: true, portListener: 'mihomo', nameServers: [], detail: '' };
+    const view = renderDns(null, false, null, '', 'A', { status: state, loading: false, error: null, busy: false, confirm: false });
+    expect(view.indexOf('Слушатель 53 порта')).toBeLessThan(view.indexOf('Включить управление DNS'));
+    expect(view.indexOf('dns-runtime-list')).toBeLessThan(view.indexOf('dns-management-row'));
   });
 
   it('reflects the actual DNS handoff state in the switch and active labels', () => {

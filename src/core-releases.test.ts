@@ -1,6 +1,7 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import {
   fetchCoreReleases,
+  formatReleaseNotes,
   findCompatibleCoreAsset,
   isCoreRelease,
   isDisplayableCoreRelease,
@@ -91,6 +92,14 @@ describe('stable core releases', () => {
 });
 
 describe('displayable core releases', () => {
+  it('renders release markdown as readable safe HTML without exposing raw markup', () => {
+    expect(formatReleaseNotes('## What changed\n- Fixed <script>alert(1)</script>\n- [Changelog](https://github.com/owner/repo)'))
+      .toBe('<h3>What changed</h3><ul><li>Fixed &lt;script&gt;alert(1)&lt;/script&gt;</li><li><a href="https://github.com/owner/repo" target="_blank" rel="noopener noreferrer">Changelog</a></li></ul>');
+  });
+  it('turns embedded release image markup into a concise safe link label', () => {
+    expect(formatReleaseNotes('<img alt="Project X NFT" width="150px" src="https://raw.githubusercontent.com/owner/repo/image.svg" />'))
+      .toBe('<p><a href="https://raw.githubusercontent.com/owner/repo/image.svg" target="_blank" rel="noopener noreferrer">Project X NFT</a></p>');
+  });
   it('accepts release notes only as bounded text content', () => {
     expect(isCoreRelease({ ...release(), body: 'Changes\n- Fixes' })).toBe(true);
     expect(isCoreRelease({ ...release(), body: 42 })).toBe(false);

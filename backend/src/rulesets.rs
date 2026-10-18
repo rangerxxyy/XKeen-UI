@@ -214,19 +214,20 @@ fn is_mrs_provider(
         .get("format")
         .is_some_and(|format| format.eq_ignore_ascii_case("mrs"))
         || path.to_ascii_lowercase().ends_with(".mrs")
-        || provider
-            .get("url")
-            .is_some_and(|url| url.split(['?', '#']).next().unwrap_or(url).to_ascii_lowercase().ends_with(".mrs"))
+        || provider.get("url").is_some_and(|url| url_has_suffix(url, ".mrs"))
     {
         return true;
     }
-    if provider.get("format").is_some_and(|format| format.eq_ignore_ascii_case("yaml") || format.eq_ignore_ascii_case("text"))
+    if provider.get("format").is_some_and(|format| {
+        format.eq_ignore_ascii_case("yaml") || format.eq_ignore_ascii_case("text")
+    })
         || path.to_ascii_lowercase().ends_with(".yaml")
         || path.to_ascii_lowercase().ends_with(".yml")
         || path.to_ascii_lowercase().ends_with(".txt")
         || provider.get("url").is_some_and(|url| {
-            let url = url.split(['?', '#']).next().unwrap_or(url).to_ascii_lowercase();
-            url.ends_with(".yaml") || url.ends_with(".yml") || url.ends_with(".txt") || url.ends_with(".list")
+            [".yaml", ".yml", ".txt", ".list"]
+                .iter()
+                .any(|suffix| url_has_suffix(url, suffix))
         })
     {
         return false;
@@ -237,6 +238,14 @@ fn is_mrs_provider(
         && name
             .rsplit_once('@')
             .is_some_and(|(_, behavior)| behavior.eq_ignore_ascii_case("domain") || behavior.eq_ignore_ascii_case("ipcidr"))
+}
+
+fn url_has_suffix(url: &str, suffix: &str) -> bool {
+    url.split(['?', '#'])
+        .next()
+        .unwrap_or(url)
+        .to_ascii_lowercase()
+        .ends_with(suffix)
 }
 
 async fn convert_mrs(path: &str, behavior: &str) -> Result<String, String> {

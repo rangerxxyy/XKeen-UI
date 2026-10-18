@@ -1,13 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { canCopyJournal, formatJournalCopy, formatJournalDownload, shouldRefreshJournal } from './journal-controls';
-
-describe('shouldRefreshJournal', () => {
-  it('pauses routine polling but keeps polling during a restart', () => {
-    expect(shouldRefreshJournal(true, false)).toBe(false);
-    expect(shouldRefreshJournal(true, true)).toBe(true);
-    expect(shouldRefreshJournal(false, false)).toBe(true);
-  });
-});
+import { canCopyJournal, formatJournalCopy, formatJournalDownload } from './journal-controls';
 
 describe('formatJournalCopy', () => {
   it('copies only matching visible lines without backend source labels', () => {

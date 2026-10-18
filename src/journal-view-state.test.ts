@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { deduplicateRepeatedUiErrors, formatJournalTimestamp, getJournalViewState, renderJournalLoadingSkeleton, splitJournalLevel, stripLogSourceLabel } from './journal-view-state';
+import { deduplicateRepeatedUiErrors, formatJournalMessage, formatJournalTimestamp, getJournalViewState, renderJournalLoadingSkeleton, splitJournalLevel, stripLogSourceLabel } from './journal-view-state';
 
 describe('renderJournalLoadingSkeleton', () => {
   it('renders reserved journal rows rather than a centered spinner on first load', () => {
@@ -93,5 +93,21 @@ describe('splitJournalLevel', () => {
   it('reads severity from panel lifecycle metadata when the message has no level prefix', () => {
     expect(splitJournalLevel('component=xkeen action=restart', 'unix=42 level=ERROR component=xkeen action=restart'))
       .toEqual({ level: 'ERROR', message: 'component=xkeen action=restart' });
+  });
+});
+
+describe('formatJournalMessage', () => {
+  it('marks service start, stop, and Hybrid mode while preserving surrounding text', () => {
+    expect(formatJournalMessage('Прокси-клиент остановлен')).toEqual([
+      { text: 'Прокси-клиент ' }, { text: 'остановлен', tone: 'stopped' }, { text: '' },
+    ]);
+    expect(formatJournalMessage('Прокси-клиент запущен в режиме Hybrid')).toEqual([
+      { text: 'Прокси-клиент ' }, { text: 'запущен', tone: 'started' },
+      { text: ' в режиме ' }, { text: 'Hybrid', tone: 'mode' },
+    ]);
+  });
+
+  it('leaves unrelated messages as plain text', () => {
+    expect(formatJournalMessage('configuration loaded')).toEqual([{ text: 'configuration loaded' }]);
   });
 });

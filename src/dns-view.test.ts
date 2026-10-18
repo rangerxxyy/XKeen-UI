@@ -6,7 +6,7 @@ describe('DNS workspaces', () => {
     const view = renderDns(null, false, null, '', 'A');
     expect(view).toContain('dns-handoff-pane');
     expect(view).toContain('dns-mihomo-pane');
-    expect(view).toContain('Проверка DNS');
+    expect(view).toContain('DNS Diagnostics');
   });
 
   it('renders live router DNS status and a guarded transfer control', () => {
@@ -97,10 +97,13 @@ describe('DNS workspaces', () => {
       loading: false, error: null, busy: false,
     });
     expect(view).toContain('id="mihomo-dns-settings"');
-    expect(view).toContain('Правила DNS');
-    expect(view).toContain('Используются для обычных запросов устройств.');
-    expect(view).toContain('Назначают отдельные резолверы доменам или правилам.');
-    expect(view).toContain('Проверка DNS');
+    expect(view).toContain('Enhanced Mode');
+    expect(view).toContain('Nameserver Policy');
+    expect(view).toContain('DNS-серверы, используемые для обычных запросов устройств');
+    expect(view).toContain('class="dns-info"');
+    expect(view).toContain('реальные IP в ответах');
+    expect(view).toContain('поддельные IP в ответах');
+    expect(view).toContain('DNS Diagnostics');
   });
 
   it('warns when fake-ip is used with a blacklist filter mode', () => {

@@ -1,4 +1,22 @@
 export type JournalViewState = 'loading' | 'error' | 'cleared' | 'data' | 'empty';
+export type JournalMessageSegment = { text: string; tone?: 'stopped' | 'started' | 'mode' };
+
+export function formatJournalMessage(message: string): JournalMessageSegment[] {
+  const stopped = message.match(/^(\s*Прокси-клиент\s+)(остановлен)(.*)$/i);
+  if (stopped) return [
+    { text: stopped[1] ?? '' },
+    { text: stopped[2] ?? '', tone: 'stopped' },
+    { text: stopped[3] ?? '' },
+  ];
+  const started = message.match(/^(\s*Прокси-клиент\s+)(запущен)(\s+в режиме\s+)(.+)$/i);
+  if (started) return [
+    { text: started[1] ?? '' },
+    { text: started[2] ?? '', tone: 'started' },
+    { text: started[3] ?? '' },
+    { text: started[4] ?? '', tone: 'mode' },
+  ];
+  return [{ text: message }];
+}
 
 export function renderJournalLoadingSkeleton(): string {
   const row = (index: number) => `<div class="journal-skeleton-row"><span class="skeleton-block is-time"></span><span class="skeleton-block is-level"></span><span class="skeleton-block is-message message-${index % 3}"></span></div>`;

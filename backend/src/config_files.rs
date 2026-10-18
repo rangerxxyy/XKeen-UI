@@ -189,8 +189,11 @@ fn user_file_path(file: &str) -> Option<&'static str> {
         "port_exclude" => Some("/opt/etc/xkeen/port_exclude.lst"),
         "port_proxying" => Some("/opt/etc/xkeen/port_proxying.lst"),
         "xkeen" => Some("/opt/etc/xkeen/xkeen.json"),
+        "xray_log" => Some("/opt/etc/xray/configs/01_log.json"),
+        "xray_inbounds" => Some("/opt/etc/xray/configs/03_inbounds.json"),
         "xray_outbounds" => Some("/opt/etc/xray/configs/04_outbounds.json"),
         "xray_routing" => Some("/opt/etc/xray/configs/05_routing.json"),
+        "xray_policy" => Some("/opt/etc/xray/configs/06_policy.json"),
         _ => None,
     }
 }
@@ -434,7 +437,7 @@ async fn save_list(
     content: &str,
     expected: &str,
 ) -> Result<String, String> {
-    if matches!(file, "xkeen" | "xray_outbounds" | "xray_routing")
+    if file == "xkeen" || file.starts_with("xray_")
         && !matches!(
             serde_json::from_str::<serde_json::Value>(content),
             Ok(serde_json::Value::Object(_))
@@ -1077,12 +1080,24 @@ mod tests {
         );
         assert_eq!(user_file_path("xkeen"), Some("/opt/etc/xkeen/xkeen.json"));
         assert_eq!(
+            user_file_path("xray_log"),
+            Some("/opt/etc/xray/configs/01_log.json")
+        );
+        assert_eq!(
+            user_file_path("xray_inbounds"),
+            Some("/opt/etc/xray/configs/03_inbounds.json")
+        );
+        assert_eq!(
             user_file_path("xray_outbounds"),
             Some("/opt/etc/xray/configs/04_outbounds.json")
         );
         assert_eq!(
             user_file_path("xray_routing"),
             Some("/opt/etc/xray/configs/05_routing.json")
+        );
+        assert_eq!(
+            user_file_path("xray_policy"),
+            Some("/opt/etc/xray/configs/06_policy.json")
         );
         assert_eq!(user_file_path("../config.yaml"), None);
     }

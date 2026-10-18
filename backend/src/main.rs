@@ -1234,7 +1234,10 @@ fn web_root() -> PathBuf {
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     let args: Vec<String> = env::args().skip(1).collect();
-    if args.first().is_some_and(|arg| arg == "--internal-xkeen-output") {
+    if args
+        .first()
+        .is_some_and(|arg| arg == "--internal-xkeen-output")
+    {
         if args.len() != 2 {
             return Err("invalid internal output arguments".into());
         }

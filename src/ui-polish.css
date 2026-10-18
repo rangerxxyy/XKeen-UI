@@ -1,12 +1,27 @@
 :root { --app-shell-width:1280px; }
+:root {
+  --blue:#a78bfa;
+  --cyan:#b39cf7;
+  --violet:#9b7af2;
+  --surface:#111126;
+  --surface-raised:#17172f;
+  --stroke:#353052;
+}
 .app-shell { max-width:1280px; padding-inline:12px; }
+.connection-sort { display:inline-flex; align-items:center; gap:5px; padding:0; border:0; color:inherit; background:transparent; font:inherit; letter-spacing:inherit; text-transform:inherit; cursor:pointer; }
+.connection-sort span { color:#7887a0; font-size:11px; transition:color .14s ease,transform .14s ease; }
+.connection-sort:hover,.connection-sort:focus-visible { color:#d8c8ff; outline:none; }
+.connection-table th[aria-sort="ascending"] .connection-sort span,.connection-table th[aria-sort="descending"] .connection-sort span { color:#b59aff; }
+.connection-sort:focus-visible { box-shadow:0 0 0 2px #a78bfa70; border-radius:4px; }
 .connection-route-inner { display:flex; align-items:center; gap:7px; min-width:0; white-space:nowrap; }
 .connection-route-inner .connection-chain { display:block; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
 .connection-route-inner .connection-app-icon { display:inline-flex; flex:0 0 16px; align-items:center; justify-content:center; margin:0; }
+.connection-app-icon.is-telegram { color:#55b8e8; background:#102b3a; }
+.connection-app-icon.is-telegram svg { width:13px; height:13px; fill:currentColor; }
 .connection-table td { height:37px; font-size:12px; font-weight:450; }
 .connection-table .connection-host { font-weight:550; }
 .connection-table .connection-source,.connection-table .connection-time { color:var(--muted); }
-.app-shell .proxy-health.proxy-ping-value { border:0; background:transparent; box-shadow:none; border-radius:6px; min-width:30px; padding:4px 5px; font-size:12px; font-weight:600; font-variant-numeric:tabular-nums; }
+.app-shell .proxy-health.proxy-ping-value { border:0; background:transparent; box-shadow:none; border-radius:6px; min-width:36px; padding:4px 6px; font-size:15px; font-weight:700; font-variant-numeric:tabular-nums; }
 .app-shell .proxy-health.proxy-ping-value:hover { background:color-mix(in srgb,currentColor 9%,transparent); }
 .app-shell .proxy-health.proxy-ping-value:not(.is-alive):not(.is-dead) { color:#fff; }
 .app-shell .proxy-health.is-dead { color:var(--danger,#ff7187); }
@@ -24,3 +39,35 @@
 @keyframes service-sweep { from { background-position:180% 0; } to { background-position:-80% 0; } }
 @keyframes service-breathe { 50% { opacity:.35; box-shadow:0 0 10px var(--cyan,#5796ff); } }
 @media(prefers-reduced-motion:reduce) { .top-status-cluster.is-xkeen-busy::after,.is-xkeen-busy .connection-led { animation:none; } }
+
+.topbar { border-color:#393257; background:linear-gradient(110deg,#17152a,#111323 58%,#18152c); }
+.top-status-cluster { gap:10px; }
+.top-status { gap:10px; }
+.top-status strong { color:#eee9ff; font-size:12px; font-weight:650; }
+.top-status small { display:flex; align-items:center; gap:8px; color:#b9b0d5; font-size:10px; font-variant-numeric:tabular-nums; }
+.resource-metric { display:inline-flex; align-items:center; gap:4px; white-space:nowrap; }
+.resource-metric svg { width:12px; height:12px; flex:0 0 12px; fill:none; stroke:#b49cf8; stroke-width:1.4; stroke-linecap:round; stroke-linejoin:round; }
+.resource-metric-separator { color:#71668f; }
+.header-service-action { width:33px; height:33px; border-radius:9px; }
+.header-service-restart { border-color:#65519b; color:#cfbfff; background:#211a37; }
+.header-service-restart:hover:not(:disabled) { border-color:#a68aed; color:#fff; background:#36265a; }
+.header-service-stop { color:#ff8a9a; border-color:#714050; background:#291722; }
+.header-service-stop:hover:not(:disabled) { border-color:#de6d89; background:#472032; }
+.is-xkeen-busy .connection-led { box-shadow:0 0 12px #a78bfa; }
+.top-status-cluster.is-xkeen-busy::after { background:linear-gradient(110deg,transparent,#a78bfa25,transparent); }
+.top-status-cluster.is-xkeen-busy .top-status,.top-status-cluster.is-xkeen-busy .top-status strong { color:#e2d5ff; }
+.header-service-controls[aria-busy="true"] .header-service-action { border-color:#8e73cb; color:#e2d5ff; }
+.service-control-spinner { border-top-color:#d0bcff; box-shadow:0 0 0 3px #a78bfa24; }
+.config-file-nav { background:#211d35; border:1px solid #393052; }
+.config-file-nav .config-file-tab { min-height:36px; padding-inline:12px; color:#c2b9dc; font:650 13px/1.2 var(--font-ui); letter-spacing:0; transition:color .16s ease,background .16s ease,border-color .16s ease,transform .16s ease; }
+.config-file-nav .config-file-tab:hover { color:#fff; border-color:#55447d; background:#31264d; }
+.config-file-nav .config-file-tab.selected { color:#fff; border-color:#7158aa; background:linear-gradient(145deg,#39295d,#26203f); box-shadow:inset 0 0 0 1px #a78bfa20,0 2px 7px #08061155; }
+.config-file-context { border-bottom-color:#3a3153; background:linear-gradient(90deg,#19162c,#121424); }
+.config-file-context strong { color:#f0eaff; font:700 13px/1.4 "JetBrains Mono Variable",monospace; }
+.config-file-context #editor-file-description { color:#c0b7d9; }
+.config-layout .editor-statusbar { border-top-color:#3c3156; background:linear-gradient(90deg,#1a172e,#131525); }
+@media(max-width:600px) {
+  .top-status small { gap:6px; max-width:290px; font-size:9px; }
+  .resource-metric svg { width:11px; height:11px; flex-basis:11px; }
+  .config-file-nav .config-file-tab { min-height:35px; padding-inline:10px; font-size:12px; }
+}

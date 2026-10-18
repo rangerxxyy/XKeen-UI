@@ -71,9 +71,18 @@ function setEditorIdentity(routerMode: boolean, activeCore: 'mihomo' | 'xray' | 
   const file = currentFile();
   const filename = document.querySelector<HTMLElement>('#editor-filename');
   const language = document.querySelector<HTMLElement>('#editor-language');
+  const description = document.querySelector<HTMLElement>('#editor-file-description');
   const hint = document.querySelector<HTMLElement>('#editor-file-hint');
   if (filename) filename.textContent = file.filename;
   if (language) language.textContent = file.format === 'yaml' ? 'YAML · Mihomo' : file.format === 'text' ? 'TEXT · XKeen' : `${file.format.toUpperCase()} · ${file.id === 'xkeen' ? 'XKeen' : 'Xray'}`;
+  const fileDescriptions: Record<string, string> = {
+    config: 'Основные правила и параметры Mihomo', xray_json: 'Основные настройки ядра Xray', xray_routing: 'Правила маршрутизации и выбора outbound в Xray',
+    ip_exclude: 'IP-адреса и подсети, которые XKeen пропускает мимо прокси',
+    port_exclude: 'Порты, исключённые из обработки XKeen',
+    port_proxying: 'Порты, трафик которых направляется через прокси',
+    xkeen: 'Параметры запуска XKeen и системной маршрутизации',
+  };
+  if (description) description.textContent = fileDescriptions[file.id] ?? 'Файл конфигурации XKeen';
   if (hint) hint.textContent = 'Локальный черновик';
   document.querySelectorAll<HTMLButtonElement>('[data-config-file]').forEach((button) => {
     const selected = button.dataset.configFile === file.id;

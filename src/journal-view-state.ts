@@ -1,4 +1,23 @@
 export type JournalViewState = 'loading' | 'error' | 'cleared' | 'data' | 'empty';
+export type JournalLevelFilter = 'all' | 'error' | 'warning' | 'info';
+
+export function deduplicateRepeatedUiErrors(lines: string[]): string[] {
+  const seenPollErrors = new Set<string>();
+  return lines.filter((line) => {
+    if (!/component=xkeen-ui\s+source=ui\s+message=Данные не обновились:/i.test(line)) return true;
+    if (seenPollErrors.has(line)) return false;
+    seenPollErrors.add(line);
+    return true;
+  });
+}
+
+export function matchesJournalLevel(filter: JournalLevelFilter, level: string | null): boolean {
+  if (filter === 'all') return true;
+  const normalized = level?.toUpperCase();
+  if (filter === 'error') return normalized === 'ERROR' || normalized === 'FATAL';
+  if (filter === 'warning') return normalized === 'WARN' || normalized === 'WARNING';
+  return normalized === 'INFO' || normalized === 'DEBUG';
+}
 
 export function stripLogSourceLabel(line: string): string {
   return line.replace(/\s+\[(?:XKeen|Xray|XKeen UI)\]\s*$/, '');

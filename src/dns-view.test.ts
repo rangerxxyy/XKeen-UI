@@ -13,7 +13,11 @@ describe('DNS workspaces', () => {
     const state = { dnsOverride: false, mihomoDns: false, portListener: 'dnsmasq', nameServers: ['77.88.8.8'], detail: 'Состояние получено' };
     const view = renderDns(null, false, null, '', 'A', { status: state, loading: false, error: null, busy: false, confirm: false });
     expect(view).toContain('DNS Override');
+    expect(view).toContain('Слушатель 53 порта');
+    expect(view).toContain('Статус DNS');
     expect(view).toContain('Включить управление DNS');
+    expect(view).toContain('type="checkbox" role="switch"');
+    expect(view).not.toContain('Router DNS Servers');
     expect(view).toContain('Передача DNS через Mihomo');
     expect(view).toContain('Статические IPv6 DNS и DoH/DoT не меняются и могут обходить его.');
   });
@@ -29,21 +33,33 @@ describe('DNS workspaces', () => {
   it('keeps stop-protection active when router override remains but Mihomo DNS is off', () => {
     const state = { dnsOverride: true, mihomoDns: false, portListener: null, nameServers: ['77.88.8.8'], detail: 'Состояние получено' };
     const view = renderDns(null, false, null, '', 'A', { status: state, loading: false, error: null, busy: false, confirm: false });
-    expect(view).toContain('Нужно проверить');
-    expect(view).toContain('Вернуть DNS KeeneticOS');
+    expect(view).toContain('Состояния DNS не совпадают');
+    expect(view).toMatch(/id="dns-management-toggle"[^>]*checked/);
     expect(view).toContain('Состояния DNS не совпадают');
   });
 
   it('requires an explicit second step before changing router DNS', () => {
     const view = renderDns(null, false, null, '', 'A');
-    expect(view).toContain('Статус неизвестен');
-    expect(view).toContain('id="dns-management-toggle" type="button" disabled');
+    expect(view).toContain('Повторить проверку');
+    expect(view).toContain('id="dns-management-toggle"');
+    expect(view).toMatch(/id="dns-management-toggle"[^>]*type="checkbox"[^>]*role="switch"[^>]*disabled/);
+  });
+
+  it('reflects the actual DNS handoff state in the switch and active labels', () => {
+    const state = { dnsOverride: true, mihomoDns: true, portListener: 'mihomo', nameServers: [], detail: 'Состояние получено' };
+    const view = renderDns(null, false, null, '', 'A', { status: state, loading: false, error: null, busy: false, confirm: false });
+    expect(view).toMatch(/id="dns-management-toggle"[^>]*type="checkbox"[^>]*role="switch"[^>]*checked/);
+    expect(view).toContain('<strong class="state-pill state-running">Активно</strong>');
+    expect(view).toContain('<strong class="state-pill">mihomo</strong>');
+    expect(view).not.toContain('Вернуть DNS KeeneticOS');
   });
 
   it('explains that Keenetic DNS is restored before Mihomo DNS is disabled', () => {
     const state = { dnsOverride: true, mihomoDns: true, portListener: 'mihomo', nameServers: ['77.88.8.8'], detail: 'Состояние получено' };
     const view = renderDns(null, false, null, '', 'A', { status: state, loading: false, error: null, busy: false, confirm: true });
     expect(view).toContain('Сначала KeeneticOS вернёт сохранённые DNS-серверы. Затем выключится DNS в Mihomo.');
+    expect(view).toMatch(/id="dns-management-toggle"[^>]*checked[^>]*disabled/);
+    expect(view).toContain('Подтвердить возврат DNS');
   });
 
   it('shows the DNS handoff prerequisites before enabling', () => {
@@ -113,11 +129,11 @@ describe('DNS workspaces', () => {
       loading: false, error: null, busy: false,
     });
     const explanations = [...view.matchAll(/class="dns-info"[^>]*aria-label="([^"]+)"/g)].map((match) => match[1]);
-    for (const label of ['DNS Override', 'DNS Mihomo', 'Port 53', 'Router DNS Servers', 'DNS management', 'Enhanced Mode', 'Default Nameserver', 'Nameserver', 'Nameserver Policy', 'Proxy Server Nameserver', 'Fallback', 'Domain or IP', 'Record Type']) {
+    for (const label of ['DNS Override', 'DNS Mihomo', 'Слушатель 53 порта', 'DNS management', 'Enhanced Mode', 'Default Nameserver', 'Nameserver', 'Nameserver Policy', 'Proxy Server Nameserver', 'Fallback', 'Domain or IP', 'Record Type']) {
       expect(explanations.some((description) => description?.includes(label)), label).toBe(true);
     }
-    expect(explanations).toHaveLength(13);
-    expect(view.match(/class="dns-info"[^>]*tabindex="0"/g)).toHaveLength(13);
+    expect(explanations).toHaveLength(12);
+    expect(view.match(/class="dns-info"[^>]*tabindex="0"/g)).toHaveLength(12);
   });
 
   it('warns when fake-ip is used with a blacklist filter mode', () => {

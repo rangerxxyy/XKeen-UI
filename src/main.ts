@@ -21,6 +21,7 @@ import { readUiPreferences, validPingUrl, writeUiPreferences, type UiPreferences
 import { deduplicateRepeatedUiErrors, formatJournalMessage, formatJournalTimestamp, getJournalViewState, renderJournalLoadingSkeleton, splitJournalLevel, stripLogSourceLabel } from './journal-view-state';
 import { getJournalScrollTop, getNewJournalLines, hasJournalLinesChanged } from './journal-scroll';
 import { canCopyJournal, formatJournalCopy, formatJournalDownload } from './journal-controls';
+import { hideClearedJournalLines, rememberClearedJournal } from './journal-clear';
 import { SETTINGS_TABS, type SettingsTabId } from './settings-tabs';
 import { bindSelectorSortControl, renderSelectorSortControl } from './selector-sort-control';
 import { bindPingUrlControl, renderPingUrlControl } from './ping-url-control';
@@ -207,7 +208,7 @@ function renderConfiguration(): string {
 }
 
 function renderJournal(): string {
-  return `<section class="journal-panel ${logExpanded ? 'is-expanded' : ''}" aria-label="Журнал событий"><header class="journal-heading"><div class="journal-title"><h2>Журнал</h2><span id="journal-live" class="journal-live" ${xkeenControlBusy || configApplyBusy ? '' : 'hidden'}><i aria-hidden="true"></i> XKeen запускается</span></div><div class="journal-tools"><label class="journal-filter"><span aria-hidden="true">⌕</span><input id="journal-filter" type="search" placeholder="Фильтр" aria-label="Фильтр журнала" value="${escapeHtml(logFilter)}"></label><select id="journal-file" aria-label="Файл журнала">${logFiles.map((file) => `<option value="${file.id}" ${selectedLog === file.id ? 'selected' : ''}>${file.label}</option>`).join('')}</select><button class="journal-action-button" id="journal-copy" type="button" title="Копировать видимые записи" aria-label="Копировать видимые записи"><span aria-hidden="true">▢</span><span class="journal-action-label">Копировать</span></button><button class="journal-action-button" id="journal-download" type="button" title="Скачать видимые записи" aria-label="Скачать видимые записи"><span aria-hidden="true">⇩</span><span class="journal-action-label">Скачать</span></button><button class="journal-icon-button" id="journal-clear" type="button" title="Очистить отображение" aria-label="Очистить отображение">♲</button><button class="journal-icon-button" id="journal-expand" type="button" title="Развернуть журнал" aria-label="Развернуть журнал" aria-pressed="${logExpanded}">${logExpanded ? '⤢' : '⛶'}</button></div></header><div class="journal-body" id="journal-body" aria-live="off"></div><span class="sr-only" id="journal-announcement" role="status" aria-live="polite"></span></section>`;
+  return `<section class="journal-panel ${logExpanded ? 'is-expanded' : ''}" aria-label="Журнал событий"><header class="journal-heading"><div class="journal-title"><h2>Журнал</h2><span id="journal-live" class="journal-live" ${xkeenControlBusy || configApplyBusy ? '' : 'hidden'}><i aria-hidden="true"></i> XKeen запускается</span></div><div class="journal-tools"><label class="journal-filter"><span aria-hidden="true">⌕</span><input id="journal-filter" type="search" placeholder="Фильтр" aria-label="Фильтр журнала" value="${escapeHtml(logFilter)}"></label><select id="journal-file" aria-label="Файл журнала">${logFiles.map((file) => `<option value="${file.id}" ${selectedLog === file.id ? 'selected' : ''}>${file.label}</option>`).join('')}</select><button class="journal-action-button" id="journal-copy" type="button" title="Копировать видимые записи" aria-label="Копировать видимые записи"><span aria-hidden="true">▢</span><span class="journal-action-label">Копировать</span></button><button class="journal-action-button" id="journal-download" type="button" title="Скачать видимые записи" aria-label="Скачать видимые записи"><span aria-hidden="true">⇩</span><span class="journal-action-label">Скачать</span></button><button class="journal-icon-button" id="journal-clear" type="button" title="Скрыть старые записи в этом браузере" aria-label="Очистить журнал">♲</button><button class="journal-icon-button" id="journal-expand" type="button" title="Развернуть журнал" aria-label="Развернуть журнал" aria-pressed="${logExpanded}">${logExpanded ? '⤢' : '⛶'}</button></div></header><div class="journal-body" id="journal-body" aria-live="off"></div><span class="sr-only" id="journal-announcement" role="status" aria-live="polite"></span></section>`;
 }
 
 function setJournalRealtime(active: boolean): void {
@@ -327,12 +328,14 @@ async function loadSystemLog(): Promise<void> {
   try {
     const previousLog = logData;
     const previousLines = previousLog?.lines ?? null;
-    const nextLog = await getSystemLog(selectedLog, AbortSignal.any([controller.signal, AbortSignal.timeout(12_000)]));
+    const fetchedLog = await getSystemLog(selectedLog, AbortSignal.any([controller.signal, AbortSignal.timeout(12_000)]));
+    const nextLog = { ...fetchedLog, lines: hideClearedJournalLines(selectedLog, fetchedLog.lines) };
     shouldRedraw = hasJournalLinesChanged(previousLines, nextLog.lines)
       || previousLog?.file !== nextLog.file
       || previousLog?.truncated !== nextLog.truncated;
     logNewLines = new Set(previousLines ? getNewJournalLines(previousLines, nextLog.lines) : []);
     logData = nextLog;
+    if (nextLog.lines.length > 0) logCleared = false;
     logError = null;
   } catch (error) {
     if (error instanceof DOMException && error.name === 'AbortError') return;
@@ -386,7 +389,9 @@ function bindJournal(): void {
     showToast('Журнал скачан', 'success');
   });
   document.querySelector<HTMLButtonElement>('#journal-clear')?.addEventListener('click', () => {
+    if (logData) rememberClearedJournal(selectedLog, logData.lines);
     logCleared = true;
+    if (logData) logData = { ...logData, lines: [] };
     drawJournal();
   });
   document.querySelector<HTMLButtonElement>('#journal-expand')?.addEventListener('click', () => {
@@ -623,7 +628,7 @@ async function runDnsQuery(): Promise<void> {
 
 function bindDnsManagementControls(root: ParentNode): void {
   root.querySelector<HTMLButtonElement>('#dns-management-refresh')?.addEventListener('click', () => void loadRouterDnsStatus());
-  root.querySelector<HTMLButtonElement>('#dns-management-toggle')?.addEventListener('click', () => {
+  root.querySelector<HTMLInputElement>('#dns-management-toggle')?.addEventListener('change', () => {
     dnsManagementConfirm = true;
     render();
   });

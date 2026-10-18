@@ -27,6 +27,7 @@ import { bindPingUrlControl, renderPingUrlControl } from './ping-url-control';
 import { SourceNameResolver } from './source-names';
 import { renderResourceMetrics } from './resource-metrics';
 import { shouldReportUiError } from './ui-error-dedupe';
+import { sortMihomoConnections, type ConnectionSort, type ConnectionSortKey } from './connection-sort';
 
 type Page = 'selectors' | 'connections' | 'configuration' | 'dns';
 
@@ -53,6 +54,7 @@ let selectorsLoading = true;
 let selectorsError: string | null = null;
 let connections: MihomoConnections | null = null;
 let connectionSourceNames: Record<string, string> = {};
+let connectionSort: ConnectionSort = { key: 'start', direction: 'descending' };
 const sourceNameResolver = new SourceNameResolver(() => getRouterDeviceList());
 let connectionsLoading = true;
 let connectionsError: string | null = null;
@@ -386,7 +388,7 @@ function render(): void {
   }
   if (activePage !== 'configuration') yamlEditorModule?.unmountYamlEditor();
   const pageContent = activePage === 'selectors' ? renderSelectors(visibleSelectors(), selectorsLoading, selectorsError)
-    : activePage === 'connections' ? renderConnections(connections, connectionsLoading, connectionsError, uiPreferences.showConnectionSource, connectionSourceNames)
+    : activePage === 'connections' ? renderConnections(connections, connectionsLoading, connectionsError, uiPreferences.showConnectionSource, connectionSourceNames, connectionSort)
         : activePage === 'dns' ? renderDns(dnsResult, dnsLoading, dnsError, dnsQueryName, dnsQueryType, {
           status: dnsManagementStatus, loading: dnsManagementLoading, error: dnsManagementError,
           busy: dnsManagementBusy, confirm: dnsManagementConfirm,
@@ -686,6 +688,31 @@ function bindMihomoInteractions(): void {
     button.addEventListener('click', () => void closeConnectionFromUi(button));
   });
   document.querySelector<HTMLButtonElement>('#close-all-connections')?.addEventListener('click', () => void closeAllConnectionsFromUi());
+  document.querySelectorAll<HTMLButtonElement>('[data-connection-sort]').forEach((button) => {
+    button.addEventListener('click', () => {
+      const key = button.dataset.connectionSort;
+      if (!key || !['route', 'host', 'network', 'source', 'traffic', 'start'].includes(key)) return;
+      const typedKey = key as ConnectionSortKey;
+      connectionSort = connectionSort.key === typedKey
+        ? { key: typedKey, direction: connectionSort.direction === 'ascending' ? 'descending' : 'ascending' }
+        : { key: typedKey, direction: typedKey === 'start' ? 'descending' : 'ascending' };
+      const rows = new Map(Array.from(document.querySelectorAll<HTMLTableRowElement>('.connection-table tbody tr'), (row) => [row.dataset.connectionId ?? '', row]));
+      const body = document.querySelector<HTMLTableSectionElement>('.connection-table tbody');
+      if (body) {
+        for (const connection of sortMihomoConnections(connections?.connections ?? [], connectionSort, uiPreferences.showConnectionSource ? connectionSourceNames : {})) {
+          const row = rows.get(connection.id);
+          if (row) body.append(row);
+        }
+      }
+      document.querySelectorAll<HTMLTableCellElement>('.connection-table thead th[aria-sort]').forEach((heading) => {
+        const headingButton = heading.querySelector<HTMLButtonElement>('[data-connection-sort]');
+        const selected = headingButton?.dataset.connectionSort === connectionSort.key;
+        heading.setAttribute('aria-sort', selected ? connectionSort.direction : 'none');
+        const arrow = headingButton?.querySelector<HTMLElement>('span');
+        if (arrow) arrow.textContent = selected ? (connectionSort.direction === 'ascending' ? '↑' : '↓') : '↕';
+      });
+    });
+  });
   document.querySelector<HTMLInputElement>('#connection-filter')?.addEventListener('input', (event) => {
     const query = (event.currentTarget as HTMLInputElement).value.trim().toLocaleLowerCase();
     let visible = 0;

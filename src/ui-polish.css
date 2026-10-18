@@ -8,6 +8,11 @@
   --stroke:#353052;
 }
 .app-shell { max-width:1280px; padding-inline:12px; }
+.connection-sort { display:inline-flex; align-items:center; gap:5px; padding:0; border:0; color:inherit; background:transparent; font:inherit; letter-spacing:inherit; text-transform:inherit; cursor:pointer; }
+.connection-sort span { color:#7887a0; font-size:11px; transition:color .14s ease,transform .14s ease; }
+.connection-sort:hover,.connection-sort:focus-visible { color:#d8c8ff; outline:none; }
+.connection-table th[aria-sort="ascending"] .connection-sort span,.connection-table th[aria-sort="descending"] .connection-sort span { color:#b59aff; }
+.connection-sort:focus-visible { box-shadow:0 0 0 2px #a78bfa70; border-radius:4px; }
 .connection-route-inner { display:flex; align-items:center; gap:7px; min-width:0; white-space:nowrap; }
 .connection-route-inner .connection-chain { display:block; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
 .connection-route-inner .connection-app-icon { display:inline-flex; flex:0 0 16px; align-items:center; justify-content:center; margin:0; }

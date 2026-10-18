@@ -131,14 +131,14 @@ describe('renderConnections', () => {
     };
     const html = renderConnections(data, false, null);
     expect(html).toContain('class="connection-table"');
-    expect(html).toContain('<tbody><tr data-search=');
+    expect(html).toContain('<tbody><tr data-connection-id="conn-1" data-search=');
     expect(html).toContain('example.com:443');
     expect(html).toContain('title="Сетевой протокол"');
     expect(html).toContain('192.168.1.20');
     expect(html).toContain('is-upload');
     expect(html).toContain('is-download');
     expect(html).toContain('class="connection-count-pill"');
-    expect(html).toContain('Хост <span>↕</span>');
+    expect(html).toContain('data-connection-sort="host"');
     expect(html).toContain('class="connection-route-cell"');
     expect(html).not.toContain('connection-card');
   });
@@ -153,6 +153,7 @@ describe('renderConnections', () => {
     };
     const html = renderConnections(data, false, null, true, { '192.168.1.20': 'Office laptop' });
     expect(html).toContain('title="Office laptop (192.168.1.20:53321)">Office laptop</td>');
+    expect(html).toContain('data-search="example.com:443 office laptop 192.168.1.20:53321');
     expect(html).not.toContain('>browser.exe</td>');
   });
 

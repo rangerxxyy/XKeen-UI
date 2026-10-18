@@ -1,4 +1,5 @@
 import type { MihomoConnection, MihomoConnections, MihomoPingResult, MihomoSelector } from './api';
+import { displayedConnectionChains, getConnectionHost, sortMihomoConnections, type ConnectionSort, type ConnectionSortKey } from './connection-sort';
 import { parseDocument } from 'yaml';
 
 export function orderSelectorsByConfig(groups: MihomoSelector[], content: string): MihomoSelector[] {
@@ -118,17 +119,10 @@ export function renderSelectors(groups: MihomoSelector[], loading: boolean, erro
 }
 
 function connectionRow(connection: MihomoConnection, showSourceName = false, sourceNames: Record<string, string> = {}): string {
-  const rawHost = connection.host;
-  const host = rawHost ? connection.destinationPort && !/\]:\d+$/.test(rawHost) && !/^[^:]+:\d+$/.test(rawHost)
-    ? `${rawHost.includes(':') && !rawHost.startsWith('[') ? `[${rawHost}]` : rawHost}:${connection.destinationPort}` : rawHost
-    : connection.destination || 'Адрес недоступен';
-  const displayedChains = connection.chains
-    .filter((chain): chain is string => typeof chain === 'string' && chain.trim().length > 0)
-    .map((chain) => chain.trim())
-    .reverse();
+  const host = getConnectionHost(connection);
+  const displayedChains = displayedConnectionChains(connection);
   const route = displayedChains.length ? displayedChains.join(' › ') : 'Маршрут неизвестен';
   const categories = displayedChains.map((chain) => chain.toLowerCase());
-  const search = [host, connection.source, route, connection.rule, connection.rulePayload, connection.process].join(' ').toLocaleLowerCase();
   const network = connection.network.toUpperCase() || '—';
   const startedAt = Date.parse(connection.start);
   const elapsedSeconds = Number.isFinite(startedAt) ? Math.max(0, Math.floor((Date.now() - startedAt) / 1000)) : null;
@@ -136,6 +130,7 @@ function connectionRow(connection: MihomoConnection, showSourceName = false, sou
   const sourceName = showSourceName && connection.sourceIp ? sourceNames[connection.sourceIp] : undefined;
   const source = sourceName || connection.source || 'Неизвестное устройство';
   const sourceTitle = sourceName ? `${sourceName} (${connection.source})` : source;
+  const search = [host, source, connection.source, route, connection.rule, connection.rulePayload, connection.process].join(' ').toLocaleLowerCase();
   const appIcon = categories.some((name) => name.includes('telegram')) ? 'telegram'
     : categories.some((name) => name.includes('youtube')) ? 'youtube'
       : categories.some((name) => name.includes('github')) ? 'github'
@@ -149,7 +144,7 @@ function connectionRow(connection: MihomoConnection, showSourceName = false, sou
     : appGlyph;
   const routeIcon = appIcon ? `<span class="connection-app-icon is-${appIcon}" aria-hidden="true">${routeGlyph}</span>` : '';
   const chain = `<span class="connection-chain" title="${escapeHtml(route)}">${displayedChains.length ? displayedChains.map(renderProxyName).join(' <span aria-hidden="true">›</span> ') : escapeHtml(route)}</span>`;
-  return `<tr data-search="${escapeHtml(search)}">
+  return `<tr data-connection-id="${escapeHtml(connection.id)}" data-search="${escapeHtml(search)}">
     <td class="connection-route-cell${routeIcon ? ' has-app-icon' : ''}"><span class="connection-route-inner">${routeIcon}${chain}</span></td>
     <td class="connection-host" title="${escapeHtml(host)}"><button class="connection-inspect" type="button" data-inspect-connection="${escapeHtml(connection.id)}" aria-label="Подробности соединения ${escapeHtml(host)}">${escapeHtml(host)}</button></td>
     <td class="connection-network" title="Сетевой протокол">${escapeHtml(network)}</td>
@@ -160,12 +155,26 @@ function connectionRow(connection: MihomoConnection, showSourceName = false, sou
   </tr>`;
 }
 
-export function renderConnections(data: MihomoConnections | null, loading: boolean, error: string | null, showSourceName = false, sourceNames: Record<string, string> = {}): string {
+function connectionSortHeading(key: ConnectionSortKey, label: string, sort: ConnectionSort): string {
+  const selected = sort.key === key;
+  const arrow = selected ? sort.direction === 'ascending' ? '↑' : '↓' : '↕';
+  return `<th scope="col" aria-sort="${selected ? sort.direction : 'none'}"><button class="connection-sort" type="button" data-connection-sort="${key}" aria-label="Сортировать по полю: ${label}">${label}<span aria-hidden="true">${arrow}</span></button></th>`;
+}
+
+export function renderConnections(
+  data: MihomoConnections | null,
+  loading: boolean,
+  error: string | null,
+  showSourceName = false,
+  sourceNames: Record<string, string> = {},
+  sort: ConnectionSort = { key: 'start', direction: 'descending' },
+): string {
   const state = loadState(loading, error, 'соединения');
   const connections = data?.connections ?? [];
+  const sortedConnections = sortMihomoConnections(connections, sort, showSourceName ? sourceNames : {});
   const udpCount = connections.filter((connection) => connection.network.toLowerCase() === 'udp').length;
   return `${state || `<section class="connections-panel"><div class="connections-toolbar"><div class="connection-counts"><span class="connection-count-pill" title="Активные соединения"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M1 8h3l2-5 3 10 2-6h4"/></svg><strong>${connections.length}</strong></span><span class="connection-count-pill is-secondary" title="UDP-соединения"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M2 4h4l4 8h4M2 12h4l4-8h4"/></svg><strong>${udpCount}</strong></span></div><label class="connection-search"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M2 3h12L9 8v4l-2 1V8L2 3Z"/></svg><input id="connection-filter" type="search" placeholder="Фильтр" aria-label="Фильтр соединений"><kbd>⌘</kbd></label><button class="connection-close-all" id="close-all-connections" ${connections.length ? '' : 'disabled'}><span aria-hidden="true">⤫</span> Закрыть все</button></div>
-    <div class="connection-table-wrap"><table class="connection-table"><thead><tr><th>Цепочка <span>↕</span></th><th>Хост <span>↕</span></th><th>Тип <span>↕</span></th><th>Источник <span>↕</span></th><th>Трафик <span>↕</span></th><th>Время <span class="is-sorted">↓</span></th><th aria-label="Действия"></th></tr></thead><tbody>${connections.map((connection) => connectionRow(connection, showSourceName, sourceNames)).join('')}</tbody></table>
+    <div class="connection-table-wrap"><table class="connection-table"><thead><tr>${connectionSortHeading('route', 'Цепочка', sort)}${connectionSortHeading('host', 'Хост', sort)}${connectionSortHeading('network', 'Тип', sort)}${connectionSortHeading('source', 'Источник', sort)}${connectionSortHeading('traffic', 'Трафик', sort)}${connectionSortHeading('start', 'Время', sort)}<th scope="col"><span class="visually-hidden">Действия</span></th></tr></thead><tbody>${sortedConnections.map((connection) => connectionRow(connection, showSourceName, sourceNames)).join('')}</tbody></table>
       ${connections.length === 0 ? '<div class="connection-no-results">Сейчас нет активных соединений.</div>' : ''}<div class="connection-no-results is-filtered" hidden>По этому фильтру соединений нет.</div></div></section>`}
   `;
 }

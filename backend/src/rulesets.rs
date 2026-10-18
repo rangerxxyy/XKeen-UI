@@ -101,6 +101,9 @@ fn find_provider(yaml: &str, wanted: &str) -> Option<std::collections::HashMap<S
                 continue;
             };
             let name = unquote(key.trim().trim_end_matches(':'));
+            if found {
+                return Some(values);
+            }
             found = name == wanted;
             provider_indent = Some(indent);
             values.clear();

@@ -77,7 +77,7 @@ function loadState(loading: boolean, error: string | null, noun: string): string
 export function renderPingStatusIcon(alive: boolean | null): string {
   if (alive === true) return '';
   const path = alive === false
-    ? '<path d="M5 2.5h6l2 2v7l-5 2-5-2v-7z"/><path d="M8 5v4m-1.5-2h3"/>'
+    ? '<path d="M5 2.5h6l2 2v7l-5 2-5-2v-7z"/><path d="m6.3 5.8 3.4 3.4m0-3.4L6.3 9.2"/>'
     : alive === true
       ? '<path d="M4.5 8.5l2.3 2.3 4.8-5.1"/>'
       : '<path d="M9 1 3 9h4l-1 6 7-9H9z"/>';

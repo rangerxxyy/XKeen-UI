@@ -51,12 +51,12 @@ struct LogSource {
 const LOG_SOURCES: &[LogSource] = &[
     LogSource {
         id: "xray-access",
-        label: "Access Log",
+        label: "access.log",
         path: "/opt/var/log/xray/access.log",
     },
     LogSource {
         id: "xkeen-ui",
-        label: "Error Log",
+        label: "error.log",
         path: XKEEN_UI_LOG_PATH,
     },
 ];
@@ -261,7 +261,7 @@ async fn read_error_log_bundle() -> std::io::Result<LogResult> {
         truncated = true;
     }
     Ok(LogResult {
-        file: "Error Log",
+        file: "error.log",
         lines,
         truncated,
     })
@@ -274,6 +274,7 @@ fn is_expected_ui_noise(source: &str, message: &str) -> bool {
     let normalized = message.to_lowercase();
     (normalized.contains("mihomo proxy ping:")
         && normalized.contains("узел не входит в доступную группу selector"))
+        || normalized.contains("данные не обновились: mihomo вернул некорректный список соединений")
         || (normalized.contains("clash ws proxy error:")
             && normalized.contains("connection refused"))
 }
@@ -487,8 +488,8 @@ mod tests {
     #[test]
     fn log_source_ids_are_unique_and_absolute() {
         assert_eq!(LOG_SOURCES.len(), 2);
-        assert_eq!(LOG_SOURCES[0].label, "Access Log");
-        assert_eq!(LOG_SOURCES[1].label, "Error Log");
+        assert_eq!(LOG_SOURCES[0].label, "access.log");
+        assert_eq!(LOG_SOURCES[1].label, "error.log");
         for (index, source) in LOG_SOURCES.iter().enumerate() {
             assert!(source.path.starts_with("/opt/var/log/"));
             assert!(LOG_SOURCES[index + 1..]
@@ -543,7 +544,7 @@ mod tests {
     }
 
     #[test]
-    fn suppresses_expected_selector_and_clash_websocket_noise_only() {
+    fn suppresses_expected_repeated_ui_polling_noise() {
         assert!(is_expected_ui_noise(
             "ui",
             "Mihomo proxy ping: Проверка узла: Узел не входит в доступную группу Selector (HTTP 400)"
@@ -551,6 +552,10 @@ mod tests {
         assert!(is_expected_ui_noise(
             "ui",
             "Clash WS proxy error: IO error: Connection refused (os error 111)"
+        ));
+        assert!(is_expected_ui_noise(
+            "ui",
+            "Данные не обновились: Mihomo вернул некорректный список соединений"
         ));
         assert!(!is_expected_ui_noise(
             "yaml",

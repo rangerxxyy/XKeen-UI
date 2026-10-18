@@ -71,3 +71,59 @@
   .resource-metric svg { width:11px; height:11px; flex-basis:11px; }
   .config-file-nav .config-file-tab { min-height:35px; padding-inline:10px; font-size:12px; }
 }
+
+/* Keep connection routes on one line and let the table fit its panel. */
+.app-shell .connection-table { width:100%; min-width:0; table-layout:fixed; }
+.app-shell .connection-table th:nth-child(1) { width:30%; }
+.app-shell .connection-table th:nth-child(2) { width:27%; }
+.app-shell .connection-table th:nth-child(3) { width:6%; }
+.app-shell .connection-table th:nth-child(4) { width:11%; }
+.app-shell .connection-table th:nth-child(5) { width:15%; }
+.app-shell .connection-table th:nth-child(6) { width:9%; }
+.app-shell .connection-table th:nth-child(7) { width:2%; }
+.app-shell .connection-table td .connection-route-inner { display:flex; align-items:center; gap:6px; min-width:0; white-space:nowrap; }
+.app-shell .connection-table td .connection-route-inner .connection-chain { display:block; flex:0 1 auto; min-width:0; max-width:100%; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.app-shell .connection-table td .connection-route-inner .connection-app-icon { display:inline-flex; flex:0 0 16px; margin:0; }
+.app-shell .connection-table td.connection-host { padding-right:7px; padding-left:7px; }
+@media(max-width:680px) {
+  .app-shell .connection-table { min-width:690px; }
+}
+
+/* Log timestamps, level badges and messages occupy independent, non-overlapping columns. */
+.app-shell .journal-line { grid-template-columns:max-content max-content minmax(0,1fr); align-items:start; gap:9px; padding:6px 10px; }
+.app-shell .journal-timestamp { min-width:0; color:#aebbd0; font:500 11px/1.55 var(--font-ui); font-variant-numeric:tabular-nums; white-space:nowrap; }
+.app-shell .journal-level-badge { min-width:42px; margin-top:1px; }
+.app-shell .journal-line code { min-width:0; overflow-wrap:anywhere; white-space:pre-wrap; }
+.app-shell .journal-tools select#journal-file { min-width:112px; }
+@media(max-width:600px) {
+  .app-shell .journal-line { grid-template-columns:max-content max-content minmax(0,1fr); gap:6px; padding-inline:7px; }
+  .app-shell .journal-timestamp { font-size:10px; }
+}
+
+/* Give DNS status and utility menus the same calm violet hierarchy as the rest of the panel. */
+.app-shell .dns-workspace { overflow:hidden; border-color:#393052; border-radius:13px; background:linear-gradient(150deg,#141426,#101323 58%); box-shadow:0 8px 24px #07060f22; }
+.app-shell .dns-workspace-heading { min-height:55px; border-color:#302a45; background:linear-gradient(100deg,#1a172d,#141426); }
+.app-shell .dns-runtime-list { overflow:hidden; border-color:#3a3153; background:#100f20; }
+.app-shell .dns-runtime-list>div { min-height:43px; border-color:#29253b; }
+.app-shell .dns-runtime-list>div strong:not(.state-pill) { color:#c8b8ff; }
+.app-shell .dns-settings-form textarea { min-height:96px; padding:11px 12px; border-radius:9px; background:#0d0d1b; line-height:1.6; }
+.app-shell .dns-settings-form select { min-height:40px; border-radius:9px; }
+.app-shell .dns-settings-form>label>span { display:grid; gap:3px; }
+.app-shell .dns-field-hint { color:#a89fbd; font-size:11px; font-weight:450; line-height:1.4; }
+.app-shell .dns-diagnostics { margin:0 18px 16px; padding:0 12px; border:1px solid #342c4b; border-radius:10px; background:#121224; }
+.app-shell .dns-diagnostics>summary { color:#c8b8ff; }
+.app-shell .editor-utilities-menu { border-color:#44375f; background:linear-gradient(155deg,#19172b,#111322); box-shadow:0 16px 38px #05040bcc; }
+.app-shell .editor-utilities-menu button { min-height:39px; border-radius:7px; transition:background .15s ease,color .15s ease,transform .15s ease; }
+.app-shell .editor-utilities-menu button:hover,.app-shell .editor-utilities-menu button:focus-visible { color:#f2edff; background:#2a2340; transform:translateX(2px); }
+.app-shell .editor-utilities-menu .utility-icon { color:#b49cf8; }
+.app-shell .proxy-health.proxy-ping-value { min-width:42px; font-size:17px; }
+.app-shell .proxy-health .ping-status-icon,.app-shell .proxy-health .ping-status-icon svg { width:16px; height:16px; }
+:root[data-theme="light"] .app-shell .dns-workspace { border-color:#d8d2e8; background:linear-gradient(150deg,#fff,#f7f5fc); }
+:root[data-theme="light"] .app-shell .dns-workspace-heading { border-color:#e2dcef; background:#f7f4ff; }
+:root[data-theme="light"] .app-shell .dns-runtime-list { border-color:#ded8ec; background:#fff; }
+:root[data-theme="light"] .app-shell .dns-runtime-list>div { border-color:#ebe7f1; }
+:root[data-theme="light"] .app-shell .dns-runtime-list>div strong:not(.state-pill) { color:#66509b; }
+:root[data-theme="light"] .app-shell .dns-settings-form textarea { background:#fff; }
+:root[data-theme="light"] .app-shell .dns-diagnostics { border-color:#ded8ec; background:#fff; }
+:root[data-theme="light"] .app-shell .editor-utilities-menu { border-color:#d4cbe7; background:linear-gradient(155deg,#fff,#f8f6fc); box-shadow:0 16px 38px #27324a24; }
+:root[data-theme="light"] .app-shell .editor-utilities-menu button:hover,:root[data-theme="light"] .app-shell .editor-utilities-menu button:focus-visible { color:#352653; background:#f0ebfa; }

@@ -1151,7 +1151,7 @@ dialog.template-dialog.is-closing { animation: modal-panel-out .16s ease-in both
   --editor-caret:#65c9ff; --editor-selection:#244775; --editor-property:#62a8ff; --editor-string:#9cda78;
   --editor-number:#ff9b55; --editor-atom:#d58bff; --editor-comment:#777ca7; --editor-punctuation:#a8bad4; --editor-keyword:#68c9e8;
 }
-.journal-line { grid-template-columns:34px max-content minmax(0,1fr); }
+.journal-line { grid-template-columns:max-content max-content minmax(0,1fr); align-items:start; }
 .journal-timestamp { color:#aab8ca; font:500 11px/1.5 var(--font-ui); white-space:nowrap; }
 :root[data-theme="light"] {
   color-scheme:light;

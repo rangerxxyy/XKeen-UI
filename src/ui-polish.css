@@ -264,6 +264,34 @@
 :root[data-theme="light"] .app-shell .dns-runtime-list { border-color:#ded8ec; background:#fff; }
 :root[data-theme="light"] .app-shell .dns-runtime-list>div { border-color:#ebe7f1; }
 :root[data-theme="light"] .app-shell .dns-runtime-list>div strong:not(.state-pill) { color:#66509b; }
+
+/* Keep the router handoff explanation attached to its switch and make runtime state easy to scan. */
+.app-shell .dns-handoff-pane .dns-handoff-note { margin:0 18px 8px; padding:0; color:#95a4b9; font-size:11px; line-height:1.45; }
+.app-shell .dns-management-row { align-items:flex-start; margin-top:10px; margin-bottom:14px; }
+.app-shell .dns-management-copy { flex:1 1 auto; }
+.app-shell .dns-management-switch { margin-top:2px; }
+.app-shell .dns-management-copy .dns-management-help { display:flex; align-items:flex-start; gap:8px; max-width:900px; margin:8px 0 0; padding:8px 10px; border:1px solid #55447b; border-left:2px solid #a78bfa; border-radius:7px; color:#c5badc; background:#171528; font-size:11px; line-height:1.5; }
+.app-shell .dns-management-help>span:first-child { display:grid; flex:0 0 16px; width:16px; height:16px; place-items:center; border-radius:50%; color:#d7c6ff; background:#34294f; font-size:10px; font-weight:750; }
+.app-shell .dns-management-help strong { display:inline; color:#e0d3ff; font-weight:700; }
+.app-shell .dns-runtime-list .dns-state-value { min-height:24px; padding:4px 9px; border:1px solid #7560a5; border-radius:7px; color:#dfd2ff; background:#211a35; font-size:10px; font-weight:700; letter-spacing:.01em; }
+.app-shell .dns-runtime-list .dns-state-value.state-stopped { border-color:#596477; color:#bbc5d2; background:#1b2432; }
+.app-shell .dns-field-heading { display:inline-flex; flex-wrap:nowrap; align-items:center; gap:6px; vertical-align:middle; white-space:nowrap; }
+.app-shell .dns-settings-form>label>.dns-field-heading { display:inline-flex; width:max-content; max-width:100%; }
+.app-shell .dns-settings-form textarea { height:auto; }
+@media(max-width:700px) {
+  .app-shell .dns-handoff-pane .dns-handoff-note { margin-right:14px; margin-left:14px; }
+  .app-shell .dns-management-row { align-items:flex-start; gap:10px; }
+  .app-shell .dns-management-copy .dns-management-help { font-size:10px; }
+}
+:root[data-theme="light"] .app-shell .dns-handoff-pane .dns-handoff-note { color:#65748a; }
+:root[data-theme="light"] .app-shell .dns-management-copy .dns-management-help { border-color:#c8b9e7; border-left-color:#7957bb; color:#536078; background:#f5f1fb; }
+:root[data-theme="light"] .app-shell .dns-management-help>span:first-child { color:#6540a6; background:#e8ddf8; }
+:root[data-theme="light"] .app-shell .dns-management-help strong { color:#493278; }
+:root[data-theme="light"] .app-shell .dns-runtime-list .dns-state-value { border-color:#a38acb; color:#563c83; background:#f4eefc; }
+:root[data-theme="light"] .app-shell .dns-runtime-list .dns-state-value.state-stopped { border-color:#c8d0db; color:#526174; background:#f2f5f8; }
+:root[data-theme="light"] .app-shell .dns-field-heading { display:inline-flex; flex-wrap:nowrap; align-items:center; gap:6px; vertical-align:middle; white-space:nowrap; }
+:root[data-theme="light"] .app-shell .dns-settings-form>label>.dns-field-heading { display:inline-flex; width:max-content; max-width:100%; }
+:root[data-theme="light"] .app-shell .dns-settings-form textarea { height:auto; }
 :root[data-theme="light"] .app-shell .dns-settings-form textarea { background:#fff; }
 :root[data-theme="light"] .app-shell .dns-diagnostics { border-color:#ded8ec; background:#fff; }
 :root[data-theme="light"] .app-shell .dns-fake-ip-warning { border-color:#ead49b; color:#665019; background:linear-gradient(120deg,#fff8e3,#fffdf7); }

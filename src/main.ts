@@ -31,7 +31,7 @@ import { SourceNameResolver } from './source-names';
 import { renderResourceMetrics } from './resource-metrics';
 import { shouldReportUiError } from './ui-error-dedupe';
 import { sortMihomoConnections, type ConnectionSort, type ConnectionSortKey } from './connection-sort';
-import { MAIN_NAVIGATION_PAGES, renderNavigationView } from './navigation-view';
+import { MAIN_NAVIGATION_PAGES, renderNavigationView, renderWorkspaceFrame } from './navigation-view';
 
 type Page = 'selectors' | 'connections' | 'configuration' | 'dns';
 
@@ -429,7 +429,8 @@ function render(): void {
           busy: dnsManagementBusy, confirm: dnsManagementConfirm,
         }, { values: dnsConfig?.values ?? null, loading: dnsConfigLoading, error: dnsConfigError, busy: dnsConfigBusy })
         : renderComingSoon(activePage);
-  app.innerHTML = `<div class="app-shell">${renderHeader()}${renderNavigation()}<div class="workspace-scroll"><main class="main-content${animatePageEntry ? ' page-enter' : ''}">${pageContent}</main>${renderJournal()}</div><div class="toast-region" aria-live="polite"></div></div>`;
+  const workspace = renderWorkspaceFrame(renderNavigation(), pageContent, `main-content${animatePageEntry ? ' page-enter' : ''}`);
+  app.innerHTML = `<div class="app-shell">${renderHeader()}<div class="workspace-scroll">${workspace}${renderJournal()}</div><div class="toast-region" aria-live="polite"></div></div>`;
   animatePageEntry = false;
   updateAppUpdateNotice();
   app.querySelector<HTMLElement>('.workspace-scroll')!.scrollTop = scrollTop;

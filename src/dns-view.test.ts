@@ -14,13 +14,13 @@ describe('DNS workspaces', () => {
     const view = renderDns(null, false, null, '', 'A', { status: state, loading: false, error: null, busy: false, confirm: false });
     expect(view).toContain('DNS Override');
     expect(view).toContain('Слушатель 53 порта');
-    expect(view).toContain('DNS-серверы роутера');
+    expect(view).not.toContain('DNS-серверы роутера');
     expect(view).toContain('Статус DNS');
+    expect(view).toContain('id="dns-management-refresh"');
     expect(view).toContain('Включить управление DNS');
-    expect(view).toContain('77.88.8.8');
     expect(view).not.toContain('Состояние получено');
     expect(view).toContain('type="checkbox" role="switch"');
-    expect(view).toContain('DNS-серверы роутера');
+    expect(view).not.toContain('DNS-серверы роутера');
     expect(view).not.toContain('Передача DNS через Mihomo');
     expect(view).not.toContain('dns-management-help');
     expect(view).not.toContain('dns-handoff-intro');
@@ -45,7 +45,7 @@ describe('DNS workspaces', () => {
 
   it('requires an explicit second step before changing router DNS', () => {
     const view = renderDns(null, false, null, '', 'A');
-    expect(view).toContain('Повторить проверку');
+    expect(view).toContain('Обновить статус');
     expect(view).toContain('id="dns-management-toggle"');
     expect(view).toMatch(/id="dns-management-toggle"[^>]*type="checkbox"[^>]*role="switch"[^>]*disabled/);
   });
@@ -162,11 +162,11 @@ describe('DNS workspaces', () => {
       loading: false, error: null, busy: false,
     });
     const explanations = [...view.matchAll(/class="dns-info"[^>]*aria-label="([^"]+)"/g)].map((match) => match[1]);
-    for (const label of ['DNS Override', 'DNS Mihomo', 'Слушатель 53 порта', 'Управление DNS', 'DNS-серверы роутера', 'Enhanced Mode', 'Default Nameserver', 'Nameserver', 'Nameserver Policy', 'Proxy Server Nameserver', 'Fallback', 'Domain or IP', 'Record Type']) {
+    for (const label of ['DNS Override', 'DNS Mihomo', 'Слушатель 53 порта', 'Управление DNS', 'Enhanced Mode', 'Default Nameserver', 'Nameserver', 'Nameserver Policy', 'Proxy Server Nameserver', 'Fallback', 'Domain or IP', 'Record Type']) {
       expect(explanations.some((description) => description?.includes(label)), label).toBe(true);
     }
-    expect(explanations).toHaveLength(13);
-    expect(view.match(/class="dns-info"[^>]*tabindex="0"/g)).toHaveLength(13);
+    expect(explanations).toHaveLength(12);
+    expect(view.match(/class="dns-info"[^>]*tabindex="0"/g)).toHaveLength(12);
   });
 
   it('warns when fake-ip is used with a blacklist filter mode', () => {

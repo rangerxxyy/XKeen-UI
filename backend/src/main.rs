@@ -1446,7 +1446,7 @@ mod tests {
 
     #[test]
     fn backend_package_version_matches_release_version() {
-        assert_eq!(env!("CARGO_PKG_VERSION"), "0.5.3");
+        assert_eq!(env!("CARGO_PKG_VERSION"), "0.5.4");
     }
 
     #[test]

@@ -19,6 +19,7 @@
 .app-shell .workspace-frame > .navigation .nav-icon svg { display:block; width:17px; height:17px; fill:none; stroke:currentColor; stroke-width:1.7; stroke-linecap:round; stroke-linejoin:round; }
 .app-shell .workspace-frame > .navigation .nav-item.active .nav-icon { color:#c5adff; }
 .app-shell .workspace-frame > .navigation .nav-label { white-space:nowrap; }
+.app-shell .topbar .brand { font-size:22px; }
 .app-shell .workspace-frame > .main-content { min-height:0; height:auto; flex:1 1 auto; overflow:auto; padding:15px 16px 18px; }
 .app-shell .workspace-frame .config-file-switcher-panel { flex:0 0 auto; margin:0 0 0 auto; }
 .app-shell .connection-route-inner { gap:8px; }
@@ -61,6 +62,7 @@
 :root[data-theme="light"] .app-shell .connection-table td.connection-route-cell .connection-route-arrow { color:#4d5b70; background:#e8edf4; }
 @media(prefers-reduced-motion:reduce) { .app-shell .workspace-frame > .navigation .nav-item { transition:none; } }
 @media(max-width:600px) {
+  .app-shell .topbar .brand { font-size:19px; }
   .app-shell .workspace-frame { flex:0 0 auto; min-height:0; margin-top:10px; overflow:visible; }
   .app-shell .workspace-frame > .navigation { min-height:59px; padding:8px; gap:6px; }
   .app-shell .workspace-frame > .navigation .nav-item { height:40px; min-height:40px; gap:7px; padding-inline:10px; font-size:11px; }
@@ -168,11 +170,12 @@
 @media(prefers-reduced-motion:reduce) { .template-option,.template-import-button { transition:none; } .template-option:hover,.template-import-button:active { transform:none; } }
 .top-status-cluster.is-xkeen-busy { position:relative; isolation:isolate; }
 .top-status-cluster.is-xkeen-busy::after { content:''; position:absolute; inset:-5px -9px; z-index:-1; border-radius:12px; background:linear-gradient(110deg,transparent,color-mix(in srgb,var(--cyan,#5796ff) 14%,transparent),transparent); background-size:200% 100%; animation:service-sweep 1.6s ease-in-out infinite; }
-.connection-led.is-online { animation:service-breathe 3s ease-in-out infinite; }
+.connection-led.is-online { animation:service-breathe 2s ease-in-out infinite; }
 .is-xkeen-busy .connection-led { animation:service-breathe 1s ease-in-out infinite; }
 @keyframes service-sweep { from { background-position:180% 0; } to { background-position:-80% 0; } }
-@keyframes service-breathe { 50% { opacity:.35; box-shadow:0 0 10px var(--cyan,#5796ff); } }
+@keyframes service-breathe { 50% { opacity:.55; box-shadow:0 0 10px var(--cyan,#5796ff); } }
 @media(prefers-reduced-motion:reduce) { .top-status-cluster.is-xkeen-busy::after,.connection-led.is-online,.is-xkeen-busy .connection-led { animation:none; } }
+@media(prefers-reduced-motion:reduce) { .app-shell *, .app-shell *::before, .app-shell *::after { scroll-behavior:auto!important; animation-duration:.01ms!important; animation-iteration-count:1!important; transition-duration:.01ms!important; } }
 
 /* Low-cost first-load placeholders preserve the shape of the three live-data panels. */
 .skeleton-block { display:block; border-radius:6px; background:#2a354a; opacity:.82; animation:skeleton-breathe 1.5s ease-in-out infinite alternate; }
@@ -421,3 +424,39 @@
   .config-file-switcher-panel { margin:0 8px 8px; padding:5px; }
   .config-file-nav { width:100%; overflow-x:auto; }
 }
+
+/* DNS status values sit directly on the page surface, as in zxc-rv. */
+.app-shell .dns-runtime-list { border-color:transparent; background:transparent; }
+.app-shell .dns-runtime-list>div { background:transparent; }
+.app-shell .dns-workspace.dns-handoff-pane { background:transparent; }
+.app-shell .dns-handoff-pane .dns-management-refresh { min-height:32px; height:32px; padding:0 10px; font-size:11px; }
+
+/* Match zxc-rv's readable connection rows while keeping the route icon assets intact. */
+.app-shell .connection-table th { font-size:12px; }
+.app-shell .connection-table td { background:#080d18; color:#dce5f1; font-size:12px; }
+.app-shell .connection-table tbody tr:nth-child(even) td { background:#0a101d; }
+.app-shell .connection-table tbody tr:hover td { background:#101a2a; }
+.app-shell .connection-table .connection-chain,
+.app-shell .connection-table td.connection-host { font-size:12px; }
+.app-shell .connection-table .connection-close { width:34px; height:34px; border:1px solid #35445a; border-radius:8px; font-size:19px; }
+.app-shell .connection-table .connection-close:focus-visible { outline:2px solid var(--cyan,#5796ff); outline-offset:1px; }
+@media(max-width:600px) {
+  .app-shell .connection-table .connection-close { width:44px; height:44px; }
+}
+
+/* Nested documentation menu follows the utility submenu pattern from zxc-rv. */
+.app-shell .editor-utilities-menu:has(.editor-utilities-links[open]) { overflow:visible; }
+.app-shell .editor-utilities-links { position:relative; }
+.app-shell .editor-utilities-links > summary { min-height:39px; display:flex; align-items:center; gap:10px; padding:0 10px; border-radius:7px; color:#e7edf6; font:500 13px/1.25 var(--font-ui); list-style:none; cursor:pointer; }
+.app-shell .editor-utilities-links > summary::-webkit-details-marker { display:none; }
+.app-shell .editor-utilities-links > summary:hover,.app-shell .editor-utilities-links[open] > summary,.app-shell .editor-utilities-links > summary:focus-visible { outline:none; color:#f2edff; background:#2a2340; }
+.app-shell .editor-utilities-links > summary .utilities-chevron { margin-left:auto; }
+.app-shell .editor-utilities-links[open] > summary .utilities-chevron { transform:rotate(225deg); }
+.app-shell .editor-utilities-links-menu { position:absolute; z-index:7; right:calc(100% + 8px); bottom:0; min-width:220px; display:grid; gap:3px; padding:6px; border:1px solid #44375f; border-radius:11px; background:linear-gradient(155deg,#19172b,#111322); box-shadow:0 16px 38px #05040bcc; }
+.app-shell .editor-utilities-links-menu .utility-link { min-height:39px; display:flex; align-items:center; gap:10px; padding:0 10px; border-radius:7px; color:#e7edf6; text-decoration:none; font:500 13px/1.25 var(--font-ui); }
+.app-shell .editor-utilities-links-menu .utility-link:hover,.app-shell .editor-utilities-links-menu .utility-link:focus-visible { outline:none; color:#f2edff; background:#2a2340; }
+.app-shell .editor-utilities-divider { height:1px; margin:4px 2px; background:#30344a; }
+:root[data-theme="light"] .app-shell .editor-utilities-links > summary,:root[data-theme="light"] .app-shell .editor-utilities-links-menu .utility-link { color:#26364b; }
+:root[data-theme="light"] .app-shell .editor-utilities-links > summary:hover,:root[data-theme="light"] .app-shell .editor-utilities-links[open] > summary,:root[data-theme="light"] .app-shell .editor-utilities-links > summary:focus-visible,:root[data-theme="light"] .app-shell .editor-utilities-links-menu .utility-link:hover,:root[data-theme="light"] .app-shell .editor-utilities-links-menu .utility-link:focus-visible { color:#352653; background:#f0ebfa; }
+:root[data-theme="light"] .app-shell .editor-utilities-links-menu { border-color:#d4cbe7; background:linear-gradient(155deg,#fff,#f8f6fc); box-shadow:0 16px 38px #27324a24; }
+:root[data-theme="light"] .app-shell .editor-utilities-divider { background:#dce2eb; }

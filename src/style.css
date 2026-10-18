@@ -1588,6 +1588,26 @@ body { -webkit-font-smoothing:auto; }
 .config-backups-dialog .modal-heading h2 { flex:1; margin:0; font-size:18px; }
 .config-backups-dialog .modal-icon { color:#b5a2ff; }
 .config-backups-dialog .modal-note { margin:0; color:#b9c6d8; font-size:13px; line-height:1.55; }
+.amnezia-import-dialog { width:min(660px,calc(100vw - 24px)); max-width:none; max-height:calc(100dvh - 24px); padding:0; overflow:visible; border:0; background:transparent; color:inherit; }
+.amnezia-import-dialog::backdrop { background:#030711c7; }
+.amnezia-import-dialog .modal-panel { display:flex; flex-direction:column; gap:12px; width:100%; max-height:calc(100dvh - 24px); padding:20px; overflow:hidden; border:1px solid #34445d; border-radius:14px; background:#101827; color:#edf2fa; box-shadow:0 22px 58px #000a; }
+.amnezia-import-dialog .modal-heading h2 { flex:1; margin:0; font-size:19px; font-weight:700; }
+.amnezia-import-dialog .modal-note { margin:0; color:#aebbd0; font-size:13px; line-height:1.5; }
+.amnezia-file-input { position:absolute; width:1px; height:1px; overflow:hidden; clip-path:inset(50%); white-space:nowrap; }
+.amnezia-dropzone { display:grid; min-height:190px; place-content:center; justify-items:center; gap:10px; border:1px dashed #34445d; border-radius:11px; background:#111a2a; color:#ecf2fb; font:inherit; cursor:pointer; transition:border-color .16s ease,background-color .16s ease; }
+.amnezia-dropzone:hover,.amnezia-dropzone:focus-visible,.amnezia-dropzone.is-dragging { outline:none; border-color:#6388d7; background:#14233b; }
+.amnezia-dropzone strong { font-size:16px; }
+.amnezia-dropzone > span:last-child { color:#91a0b6; font-size:13px; }
+.amnezia-upload-icon { display:grid; width:42px; height:42px; place-items:center; border-radius:11px; background:#202c40; color:#9db9ff; font-size:22px; }
+.amnezia-file-name { margin:0; color:#9eabc0; font-size:12px; }
+.amnezia-import-error { margin:0; color:#ff8a97; font-size:13px; }
+.amnezia-preview { display:grid; grid-template-rows:auto minmax(0,1fr); flex:1; min-height:0; overflow:hidden; border:1px solid #2b3b55; border-radius:10px; background:#0b1320; }
+.amnezia-preview-heading { display:flex; align-items:center; justify-content:space-between; gap:10px; padding:8px 10px; border-bottom:1px solid #26354b; color:#aab9d0; font-size:11px; font-weight:650; letter-spacing:.04em; }
+.amnezia-preview pre { min-height:100px; max-height:36dvh; margin:0; padding:12px; overflow:auto; color:#dce7fa; font:12px/1.55 "JetBrains Mono Variable","JetBrains Mono",ui-monospace,monospace; white-space:pre; }
+.amnezia-import-actions { display:flex; gap:8px; }
+.amnezia-import-actions .editor-button { flex:1; min-height:42px; }
+.amnezia-import-dialog [hidden] { display:none!important; }
+@media(max-width:520px) { .amnezia-import-dialog .modal-panel { padding:15px; } .amnezia-dropzone { min-height:160px; } .amnezia-preview-heading { align-items:flex-start; flex-direction:column; } }
 .config-backups-list { display:grid; gap:8px; max-height:min(58dvh,520px); padding:2px 4px 2px 0; overflow:auto; overscroll-behavior:contain; }
 .config-backup-row { display:flex; align-items:center; justify-content:space-between; gap:12px; min-width:0; padding:12px; border:1px solid #303d55; border-radius:10px; background:#111a2a; transition:border-color .16s ease,background .16s ease,transform .16s ease; }
 .config-backup-row:hover { transform:translateY(-1px); border-color:#7264cb; background:#171f34; }

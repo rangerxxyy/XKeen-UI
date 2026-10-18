@@ -44,8 +44,8 @@ fn parse_system_memory(data: &Value) -> Option<MemoryStatus> {
         return None;
     }
     Some(MemoryStatus {
-        used_mb: used_kb / 1024,
-        total_mb: total_kb / 1024,
+        used_mb: used_kb.div_ceil(1024),
+        total_mb: total_kb.div_ceil(1024),
     })
 }
 
@@ -177,7 +177,7 @@ mod tests {
         }))
         .expect("complete RCI memory metrics");
 
-        assert_eq!(memory.used_mb, 120);
+        assert_eq!(memory.used_mb, 121);
         assert_eq!(memory.total_mb, 512);
     }
 

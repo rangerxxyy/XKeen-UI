@@ -172,6 +172,20 @@ describe('fetchCoreReleases', () => {
     );
   });
 
+  it('tries configured GitHub mirrors when the direct release API is unavailable', async () => {
+    const fetchMock = vi.fn()
+      .mockRejectedValueOnce(new TypeError('network unavailable'))
+      .mockResolvedValueOnce(new Response(JSON.stringify([release()]), { status: 200 }));
+    vi.stubGlobal('fetch', fetchMock);
+
+    await expect(fetchCoreReleases('https://github.com/owner/repo', ['https://gh-proxy.com']))
+      .resolves.toHaveLength(1);
+    expect(fetchMock.mock.calls.map(([url]) => url)).toEqual([
+      'https://api.github.com/repos/owner/repo/releases?per_page=5',
+      'https://gh-proxy.com/https://api.github.com/repos/owner/repo/releases?per_page=5',
+    ]);
+  });
+
   it('rejects the repository before making any network request', async () => {
     const fetchMock = vi.fn();
     vi.stubGlobal('fetch', fetchMock);

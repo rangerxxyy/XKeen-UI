@@ -38,7 +38,7 @@
 .app-shell .connection-table td.connection-route-cell .connection-chain { display:inline-flex; gap:0; }
 .app-shell .connection-table td.connection-route-cell .connection-route-arrow { flex:0 0 14px; width:14px; height:14px; margin:0 6px; color:#bac4d4; background:#273143; font-size:9px; }
 .app-shell .connection-table td.connection-route-cell .connection-route-label { display:inline-flex; min-width:0; align-items:center; gap:5px; }
-.app-shell .connection-table td.connection-route-cell .connection-proxy-icon { width:15px; height:15px; flex:0 0 15px; object-fit:contain; border-radius:4px; }
+.app-shell .connection-table td.connection-route-cell .connection-proxy-icon { width:18px; height:18px; flex:0 0 18px; object-fit:contain; border-radius:0; }
 .app-shell .connection-table td.connection-route-cell .connection-route-hop { min-width:0; overflow:hidden; text-overflow:ellipsis; }
 :root:not([data-theme="light"]) .app-shell .connections-panel { background:#0b0e19; }
 :root:not([data-theme="light"]) .app-shell .connections-toolbar { background:#0e1220; }

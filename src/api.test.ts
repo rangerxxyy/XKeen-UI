@@ -5,7 +5,9 @@ afterEach(() => vi.unstubAllGlobals());
 
 describe('Mihomo proxy providers API', () => {
   it('maps provider counts, subscription usage, expiry, and update metadata', async () => {
-    vi.stubGlobal('fetch', vi.fn(async () => new Response(JSON.stringify({ providers: {
+    vi.stubGlobal('fetch', vi.fn(async (input: RequestInfo | URL) => new Response(JSON.stringify(String(input).includes('/config/active') ? {
+      core: 'mihomo', path: '/opt/etc/mihomo/config.yaml', content: 'proxy-providers:\n  subscription_1:\n    type: http\n',
+    } : { providers: {
       subscription_1: {
         name: 'subscription_1', type: 'Proxy', vehicleType: 'HTTP',
         proxies: [{ name: 'Sweden', type: 'VLESS' }, { name: 'Finland', type: 'Hysteria2' }],
@@ -21,9 +23,12 @@ describe('Mihomo proxy providers API', () => {
   });
 
   it('excludes proxy groups if they are mixed into the provider response', async () => {
-    vi.stubGlobal('fetch', vi.fn(async () => new Response(JSON.stringify({ providers: {
+    vi.stubGlobal('fetch', vi.fn(async (input: RequestInfo | URL) => new Response(JSON.stringify(String(input).includes('/config/active') ? {
+      core: 'mihomo', path: '/opt/etc/mihomo/config.yaml', content: 'proxy-providers:\n  subscription_1:\n    type: http\n',
+    } : { providers: {
       subscription_1: { name: 'subscription_1', type: 'Proxy', vehicleType: 'HTTP', proxies: [] },
       Main: { name: 'Main', type: 'Selector', proxies: [{ name: 'subscription_1', type: 'Proxy' }] },
+      MainProxy: { name: 'MainProxy', type: 'Proxy', vehicleType: 'HTTP', proxies: [{ name: 'subscription_1', type: 'Proxy' }] },
     } }), { headers: { 'Content-Type': 'application/json' } })));
     await expect(getMihomoProxyProviders()).resolves.toMatchObject([{ name: 'subscription_1', vehicleType: 'HTTP' }]);
   });

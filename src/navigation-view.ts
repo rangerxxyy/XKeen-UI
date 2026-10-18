@@ -14,7 +14,8 @@ export function renderProviderNavigationActions(): string {
 export function renderNavigationView(pages: readonly NavigationPage[], activePage: string, configFileTabs = '', rightActions = ''): string {
   const configurationPage = activePage === 'configuration';
   const fileTabs = configurationPage ? `<div class="config-file-switcher-panel">${configFileTabs}</div>` : '';
-  return `<nav class="navigation" aria-label="Разделы панели">${pages.map((page) => `<button class="nav-item ${activePage === page.id ? 'active' : ''}" data-page="${page.id}" ${activePage === page.id ? 'aria-current="page"' : ''}><span class="nav-icon"><svg viewBox="0 0 20 20" aria-hidden="true" focusable="false">${page.icon}</svg></span><span class="nav-label">${page.label}</span></button>`).join('')}<div class="navigation-spacer" aria-hidden="true"></div>${fileTabs}${rightActions}</nav>`;
+  const contextualActions = activePage === 'selectors' ? rightActions : '';
+  return `<nav class="navigation" aria-label="Разделы панели">${pages.map((page) => `<button class="nav-item ${activePage === page.id ? 'active' : ''}" data-page="${page.id}" ${activePage === page.id ? 'aria-current="page"' : ''}><span class="nav-icon"><svg viewBox="0 0 20 20" aria-hidden="true" focusable="false">${page.icon}</svg></span><span class="nav-label">${page.label}</span></button>`).join('')}<div class="navigation-spacer" aria-hidden="true"></div>${fileTabs}${contextualActions}</nav>`;
 }
 
 export function renderWorkspaceFrame(navigation: string, pageContent: string, mainClass = 'main-content', afterFrame = ''): string {

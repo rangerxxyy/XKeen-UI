@@ -14,12 +14,25 @@ use tracing::{info, warn};
 
 const CONFIG_PATH: &str = "/opt/etc/mihomo/config.yaml";
 const DNS_STATE_PATH: &str = "/opt/etc/xkeen-ui/dns-restore.json";
+const DNS_AUTO_APPLY_PATH: &str = "/opt/etc/xkeen-ui/dns-auto-apply.json";
 
 #[derive(Clone, Debug, Deserialize, PartialEq, Eq, Serialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 struct DnsRestoreState {
     dns_override: bool,
     name_servers: Vec<String>,
+}
+
+#[derive(Clone, Copy, Debug, Default, Deserialize, PartialEq, Eq, Serialize)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+struct DnsAutoApplySettings {
+    enabled: bool,
+}
+
+#[derive(Deserialize)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub(crate) struct DnsAutoApplyRequest {
+    enabled: bool,
 }
 
 #[derive(Deserialize)]
@@ -123,9 +136,172 @@ fn enable_router_dns_commands(previous: &DnsRestoreState, br0_ip: &str) -> Vec<S
     commands.extend([
         format!("ip name-server {br0_ip}"),
         "opkg dns-override".into(),
+        "dns-proxy no filter engine".into(),
         "system configuration save".into(),
     ]);
     commands
+}
+
+fn should_reapply_dns_on_boot(
+    auto_apply: bool,
+    restore_exists: bool,
+    valid_handoff: bool,
+    mihomo_running: bool,
+) -> bool {
+    auto_apply && restore_exists && valid_handoff && mihomo_running
+}
+
+fn is_missing_optional_filter(error: &str) -> bool {
+    let error = error.to_ascii_lowercase();
+    error.contains("no such command") && error.contains("filter")
+}
+
+async fn apply_router_dns_command(command: &str) -> Result<(), String> {
+    match ndmc(command).await {
+        Ok(_) => Ok(()),
+        Err(error)
+            if command == "dns-proxy no filter engine" && is_missing_optional_filter(&error) =>
+        {
+            info!("Контентный фильтр KeeneticOS отсутствует; пропуск его отключения");
+            Ok(())
+        }
+        Err(error) => Err(error),
+    }
+}
+
+pub(crate) async fn get_auto_apply(State(state): State<AppState>) -> Response {
+    if !state.router_mode {
+        return error(
+            StatusCode::SERVICE_UNAVAILABLE,
+            "Настройка автоприменения DNS доступна только на роутере",
+        );
+    }
+    match read_auto_apply_settings().await {
+        Ok(settings) => Json(settings).into_response(),
+        Err(message) => error(StatusCode::INTERNAL_SERVER_ERROR, message),
+    }
+}
+
+pub(crate) async fn set_auto_apply(
+    State(state): State<AppState>,
+    Json(request): Json<DnsAutoApplyRequest>,
+) -> Response {
+    if !state.router_mode {
+        return error(
+            StatusCode::SERVICE_UNAVAILABLE,
+            "Настройка автоприменения DNS доступна только на роутере",
+        );
+    }
+    let settings = DnsAutoApplySettings {
+        enabled: request.enabled,
+    };
+    match write_auto_apply_settings(settings).await {
+        Ok(()) => Json(settings).into_response(),
+        Err(message) => error(StatusCode::INTERNAL_SERVER_ERROR, message),
+    }
+}
+
+async fn read_auto_apply_settings() -> Result<DnsAutoApplySettings, String> {
+    match tokio::fs::symlink_metadata(DNS_AUTO_APPLY_PATH).await {
+        Ok(meta) if meta.is_file() && !meta.file_type().is_symlink() && meta.len() <= 4096 => {
+            let value = tokio::fs::read_to_string(DNS_AUTO_APPLY_PATH)
+                .await
+                .map_err(|e| format!("Не удалось прочитать настройку автоприменения DNS: {e}"))?;
+            serde_json::from_str(&value)
+                .map_err(|e| format!("Настройка автоприменения DNS повреждена: {e}"))
+        }
+        Ok(_) => Err("Файл настройки автоприменения DNS имеет неподдерживаемый тип".into()),
+        Err(e) if e.kind() == std::io::ErrorKind::NotFound => Ok(DnsAutoApplySettings::default()),
+        Err(e) => Err(format!(
+            "Не удалось проверить настройку автоприменения DNS: {e}"
+        )),
+    }
+}
+
+async fn write_auto_apply_settings(settings: DnsAutoApplySettings) -> Result<(), String> {
+    let path = Path::new(DNS_AUTO_APPLY_PATH);
+    let parent = path.parent().ok_or("Некорректный путь настройки DNS")?;
+    tokio::fs::create_dir_all(parent)
+        .await
+        .map_err(|e| format!("Не удалось создать каталог настроек DNS: {e}"))?;
+    match tokio::fs::symlink_metadata(path).await {
+        Ok(meta) if meta.is_file() && !meta.file_type().is_symlink() => {}
+        Ok(_) => return Err("Файл настройки автоприменения DNS имеет неподдерживаемый тип".into()),
+        Err(e) if e.kind() == std::io::ErrorKind::NotFound => {}
+        Err(e) => {
+            return Err(format!(
+                "Не удалось проверить настройку автоприменения DNS: {e}"
+            ))
+        }
+    }
+    let staged = parent.join(format!(".dns-auto-apply-{}.tmp", std::process::id()));
+    let bytes = serde_json::to_vec(&settings)
+        .map_err(|e| format!("Не удалось собрать настройку DNS: {e}"))?;
+    let mut file = tokio::fs::OpenOptions::new()
+        .write(true)
+        .create_new(true)
+        .mode(0o600)
+        .open(&staged)
+        .await
+        .map_err(|e| format!("Не удалось создать настройку автоприменения DNS: {e}"))?;
+    if let Err(e) = file.write_all(&bytes).await {
+        let _ = tokio::fs::remove_file(&staged).await;
+        return Err(format!("Не удалось записать настройку DNS: {e}"));
+    }
+    if let Err(e) = file.sync_all().await {
+        let _ = tokio::fs::remove_file(&staged).await;
+        return Err(format!("Не удалось сохранить настройку DNS: {e}"));
+    }
+    drop(file);
+    tokio::fs::rename(&staged, path)
+        .await
+        .map_err(|e| format!("Не удалось установить настройку DNS: {e}"))
+}
+
+pub(crate) fn start_boot_reapply(state: AppState) {
+    if !state.router_mode {
+        return;
+    }
+    tokio::spawn(async move {
+        for attempt in 0..30 {
+            match reapply_dns_after_boot().await {
+                Ok(true) => return,
+                Ok(false) => return,
+                Err(error) if attempt == 29 => {
+                    warn!("Автоприменение DNS после загрузки не выполнено: {error}")
+                }
+                Err(_) => tokio::time::sleep(Duration::from_secs(10)).await,
+            }
+        }
+    });
+}
+
+async fn reapply_dns_after_boot() -> Result<bool, String> {
+    if !read_auto_apply_settings().await?.enabled {
+        return Ok(false);
+    }
+    let Some(previous) = read_restore_state().await? else {
+        return Ok(false);
+    };
+    let config = tokio::fs::read_to_string(CONFIG_PATH)
+        .await
+        .map_err(|e| format!("Не удалось прочитать config.yaml Mihomo: {e}"))?;
+    let core = xkeen::read_status();
+    let mihomo_running = core.core.as_deref() == Some("mihomo") && core.running == Some(true);
+    if !should_reapply_dns_on_boot(
+        true,
+        true,
+        mihomo_dns_preserves_router_handoff(&config),
+        mihomo_running,
+    ) {
+        return Err("Mihomo ещё не запущен с включённым DNS на 0.0.0.0:53".into());
+    }
+    let br0_ip = get_br0_ip()?;
+    for command in enable_router_dns_commands(&previous, &br0_ip) {
+        apply_router_dns_command(&command).await?;
+    }
+    info!("Управление DNS повторно применено после загрузки роутера");
+    Ok(true)
 }
 
 fn read_mihomo_dns_enabled(content: &str) -> bool {
@@ -431,7 +607,7 @@ pub async fn toggle(
             };
         }
         for command in enable_router_dns_commands(&previous, &br0_ip) {
-            if let Err(e) = ndmc(&command).await {
+            if let Err(e) = apply_router_dns_command(&command).await {
                 return rollback_enable(&previous, &current, &candidate, e).await;
             }
         }
@@ -623,9 +799,10 @@ fn truncate(value: &str, max_bytes: usize) -> String {
 #[cfg(test)]
 mod tests {
     use super::{
-        enable_router_dns_commands, mihomo_dns_listens_on_router_interface,
-        mihomo_dns_preserves_router_handoff, parse_restore_state, read_mihomo_dns_enabled,
-        set_mihomo_dns, DnsRestoreState,
+        enable_router_dns_commands, is_missing_optional_filter,
+        mihomo_dns_listens_on_router_interface, mihomo_dns_preserves_router_handoff,
+        parse_restore_state, read_mihomo_dns_enabled, set_mihomo_dns, should_reapply_dns_on_boot,
+        DnsAutoApplySettings, DnsRestoreState,
     };
 
     #[test]
@@ -699,8 +876,36 @@ mod tests {
                 "ipv6 name-server 2001:4860:4860::8888",
                 "ip name-server 192.168.1.1",
                 "opkg dns-override",
+                "dns-proxy no filter engine",
                 "system configuration save",
             ]
         );
+    }
+
+    #[test]
+    fn boot_reapply_requires_opt_in_saved_dns_state_and_valid_mihomo_handoff() {
+        assert!(should_reapply_dns_on_boot(true, true, true, true));
+        assert!(!should_reapply_dns_on_boot(false, true, true, true));
+        assert!(!should_reapply_dns_on_boot(true, false, true, true));
+        assert!(!should_reapply_dns_on_boot(true, true, false, true));
+        assert!(!should_reapply_dns_on_boot(true, true, true, false));
+    }
+
+    #[test]
+    fn auto_apply_setting_defaults_off_and_round_trips_json() {
+        assert!(!DnsAutoApplySettings::default().enabled);
+        let enabled = DnsAutoApplySettings { enabled: true };
+        let encoded = serde_json::to_string(&enabled).unwrap();
+        assert_eq!(
+            serde_json::from_str::<DnsAutoApplySettings>(&encoded).unwrap(),
+            enabled
+        );
+    }
+
+    #[test]
+    fn ignores_only_the_optional_missing_content_filter_component() {
+        assert!(is_missing_optional_filter("no such command: filter"));
+        assert!(!is_missing_optional_filter("no such command: dns-proxy"));
+        assert!(!is_missing_optional_filter("permission denied"));
     }
 }

@@ -9,7 +9,7 @@ import { enhanceStyledSelects, syncStyledSelects } from './styled-select';
 import { CONFIG_APPLY_EVENT, type ConfigApplyEventDetail } from './config-actions';
 import { createSettingsLoader, type SettingsLoader } from './settings-load';
 import { renderConnectionDetails } from './connection-details';
-import { applyActiveMihomoConfig, closeAllMihomoConnections, closeMihomoConnection, controlXkeen, getActiveMihomoConfig, getCoreSources, getHealth, getMihomoConnections, getMihomoSelectors, getMihomoVersion, getRouterDeviceList, getRouterDnsStatus, getStatus, getSystemLog, getUpdateProxies, getXkeenStatus, logUiError, pingMihomoGroup, pingMihomoProxy, queryMihomoDns, requestAppUpdate, saveCoreSources, saveUpdateProxies, selectMihomoProxy, setRouterDnsManagement, type ApiState, type CoreSources, type MihomoConnections, type MihomoDnsResult, type MihomoSelector, type RouterDnsStatus, type SystemLog, type XkeenStatus } from './api';
+import { applyActiveMihomoConfig, closeAllMihomoConnections, closeMihomoConnection, controlXkeen, getActiveMihomoConfig, getCoreSources, getDnsAutoApply, getHealth, getMihomoConnections, getMihomoSelectors, getMihomoVersion, getRouterDeviceList, getRouterDnsStatus, getStatus, getSystemLog, getUpdateProxies, getXkeenStatus, logUiError, pingMihomoGroup, pingMihomoProxy, queryMihomoDns, requestAppUpdate, saveCoreSources, saveUpdateProxies, selectMihomoProxy, setDnsAutoApply, setRouterDnsManagement, type ApiState, type CoreSources, type MihomoConnections, type MihomoDnsResult, type MihomoSelector, type RouterDnsStatus, type SystemLog, type XkeenStatus } from './api';
 import { applyPingResults, collectConnectionProxyIcons, orderSelectorsByConfig, renderConnections, renderPingStatusIcon, renderSelectorDestination, renderSelectors } from './mihomo-view';
 import { patchDnsManagement, patchMihomoDnsSettings, readMihomoDnsSettings, renderDns, type MihomoDnsSettings } from './dns-view';
 import { bindDnsTextareaGrowth } from './dns-textarea-growth';
@@ -569,11 +569,11 @@ async function runXkeenAction(action: string | undefined): Promise<void> {
 }
 
 async function maybeEnableDnsAfterStart(): Promise<void> {
-  if (uiPreferences.dnsAutostart !== 'confirm' || state.status?.mode !== 'router') return;
+  if (uiPreferences.dnsAutostart === 'off' || state.status?.mode !== 'router') return;
   try {
     dnsManagementStatus = await getRouterDnsStatus();
     if (dnsManagementStatus.dnsOverride) return;
-    const confirmed = await confirmInApp(
+    const confirmed = uiPreferences.dnsAutostart === 'auto' || await confirmInApp(
       'Передать DNS через Mihomo?',
       'KeeneticOS временно направит IPv4 DNS на Mihomo. Статические IPv6 DNS и DoH/DoT не меняются. Остановить XKeen при активной передаче DNS нельзя, пока вы не вернёте DNS KeeneticOS.',
       'Включить управление DNS',
@@ -1232,8 +1232,16 @@ function openSettings(): void {
     if (!content) return;
     content.setAttribute('aria-labelledby', `settings-${tab}`);
     if (tab === 'general') {
-      content.innerHTML = `<section class="settings-section"><h3>ВНЕШНИЙ ВИД И ЖУРНАЛ</h3><label class="setting-row setting-control-row"><span><strong>Тема</strong><small>Стандартная тема — тёмная. Выбор сохраняется в этом браузере.</small></span><select class="setting-control" data-pref="theme"><option value="light" ${uiPreferences.theme === 'light' ? 'selected' : ''}>Светлая</option><option value="dark" ${uiPreferences.theme === 'dark' ? 'selected' : ''}>Тёмная</option></select></label><label class="setting-row setting-control-row"><span><strong>Часовой пояс журнала</strong><small>Показывает время в выбранном часовом поясе. Записи без часового пояса остаются как есть.</small></span><select class="setting-control" data-pref="journalTimeZone"><option value="local" ${uiPreferences.journalTimeZone === 'local' ? 'selected' : ''}>Системный</option>${Array.from({ length: 27 }, (_, index) => index - 12).map((offset) => { const value = `UTC${offset >= 0 ? '+' : ''}${offset}`; return `<option value="${value}" ${uiPreferences.journalTimeZone === value ? 'selected' : ''}>${value}</option>`; }).join('')}</select></label></section><section class="settings-section"><h3>СОЕДИНЕНИЯ</h3>${switchRow('closeConnectionsAfterApply', 'Закрывать соединения после применения', 'Закрывает активные подключения после успешного применения конфигурации Mihomo.')}</section><section class="settings-section"><h3>DNS</h3><label class="setting-row setting-control-row"><span><strong>Автовключение управления DNS</strong><small>При запуске XKeen запросить подтверждение и передать DNS через Mihomo</small></span><select class="setting-control" data-pref="dnsAutostart"><option value="off" ${uiPreferences.dnsAutostart === 'off' ? 'selected' : ''}>Выключено</option><option value="confirm" ${uiPreferences.dnsAutostart === 'confirm' ? 'selected' : ''}>Включать с подтверждением</option></select></label></section>`;
+      content.innerHTML = `<section class="settings-section"><h3>ВНЕШНИЙ ВИД И ЖУРНАЛ</h3><label class="setting-row setting-control-row"><span><strong>Тема</strong><small>Стандартная тема — тёмная. Выбор сохраняется в этом браузере.</small></span><select class="setting-control" data-pref="theme"><option value="light" ${uiPreferences.theme === 'light' ? 'selected' : ''}>Светлая</option><option value="dark" ${uiPreferences.theme === 'dark' ? 'selected' : ''}>Тёмная</option></select></label><label class="setting-row setting-control-row"><span><strong>Часовой пояс журнала</strong><small>Показывает время в выбранном часовом поясе. Записи без часового пояса остаются как есть.</small></span><select class="setting-control" data-pref="journalTimeZone"><option value="local" ${uiPreferences.journalTimeZone === 'local' ? 'selected' : ''}>Системный</option>${Array.from({ length: 27 }, (_, index) => index - 12).map((offset) => { const value = `UTC${offset >= 0 ? '+' : ''}${offset}`; return `<option value="${value}" ${uiPreferences.journalTimeZone === value ? 'selected' : ''}>${value}</option>`; }).join('')}</select></label></section><section class="settings-section"><h3>СОЕДИНЕНИЯ</h3>${switchRow('closeConnectionsAfterApply', 'Закрывать соединения после применения', 'Закрывает активные подключения после успешного применения конфигурации Mihomo.')}</section><section class="settings-section"><h3>DNS</h3><label class="setting-row setting-control-row"><span><strong>Автоприменение управления DNS</strong><small>При перезагрузке роутера повторно включает DNS Mihomo и выключает контентный фильтр KeeneticOS</small></span><select class="setting-control" data-pref="dnsAutostart"><option value="off" ${uiPreferences.dnsAutostart === 'off' ? 'selected' : ''}>Выключено</option><option value="confirm" ${uiPreferences.dnsAutostart === 'confirm' ? 'selected' : ''}>Включать с подтверждением</option><option value="auto" ${uiPreferences.dnsAutostart === 'auto' ? 'selected' : ''}>Вкл + автоприменение</option></select></label></section>`;
       bindPreferenceInputs(content);
+      if (state.status?.mode === 'router') void getDnsAutoApply().then((enabled) => {
+        const select = content.querySelector<HTMLSelectElement>('[data-pref="dnsAutostart"]');
+        if (!select?.isConnected || select.dataset.userChanged === 'true') return;
+        if (enabled) uiPreferences.dnsAutostart = 'auto';
+        else if (uiPreferences.dnsAutostart === 'auto') uiPreferences.dnsAutostart = 'off';
+        select.value = uiPreferences.dnsAutostart;
+        writeUiPreferences(uiPreferences);
+      }).catch((error) => showToast(error instanceof Error ? error.message : 'Не удалось загрузить настройку DNS', 'error'));
       return;
     }
     if (tab === 'mihomo') {
@@ -1393,6 +1401,8 @@ function bindPreferenceInputs(root: HTMLElement): void {
     input.addEventListener('change', () => {
       const key = input.dataset.pref as keyof UiPreferences | undefined;
       if (!key) return;
+      if (key === 'dnsAutostart') input.dataset.userChanged = 'true';
+      const previousDnsAutostart = uiPreferences.dnsAutostart;
       if (input instanceof HTMLInputElement && input.type === 'checkbox') {
         (uiPreferences as unknown as Record<string, unknown>)[key] = input.checked;
       } else if (input instanceof HTMLInputElement && input.type === 'number') {
@@ -1420,6 +1430,15 @@ function bindPreferenceInputs(root: HTMLElement): void {
         if (key === 'journalTimeZone') drawJournal();
       }
       writeUiPreferences(uiPreferences);
+      if (key === 'dnsAutostart' && state.status?.mode === 'router') {
+        input.disabled = true;
+        void setDnsAutoApply(uiPreferences.dnsAutostart === 'auto').catch((error) => {
+          uiPreferences.dnsAutostart = previousDnsAutostart;
+          input.value = uiPreferences.dnsAutostart;
+          writeUiPreferences(uiPreferences);
+          showToast(error instanceof Error ? error.message : 'Не удалось сохранить настройку DNS', 'error');
+        }).finally(() => { input.disabled = false; });
+      }
       if (key === 'showConnectionSource' && uiPreferences.showConnectionSource && activePage === 'connections' && connections) {
         refreshConnectionSourceNames(connections, mihomoController?.signal ?? new AbortController().signal);
       }

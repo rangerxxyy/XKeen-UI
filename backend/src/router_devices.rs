@@ -7,8 +7,18 @@ use hyper_util::{
     rt::TokioExecutor,
 };
 use serde_json::Value;
+use std::time::Duration;
 
 const XKEEN_CONFIG: &str = "/opt/etc/xkeen/xkeen.json";
+const SYSTEM_RCI_TIMEOUT: Duration = Duration::from_secs(2);
+const MAX_SYSTEM_RCI_BODY: usize = 64 * 1024;
+
+#[derive(serde::Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct MemoryStatus {
+    pub used_mb: u64,
+    pub total_mb: u64,
+}
 
 fn rci_token(config: &str) -> Option<String> {
     serde_json::from_str::<Value>(config)
@@ -19,6 +29,60 @@ fn rci_token(config: &str) -> Option<String> {
         .map(str::trim)
         .filter(|token| !token.is_empty())
         .map(ToOwned::to_owned)
+}
+
+fn parse_system_memory(data: &Value) -> Option<MemoryStatus> {
+    let total_kb = data.get("memtotal")?.as_u64()?;
+    let used_kb = data
+        .get("memory")?
+        .as_str()?
+        .split_once('/')?
+        .0
+        .trim()
+        .parse::<u64>()
+        .ok()?;
+    if total_kb == 0 || used_kb > total_kb {
+        return None;
+    }
+    Some(MemoryStatus {
+        used_mb: used_kb.div_ceil(1024),
+        total_mb: total_kb.div_ceil(1024),
+    })
+}
+
+pub async fn read_system_memory() -> Option<MemoryStatus> {
+    let config = tokio::fs::read_to_string(XKEEN_CONFIG).await.ok()?;
+    let mut connector = HttpConnector::new();
+    connector.set_connect_timeout(Some(Duration::from_secs(1)));
+    let client: Client<_, Empty<Bytes>> = Client::builder(TokioExecutor::new()).build(connector);
+    let mut request = Request::builder().uri("http://127.0.0.1:79/rci/show/system");
+    if let Some(token) = rci_token(&config) {
+        request = request.header("X-Ndma-Tkn", token);
+    }
+    let request = request.body(Empty::new()).ok()?;
+
+    tokio::time::timeout(SYSTEM_RCI_TIMEOUT, async move {
+        let response = client.request(request).await.ok()?;
+        if !response.status().is_success() {
+            return None;
+        }
+        let mut body = response.into_body();
+        let mut bytes = Vec::new();
+        while let Some(frame) = body.frame().await {
+            let frame = frame.ok()?;
+            if let Ok(data) = frame.into_data() {
+                if bytes.len().saturating_add(data.len()) > MAX_SYSTEM_RCI_BODY {
+                    return None;
+                }
+                bytes.extend_from_slice(&data);
+            }
+        }
+        let payload = serde_json::from_slice::<Value>(&bytes).ok()?;
+        parse_system_memory(&payload)
+    })
+    .await
+    .ok()
+    .flatten()
 }
 
 pub async fn devices(State(state): State<AppState>) -> impl IntoResponse {
@@ -103,7 +167,35 @@ pub async fn devices(State(state): State<AppState>) -> impl IntoResponse {
 
 #[cfg(test)]
 mod tests {
-    use super::rci_token;
+    use super::{parse_system_memory, rci_token};
+    use serde_json::json;
+
+    #[test]
+    fn parses_rci_memory_in_kib_and_reports_nominal_total_megabytes() {
+        let memory = parse_system_memory(&json!({
+            "memtotal": 524288,
+            "memory": "123456/524288"
+        }))
+        .expect("complete RCI memory metrics");
+
+        assert_eq!(memory.used_mb, 121);
+        assert_eq!(memory.total_mb, 512);
+    }
+
+    #[test]
+    fn rejects_incomplete_or_inconsistent_rci_memory_metrics() {
+        assert!(parse_system_memory(&json!({ "memtotal": 524288 })).is_none());
+        assert!(parse_system_memory(&json!({
+            "memtotal": 524288,
+            "memory": "524289/524288"
+        }))
+        .is_none());
+        assert!(parse_system_memory(&json!({
+            "memtotal": "524288",
+            "memory": "123456/524288"
+        }))
+        .is_none());
+    }
 
     #[test]
     fn reads_rci_token_from_xkeen_configuration_without_exposing_other_fields() {

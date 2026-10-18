@@ -16,6 +16,8 @@ import { generateConfigForCore } from './outbound-parser';
 import { appendMihomoProxy } from './proxy-import';
 import { createMihomoProviderYaml, insertMihomoProvider, nextMihomoProviderName, type MihomoProviderPosition, type MihomoProviderSettings } from './mihomo-provider';
 import { formatBackupDate, formatBackupSize } from './config-backups';
+import { convertAmneziaConfig, renderAmneziaImportActionMarkup } from './amnezia-import';
+import { mountUsefulLinksMenu } from './useful-links';
 
 const draftKey = 'xkeen-ui:draft:';
 const activeFileKey = 'xkeen-ui:draft-active-file';
@@ -159,6 +161,98 @@ function bindConfigBackups(signal: AbortSignal): void {
     } catch (cause) {
       if (list) { list.replaceChildren(); const error = document.createElement('p'); error.className = 'config-backups-empty is-error'; error.textContent = cause instanceof Error ? cause.message : 'Не удалось загрузить резервные копии.'; list.append(error); }
     }
+  }, { signal });
+}
+
+function bindAmneziaImportDialog(signal: AbortSignal): void {
+  const menu = document.querySelector<HTMLElement>('.editor-utilities-menu');
+  if (!menu) return;
+  let trigger = document.querySelector<HTMLButtonElement>('#yaml-import-amnezia');
+  if (!trigger) {
+    trigger = document.createElement('button');
+    trigger.id = 'yaml-import-amnezia';
+    trigger.type = 'button';
+    trigger.setAttribute('role', 'menuitem');
+    trigger.innerHTML = '<span class="utility-icon" aria-hidden="true">⇧</span><span>Импорт AmneziaWG</span>';
+    menu.append(trigger);
+  }
+  trigger.hidden = currentFile().id !== 'config';
+  trigger.addEventListener('click', (event) => {
+    (event.currentTarget as HTMLButtonElement).closest('details')?.removeAttribute('open');
+    const dialog = document.createElement('dialog');
+    dialog.className = 'modal amnezia-import-dialog';
+    dialog.setAttribute('aria-labelledby', 'amnezia-import-title');
+    dialog.innerHTML = `<form class="modal-panel" method="dialog">
+      <header class="modal-heading"><span class="modal-icon" aria-hidden="true">⇧</span><h2 id="amnezia-import-title">Импорт AmneziaWG</h2><button class="icon-button" type="button" data-amnezia-close aria-label="Закрыть">×</button></header>
+      <p class="modal-note">Выберите конфигурацию AmneziaWG (.conf), чтобы преобразовать её в прокси Mihomo.</p>
+      <input class="amnezia-file-input" type="file" accept=".conf,.cfg,text/plain" aria-label="Файл конфигурации AmneziaWG">
+      <button class="amnezia-dropzone" type="button" data-amnezia-pick><span class="amnezia-upload-icon" aria-hidden="true">⇧</span><strong>Перетащите файл .conf сюда</strong><span>или нажмите для выбора файла</span></button>
+      <p class="amnezia-file-name" data-amnezia-filename hidden></p>
+      <p class="amnezia-import-error" data-amnezia-error role="alert" hidden></p>
+      <section class="amnezia-preview" data-amnezia-preview hidden><div class="amnezia-preview-heading"><span data-amnezia-version></span><button class="editor-button" type="button" data-amnezia-reset>Выбрать другой файл</button></div><pre data-amnezia-yaml></pre></section>
+      <footer class="amnezia-import-actions" data-amnezia-actions hidden>${renderAmneziaImportActionMarkup()}</footer>
+    </form>`;
+    document.body.append(dialog);
+    const input = dialog.querySelector<HTMLInputElement>('.amnezia-file-input')!;
+    const dropzone = dialog.querySelector<HTMLButtonElement>('[data-amnezia-pick]')!;
+    const preview = dialog.querySelector<HTMLElement>('[data-amnezia-preview]')!;
+    const actions = dialog.querySelector<HTMLElement>('[data-amnezia-actions]')!;
+    const filename = dialog.querySelector<HTMLElement>('[data-amnezia-filename]')!;
+    const error = dialog.querySelector<HTMLElement>('[data-amnezia-error]')!;
+    let generated = '';
+    let importedName = '';
+    const close = () => { dialog.close(); dialog.remove(); };
+    const reset = () => {
+      generated = ''; importedName = ''; input.value = '';
+      preview.hidden = true; actions.hidden = true; filename.hidden = true; error.hidden = true;
+      dropzone.hidden = false;
+    };
+    const loadFile = async (file?: File) => {
+      if (!file) return;
+      reset();
+      if (!/\.(conf|cfg)$/i.test(file.name) && file.type !== 'text/plain') {
+        error.textContent = 'Выберите текстовый файл .conf или .cfg.'; error.hidden = false; return;
+      }
+      try {
+        const converted = convertAmneziaConfig(await file.text(), file.name);
+        generated = converted.yaml; importedName = file.name;
+        filename.textContent = `Файл: ${file.name}`; filename.hidden = false;
+        dialog.querySelector<HTMLElement>('[data-amnezia-version]')!.textContent = `WIREGUARD / AMNEZIAWG · AWG ${converted.version.version}${converted.version.confidence === 'minimum' ? '+' : ''}`;
+        dialog.querySelector<HTMLElement>('[data-amnezia-yaml]')!.textContent = converted.previewYaml;
+        preview.hidden = false; actions.hidden = false; dropzone.hidden = true;
+      } catch (cause) {
+        error.textContent = cause instanceof Error ? cause.message : 'Не удалось обработать конфигурацию AmneziaWG.';
+        error.hidden = false;
+      }
+    };
+    input.addEventListener('change', () => { void loadFile(input.files?.[0]); }, { signal });
+    dropzone.addEventListener('click', () => input.click(), { signal });
+    dropzone.addEventListener('dragover', (dragEvent) => { dragEvent.preventDefault(); dropzone.classList.add('is-dragging'); }, { signal });
+    dropzone.addEventListener('dragleave', () => dropzone.classList.remove('is-dragging'), { signal });
+    dropzone.addEventListener('drop', (dropEvent) => {
+      dropEvent.preventDefault(); dropzone.classList.remove('is-dragging');
+      void loadFile(dropEvent.dataTransfer?.files[0]);
+    }, { signal });
+    dialog.querySelector('[data-amnezia-reset]')?.addEventListener('click', reset, { signal });
+    dialog.querySelector('[data-amnezia-close]')?.addEventListener('click', close, { signal });
+    dialog.querySelector<HTMLButtonElement>('[data-amnezia-add]')?.addEventListener('click', () => {
+      if (!editor || currentFile().id !== 'config' || !generated) return;
+      try {
+        const current = editor.state.doc.toString();
+        const updated = appendMihomoProxy(current, generated);
+        enableEditorEditing();
+        editor.dispatch({ changes: { from: 0, to: editor.state.doc.length, insert: updated } });
+        editor.focus();
+        validateStructuredDocument(updated);
+        setValidation(`Прокси AmneziaWG из «${importedName}» добавлен в локальный черновик. Проверьте YAML перед применением.`, true);
+        close();
+      } catch (cause) {
+        error.textContent = cause instanceof Error ? cause.message : 'Не удалось добавить прокси в конфигурацию.';
+        error.hidden = false;
+      }
+    }, { signal });
+    dialog.addEventListener('click', (clickEvent) => { if (clickEvent.target === dialog) close(); }, { signal });
+    dialog.showModal();
   }, { signal });
 }
 
@@ -508,6 +602,7 @@ export function mountYamlEditor(routerMode = false, activeCore: 'mihomo' | 'xray
   const saveButton = document.querySelector<HTMLButtonElement>('#config-save-active');
   if (saveButton) saveButton.disabled = currentSnapshot() === null;
 
+  mountUsefulLinksMenu();
   setEditorIdentity(routerMode, activeCore);
   editorEditing = false;
   editorReadOnly = new Compartment();
@@ -516,6 +611,7 @@ export function mountYamlEditor(routerMode = false, activeCore: 'mihomo' | 'xray
     if ((event.target as HTMLElement).closest('.cm-content')) enableEditorEditing();
   }, { signal });
   bindAddProxyDialog(signal);
+  bindAmneziaImportDialog(signal);
   bindConfigBackups(signal);
   const file = currentFile();
   const storedDraft = sessionStorage.getItem(`${draftKey}${file.id}`);

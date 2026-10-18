@@ -1,4 +1,4 @@
-import { installCoreRelease } from './api';
+import { getUpdateProxies, installCoreRelease } from './api';
 import { confirmInApp } from './confirm-dialog';
 import { bindDialogMotion } from './dialog-motion';
 
@@ -210,7 +210,7 @@ export async function openCoreReleaseDialog(
     const configuredRepository = await repository();
     const repo = normalizeCoreRepository(configuredRepository);
     source.textContent = repo;
-    const releases = await fetchCoreReleases(configuredRepository);
+    const releases = await fetchConfiguredCoreReleases(configuredRepository);
     const visible = releases.filter((release) => isDisplayableCoreRelease(core, release));
     status.textContent = `${visible.length} совместимых ARM64-релизов${currentVersion ? ` · установлена ${currentVersion}` : ''}`;
     renderReleaseList(target, core, releases, keepBackup);
@@ -251,17 +251,38 @@ async function installRelease(core: CoreName, tag: string, asset: string, sha256
   }
 }
 
-export async function fetchCoreReleases(repository: string): Promise<GitHubRelease[]> {
+export async function fetchCoreReleases(repository: string, proxies: string[] = []): Promise<GitHubRelease[]> {
   const repo = normalizeCoreRepository(repository);
-  const response = await fetch(`https://api.github.com/repos/${repo}/releases?per_page=5`, {
+  const apiUrl = `https://api.github.com/repos/${repo}/releases?per_page=5`;
+  const urls = [apiUrl, ...proxies.flatMap((proxy) => {
+    try {
+      const parsed = new URL(proxy);
+      if (parsed.protocol !== 'https:' || parsed.username || parsed.password) return [];
+      return [`${proxy.replace(/\/+$/, '')}/${apiUrl}`];
+    } catch { return []; }
+  })];
+  let response: Response | undefined;
+  let lastNetworkError: unknown;
+  for (const url of urls) {
+    try {
+      const candidate = await fetch(url, {
     headers: { Accept: 'application/vnd.github+json', 'X-GitHub-Api-Version': '2022-11-28' },
     credentials: 'omit',
     cache: 'no-store',
     referrerPolicy: 'no-referrer',
     signal: AbortSignal.timeout(12_000),
   });
-  if (response.status === 404) throw new Error('GitHub не нашёл такой репозиторий или он закрытый.');
-  if (response.status === 403 || response.status === 429) throw new Error('GitHub ограничил запросы. Повторите проверку позже.');
+      if (candidate.status === 404) throw new Error('GitHub не нашёл такой репозиторий или он закрытый.');
+      if ((candidate.status === 403 || candidate.status === 429 || candidate.status >= 500) && url !== urls.at(-1)) continue;
+      response = candidate;
+      break;
+    } catch (error) {
+      if (error instanceof Error && error.message.startsWith('GitHub не нашёл')) throw error;
+      lastNetworkError = error;
+    }
+  }
+  if (!response) throw new Error(lastNetworkError instanceof Error ? 'Не удалось получить релизы GitHub напрямую или через настроенные прокси.' : 'GitHub не вернул список релизов.');
+  if (response.status === 403 || response.status === 429) throw new Error('GitHub ограничил запросы. Проверьте настроенные прокси и повторите попытку позже.');
   if (!response.ok) throw new Error(`GitHub API вернул HTTP ${response.status}.`);
   const length = Number(response.headers.get('Content-Length') || 0);
   if (length > RESPONSE_LIMIT) throw new Error('Ответ со списком релизов превышает допустимый размер.');
@@ -295,6 +316,11 @@ export async function fetchCoreReleases(repository: string): Promise<GitHubRelea
   return payload;
 }
 
+export async function fetchConfiguredCoreReleases(repository: string): Promise<GitHubRelease[]> {
+  const proxies = await getUpdateProxies().then(({ proxies: values }) => values).catch(() => []);
+  return fetchCoreReleases(repository, proxies);
+}
+
 export function bindCoreReleaseChecks(): void {
   for (const button of document.querySelectorAll<HTMLButtonElement>('[data-core-release]')) {
     button.addEventListener('click', async () => {
@@ -307,7 +333,7 @@ export function bindCoreReleaseChecks(): void {
       button.textContent = 'Проверяем…';
       target.replaceChildren(element('p', 'core-release-feedback', 'Получаем опубликованные релизы из GitHub.'));
       try {
-        const releases = await fetchCoreReleases(input.value);
+        const releases = await fetchConfiguredCoreReleases(input.value);
         renderReleaseList(target, core, releases);
       } catch (error) {
         target.replaceChildren(element('p', 'core-release-feedback is-error', error instanceof Error ? error.message : 'Не удалось получить релизы.'));

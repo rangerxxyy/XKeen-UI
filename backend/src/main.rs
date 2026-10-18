@@ -348,18 +348,11 @@ struct SystemStatus {
     port: u16,
     uptime_seconds: u64,
     platform: String,
-    memory: Option<MemoryStatus>,
+    memory: Option<router_devices::MemoryStatus>,
     load_average: Option<f32>,
     cpu_percent: Option<f32>,
     services: Vec<ServiceStatus>,
     notice: &'static str,
-}
-
-#[derive(Serialize)]
-#[serde(rename_all = "camelCase")]
-struct MemoryStatus {
-    used_mb: u64,
-    total_mb: u64,
 }
 
 #[derive(Deserialize)]
@@ -731,6 +724,14 @@ async fn status(State(state): State<AppState>) -> Json<SystemStatus> {
         })
         .collect();
 
+    let memory = if state.router_mode {
+        router_devices::read_system_memory()
+            .await
+            .or_else(read_memory_status)
+    } else {
+        None
+    };
+
     Json(SystemStatus {
         app_version: env!("CARGO_PKG_VERSION"),
         mode: if state.router_mode {
@@ -741,7 +742,7 @@ async fn status(State(state): State<AppState>) -> Json<SystemStatus> {
         port: state.port,
         uptime_seconds: state.started.elapsed().as_secs(),
         platform: state.platform.clone(),
-        memory: state.router_mode.then(read_memory_status).flatten(),
+        memory,
         load_average: state
             .router_mode
             .then(|| {
@@ -1129,7 +1130,7 @@ fn mihomo_error_response(error: MihomoError) -> Response {
     (status, Json(serde_json::json!({"error":message}))).into_response()
 }
 
-fn read_memory_status() -> Option<MemoryStatus> {
+fn read_memory_status() -> Option<router_devices::MemoryStatus> {
     let contents = std::fs::read_to_string("/proc/meminfo").ok()?;
     let mut total_kb = None;
     let mut available_kb = None;
@@ -1143,7 +1144,7 @@ fn read_memory_status() -> Option<MemoryStatus> {
     }
     let total = total_kb?;
     let available = available_kb?.min(total);
-    Some(MemoryStatus {
+    Some(router_devices::MemoryStatus {
         used_mb: (total - available) / 1024,
         total_mb: total / 1024,
     })
@@ -1445,7 +1446,7 @@ mod tests {
 
     #[test]
     fn backend_package_version_matches_release_version() {
-        assert_eq!(env!("CARGO_PKG_VERSION"), "0.5.3");
+        assert_eq!(env!("CARGO_PKG_VERSION"), "0.5.4");
     }
 
     #[test]

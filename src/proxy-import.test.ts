@@ -15,4 +15,5 @@ describe('Mihomo proxy import', () => {
     const parsed = parse(result) as { proxies: { name: string }[] };
     expect(parsed.proxies[0]?.name).toBe('new');
   });
+
 });

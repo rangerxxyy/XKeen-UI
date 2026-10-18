@@ -12,7 +12,7 @@ import { renderConnectionDetails } from './connection-details';
 import { applyActiveMihomoConfig, closeAllMihomoConnections, closeMihomoConnection, controlXkeen, getActiveMihomoConfig, getCoreSources, getHealth, getMihomoConnections, getMihomoSelectors, getMihomoVersion, getRouterDeviceList, getRouterDnsStatus, getStatus, getSystemLog, getUpdateProxies, getXkeenStatus, logUiError, pingMihomoGroup, pingMihomoProxy, queryMihomoDns, requestAppUpdate, saveCoreSources, saveUpdateProxies, selectMihomoProxy, setRouterDnsManagement, type ApiState, type CoreSources, type MihomoConnections, type MihomoDnsResult, type MihomoSelector, type RouterDnsStatus, type SystemLog, type XkeenStatus } from './api';
 import { applyPingResults, collectConnectionProxyIcons, orderSelectorsByConfig, renderConnections, renderPingStatusIcon, renderSelectors } from './mihomo-view';
 import { patchDnsManagement, patchMihomoDnsSettings, readMihomoDnsSettings, renderDns, type MihomoDnsSettings } from './dns-view';
-import { fetchCoreReleases, isStableCompatibleRelease, openCoreReleaseDialog } from './core-releases';
+import { fetchConfiguredCoreReleases, isStableCompatibleRelease, openCoreReleaseDialog } from './core-releases';
 import { openCoreManagerDialog } from './core-manager';
 import { appUpdateProgressFromLog, isInstalledReleaseVersion, isNewerVersion, listAppReleases, type AppRelease } from './app-update';
 import { confirmInApp } from './confirm-dialog';
@@ -21,6 +21,8 @@ import { lifecycleFeedback } from './service-feedback';
 import { readUiPreferences, validPingUrl, writeUiPreferences, type UiPreferences } from './preferences';
 import { deduplicateRepeatedUiErrors, formatJournalMessage, formatJournalTimestamp, getJournalViewState, renderJournalLoadingSkeleton, splitJournalLevel, stripLogSourceLabel } from './journal-view-state';
 import { getJournalScrollTop, getNewJournalLines, hasJournalLinesChanged } from './journal-scroll';
+import { createAsyncStatusCache } from './dns-status-cache';
+import { selectProxyOptimistically } from './selector-selection';
 import { hideClearedJournalLines, rememberClearedJournal } from './journal-clear';
 import { journalExpandIcon, journalExpandLabel } from './journal-ui';
 import { renderAppReleaseActions, renderAppUpdateNotice, renderAppVersionChip } from './app-release-ui';
@@ -51,6 +53,7 @@ let mihomoController: AbortController | undefined;
 let selectors: MihomoSelector[] = [];
 let selectorsLoading = true;
 let selectorsError: string | null = null;
+let selectorSelectionBusy = false;
 let connections: MihomoConnections | null = null;
 let connectionSourceNames: Record<string, string> = {};
 let connectionSort: ConnectionSort = { key: 'start', direction: 'descending' };
@@ -64,6 +67,7 @@ let dnsQueryName = '';
 let dnsQueryType = 'A';
 let dnsController: AbortController | undefined;
 let dnsManagementStatus: RouterDnsStatus | null = null;
+const dnsStatusCache = createAsyncStatusCache<RouterDnsStatus>();
 let dnsManagementLoading = false;
 let dnsManagementError: string | null = null;
 let dnsManagementBusy = false;
@@ -203,7 +207,7 @@ function renderConfiguration(): string {
   return `<section class="editor-workspace config-layout" aria-label="Редактор конфигурации">
     <div class="config-editor-main">
       <div class="code-editor-shell"><div class="code-editor" id="yaml-editor" aria-label="Текст конфигурации"></div></div>
-        <div class="editor-statusbar"><span id="yaml-validation" class="editor-validation" aria-live="polite">Проверка конфигурации…</span><div class="editor-actions"><button class="editor-button" id="config-save-active" type="button" data-router-file disabled title="Сохранить файл на роутере без применения">Сохранить</button><button class="editor-button editor-button-primary" id="config-apply-active" type="button" data-router-file disabled title="Проверить, сохранить и перезапустить активное ядро">Применить</button><details class="editor-utilities"><summary class="editor-button"><span class="utilities-trigger-icon" aria-hidden="true">•••</span><span>Утилиты</span><span class="utilities-chevron" aria-hidden="true"></span></summary><div class="editor-utilities-menu" role="menu" aria-label="Утилиты конфигурации"><button type="button" role="menuitem" id="yaml-add-proxy" data-mihomo-only><span class="utility-icon" aria-hidden="true">↗</span><span>Добавить прокси</span></button><button type="button" role="menuitem" id="yaml-template" data-structured-only><span class="utility-icon" aria-hidden="true">▤</span><span>Шаблон конфигурации</span></button><button type="button" role="menuitem" id="yaml-backups" data-mihomo-only><span class="utility-icon" aria-hidden="true">◷</span><span>Резервные копии</span></button></div></details></div></div>
+        <div class="editor-statusbar"><span id="yaml-validation" class="editor-validation" aria-live="polite">Проверка конфигурации…</span><div class="editor-actions"><button class="editor-button editor-button-primary" id="config-apply-active" type="button" data-router-file disabled title="Проверить, сохранить и перезапустить активное ядро">Применить</button><button class="editor-button" id="config-save-active" type="button" data-router-file disabled title="Сохранить файл на роутере без применения">Сохранить</button><details class="editor-utilities"><summary class="editor-button"><span class="utilities-trigger-icon" aria-hidden="true">•••</span><span>Утилиты</span><span class="utilities-chevron" aria-hidden="true"></span></summary><div class="editor-utilities-menu" role="menu" aria-label="Утилиты конфигурации"><button type="button" role="menuitem" id="yaml-add-proxy" data-mihomo-only><span class="utility-icon" aria-hidden="true">↗</span><span>Добавить прокси</span></button><button type="button" role="menuitem" id="yaml-template" data-structured-only><span class="utility-icon" aria-hidden="true">▤</span><span>Шаблон конфигурации</span></button><button type="button" role="menuitem" id="yaml-backups" data-mihomo-only><span class="utility-icon" aria-hidden="true">◷</span><span>Резервные копии</span></button></div></details></div></div>
     </div>
   </section>`;
 }
@@ -350,6 +354,7 @@ async function loadSystemLog(): Promise<void> {
 }
 
 function bindJournal(): void {
+  if (!document.querySelector('.journal-panel')) return;
   const fileSelect = document.querySelector<HTMLSelectElement>('#journal-file');
   fileSelect?.addEventListener('change', () => {
     selectedLog = fileSelect.value;
@@ -430,7 +435,7 @@ function render(): void {
         }, { values: dnsConfig?.values ?? null, loading: dnsConfigLoading, error: dnsConfigError, busy: dnsConfigBusy })
         : renderComingSoon(activePage);
   const workspace = renderWorkspaceFrame(renderNavigation(), pageContent, `main-content${animatePageEntry ? ' page-enter' : ''}`);
-  app.innerHTML = `<div class="app-shell">${renderHeader()}<div class="workspace-scroll">${workspace}${renderJournal()}</div><div class="toast-region" aria-live="polite"></div></div>`;
+  app.innerHTML = `<div class="app-shell">${renderHeader()}<div class="workspace-scroll">${workspace}${activePage === 'configuration' ? '' : renderJournal()}</div><div class="toast-region" aria-live="polite"></div></div>`;
   animatePageEntry = false;
   updateAppUpdateNotice();
   app.querySelector<HTMLElement>('.workspace-scroll')!.scrollTop = scrollTop;
@@ -624,7 +629,7 @@ async function runDnsQuery(): Promise<void> {
 }
 
 function bindDnsManagementControls(root: ParentNode): void {
-  root.querySelector<HTMLButtonElement>('#dns-management-refresh')?.addEventListener('click', () => void loadRouterDnsStatus());
+  root.querySelector<HTMLButtonElement>('#dns-management-refresh')?.addEventListener('click', () => void loadRouterDnsStatus(true));
   root.querySelector<HTMLInputElement>('#dns-management-toggle')?.addEventListener('change', () => {
     dnsManagementConfirm = true;
     render();
@@ -636,18 +641,31 @@ function bindDnsManagementControls(root: ParentNode): void {
   root.querySelector<HTMLButtonElement>('#dns-management-apply')?.addEventListener('click', () => void runDnsManagementToggle());
 }
 
-async function loadRouterDnsStatus(): Promise<void> {
+async function loadRouterDnsStatus(force = false): Promise<void> {
+  if (force) dnsStatusCache.invalidate();
+  const cached = dnsStatusCache.peek();
+  if (cached) {
+    dnsManagementStatus = cached;
+    if (activePage === 'dns') render();
+    return;
+  }
+  const requestRevision = dnsStatusCache.currentRevision();
   dnsManagementLoading = true;
   dnsManagementError = null;
   render();
   try {
-    dnsManagementStatus = await getRouterDnsStatus();
+    const status = await dnsStatusCache.get(() => getRouterDnsStatus());
+    if (dnsStatusCache.isCurrent(requestRevision)) dnsManagementStatus = status;
   } catch (error) {
-    dnsManagementError = error instanceof Error ? error.message : 'Не удалось прочитать состояние DNS';
-    void logUiError('ui', `DNS status: ${dnsManagementError}`).catch(() => undefined);
+    if (dnsStatusCache.isCurrent(requestRevision)) {
+      dnsManagementError = error instanceof Error ? error.message : 'Не удалось прочитать состояние DNS';
+      void logUiError('ui', `DNS status: ${dnsManagementError}`).catch(() => undefined);
+    }
   } finally {
-    dnsManagementLoading = false;
-    if (activePage === 'dns') render();
+    if (dnsStatusCache.isCurrent(requestRevision)) {
+      dnsManagementLoading = false;
+      if (activePage === 'dns') render();
+    }
   }
 }
 
@@ -679,7 +697,7 @@ async function saveMihomoDnsConfig(settings: MihomoDnsSettings): Promise<void> {
     await applyActiveMihomoConfig(updated, dnsConfig.content);
     const current = await getActiveMihomoConfig();
     dnsConfig = { content: current.content, values: readMihomoDnsSettings(current.content) };
-    await loadRouterDnsStatus();
+    await loadRouterDnsStatus(true);
     showToast('Настройки DNS Mihomo сохранены и применены', 'success');
   } catch (error) {
     dnsConfigError = error instanceof Error ? error.message : 'Не удалось применить настройки DNS Mihomo';
@@ -706,7 +724,7 @@ async function runDnsManagementToggle(): Promise<void> {
     await setRouterDnsManagement({ enabled, expectedContent: activeConfig.content });
     notice = enabled ? 'DNS Mihomo включён' : 'DNS возвращён KeeneticOS';
     try {
-      dnsManagementStatus = await getRouterDnsStatus();
+      await loadRouterDnsStatus(true);
     } catch (error) {
       dnsManagementStatus = null;
       dnsManagementError = error instanceof Error ? `Настройки применились, но состояние не обновилось: ${error.message}` : 'Настройки применились, но состояние не обновилось';
@@ -983,18 +1001,27 @@ function refreshConnectionSourceNames(data: MihomoConnections, signal: AbortSign
 }
 
 async function selectProxyFromUi(button: HTMLButtonElement): Promise<void> {
+  if (selectorSelectionBusy) return;
   const group = button.dataset.proxyGroup;
   const name = button.dataset.proxyName;
   if (button.getAttribute('aria-current') === 'true') return;
   if (!group || !name) return;
-  button.disabled = true;
+  const previous = selectors;
+  const updated = selectProxyOptimistically(previous, group, name);
+  if (updated === previous) return;
+  selectorSelectionBusy = true;
+  selectors = updated;
+  selectorsError = null;
+  render();
   try {
-    await selectMihomoProxy(group, name, mihomoController?.signal);
-    await loadMihomoPage('selectors');
+    await selectMihomoProxy(group, name);
   } catch (error) {
+    selectors = previous;
     selectorsError = error instanceof Error ? error.message : 'Не удалось выбрать узел';
-    selectorsLoading = false;
-    render();
+    showToast(`Не удалось выбрать узел: ${selectorsError}`, 'error');
+  } finally {
+    selectorSelectionBusy = false;
+    if (activePage === 'selectors') render();
   }
 }
 
@@ -1451,8 +1478,8 @@ async function checkUpdatesInBackground(): Promise<void> {
     try {
       const sources = await getCoreSources();
       const [mihomoReleases, xrayReleases] = await Promise.all([
-        fetchCoreReleases(sources.mihomo),
-        fetchCoreReleases(sources.xray),
+        fetchConfiguredCoreReleases(sources.mihomo),
+        fetchConfiguredCoreReleases(sources.xray),
       ]);
       const mihomoLatest = mihomoReleases.find((release) => isStableCompatibleRelease('mihomo', release));
       const xrayLatest = xrayReleases.find((release) => isStableCompatibleRelease('xray', release));

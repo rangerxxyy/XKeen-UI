@@ -94,6 +94,42 @@ export function isNewerVersion(latest: string, installed: string): boolean {
   return false;
 }
 
+export function isInstalledReleaseVersion(installed: string, requestedTag: string): boolean {
+  const installedParts = versionParts(installed);
+  const requestedParts = versionParts(requestedTag);
+  return installedParts !== null && requestedParts !== null
+    && installedParts.every((part, index) => part === requestedParts[index]);
+}
+
+export function appUpdateProgressFromLog(lines: string[], requestedTag: string): string | null {
+  let startIndex = -1;
+  for (let index = lines.length - 1; index >= 0; index -= 1) {
+    if (lines[index]?.includes(`Starting XKeen UI update to ${requestedTag}`)) {
+      startIndex = index;
+      break;
+    }
+  }
+  if (startIndex < 0) return null;
+  const attemptLines = lines.slice(startIndex + 1);
+  const stages: Array<[string, string]> = [
+    ['SUCCESS: XKeen UI ', 'Установка завершена. Перезагружаем панель…'],
+    ['Запуск обновлённой панели', 'Запускаем обновлённую панель…'],
+    ['Установка новой версии панели', `Устанавливаем XKeen UI ${requestedTag}…`],
+    ['Остановка текущей панели', 'Останавливаем текущую панель…'],
+    ['Сохранение предыдущей версии', 'Сохраняем предыдущую версию панели…'],
+    ['Проверка контрольной суммы', 'Проверяем целостность пакета…'],
+    ['Загрузка пакета XKeen UI', 'Загружаем пакет XKeen UI…'],
+    ['Fetching installer from GitHub', 'Загружаем установщик XKeen UI…'],
+    ['Starting XKeen UI update', 'Подготавливаем обновление…'],
+  ];
+  for (let index = attemptLines.length - 1; index >= 0; index -= 1) {
+    const line = attemptLines[index] ?? '';
+    const stage = stages.find(([marker]) => line.includes(marker));
+    if (stage) return stage[1];
+  }
+  return null;
+}
+
 export async function checkAppUpdate(installedVersion: string, signal?: AbortSignal): Promise<AppRelease | null> {
   const releases = await listAppReleases(signal);
   const release = releases[0];

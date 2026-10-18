@@ -14,7 +14,7 @@ import { applyPingResults, collectConnectionProxyIcons, orderSelectorsByConfig, 
 import { patchDnsManagement, patchMihomoDnsSettings, readMihomoDnsSettings, renderDns, type MihomoDnsSettings } from './dns-view';
 import { fetchCoreReleases, isStableCompatibleRelease, openCoreReleaseDialog } from './core-releases';
 import { openCoreManagerDialog } from './core-manager';
-import { isNewerVersion, listAppReleases, type AppRelease } from './app-update';
+import { appUpdateProgressFromLog, isInstalledReleaseVersion, isNewerVersion, listAppReleases, type AppRelease } from './app-update';
 import { confirmInApp } from './confirm-dialog';
 import { bindDialogMotion, closeDialogWithMotion } from './dialog-motion';
 import { lifecycleFeedback } from './service-feedback';
@@ -31,15 +31,11 @@ import { SourceNameResolver } from './source-names';
 import { renderResourceMetrics } from './resource-metrics';
 import { shouldReportUiError } from './ui-error-dedupe';
 import { sortMihomoConnections, type ConnectionSort, type ConnectionSortKey } from './connection-sort';
+import { MAIN_NAVIGATION_PAGES, renderNavigationView } from './navigation-view';
 
 type Page = 'selectors' | 'connections' | 'configuration' | 'dns';
 
-const pages: { id: Page; label: string; icon: string }[] = [
-  { id: 'selectors', label: 'Селекторы', icon: '⇄' },
-  { id: 'connections', label: 'Соединения', icon: '⌁' },
-  { id: 'configuration', label: 'Конфигурация', icon: '⌘' },
-  { id: 'dns', label: 'DNS', icon: '◎' },
-];
+const pages = MAIN_NAVIGATION_PAGES;
 
 const state: ApiState = { connected: false, status: null, error: null, checkedAt: null };
 type YamlEditorModule = typeof import('./yaml-editor');
@@ -137,12 +133,14 @@ function formatAppReleaseNotes(value: string): string {
 }
 
 function renderHeader(): string {
-  const serviceBusy = xkeenControlBusy || configApplyBusy;
+  const serviceBusy = xkeenControlBusy || configApplyBusy || appUpdateInstalling;
   const status = state.status;
   const service = status?.services.find((item) => item.name.toLowerCase() === 'mihomo');
   const formatVersion = (version: string) => `v${escapeHtml(version.replace(/^v+/i, ''))}`;
   const coreLabel = mihomoVersion ? formatVersion(mihomoVersion) : service ? (service.version ? formatVersion(service.version) : service.state === 'running' ? 'Активен' : service.state === 'stopped' ? 'Остановлен' : 'Недоступен') : state.connected ? 'Не проверен' : 'Ожидание';
-  const serviceText = serviceBusy
+  const serviceText = appUpdateInstalling
+    ? 'Обновление XKeen UI…'
+    : serviceBusy
     ? `${xkeenControlAction === 'stop' ? 'Остановка' : xkeenControlAction === 'start' ? 'Запуск' : 'Перезапуск'} XKeen…`
     : status?.mode === 'router'
       ? xkeenStatus?.installed
@@ -164,7 +162,7 @@ function renderHeader(): string {
 }
 
 function renderNavigation(): string {
-  return `<nav class="navigation" aria-label="Разделы панели">${pages.map((page) => `<button class="nav-item ${activePage === page.id ? 'active' : ''}" data-page="${page.id}" ${activePage === page.id ? 'aria-current="page"' : ''}><span class="nav-icon">${page.icon}</span>${page.label}</button>`).join('')}<span class="navigation-spacer"></span></nav>`;
+  return renderNavigationView(pages, activePage, activePage === 'configuration' ? renderConfigFileButtons() : '');
 }
 
 function renderConfigFileButtons(): string {
@@ -431,7 +429,7 @@ function render(): void {
           busy: dnsManagementBusy, confirm: dnsManagementConfirm,
         }, { values: dnsConfig?.values ?? null, loading: dnsConfigLoading, error: dnsConfigError, busy: dnsConfigBusy })
         : renderComingSoon(activePage);
-  app.innerHTML = `<div class="app-shell">${renderHeader()}${renderNavigation()}${activePage === 'configuration' ? `<div class="config-file-switcher-panel">${renderConfigFileButtons()}</div>` : ''}<div class="workspace-scroll"><main class="main-content${animatePageEntry ? ' page-enter' : ''}">${pageContent}</main>${renderJournal()}</div><div class="toast-region" aria-live="polite"></div></div>`;
+  app.innerHTML = `<div class="app-shell">${renderHeader()}${renderNavigation()}<div class="workspace-scroll"><main class="main-content${animatePageEntry ? ' page-enter' : ''}">${pageContent}</main>${renderJournal()}</div><div class="toast-region" aria-live="polite"></div></div>`;
   animatePageEntry = false;
   updateAppUpdateNotice();
   app.querySelector<HTMLElement>('.workspace-scroll')!.scrollTop = scrollTop;
@@ -1341,6 +1339,7 @@ async function installAppUpdate(): Promise<void> {
   const expectedVersion = state.status.appVersion;
   appUpdateInstalling = true;
   appUpdateMessage = `Загружаем ${appRelease.tag_name} и перезапускаем панель…`;
+  updateChrome();
   const messageNode = document.querySelector<HTMLElement>('#app-releases-status');
   const installButton = document.querySelector<HTMLButtonElement>('#app-release-install');
   if (messageNode) messageNode.textContent = appUpdateMessage;
@@ -1356,7 +1355,7 @@ async function installAppUpdate(): Promise<void> {
       await new Promise((resolve) => window.setTimeout(resolve, 2500));
       try {
         const updated = await getStatus();
-        if (updated.appVersion !== expectedVersion) {
+        if (updated.appVersion !== expectedVersion && isInstalledReleaseVersion(updated.appVersion, appRelease.tag_name)) {
           appUpdateMessage = `Установлена версия ${updated.appVersion}.`;
           window.location.reload();
           return;
@@ -1364,18 +1363,38 @@ async function installAppUpdate(): Promise<void> {
       } catch {
         // The service restarts while the package is replaced; keep polling.
       }
-      if (Date.now() - lastDiagnosticCheck >= 10_000) {
+      if (Date.now() - lastDiagnosticCheck >= 3_500) {
         lastDiagnosticCheck = Date.now();
         try {
           const updateLog = await getSystemLog('app-update', AbortSignal.timeout(5000));
-          const entries = [...updateLog.lines].reverse();
-          const success = entries.find((line) => line.includes(`SUCCESS: XKeen UI ${appRelease?.tag_name} installed`));
-          if (success && appRelease?.tag_name === `v${expectedVersion.replace(/^v/i, '')}`) {
+          let attemptStart = -1;
+          for (let index = updateLog.lines.length - 1; index >= 0; index -= 1) {
+            if (updateLog.lines[index]?.includes(`Starting XKeen UI update to ${appRelease.tag_name}`)) {
+              attemptStart = index;
+              break;
+            }
+          }
+          const attemptLines = attemptStart >= 0 ? updateLog.lines.slice(attemptStart) : [];
+          const progress = appUpdateProgressFromLog(updateLog.lines, appRelease.tag_name);
+          if (progress && progress !== appUpdateMessage) {
+            appUpdateMessage = progress;
+            const currentStatus = document.querySelector<HTMLElement>('#app-releases-status');
+            if (currentStatus) currentStatus.textContent = progress;
+            updateChrome();
+          }
+          const success = attemptLines.find((line) => line.includes(`SUCCESS: XKeen UI ${appRelease?.tag_name} installed`));
+          if (success) {
             appUpdateMessage = `Переустановка ${appRelease.tag_name} завершена.`;
             window.location.reload();
             return;
           }
-          const failure = entries.find((line) => line.includes('ERROR:'));
+          let failure: string | undefined;
+          for (let index = attemptLines.length - 1; index >= 0; index -= 1) {
+            if (attemptLines[index]?.includes('ERROR:')) {
+              failure = attemptLines[index];
+              break;
+            }
+          }
           if (failure) throw new Error(`Обновление остановлено: ${failure.replace(/^.*?ERROR:\s*/, '')}`);
         } catch (error) {
           if (error instanceof Error && error.message.startsWith('Обновление остановлено:')) throw error;
@@ -1396,6 +1415,7 @@ async function installAppUpdate(): Promise<void> {
     appUpdateMessage = error instanceof Error ? error.message : 'Обновление панели завершилось ошибкой.';
   } finally {
     appUpdateInstalling = false;
+    updateChrome();
     const message = document.querySelector<HTMLElement>('#app-releases-status');
     if (message) message.textContent = appUpdateMessage;
     if (installButton) {

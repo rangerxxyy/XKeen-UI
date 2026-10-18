@@ -1444,6 +1444,11 @@ mod tests {
     use axum::http::{header, HeaderMap, HeaderValue};
 
     #[test]
+    fn backend_package_version_matches_release_version() {
+        assert_eq!(env!("CARGO_PKG_VERSION"), "0.5.2");
+    }
+
+    #[test]
     fn load_average_parser_reads_only_a_finite_first_value() {
         assert_eq!(parse_load_average("0.42 0.38 0.27 1/90 1234"), Some(0.42));
         assert_eq!(parse_load_average("not-a-number 0 0"), None);

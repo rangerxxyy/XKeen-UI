@@ -48,6 +48,23 @@ describe('renderSelectors', () => {
     expect(html).not.toContain('GLOBAL');
   });
 
+  it('shows the complete selected route through nested selectors to the actual node', () => {
+    const groups: MihomoSelector[] = [
+      { name: 'AI', type: 'Selector', icon: null, current: 'Main', options: [] },
+      { name: 'Main', type: 'Selector', icon: null, current: 'Finland · TCP', options: [] },
+    ];
+    const html = renderSelectors(groups, false, null);
+    expect(html).toContain('Куда:');
+    expect(html).toContain('data-selector-destination="Main → Finland · TCP"');
+    expect(html).toContain('title="Маршрут: Main → Finland · TCP"');
+  });
+
+  it('clearly labels auto-managed selectors when Mihomo has not chosen a destination yet', () => {
+    const html = renderSelectors([{ name: 'Fastest', type: 'URLTest', icon: null, current: null, options: [] }], false, null);
+    expect(html).toContain('Автовыбор Mihomo');
+    expect(html).toContain('data-selector-destination="Автовыбор Mihomo"');
+  });
+
   it('leaves successful ping as a number and uses lightning before testing', () => {
     const html = renderPingStatusIcon(true);
     expect(html).toBe('');

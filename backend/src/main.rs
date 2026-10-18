@@ -1232,8 +1232,21 @@ fn web_root() -> PathBuf {
         .unwrap_or_else(|| PathBuf::from("web"))
 }
 
-#[tokio::main]
-async fn main() -> Result<(), Box<dyn std::error::Error>> {
+fn main() -> Result<(), Box<dyn std::error::Error>> {
+    let args: Vec<String> = env::args().skip(1).collect();
+    if args
+        .first()
+        .is_some_and(|arg| arg == "--internal-xkeen-output")
+    {
+        if args.len() != 2 {
+            return Err("invalid internal output arguments".into());
+        }
+        return xkeen::run_output_helper(std::path::Path::new(&args[1])).map_err(Into::into);
+    }
+    tokio::runtime::Runtime::new()?.block_on(run_panel())
+}
+
+async fn run_panel() -> Result<(), Box<dyn std::error::Error>> {
     let args: Vec<String> = env::args().skip(1).collect();
     if !args.is_empty() {
         installer::dispatch(&args)?;

@@ -123,6 +123,7 @@ export interface MihomoConnection {
   id: string;
   host: string;
   destination: string;
+  destinationPort?: number;
   source: string;
   sourceIp?: string;
   network: string;
@@ -440,6 +441,7 @@ export async function getMihomoConnections(signal?: AbortSignal): Promise<Mihomo
       id: raw.id,
       host: readString(metadata.host),
       destination: joinAddress(metadata.destinationIP, metadata.destinationPort),
+      destinationPort: /^\d+$/.test(String(metadata.destinationPort)) && Number(metadata.destinationPort) > 0 && Number(metadata.destinationPort) <= 65535 ? Number(metadata.destinationPort) : undefined,
       source: joinAddress(metadata.sourceIP, metadata.sourcePort),
       sourceIp: readString(metadata.sourceIP),
       network: readString(metadata.network),
@@ -523,7 +525,9 @@ function readCounter(value: unknown): number {
 function joinAddress(host: unknown, port: unknown): string {
   const address = readString(host);
   const number = typeof port === 'number' || typeof port === 'string' ? String(port) : '';
-  return address && number ? `${address}:${number}` : address || number;
+  const withBrackets = address.includes(':') && !(address.startsWith('[') && address.endsWith(']'))
+    ? `[${address}]` : address;
+  return address && number ? `${withBrackets}:${number}` : address || number;
 }
 
 async function getMihomoJson(path: string, operation: string, signal?: AbortSignal): Promise<unknown> {

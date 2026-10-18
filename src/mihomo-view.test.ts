@@ -40,9 +40,10 @@ describe('renderSelectors', () => {
     expect(html).not.toContain('GLOBAL');
   });
 
-  it('uses a check for an available node instead of a Wi-Fi glyph', () => {
+  it('leaves successful ping as a number and uses lightning before testing', () => {
     const html = renderPingStatusIcon(true);
-    expect(html).toContain('M4.5 8.5l2.3 2.3 4.8-5.1');
+    expect(html).toBe('');
+    expect(renderPingStatusIcon(null)).toContain('M9 1');
     expect(html).not.toContain('M2 5.4');
   });
 
@@ -150,13 +151,14 @@ describe('renderConnections', () => {
     const data: MihomoConnections = {
       uploadTotal: 0, downloadTotal: 0,
       connections: [
-        { id: 'cdn', host: 'th.bing.com:443', destination: '', source: 'PC', network: 'tcp', process: '', chains: ['DIRECT'], rule: 'DOMAIN-SUFFIX', rulePayload: 'bing.com', upload: 0, download: 0, start: '' },
+        { id: 'cdn', host: 'th.bing.com', destinationPort: 443, destination: '', source: 'PC', network: 'tcp', process: '', chains: ['DIRECT', 'CDN'], rule: 'DOMAIN-SUFFIX', rulePayload: 'bing.com', upload: 0, download: 0, start: '' },
         { id: 'direct', host: 'substrate.office.com:443', destination: '', source: 'PC', network: 'tcp', process: '', chains: ['DIRECT'], rule: 'MATCH', rulePayload: '', upload: 0, download: 0, start: '' },
       ],
     };
     const html = renderConnections(data, false, null);
     expect(html).toContain('class="connection-app-icon is-web"');
     expect(html).toContain('CDN › DIRECT');
+    expect(html).toContain('th.bing.com:443');
     expect(html).toContain('substrate.office.com:443');
     expect(html).toContain('DIRECT');
   });

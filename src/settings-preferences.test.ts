@@ -55,10 +55,14 @@ describe('saved Mihomo and update preferences', () => {
 });
 
 describe('appearance and journal timezone preferences', () => {
-  it('provides persistent system-theme and local-time defaults', () => {
+  it('provides a dark theme and local-time defaults', () => {
     const preferences = readUiPreferences({ getItem: () => null });
-    expect(preferences.theme).toBe('system');
+    expect(preferences.theme).toBe('dark');
     expect(preferences.journalTimeZone).toBe('local');
+  });
+
+  it('migrates the removed automatic theme to the standard dark theme', () => {
+    expect(readUiPreferences({ getItem: () => JSON.stringify({ theme: 'system' }) }).theme).toBe('dark');
   });
 
   it('loads a saved theme and journal timezone without changing the storage key', () => {

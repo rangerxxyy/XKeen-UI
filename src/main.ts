@@ -3,11 +3,17 @@ import '@fontsource-variable/jetbrains-mono';
 import './country-flags.css';
 import './style.css';
 import './typography.css';
+import './connection-details.css';
+import './styled-select.css';
+import './ui-polish.css';
+import { enhanceStyledSelects, syncStyledSelects } from './styled-select';
+import { CONFIG_APPLY_EVENT, type ConfigApplyEventDetail } from './config-actions';
 import { createSettingsLoader, type SettingsLoader } from './settings-load';
+import { renderConnectionDetails } from './connection-details';
 import { applyActiveMihomoConfig, closeAllMihomoConnections, closeMihomoConnection, controlXkeen, getActiveMihomoConfig, getCoreSources, getHealth, getMihomoConnections, getMihomoSelectors, getMihomoVersion, getRouterDeviceList, getRouterDnsStatus, getStatus, getSystemLog, getUpdateProxies, getXkeenStatus, logUiError, pingMihomoGroup, pingMihomoProxy, queryMihomoDns, requestAppUpdate, saveCoreSources, saveUpdateProxies, selectMihomoProxy, setRouterDnsManagement, type ApiState, type CoreSources, type MihomoConnections, type MihomoDnsResult, type MihomoSelector, type RouterDnsStatus, type SystemLog, type XkeenStatus } from './api';
 import { applyPingResults, orderSelectorsByConfig, renderConnections, renderPingStatusIcon, renderSelectors } from './mihomo-view';
 import { patchDnsManagement, patchMihomoDnsSettings, readMihomoDnsSettings, renderDns, type MihomoDnsSettings } from './dns-view';
-import { bindCoreReleaseChecks, fetchCoreReleases, isStableCompatibleRelease, openCoreReleaseDialog } from './core-releases';
+import { fetchCoreReleases, isStableCompatibleRelease, openCoreReleaseDialog } from './core-releases';
 import { isNewerVersion, listAppReleases, type AppRelease } from './app-update';
 import { confirmInApp } from './confirm-dialog';
 import { bindDialogMotion, closeDialogWithMotion } from './dialog-motion';
@@ -65,6 +71,7 @@ let dnsConfigBusy = false;
 let mihomoVersion: string | null = null;
 let xkeenStatus: XkeenStatus | null = null;
 let xkeenControlBusy = false;
+let configApplyBusy = false;
 let xkeenControlAction: 'start' | 'stop' | 'restart' | null = null;
 const logFiles = [
   { id: 'xray-access', label: 'Access Log' },
@@ -87,17 +94,12 @@ let uiPreferences: UiPreferences = readUiPreferences();
 const proxyPingFailures = new Map<string, number>();
 
 function applyUiTheme(): void {
-  const theme = uiPreferences.theme === 'system'
-    ? (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light')
-    : uiPreferences.theme;
+  const theme = uiPreferences.theme;
   document.documentElement.dataset.theme = theme;
   document.documentElement.style.colorScheme = theme;
 }
 
 applyUiTheme();
-window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => {
-  if (uiPreferences.theme === 'system') applyUiTheme();
-});
 
 const app = document.querySelector<HTMLDivElement>('#app');
 if (!app) throw new Error('Корневой элемент интерфейса #app не найден');
@@ -122,11 +124,12 @@ function formatAppReleaseNotes(value: string): string {
 }
 
 function renderHeader(): string {
+  const serviceBusy = xkeenControlBusy || configApplyBusy;
   const status = state.status;
   const service = status?.services.find((item) => item.name.toLowerCase() === 'mihomo');
   const formatVersion = (version: string) => `v${escapeHtml(version.replace(/^v+/i, ''))}`;
   const coreLabel = mihomoVersion ? formatVersion(mihomoVersion) : service ? (service.version ? formatVersion(service.version) : service.state === 'running' ? 'Активен' : service.state === 'stopped' ? 'Остановлен' : 'Недоступен') : state.connected ? 'Не проверен' : 'Ожидание';
-  const serviceText = xkeenControlBusy
+  const serviceText = serviceBusy
     ? `${xkeenControlAction === 'stop' ? 'Остановка' : xkeenControlAction === 'start' ? 'Запуск' : 'Перезапуск'} XKeen…`
     : status?.mode === 'router'
       ? xkeenStatus?.installed
@@ -138,11 +141,11 @@ function renderHeader(): string {
   const canControl = status?.mode === 'router' && Boolean(xkeenStatus?.installed);
   const controls = canControl
     ? `${xkeenStatus?.running === false
-      ? `<button class="header-service-action" data-xkeen-action="start" type="button" title="Запустить XKeen" aria-label="Запустить XKeen" ${xkeenControlBusy ? 'disabled' : ''}>${xkeenControlBusy && xkeenControlAction === 'start' ? '<span class="service-control-spinner" aria-hidden="true"></span>' : '▶'}</button>`
-      : `<button class="header-service-action" data-xkeen-action="restart" type="button" title="Перезапустить XKeen" aria-label="Перезапустить XKeen" ${xkeenControlBusy ? 'disabled' : ''}>${xkeenControlBusy && xkeenControlAction === 'restart' ? '<span class="service-control-spinner" aria-hidden="true"></span>' : '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 7v5h-5M4.9 9a7.5 7.5 0 0 1 12.4-2L20 12M4 17v-5h5m10.1 3a7.5 7.5 0 0 1-12.4 2L4 12"/></svg>'}</button><button class="header-service-action header-service-stop" data-xkeen-action="stop" type="button" title="Остановить XKeen" aria-label="Остановить XKeen" ${xkeenControlBusy || xkeenStatus?.running !== true ? 'disabled' : ''}>${xkeenControlBusy && xkeenControlAction === 'stop' ? '<span class="service-control-spinner" aria-hidden="true"></span>' : '■'}</button>`}`
+      ? `<button class="header-service-action" data-xkeen-action="start" type="button" title="Запустить XKeen" aria-label="Запустить XKeen" ${serviceBusy ? 'disabled' : ''}>${serviceBusy && xkeenControlAction === 'start' ? '<span class="service-control-spinner" aria-hidden="true"></span>' : '▶'}</button>`
+      : `<button class="header-service-action" data-xkeen-action="restart" type="button" title="Перезапустить XKeen" aria-label="Перезапустить XKeen" ${serviceBusy ? 'disabled' : ''}>${configApplyBusy || (xkeenControlBusy && xkeenControlAction === 'restart') ? '<span class="service-control-spinner" aria-hidden="true"></span>' : '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 7v5h-5M4.9 9a7.5 7.5 0 0 1 12.4-2L20 12M4 17v-5h5m10.1 3a7.5 7.5 0 0 1-12.4 2L4 12"/></svg>'}</button><button class="header-service-action header-service-stop" data-xkeen-action="stop" type="button" title="Остановить XKeen" aria-label="Остановить XKeen" ${serviceBusy || xkeenStatus?.running !== true ? 'disabled' : ''}>${serviceBusy && xkeenControlAction === 'stop' ? '<span class="service-control-spinner" aria-hidden="true"></span>' : '■'}</button>`}`
     : '';
   return `<header class="topbar">
-    <div class="top-status-cluster ${xkeenControlBusy ? 'is-xkeen-busy' : ''}"><div class="top-status" aria-label="Состояние XKeen" aria-live="polite"><span id="status-led" class="connection-led ${state.connected ? 'is-online' : 'is-offline'}"></span><span><strong id="service-label">${escapeHtml(serviceText)}</strong><small id="service-summary">${state.connected ? `${memory} · ${cpu}` : 'Ожидание соединения с backend'}</small></span></div><div class="header-service-controls" aria-label="Управление XKeen" aria-busy="${xkeenControlBusy}">${controls}</div></div>
+    <div class="top-status-cluster ${serviceBusy ? 'is-xkeen-busy' : ''}"><div class="top-status" aria-label="Состояние XKeen" aria-live="polite"><span id="status-led" class="connection-led ${state.connected ? 'is-online' : 'is-offline'}"></span><span><strong id="service-label">${escapeHtml(serviceText)}</strong><small id="service-summary">${state.connected ? `${memory} · ${cpu}` : 'Ожидание соединения с backend'}</small></span></div><div class="header-service-controls" aria-label="Управление XKeen" aria-busy="${serviceBusy}">${controls}</div></div>
     <a class="brand" href="#selectors" aria-label="XKeen UI, селекторы"><span class="brand-mark">X</span><span>XKeen <b>UI</b></span></a>
     <div class="top-actions"><button class="version-chip core-chip core-version-button" id="core-version" type="button" title="Выбрать релиз Mihomo" aria-label="Выбрать релиз Mihomo"><span class="chip-icon">◈</span> Mihomo <b id="core-version-label">${coreLabel}</b><span class="chip-chevron" aria-hidden="true">⌄</span></button><button class="version-chip app-version-button" id="app-version" type="button" title="Выбрать релиз XKeen UI" aria-label="Выбрать релиз XKeen UI"><span class="chip-icon">⬡</span> XKeen UI <b id="app-version-label">v${status?.appVersion ?? APP_VERSION}</b><span class="chip-chevron" aria-hidden="true">⌄</span></button><button class="icon-button" id="settings" title="Настройки" aria-label="Настройки">⚙</button></div>
   </header>`;
@@ -393,13 +396,9 @@ function render(): void {
 
 async function runXkeenAction(action: string | undefined): Promise<void> {
   if (action !== 'start' && action !== 'stop' && action !== 'restart') return;
-  if (action !== 'start' && !(await confirmInApp(
-    action === 'restart' ? 'Перезапустить XKeen?' : 'Остановить XKeen?',
-    action === 'restart'
-      ? 'Текущие соединения кратковременно прервутся, затем панель проверит запуск ядра.'
-      : 'Трафик через XKeen остановится. Если DNS передан Mihomo, остановка будет заблокирована.',
-    action === 'restart' ? 'Перезапустить' : 'Остановить',
-  ))) return;
+  if (xkeenControlBusy || configApplyBusy) return;
+  if (action === 'stop' && !(await confirmInApp('Остановить XKeen?',
+    'Трафик через XKeen остановится. Если DNS передан Mihomo, остановка будет заблокирована.', 'Остановить'))) return;
   xkeenControlBusy = true;
   xkeenControlAction = action;
   render();
@@ -586,7 +585,25 @@ async function runDnsManagementToggle(): Promise<void> {
   }
 }
 
+function openConnectionDetails(id: string): void {
+  const connection = connections?.connections.find((item) => item.id === id);
+  if (!connection) return;
+  const sourceName = uiPreferences.showConnectionSource && connection.sourceIp ? connectionSourceNames[connection.sourceIp] : undefined;
+  const modal = document.createElement('dialog');
+  modal.className = 'modal connection-details-dialog';
+  modal.setAttribute('aria-labelledby', 'connection-details-title');
+  modal.innerHTML = `<section class="modal-panel connection-details-panel"><header class="modal-heading"><h2 id="connection-details-title">Подробности соединения</h2><button class="icon-button" type="button" data-close-details aria-label="Закрыть подробности">×</button></header><div class="connection-details-body">${renderConnectionDetails(connection, sourceName)}</div></section>`;
+  document.body.append(modal);
+  bindDialogMotion(modal);
+  modal.querySelector<HTMLButtonElement>('[data-close-details]')?.addEventListener('click', () => closeDialogWithMotion(modal));
+  modal.addEventListener('close', () => modal.remove(), { once: true });
+  modal.showModal();
+}
+
 function bindMihomoInteractions(): void {
+  document.querySelectorAll<HTMLButtonElement>('[data-inspect-connection]').forEach((button) => {
+    button.addEventListener('click', () => openConnectionDetails(button.dataset.inspectConnection ?? ''));
+  });
   document.querySelector<HTMLButtonElement>('#mihomo-retry')?.addEventListener('click', () => void loadMihomoPage(activePage));
   document.querySelectorAll<HTMLButtonElement>('.proxy-option-select').forEach((button) => {
     button.addEventListener('click', () => void selectProxyFromUi(button));
@@ -627,7 +644,7 @@ function updatePingControls(): void {
     const icon = button.querySelector('.ping-status-icon');
     if (icon) icon.outerHTML = renderPingStatusIcon(option.alive);
     const value = button.querySelector('span');
-    if (value) value.textContent = option.delay === null ? '—' : `${option.delay} мс`;
+    if (value) value.textContent = option.alive === true && option.delay !== null ? String(option.delay) : '';
   });
 }
 
@@ -709,7 +726,7 @@ function visibleSelectors(): MihomoSelector[] {
 
 async function closeConnectionFromUi(button: HTMLButtonElement): Promise<void> {
   const id = button.dataset.closeConnection;
-  if (!id || !(await confirmInApp('Закрыть соединение?', 'Текущий сетевой запрос этого устройства может прерваться.', 'Закрыть'))) return;
+  if (!id || button.disabled) return;
   button.disabled = true;
   try {
     await closeMihomoConnection(id, mihomoController?.signal);
@@ -723,7 +740,7 @@ async function closeConnectionFromUi(button: HTMLButtonElement): Promise<void> {
 
 async function closeAllConnectionsFromUi(): Promise<void> {
   const count = connections?.connections.length ?? 0;
-  if (!count || !(await confirmInApp('Закрыть все соединения?', `Будут закрыты ${count} активных соединений. Текущие запросы устройств могут прерваться.`, 'Закрыть все'))) return;
+  if (!count) return;
   const button = document.querySelector<HTMLButtonElement>('#close-all-connections');
   if (button) { button.disabled = true; button.textContent = 'Закрываем…'; }
   try {
@@ -835,6 +852,7 @@ function updateChrome(): void {
       setText('#service-summary');
       setText('#core-version-label');
       setText('#app-version-label');
+      header.querySelector('.top-status-cluster')?.classList.toggle('is-xkeen-busy', xkeenControlBusy || configApplyBusy);
       const currentControls = header.querySelector<HTMLElement>('.header-service-controls');
       const nextControls = nextHeader.querySelector<HTMLElement>('.header-service-controls');
       if (currentControls && nextControls) {
@@ -951,7 +969,7 @@ function openSettings(): void {
     if (!content) return;
     content.setAttribute('aria-labelledby', `settings-${tab}`);
     if (tab === 'general') {
-      content.innerHTML = `<section class="settings-section"><h3>ВНЕШНИЙ ВИД И ЖУРНАЛ</h3><label class="setting-row setting-control-row"><span><strong>Тема</strong><small>«Авто» следует теме системы. Выбор сохраняется в этом браузере.</small></span><select class="setting-control" data-pref="theme"><option value="system" ${uiPreferences.theme === 'system' ? 'selected' : ''}>Авто</option><option value="light" ${uiPreferences.theme === 'light' ? 'selected' : ''}>Светлая</option><option value="dark" ${uiPreferences.theme === 'dark' ? 'selected' : ''}>Тёмная</option></select></label><label class="setting-row setting-control-row"><span><strong>Часовой пояс журнала</strong><small>Показывает время в выбранном часовом поясе. Записи без часового пояса остаются как есть.</small></span><select class="setting-control" data-pref="journalTimeZone"><option value="local" ${uiPreferences.journalTimeZone === 'local' ? 'selected' : ''}>Системный</option>${Array.from({ length: 27 }, (_, index) => index - 12).map((offset) => { const value = `UTC${offset >= 0 ? '+' : ''}${offset}`; return `<option value="${value}" ${uiPreferences.journalTimeZone === value ? 'selected' : ''}>${value}</option>`; }).join('')}</select></label></section><section class="settings-section"><h3>СОЕДИНЕНИЯ</h3>${switchRow('closeConnectionsAfterApply', 'Закрывать соединения после применения', 'Закрывает активные подключения после успешного применения конфигурации Mihomo.')}</section><section class="settings-section"><h3>DNS</h3><label class="setting-row setting-control-row"><span><strong>Автовключение управления DNS</strong><small>При запуске XKeen запросить подтверждение и передать DNS через Mihomo</small></span><select class="setting-control" data-pref="dnsAutostart"><option value="off" ${uiPreferences.dnsAutostart === 'off' ? 'selected' : ''}>Выключено</option><option value="confirm" ${uiPreferences.dnsAutostart === 'confirm' ? 'selected' : ''}>Включать с подтверждением</option></select></label></section>`;
+      content.innerHTML = `<section class="settings-section"><h3>ВНЕШНИЙ ВИД И ЖУРНАЛ</h3><label class="setting-row setting-control-row"><span><strong>Тема</strong><small>Стандартная тема — тёмная. Выбор сохраняется в этом браузере.</small></span><select class="setting-control" data-pref="theme"><option value="light" ${uiPreferences.theme === 'light' ? 'selected' : ''}>Светлая</option><option value="dark" ${uiPreferences.theme === 'dark' ? 'selected' : ''}>Тёмная</option></select></label><label class="setting-row setting-control-row"><span><strong>Часовой пояс журнала</strong><small>Показывает время в выбранном часовом поясе. Записи без часового пояса остаются как есть.</small></span><select class="setting-control" data-pref="journalTimeZone"><option value="local" ${uiPreferences.journalTimeZone === 'local' ? 'selected' : ''}>Системный</option>${Array.from({ length: 27 }, (_, index) => index - 12).map((offset) => { const value = `UTC${offset >= 0 ? '+' : ''}${offset}`; return `<option value="${value}" ${uiPreferences.journalTimeZone === value ? 'selected' : ''}>${value}</option>`; }).join('')}</select></label></section><section class="settings-section"><h3>СОЕДИНЕНИЯ</h3>${switchRow('closeConnectionsAfterApply', 'Закрывать соединения после применения', 'Закрывает активные подключения после успешного применения конфигурации Mihomo.')}</section><section class="settings-section"><h3>DNS</h3><label class="setting-row setting-control-row"><span><strong>Автовключение управления DNS</strong><small>При запуске XKeen запросить подтверждение и передать DNS через Mihomo</small></span><select class="setting-control" data-pref="dnsAutostart"><option value="off" ${uiPreferences.dnsAutostart === 'off' ? 'selected' : ''}>Выключено</option><option value="confirm" ${uiPreferences.dnsAutostart === 'confirm' ? 'selected' : ''}>Включать с подтверждением</option></select></label></section>`;
       bindPreferenceInputs(content);
       return;
     }
@@ -967,10 +985,7 @@ function openSettings(): void {
         <label class="source-field"><span><strong>Источник Xray</strong><small>Формат: github.com/владелец/репозиторий</small></span><input id="source-xray" type="url" autocomplete="url" placeholder="https://github.com/XTLS/Xray-core"></label>
         <label class="source-field"><span><strong>Источник релизов Mihomo</strong><small>Можно указать репозиторий установленного форка или другой GitHub-репозиторий</small></span><select id="source-mihomo-preset"><option value="official">Оригинальный Mihomo · MetaCubeX</option><option value="prizrak">Prizrak-Core</option><option value="custom">Другой форк</option></select></label>
         <label class="source-field"><span><strong>Репозиторий</strong><small>Проверка релизов использует это значение; сохранение не заменяет установленное ядро</small></span><input id="source-mihomo" type="url" autocomplete="url" placeholder="https://github.com/MetaCubeX/mihomo"></label>
-        <div class="core-release-checks"><section><div><strong>Xray</strong><small>Проверить последние ARM64-релизы</small></div><button type="button" class="editor-button" data-core-release="xray">Проверить релизы</button></section><div id="releases-xray" aria-live="polite"></div>
-        <section><div><strong>Mihomo</strong><small>Проверить последние ARM64-релизы</small></div><button type="button" class="editor-button" data-core-release="mihomo">Проверить релизы</button></section><div id="releases-mihomo" aria-live="polite"></div></div>
         <div class="source-save-row"><span class="sources-feedback" id="sources-feedback" aria-live="polite">Загружаем сохранённые значения…</span><button class="editor-button editor-button-primary" type="button" id="save-core-sources">Сохранить источники</button></div></section><section class="settings-section github-proxy-settings"><h3>GITHUB PROXY</h3><p class="settings-inline-note">Прокси используются по порядку сверху вниз при недоступности GitHub. Оставьте список пустым, чтобы загружать обновление напрямую.</p><div id="github-proxy-list"><p class="settings-inline-note">Загружаем сохранённый список…</p></div><div class="github-proxy-add-row"><input id="github-proxy-new" type="url" placeholder="https://proxy.example" autocomplete="url"><button class="editor-button" type="button" id="github-proxy-add">Добавить</button></div><div class="source-save-row"><span class="sources-feedback" id="github-proxy-feedback" aria-live="polite">Список хранится на роутере.</span><button class="editor-button editor-button-primary" type="button" id="github-proxy-save">Сохранить прокси</button></div></section>`;
-      bindCoreReleaseChecks();
       const xrayInput = content.querySelector<HTMLInputElement>('#source-xray');
       const mihomoInput = content.querySelector<HTMLInputElement>('#source-mihomo');
       const mihomoPreset = content.querySelector<HTMLSelectElement>('#source-mihomo-preset');
@@ -999,7 +1014,7 @@ function openSettings(): void {
         coreControls.forEach((control) => { control.disabled = phase !== 'ready'; });
         coreRetry.hidden = phase !== 'error';
         if (feedback) feedback.textContent = phase === 'loading' ? 'Загружаем сохранённые значения…'
-          : phase === 'ready' ? 'Сохранённые настройки загружены.' : `Сохранение недоступно до загрузки. ${error}`;
+          : phase === 'ready' ? '' : `Сохранение недоступно до загрузки. ${error}`;
       });
       const proxyFeedback = content.querySelector<HTMLElement>('#github-proxy-feedback');
       const proxyControls = () => content.querySelectorAll<HTMLInputElement | HTMLButtonElement>('#github-proxy-list input,#github-proxy-list button,#github-proxy-new,#github-proxy-add,#github-proxy-save');
@@ -1293,7 +1308,24 @@ async function refresh(): Promise<void> {
 }
 
 render();
-window.addEventListener('xkeen-config-applied', () => void autoCloseConnectionsAfterApply());
+window.addEventListener(CONFIG_APPLY_EVENT, (event) => {
+  const detail = (event as CustomEvent<ConfigApplyEventDetail>).detail;
+  configApplyBusy = detail.phase === 'start';
+  updateChrome();
+  if (detail.phase === 'finish') {
+    void refresh();
+    if (detail.success && detail.core === 'mihomo') void autoCloseConnectionsAfterApply();
+  }
+});
+// Enhance dialogs and asynchronously rendered settings without replacing native form values.
+const selectObserver = new MutationObserver(() => {
+  selectObserver.disconnect();
+  enhanceStyledSelects();
+  syncStyledSelects();
+  selectObserver.observe(document.body, { childList: true, subtree: true, attributes: true, attributeFilter: ['disabled', 'hidden'] });
+});
+enhanceStyledSelects();
+selectObserver.observe(document.body, { childList: true, subtree: true, attributes: true, attributeFilter: ['disabled', 'hidden'] });
 void refresh();
 void loadMihomoPage(activePage);
 window.addEventListener('xkeen-core-updated', () => {

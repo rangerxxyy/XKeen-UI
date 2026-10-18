@@ -1,7 +1,7 @@
 {
   "name": "xkeen-ui",
   "private": true,
-  "version": "0.4.5",
+  "version": "0.5.0",
   "packageManager": "pnpm@11.25.0",
   "type": "module",
   "scripts": {

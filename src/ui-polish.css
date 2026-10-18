@@ -98,10 +98,11 @@
 @media(prefers-reduced-motion:reduce) { .template-option,.template-import-button { transition:none; } .template-option:hover,.template-import-button:active { transform:none; } }
 .top-status-cluster.is-xkeen-busy { position:relative; isolation:isolate; }
 .top-status-cluster.is-xkeen-busy::after { content:''; position:absolute; inset:-5px -9px; z-index:-1; border-radius:12px; background:linear-gradient(110deg,transparent,color-mix(in srgb,var(--cyan,#5796ff) 14%,transparent),transparent); background-size:200% 100%; animation:service-sweep 1.6s ease-in-out infinite; }
+.connection-led.is-online { animation:service-breathe 3s ease-in-out infinite; }
 .is-xkeen-busy .connection-led { animation:service-breathe 1s ease-in-out infinite; }
 @keyframes service-sweep { from { background-position:180% 0; } to { background-position:-80% 0; } }
 @keyframes service-breathe { 50% { opacity:.35; box-shadow:0 0 10px var(--cyan,#5796ff); } }
-@media(prefers-reduced-motion:reduce) { .top-status-cluster.is-xkeen-busy::after,.is-xkeen-busy .connection-led { animation:none; } }
+@media(prefers-reduced-motion:reduce) { .top-status-cluster.is-xkeen-busy::after,.connection-led.is-online,.is-xkeen-busy .connection-led { animation:none; } }
 
 /* Low-cost first-load placeholders preserve the shape of the three live-data panels. */
 .skeleton-block { display:block; border-radius:6px; background:#2a354a; opacity:.82; animation:skeleton-breathe 1.5s ease-in-out infinite alternate; }
@@ -297,7 +298,10 @@
 .app-shell .editor-utilities-menu button { min-height:39px; border-radius:7px; transition:background .15s ease,color .15s ease,transform .15s ease; }
 .app-shell .editor-utilities-menu button:hover,.app-shell .editor-utilities-menu button:focus-visible { color:#f2edff; background:#2a2340; transform:translateX(2px); }
 .app-shell .editor-utilities-menu .utility-icon { color:#b49cf8; }
-.app-shell .proxy-health.proxy-ping-value { min-width:42px; font-size:17px; }
+.app-shell .proxy-health.proxy-ping-value { min-width:48px; font-size:19px; }
+.app-shell .connection-table .connection-close { display:inline-grid; place-items:center; width:32px; height:32px; border:1px solid transparent; border-radius:8px; font-size:0; }
+.app-shell .connection-table .connection-close svg { width:16px; height:16px; fill:none; stroke:currentColor; stroke-width:1.8; stroke-linecap:round; }
+.app-shell .connection-table .connection-close:hover,.app-shell .connection-table .connection-close:focus-visible { border-color:#a64558; background:#351923; color:#ff9aa5; outline:none; }
 .app-shell .proxy-health .ping-status-icon,.app-shell .proxy-health .ping-status-icon svg { width:16px; height:16px; }
 :root[data-theme="light"] .app-shell .dns-workspace { border-color:#d8d2e8; background:linear-gradient(150deg,#fff,#f7f5fc); }
 :root[data-theme="light"] .app-shell .dns-workspace-heading { border-color:#e2dcef; background:#f7f4ff; }

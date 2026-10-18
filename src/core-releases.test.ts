@@ -3,6 +3,7 @@ import {
   fetchCoreReleases,
   findCompatibleCoreAsset,
   isCoreRelease,
+  isDisplayableCoreRelease,
   isStableCompatibleRelease,
   normalizeCoreRepository,
   safeCoreReleaseLink,
@@ -86,6 +87,27 @@ describe('stable core releases', () => {
     expect(isStableCompatibleRelease('xray', release({ prerelease: true }))).toBe(false);
     expect(isStableCompatibleRelease('xray', release({ assets: [asset('Xray-linux-arm64.zip')] }))).toBe(false);
     expect(isStableCompatibleRelease('mihomo', release({ assets: [asset('prizrak-core-linux-arm64-v1.19.32-r4.gz')] }))).toBe(true);
+  });
+});
+
+describe('displayable core releases', () => {
+  it('accepts release notes only as bounded text content', () => {
+    expect(isCoreRelease({ ...release(), body: 'Changes\n- Fixes' })).toBe(true);
+    expect(isCoreRelease({ ...release(), body: 42 })).toBe(false);
+  });
+  it('includes compatible Xray prereleases with an ARM64 binary like the reference updater', () => {
+    expect(isDisplayableCoreRelease('xray', release({ prerelease: true }))).toBe(true);
+  });
+
+  it('keeps Mihomo prereleases out of the normal update list', () => {
+    expect(isDisplayableCoreRelease('mihomo', release({
+      prerelease: true,
+      assets: [asset('prizrak-core-linux-arm64-v1.19.32-r4.gz')],
+    }))).toBe(false);
+  });
+
+  it('does not show prereleases without a supported ARM64 archive', () => {
+    expect(isDisplayableCoreRelease('xray', release({ prerelease: true, assets: [] }))).toBe(false);
   });
 });
 

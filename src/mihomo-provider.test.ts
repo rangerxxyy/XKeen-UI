@@ -59,6 +59,28 @@ describe('Mihomo subscription providers', () => {
     expect(Object.keys(config['proxy-providers'])).toEqual(['old', 'new']);
   });
 
+  it('connects a subscription to only the selected proxy groups', () => {
+    const result = insertMihomoProvider(
+      'proxy-groups:\n  - name: Select\n    type: select\n    proxies: [DIRECT]\n  - name: Auto\n    type: url-test\n    proxies: [DIRECT]\n',
+      provider('new', 'https://new.example/sub'),
+      'end',
+      undefined,
+      ['Select'],
+    );
+    const config = parse(result) as { 'proxy-groups': Array<{ name: string; use?: string[] }> };
+    expect(config['proxy-groups'][0]?.use).toEqual(['new']);
+    expect(config['proxy-groups'][1]?.use).toBeUndefined();
+  });
+
+  it('preserves existing provider references and rejects a missing selected group', () => {
+    const source = 'proxy-groups:\n  - name: Select\n    type: select\n    use: [old]\n';
+    const result = insertMihomoProvider(source, provider('new', 'https://new.example/sub'), 'end', undefined, ['Select']);
+    const config = parse(result) as { 'proxy-groups': Array<{ use: string[] }> };
+    expect(config['proxy-groups'][0]?.use).toEqual(['old', 'new']);
+    expect(() => insertMihomoProvider(source, provider('new', 'https://new.example/sub'), 'end', undefined, ['Missing']))
+      .toThrow('Группа не найдена: Missing');
+  });
+
   it('rejects a subscription URL without an HTTP scheme', () => {
     expect(() => createMihomoProviderYaml({
       name: 'subscription_1', url: 'sub.example.net/list', interval: 43200,
@@ -78,6 +100,19 @@ describe('Mihomo subscription providers', () => {
     const config = parse(result) as { 'proxy-providers': Record<string, { url: string }> };
     expect(Object.keys(config['proxy-providers'])).toEqual(['current', 'keep']);
     expect(config['proxy-providers'].current?.url).toBe('https://new.example/sub');
+  });
+
+  it('keeps replacement groups attached to the preserved provider name', () => {
+    const result = insertMihomoProvider(
+      'proxy-providers:\n  current:\n    type: http\n    url: https://old.example/sub\n    interval: 43200\nproxy-groups:\n  - name: Select\n    type: select\n    use: [current]\n',
+      provider('generated_name', 'https://new.example/sub'),
+      'replace',
+      'current',
+      ['Select'],
+    );
+    const config = parse(result) as { 'proxy-groups': Array<{ use: string[] }> };
+    expect(config['proxy-groups'][0]?.use).toEqual(['current']);
+    expect(config['proxy-groups'][0]?.use).not.toContain('generated_name');
   });
 
   it('rejects a duplicate provider name instead of overwriting data', () => {

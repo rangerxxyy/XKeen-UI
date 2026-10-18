@@ -13,23 +13,25 @@ describe('DNS workspaces', () => {
     const state = { dnsOverride: false, mihomoDns: false, portListener: 'dnsmasq', nameServers: ['77.88.8.8'], detail: 'Состояние получено' };
     const view = renderDns(null, false, null, '', 'A', { status: state, loading: false, error: null, busy: false, confirm: false });
     expect(view).toContain('DNS Override');
-    expect(view).toContain('Слушатель 53 порта');
-    expect(view).toContain('Статус DNS');
-    expect(view).toContain('Включить управление DNS');
+    expect(view).toContain('Port 53');
+    expect(view).toContain('Router DNS Servers');
+    expect(view).toContain('DNS Status');
+    expect(view).toContain('Enable DNS Management');
+    expect(view).toContain('77.88.8.8');
+    expect(view).not.toContain('Состояние получено');
     expect(view).toContain('type="checkbox" role="switch"');
-    expect(view).not.toContain('Router DNS Servers');
-    expect(view).toContain('Передача DNS через Mihomo');
-    expect(view).toContain('Статические IPv6 DNS и DoH/DoT не меняются и могут обходить его.');
-    expect(view).toContain('dns-management-help');
+    expect(view).toContain('Router DNS Servers');
+    expect(view).not.toContain('Передача DNS через Mihomo');
+    expect(view).not.toContain('dns-management-help');
     expect(view).not.toContain('dns-handoff-intro');
-    expect(view.indexOf('dns-management-help')).toBeLessThan(view.indexOf('id="dns-management-toggle"'));
+    expect(view.indexOf('dns-management-help')).toBe(-1);
   });
 
   it('treats an enabled Mihomo DNS config as separate from router DNS handoff', () => {
     const state = { dnsOverride: false, mihomoDns: true, portListener: 'mihomo', nameServers: ['77.88.8.8'], detail: 'Состояние получено' };
     const view = renderDns(null, false, null, '', 'A', { status: state, loading: false, error: null, busy: false, confirm: false });
-    expect(view).toContain('Выключено');
-    expect(view).toContain('Включить управление DNS');
+    expect(view).toContain('Inactive');
+    expect(view).toContain('Enable DNS Management');
     expect(view).not.toContain('Состояния DNS не совпадают');
   });
 
@@ -52,7 +54,7 @@ describe('DNS workspaces', () => {
     const state = { dnsOverride: true, mihomoDns: true, portListener: 'mihomo', nameServers: [], detail: 'Состояние получено' };
     const view = renderDns(null, false, null, '', 'A', { status: state, loading: false, error: null, busy: false, confirm: false });
     expect(view).toMatch(/id="dns-management-toggle"[^>]*type="checkbox"[^>]*role="switch"[^>]*checked/);
-    expect(view).toContain('<strong class="state-pill dns-state-value state-running">Активно</strong>');
+    expect(view).toContain('<strong class="state-pill dns-state-value state-running">Active</strong>');
     expect(view).toContain('<strong class="state-pill dns-state-value">mihomo</strong>');
     expect(view).not.toContain('Вернуть DNS KeeneticOS');
   });
@@ -69,7 +71,15 @@ describe('DNS workspaces', () => {
     const state = { dnsOverride: false, mihomoDns: false, portListener: 'dnsmasq', nameServers: ['77.88.8.8'], detail: 'Состояние получено' };
     const view = renderDns(null, false, null, '', 'A', { status: state, loading: false, error: null, busy: false, confirm: true });
     expect(view).toContain('Перед включением отключите XKeen -dns и включите игнорирование DNS провайдера.');
-    expect(view).toContain('Включить управление DNS');
+    expect(view).toContain('<strong>Передача DNS через Mihomo.</strong> IPv4 DNS роутера будет перенаправлен через Mihomo. Статические IPv6 DNS и DoH/DoT не меняются и могут обходить его. Перед остановкой XKeen сначала верните DNS KeeneticOS.');
+    expect(view).toContain('Enable DNS Management');
+  });
+
+  it('does not show the enable warning while confirming a DNS handoff disable', () => {
+    const state = { dnsOverride: true, mihomoDns: true, portListener: 'mihomo', nameServers: ['77.88.8.8'], detail: 'Состояние получено' };
+    const view = renderDns(null, false, null, '', 'A', { status: state, loading: false, error: null, busy: false, confirm: true });
+    expect(view).not.toContain('Передача DNS через Mihomo. IPv4 DNS роутера');
+    expect(view).toContain('Сначала KeeneticOS вернёт сохранённые DNS-серверы. Затем выключится DNS в Mihomo.');
   });
 
   it('updates Mihomo DNS keys without discarding the rest of the config', () => {
@@ -149,11 +159,11 @@ describe('DNS workspaces', () => {
       loading: false, error: null, busy: false,
     });
     const explanations = [...view.matchAll(/class="dns-info"[^>]*aria-label="([^"]+)"/g)].map((match) => match[1]);
-    for (const label of ['DNS Override', 'DNS Mihomo', 'Слушатель 53 порта', 'DNS management', 'Enhanced Mode', 'Default Nameserver', 'Nameserver', 'Nameserver Policy', 'Proxy Server Nameserver', 'Fallback', 'Domain or IP', 'Record Type']) {
+    for (const label of ['DNS Override', 'DNS Mihomo', 'Port 53', 'DNS management', 'Router DNS Servers', 'Enhanced Mode', 'Default Nameserver', 'Nameserver', 'Nameserver Policy', 'Proxy Server Nameserver', 'Fallback', 'Domain or IP', 'Record Type']) {
       expect(explanations.some((description) => description?.includes(label)), label).toBe(true);
     }
-    expect(explanations).toHaveLength(12);
-    expect(view.match(/class="dns-info"[^>]*tabindex="0"/g)).toHaveLength(12);
+    expect(explanations).toHaveLength(13);
+    expect(view.match(/class="dns-info"[^>]*tabindex="0"/g)).toHaveLength(13);
   });
 
   it('warns when fake-ip is used with a blacklist filter mode', () => {

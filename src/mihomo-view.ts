@@ -177,7 +177,7 @@ function connectionRow(connection: MihomoConnection, showSourceName = false, sou
     <td class="connection-source" title="${escapeHtml(sourceTitle)}">${escapeHtml(source)}</td>
     <td class="connection-traffic"><span title="Отправлено"><i class="is-upload" aria-hidden="true">↑</i>${formatBytes(connection.upload)}</span><span title="Получено"><i class="is-download" aria-hidden="true">↓</i>${formatBytes(connection.download)}</span></td>
     <td class="connection-time"><time title="Время с начала соединения">${escapeHtml(started)}</time></td>
-    <td class="connection-actions"><button class="connection-close" data-close-connection="${escapeHtml(connection.id)}" aria-label="Закрыть соединение ${escapeHtml(host)}" title="Закрыть соединение">×</button></td>
+    <td class="connection-actions"><button class="connection-close" data-close-connection="${escapeHtml(connection.id)}" aria-label="Закрыть соединение ${escapeHtml(host)}" title="Закрыть соединение"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="m4 4 8 8M12 4l-8 8"/></svg></button></td>
   </tr>`;
 }
 

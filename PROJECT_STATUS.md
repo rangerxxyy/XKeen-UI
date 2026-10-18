@@ -1,10 +1,12 @@
 # Состояние проекта
 
-## Кандидат v0.4.4 — 18 октября 2026
+## Релиз v0.4.4 — 18 октября 2026
 
 Последние правки улучшают читаемость маршрутов иконок в таблице соединений, переводят маршрут в явную последовательность узлов со стрелками и упрощают version chip. Кнопка «Открыть релиз» удалена из окна обновления XKeen UI; остаётся выбор версии и установка.
 
-Локально пройдены 219 frontend-тестов, typecheck, production build и `git diff --check`. Rust-команды недоступны в текущей Windows-среде; backend, installer и Linux AArch64 проверки ожидают GitHub CI. Публикация ещё не выполнена.
+Локально пройдены 219 frontend-тестов, typecheck, production build и `git diff --check`. Все четыре CI jobs прошли на merge-коммите `411c982` в run `39126246964`: frontend, backend, installer и Linux AArch64. Публичный архив `xkeen-ui-linux-aarch64.tar.gz` скачан повторно, SHA-256 совпал с `SHA256SUMS`: `7b568e38cb39a55d21613d650f6074ac547bb017908658c886620aee64055856`.
+
+Релиз: https://github.com/rangerxxyy/XKeen-UI/releases/tag/v0.4.4. На реальном Keenetic не тестировался.
 
 ## Предыдущий релиз v0.4.3 — 18 октября 2026
 

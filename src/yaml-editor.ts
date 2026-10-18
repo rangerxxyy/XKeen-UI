@@ -18,6 +18,7 @@ import { createMihomoProviderYaml, insertMihomoProvider, nextMihomoProviderName,
 import { formatBackupDate, formatBackupSize } from './config-backups';
 import { convertAmneziaConfig, renderAmneziaImportActionMarkup } from './amnezia-import';
 import { mountUsefulLinksMenu } from './useful-links';
+import { formatConfigContent } from './config-format';
 
 const draftKey = 'xkeen-ui:draft:';
 const activeFileKey = 'xkeen-ui:draft-active-file';
@@ -79,6 +80,8 @@ function syncConfigActions(content: string, valid = currentDocumentValid): void 
   if (applyButton) applyButton.disabled = !enabled;
   const saveButton = document.querySelector<HTMLButtonElement>('#config-save-active');
   if (saveButton) saveButton.disabled = !enabled;
+  const formatButton = document.querySelector<HTMLButtonElement>('#config-format-active');
+  if (formatButton) formatButton.disabled = !content.trim() || currentFile().format === 'text' || configActionBusy;
 }
 
 function setEditorIdentity(routerMode: boolean, activeCore: 'mihomo' | 'xray' | null): void {
@@ -95,6 +98,8 @@ function setEditorIdentity(routerMode: boolean, activeCore: 'mihomo' | 'xray' | 
   if (applyButton) applyButton.hidden = file.id !== 'config' && !isXrayConfigFile(file.id);
   const saveButton = document.querySelector<HTMLButtonElement>('#config-save-active');
   if (saveButton) saveButton.hidden = !routerMode;
+  const formatButton = document.querySelector<HTMLButtonElement>('#config-format-active');
+  if (formatButton) formatButton.hidden = file.format === 'text';
   document.querySelectorAll<HTMLElement>('[data-structured-only]').forEach((element) => {
     element.hidden = file.format === 'text';
   });
@@ -176,6 +181,10 @@ function bindAmneziaImportDialog(signal: AbortSignal): void {
     trigger.innerHTML = '<span class="utility-icon" aria-hidden="true">⇧</span><span>Импорт AmneziaWG</span>';
     menu.append(trigger);
   }
+  const addConnectionButton = menu.querySelector('#yaml-add-proxy');
+  const templateButton = menu.querySelector('#yaml-template');
+  if (addConnectionButton) menu.insertBefore(trigger, addConnectionButton.nextSibling);
+  else if (templateButton) menu.insertBefore(trigger, templateButton);
   trigger.hidden = currentFile().id !== 'config';
   trigger.addEventListener('click', (event) => {
     (event.currentTarget as HTMLButtonElement).closest('details')?.removeAttribute('open');
@@ -603,6 +612,9 @@ export function mountYamlEditor(routerMode = false, activeCore: 'mihomo' | 'xray
   if (saveButton) saveButton.disabled = currentSnapshot() === null;
 
   mountUsefulLinksMenu();
+  const utilityMenu = document.querySelector<HTMLElement>('.editor-utilities-menu');
+  const backupsButton = document.querySelector<HTMLElement>('#yaml-backups');
+  if (utilityMenu && backupsButton) utilityMenu.append(backupsButton);
   setEditorIdentity(routerMode, activeCore);
   editorEditing = false;
   editorReadOnly = new Compartment();
@@ -613,6 +625,20 @@ export function mountYamlEditor(routerMode = false, activeCore: 'mihomo' | 'xray
   bindAddProxyDialog(signal);
   bindAmneziaImportDialog(signal);
   bindConfigBackups(signal);
+  document.querySelector<HTMLButtonElement>('#config-format-active')?.addEventListener('click', () => {
+    if (!editor) return;
+    try {
+      const content = editor.state.doc.toString();
+      const formatted = formatConfigContent(content, currentFile().format);
+      if (formatted === content) return;
+      enableEditorEditing();
+      editor.dispatch({ changes: { from: 0, to: editor.state.doc.length, insert: formatted } });
+      editor.focus();
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Не удалось отформатировать файл';
+      setValidation(`Форматирование не выполнено: ${message}`, false);
+    }
+  }, { signal });
   const file = currentFile();
   const storedDraft = sessionStorage.getItem(`${draftKey}${file.id}`);
   const startWithRouterFile = routerMode && (file.id === 'config' || isRouterConfigFile(file.id) || isXrayConfigFile(file.id));

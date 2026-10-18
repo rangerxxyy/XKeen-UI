@@ -18,7 +18,7 @@ import { confirmInApp } from './confirm-dialog';
 import { bindDialogMotion, closeDialogWithMotion } from './dialog-motion';
 import { lifecycleFeedback } from './service-feedback';
 import { readUiPreferences, validPingUrl, writeUiPreferences, type UiPreferences } from './preferences';
-import { deduplicateRepeatedUiErrors, formatJournalTimestamp, getJournalViewState, splitJournalLevel, stripLogSourceLabel } from './journal-view-state';
+import { deduplicateRepeatedUiErrors, formatJournalTimestamp, getJournalViewState, renderJournalLoadingSkeleton, splitJournalLevel, stripLogSourceLabel } from './journal-view-state';
 import { getJournalScrollTop } from './journal-scroll';
 import { canCopyJournal, formatJournalCopy, shouldRefreshJournal } from './journal-controls';
 import { SETTINGS_TABS, type SettingsTabId } from './settings-tabs';
@@ -233,7 +233,7 @@ function drawJournal(): void {
     );
   }
   if (viewState === 'loading') {
-    body.innerHTML = '<div class="journal-empty"><span class="loading-orbit" aria-hidden="true"></span><strong>Загружаем журнал</strong></div>';
+    body.innerHTML = renderJournalLoadingSkeleton();
     return;
   }
   if (viewState === 'error') {

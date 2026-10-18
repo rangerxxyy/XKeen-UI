@@ -74,6 +74,24 @@ function loadState(loading: boolean, error: string | null, noun: string): string
   return '';
 }
 
+function renderSelectorSkeleton(): string {
+  const card = () => `<div class="selector-card selector-skeleton-card" aria-hidden="true">
+    <div class="selector-skeleton-heading"><span class="skeleton-block skeleton-group-name"></span><span class="skeleton-block skeleton-group-action"></span></div>
+    <div class="selector-skeleton-meta"><span class="skeleton-block skeleton-meta-line"></span><span class="skeleton-block skeleton-meta-line is-short"></span></div>
+    <div class="proxy-options">${Array.from({ length: 8 }, (_, index) => `<div class="proxy-option skeleton-option"><span class="skeleton-block ${index % 3 === 0 ? 'is-wide' : ''}"></span><span class="skeleton-block is-short"></span></div>`).join('')}</div>
+  </div>`;
+  return `<div class="selector-list selector-list-skeleton" role="status" aria-busy="true" aria-label="Загружаем селекторы">${card()}${card()}</div>`;
+}
+
+function renderConnectionSkeleton(): string {
+  const cells = ['route', 'host', 'network', 'source', 'traffic', 'time', 'action'];
+  const row = (heading = false) => `<div class="connection-skeleton-row${heading ? ' is-heading' : ''}">${cells.map((cell, index) => `<span class="skeleton-block skeleton-cell is-${cell}${heading && index > 1 ? ' is-short' : ''}"></span>`).join('')}</div>`;
+  return `<section class="connections-panel connection-skeleton" role="status" aria-busy="true" aria-label="Загружаются соединения">
+    <div class="connections-toolbar" aria-hidden="true"><div class="connection-counts"><span class="skeleton-block skeleton-count"></span><span class="skeleton-block skeleton-count is-short"></span></div><span class="skeleton-block connection-skeleton-filter"></span><span class="skeleton-block connection-skeleton-action"></span></div>
+    <div class="connection-table-wrap" aria-hidden="true"><div class="connection-skeleton-table">${row(true)}${Array.from({ length: 7 }, () => row()).join('')}</div></div>
+  </section>`;
+}
+
 export function renderPingStatusIcon(alive: boolean | null): string {
   if (alive === true) return '';
   const path = alive === false
@@ -112,6 +130,7 @@ function proxyCard(group: MihomoSelector): string {
 }
 
 export function renderSelectors(groups: MihomoSelector[], loading: boolean, error: string | null): string {
+  if (loading) return renderSelectorSkeleton();
   const visibleGroups = groups.filter((group) => group.name !== 'GLOBAL');
   const state = loadState(loading, error, 'группы');
   return `${state || (visibleGroups.length === 0 ? '<section class="mihomo-empty"><span class="mihomo-error-mark">◇</span><strong>Группы прокси не найдены</strong><p>API Mihomo ответил, но не вернул группы для выбора или автоматической проверки.</p></section>' : `<div class="selector-list">${visibleGroups.map(proxyCard).join('')}</div>`)}
@@ -169,6 +188,7 @@ export function renderConnections(
   sourceNames: Record<string, string> = {},
   sort: ConnectionSort = { key: 'start', direction: 'descending' },
 ): string {
+  if (loading) return renderConnectionSkeleton();
   const state = loadState(loading, error, 'соединения');
   const connections = data?.connections ?? [];
   const sortedConnections = sortMihomoConnections(connections, sort, showSourceName ? sourceNames : {});

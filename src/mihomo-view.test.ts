@@ -30,6 +30,14 @@ describe('applyPingResults', () => {
 });
 
 describe('renderSelectors', () => {
+  it('keeps the selector layout occupied with a skeleton while groups load', () => {
+    const html = renderSelectors([], true, null);
+    expect(html).toContain('class="selector-list selector-list-skeleton"');
+    expect(html).toContain('aria-busy="true"');
+    expect(html).toContain('skeleton-option');
+    expect(html).not.toContain('loading-orbit');
+  });
+
   it('does not render Mihomo’s internal GLOBAL selector', () => {
     const groups: MihomoSelector[] = [
       { name: 'Main', icon: null, current: null, options: [] },
@@ -119,6 +127,14 @@ describe('renderSelectors', () => {
 });
 
 describe('renderConnections', () => {
+  it('keeps the connection toolbar and rows occupied with a skeleton while loading', () => {
+    const html = renderConnections(null, true, null);
+    expect(html).toContain('class="connections-panel connection-skeleton"');
+    expect(html).toContain('aria-busy="true"');
+    expect(html).toContain('class="connection-skeleton-row"');
+    expect(html).not.toContain('loading-orbit');
+  });
+
   it('renders dense connection rows with route icons, host, protocol, source and traffic indicators', () => {
     const data: MihomoConnections = {
       uploadTotal: 2048,

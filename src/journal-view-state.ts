@@ -1,5 +1,10 @@
 export type JournalViewState = 'loading' | 'error' | 'cleared' | 'data' | 'empty';
 
+export function renderJournalLoadingSkeleton(): string {
+  const row = (index: number) => `<div class="journal-skeleton-row"><span class="skeleton-block is-time"></span><span class="skeleton-block is-level"></span><span class="skeleton-block is-message message-${index % 3}"></span></div>`;
+  return `<div class="journal-skeleton" role="status" aria-label="Загружаем журнал" aria-busy="true">${Array.from({ length: 6 }, (_, index) => row(index)).join('')}</div>`;
+}
+
 export function deduplicateRepeatedUiErrors(lines: string[]): string[] {
   const seenPollErrors = new Set<string>();
   return lines.filter((line) => {

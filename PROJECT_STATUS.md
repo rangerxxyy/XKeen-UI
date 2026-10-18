@@ -1,10 +1,10 @@
 # Состояние проекта
 
-## Релиз v0.5.4 — подготовка
+## Релиз v0.5.4 — опубликован 18 октября 2026
 
 В релиз входят исправления RAM-метрики через Keenetic RCI с резервным источником, кэш статуса DNS с ручным обновлением, мгновенный отклик при выборе узла и fallback GitHub API через сохранённые прокси. Обновлены строки соединений и действия редактора; DNS-статусы отображаются без дополнительной подложки. В конфигурацию добавлены импорт AmneziaWG с маскировкой ключей в предпросмотре и полезные ссылки.
 
-Release notes: [docs/release-notes-v0.5.4.md](docs/release-notes-v0.5.4.md). До публикации нужно пройти полный frontend CI и Rust/AArch64 CI; реальный роутер в этой среде недоступен.
+Frontend-тесты (255), typecheck, production build, Rust fmt/tests/release build, install/update/remove smoke и AArch64 cross-build прошли в локальных проверках и GitHub Actions. Примечания: [docs/release-notes-v0.5.4.md](docs/release-notes-v0.5.4.md). Релиз: https://github.com/rangerxxyy/XKeen-UI/releases/tag/v0.5.4. Реальный Keenetic в этой среде недоступен для проверки.
 
 ## Релиз v0.5.3 — 18 октября 2026
 

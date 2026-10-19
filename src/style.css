@@ -590,6 +590,9 @@ body { font-size: 14px; }
 .journal-line[data-level="warning"] .journal-level-badge { border-color:#665324; color:#f2d88f; background:#302814; }
 .journal-line[data-level="error"] .journal-level-badge { border-color:#6c3441; color:#ffb2ba; background:#351d27; }
 .journal-line[data-level="debug"] .journal-level-badge { border-color:#3b4759; color:#b4c0d1; background:#202b3a; }
+.journal-message-stopped { color:var(--red); font-weight:700; }
+.journal-message-started { color:var(--mint); font-weight:700; }
+.journal-message-mode { color:var(--cyan); font-weight:650; }
 .journal-line code { min-width:0; overflow-wrap:anywhere; }
 :root[data-theme="light"] .journal-level-badge { border-color:#bfd6f6; color:#245184; background:#e8f2ff; }
 :root[data-theme="light"] .journal-line[data-level="warning"] .journal-level-badge { border-color:#ead79a; color:#735713; background:#fff6d9; }

@@ -1,3 +1,5 @@
+// @ts-expect-error Vitest provides Node's fs runtime; the frontend project intentionally omits @types/node.
+import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import { deduplicateRepeatedUiErrors, formatJournalMessage, formatJournalTimestamp, getJournalViewState, renderJournalLoadingSkeleton, splitJournalLevel, stripLogSourceLabel } from './journal-view-state';
 
@@ -109,5 +111,12 @@ describe('formatJournalMessage', () => {
 
   it('leaves unrelated messages as plain text', () => {
     expect(formatJournalMessage('configuration loaded')).toEqual([{ text: 'configuration loaded' }]);
+  });
+
+  it('styles the lifecycle tone classes emitted for service state messages', () => {
+    const styles = readFileSync(new URL('./style.css', import.meta.url), 'utf8');
+    expect(styles).toMatch(/\.journal-message-stopped\s*\{[^}]*color\s*:/);
+    expect(styles).toMatch(/\.journal-message-started\s*\{[^}]*color\s*:/);
+    expect(styles).toMatch(/\.journal-message-mode\s*\{[^}]*color\s*:/);
   });
 });

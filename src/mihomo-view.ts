@@ -145,8 +145,7 @@ function proxyCard(group: MihomoSelector, groups: MihomoSelector[]): string {
       </button><div class="proxy-option-bottom"><span class="proxy-transport-badges">${badges}</span><button class="proxy-health proxy-ping-value ${pingClass}" type="button" data-ping-proxy="${escapeHtml(option.name)}" data-ping-group="${escapeHtml(group.name)}" title="${state}. Нажмите, чтобы проверить ping" aria-label="${pingLabel}. Нажмите, чтобы повторить ping узла ${escapeHtml(option.name)}">${renderPingStatusIcon(option.alive)}<span>${delay}</span></button></div>
     </div>`;
   }).join('');
-  const selectorIcon = group.icon || (/\bgemini\b/i.test(group.name) ? '/icons/gemini.svg' : '');
-  const groupIcon = selectorIcon ? `<img class="selector-group-icon" src="${escapeHtml(selectorIcon)}" alt="" referrerpolicy="no-referrer" onerror="this.hidden=true">` : '';
+  const groupIcon = group.icon ? `<img class="selector-group-icon" src="${escapeHtml(group.icon)}" alt="" referrerpolicy="no-referrer" onerror="this.hidden=true">` : '';
   return `<section class="selector-card" data-selector-card="${escapeHtml(group.name)}"><header class="selector-card-heading"><div><h2>${groupIcon}${escapeHtml(group.name)}</h2></div><div class="selector-heading-actions"><button class="ping-group" type="button" data-ping-group="${escapeHtml(group.name)}" aria-label="Пинг всех серверов группы ${escapeHtml(group.name)}" title="Пинг всех серверов группы">ϟ</button></div></header>
     <div class="selector-card-meta"><span>${escapeHtml(groupType)} · ${group.options.length}</span><span class="selector-destination" title="Маршрут: ${escapeHtml(destinationText)}"><span class="selector-route-arrow" aria-hidden="true">→</span><strong data-selector-destination="${escapeHtml(destinationText)}">${renderSelectorDestination(group, groups)}</strong></span></div>
     <div class="proxy-options">${options || '<div class="mihomo-inline-empty">В этой группе нет узлов.</div>'}</div>
